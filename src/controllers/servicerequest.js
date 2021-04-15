@@ -3665,7 +3665,7 @@ const serviceRequestController = {
           if (serviceResult.serviceStartTime > 0) {
             let durationInMs =
               currentTime - serviceResult.serviceStartTime;
-              calculatedDurationInSeconds = Math.floor((durationInMs/1000) + + serviceResult.calculatedDuration) ;
+              calculatedDurationInSeconds = Math.floor((durationInMs/1000) + serviceResult.calculatedDuration) ;
           }
 
         await knex("service_requests")
@@ -3945,7 +3945,7 @@ const serviceRequestController = {
           if (serviceResult.serviceStartTime > 0) {
             let durationInMs =
               currentTime - serviceResult.serviceStartTime;
-              calculatedDurationInSeconds = Math.floor((durationInMs/1000) + + serviceResult.calculatedDuration) ;
+              calculatedDurationInSeconds = Math.floor((durationInMs/1000) + serviceResult.calculatedDuration) ;
           }
 
           console.log(
