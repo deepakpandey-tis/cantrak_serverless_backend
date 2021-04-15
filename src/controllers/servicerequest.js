@@ -3649,6 +3649,25 @@ const serviceRequestController = {
       }
 
       if (updateStatus === "COM") {
+
+        let serviceResult = await knex("service_orders")
+            .where({
+              serviceRequestId: serviceRequestId,
+              orgId: req.orgId,
+            })
+            .first();
+          console.log(
+            "start duration====>>>>>",
+            serviceResult.serviceStartTime
+          );
+          let calculatedDurationInSeconds = 0 ;
+
+          if (serviceResult.serviceStartTime > 0) {
+            let durationInMs =
+              currentTime - serviceResult.serviceStartTime;
+              calculatedDurationInSeconds = Math.floor((durationInMs/1000) + + serviceResult.calculatedDuration) ;
+          }
+
         await knex("service_requests")
           .update({
             serviceStatusCode: updateStatus,
@@ -3665,6 +3684,7 @@ const serviceRequestController = {
             comment: comments,
             updatedAt: currentTime,
             completedOn: currentTime,
+            calculatedDuration : calculatedDurationInSeconds
           })
           .where({ serviceRequestId: serviceRequestId });
 
