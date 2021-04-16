@@ -265,4 +265,12 @@ router.get(
   agmController.getDashboardBasicData
 );
 
+router.post(
+  "/get-ownerlist-by-ownerId",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getOwnerListbyId
+)
+
 module.exports = router;

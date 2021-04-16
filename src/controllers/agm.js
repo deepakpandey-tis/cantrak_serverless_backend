@@ -2691,6 +2691,47 @@ const agmController = {
       });
     
     }
+  },
+  getOwnerListbyId : async(req,res)=>{
+    try {
+
+      let payload = req.body;
+
+      console.log("owners id",payload)
+
+      let ownerList = await knex("agm_owner_master")
+        .leftJoin(
+          "property_units",
+          "agm_owner_master.unitId",
+          "property_units.id"
+        )
+        .select([
+          "agm_owner_master.*",
+          "property_units.unitNumber",
+          "property_units.description as unitDescription",
+        ])
+        .where({
+          "agm_owner_master.orgId": req.orgId,
+          "agm_owner_master.agmId": payload.agmId,
+        })
+        .whereIn("agm_owner_master.id",payload.ownerId)
+
+      return res.status(200).json({
+        data : {
+          ownerList
+        },
+        message: "Owner list successfully !",
+      })
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
   }
 };
 
