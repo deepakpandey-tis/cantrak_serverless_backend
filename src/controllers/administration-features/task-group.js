@@ -2265,7 +2265,7 @@ const taskGroupController = {
             })
             .offset(offset)
             .limit(per_page)
-            .orderBy("workOrderDate", "asc"),
+            .orderBy("workOrderId", "asc"),
         ]);
       } else {
         [total, rows] = await Promise.all([
@@ -2507,7 +2507,7 @@ const taskGroupController = {
             })
             .offset(offset)
             .limit(per_page)
-            .orderBy("workOrderDate", "asc"),
+            .orderBy("workOrderId", "asc"),
         ]);
       }
 
