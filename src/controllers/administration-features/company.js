@@ -1109,38 +1109,6 @@ const companyController = {
       let result;
       let companyHavingPU1
       let companyArr1 = []
-      // let companyHavingPU2
-      // let companyArr2 =[]
-      // let companyHavingPU3
-      // let companyArr3=[]
-      // let companyHavingPU4
-      // let companyArr4=[]
-      // if(req.query.areaName === 'common'){
-      //   companyHavingPU2 = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-      //   companyArr2 = companyHavingPU2.map(v => v.companyId)
-
-      //   companyHavingPU3 = await knex('floor_and_zones').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-      //   companyArr3 = companyHavingPU3.map(v => v.companyId)
-
-      //   companyHavingPU4 = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-      //   companyArr4 = companyHavingPU4.map(v => v.companyId)
-      // } else {
-
-      // companyHavingPU1 = await knex('property_units').select(['companyId']).where({orgId:req.orgId,isActive:true})
-      // companyArr1 = companyHavingPU1.map(v => v.companyId)
-
-      // companyHavingPU2 = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-      // companyArr2 = companyHavingPU2.map(v => v.companyId)
-
-      // companyHavingPU3 = await knex('floor_and_zones').select(['companyId']).where({orgId:req.orgId,isActive:true})
-      // companyArr3 = companyHavingPU3.map(v => v.companyId)
-
-      // companyHavingPU4 = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-      // companyArr4 = companyHavingPU4.map(v => v.companyId)
-      // }
-
-      //let finalArr = _.intersection(companyArr4, companyArr2, companyArr3,companyArr1)
-
 
       if (req.query.areaName === 'common') {
         companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 2 })
@@ -1159,19 +1127,6 @@ const companyController = {
           .whereIn('companies.id', companyArr1)
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
           .orderBy('companies.companyId', 'asc')
-
-
-
-
-
-        //         result = await knex.raw(`
-        //         SELECT public.companies.*
-        // FROM public.companies
-        // WHERE EXISTS (
-        // SELECT 1 FROM public.common_area
-        // WHERE public.common_area."companyId" = public.companies.id
-        // ) and public.companies."orgId" = ${req.orgId}
-        // `)
 
       } else if (req.query.areaName === 'all') {
         companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 2 })
@@ -1192,15 +1147,6 @@ const companyController = {
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
           .orderBy('companies.companyId', 'asc')
       } else {
-
-        //         result = await knex.raw(`
-        //         SELECT public.companies.*
-        // FROM public.companies
-        // WHERE EXISTS (
-        // SELECT 1 FROM public.common_area
-        // WHERE public.common_area."companyId" = public.companies.id
-        // ) and public.companies."orgId" = ${req.orgId}
-        //         `)
 
         companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 1 })
         companyArr1 = companyHavingPU1.map(v => v.companyId)
@@ -1347,6 +1293,103 @@ const companyController = {
         err
       );
       //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+
+  getCompanyForService : async(req,res) =>{
+    try {
+
+      let result;
+      let companyHavingPU1
+      let companyArr1 = []
+      
+
+      let projectIds = req.accessibleProjects;
+            console.log('ProjectIds:', projectIds);
+
+            let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+                .whereIn('projects.id', projectIds)
+                .where({ orgId: req.orgId });
+
+            let companyIds = companyResult.map(v => v.companyId);
+
+
+      if (req.query.areaName === 'common') {
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 2 })
+        companyArr1 = companyHavingPU1.map(v => v.companyId);
+        companyArr1 = _.uniq(companyArr1);
+
+        result = await knex("companies")
+          .innerJoin('property_units', 'companies.id', 'property_units.companyId')
+          .select("companies.id",
+            "companies.companyId",
+            "companies.companyName as CompanyName",
+            "companies.logoFile as logoFile",
+            "companies.description1"
+          )
+          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId, 'property_units.type': 2 })
+          .whereIn('companies.id', companyArr1)
+          .whereIn('companies.id', companyIds)
+          .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
+          .orderBy('companies.companyId', 'asc')
+
+      } else if (req.query.areaName === 'all') {
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 2 })
+        companyArr1 = companyHavingPU1.map(v => v.companyId)
+        companyArr1 = _.uniq(companyArr1);
+
+
+        result = await knex("companies")
+          .innerJoin('property_units', 'companies.id', 'property_units.companyId')
+          .select("companies.id",
+            "companies.companyId",
+            "companies.companyName as CompanyName",
+            "companies.logoFile as logoFile",
+            "companies.description1"
+          )
+          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId })
+          .whereIn('companies.id', companyArr1)
+          .whereIn('companies.id', companyIds)
+          .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
+          .orderBy('companies.companyId', 'asc')
+      } else {
+
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 1 })
+        companyArr1 = companyHavingPU1.map(v => v.companyId)
+        companyArr1 = _.uniq(companyArr1);
+
+
+        result = await knex("companies")
+          .innerJoin('property_units', 'companies.id', 'property_units.companyId')
+          .select("companies.id",
+            "companies.companyId",
+            "companies.companyName as CompanyName",
+            "companies.logoFile as logoFile",
+            "companies.description1"
+          )
+          .where({ 'companies.isActive': true, 'companies.orgId': req.orgId, 'property_units.type': 1 })
+          .whereIn('companies.id', companyArr1)
+          .whereIn('companies.id', companyIds)
+          .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
+          .orderBy('companies.companyId', 'asc')
+
+      }
+
+      return res.status(200).json({
+        data: {
+          companies: result
+        },
+        message: "Companies List!"
+      }); 
+    } catch (err) {
+      
+      console.log(
+        "[controllers][companies][userResult] :  Error",
+        err
+      );
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
