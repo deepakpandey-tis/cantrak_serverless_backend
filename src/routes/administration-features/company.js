@@ -105,5 +105,12 @@ router.get(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isCMAccessible,
   companyController.getCompanyForService
+);
+router.get(
+  "/get-company-list-for-pm",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  companyController.getCompanyListForPm
 )
 module.exports = router;
