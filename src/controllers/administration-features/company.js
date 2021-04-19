@@ -1394,6 +1394,69 @@ const companyController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
+  },
+  getCompanyListForPm : async(req,res) =>{
+    try {
+      let pagination = {};
+      let role = req.me.roles[0];
+      let name = req.me.name;
+      let result;
+      let orgId = req.query.orgId;
+
+      let projectIds = req.accessibleProjects;
+      console.log('ProjectIds:', projectIds);
+
+      let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+          .whereIn('projects.id', projectIds)
+          .where({ orgId: req.orgId });
+
+      let companyIds = companyResult.map(v => v.companyId);
+
+      if (role === "superAdmin" && name === "superAdmin") {
+
+        if (orgId) {
+
+          [result] = await Promise.all([
+            knex("companies")
+              .select("id", "companyId", "companyName as CompanyName")
+              .where({ isActive: true, orgId: orgId })
+              .whereIn("companies.id",companyIds)
+              .orderBy('companies.companyId', 'asc')
+          ]);
+
+        } else {
+          [result] = await Promise.all([
+            knex("companies")
+              .select("id", "companyId", "companyName as CompanyName")
+              .where({ isActive: true })
+              .whereIn("companies.id",companyIds)
+              .orderBy('companies.companyId', 'asc')
+          ]);
+        }
+      } else {
+
+        [result] = await Promise.all([
+          knex("companies")
+            .select("id", "companyId", "companyName as CompanyName")
+            .where({ isActive: true, orgId: req.orgId })
+            .whereIn("companies.id",companyIds)
+            .orderBy('companies.companyId', 'asc')
+        ]);
+      }
+
+      pagination.data = result;
+      return res.status(200).json({
+        data: {
+          companies: pagination
+        },
+        message: "Companies List!"
+      });
+    } catch (err) {
+      console.log("[controllers][generalsetup][viewCompany] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
   }
 
 };
