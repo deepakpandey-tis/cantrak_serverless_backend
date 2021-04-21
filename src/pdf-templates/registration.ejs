@@ -106,6 +106,9 @@
                             <% if(columns.includes('House Id')){ %>
                             <td><%= data[i].houseId %></td>
                             <% } %>
+                            <% if(columns.includes('Ownership Ratio')){ %>
+                                <td><%= data[i].ownershipRatio %></td>
+                                <% } %>
                             <% if(columns.includes('Registration Type')){ %>
                             <td>
                                 <% if(data[i].registrationType == 1){ %>

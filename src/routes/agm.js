@@ -273,4 +273,28 @@ router.post(
   agmController.getOwnerListbyId
 )
 
+router.post(
+  "/get-unit-list-for-agenda",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getUnitListForVotingResult
+);
+
+router.post(
+  "/get-voting-detail",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.agmVoteDetail
+)
+
+router.post(
+  "/get-agenda-choice",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.agmAgendaChoice
+)
+
 module.exports = router;
