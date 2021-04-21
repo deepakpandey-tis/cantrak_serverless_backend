@@ -6,17 +6,23 @@ const agmController = require("../controllers/agm");
 const roleMiddleware = require("../middlewares/role");
 const resourceAccessMiddleware = require("../middlewares/resourceAccessMiddleware");
 
-router.get("/generate-agm-id", authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, resourceAccessMiddleware.isAGMAccessible, agmController.generateAGMId );
+router.get(
+  "/generate-agm-id",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.generateAGMId
+);
 router.post(
   "/save-agm",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.addAgmPreparation
 );
 router.post(
   "/add-owner",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.addOwner
@@ -24,86 +30,85 @@ router.post(
 
 router.post(
   "/update-owner",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.updateOwner
 );
 
-
 router.post(
   "/delete-owner",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.deleteOwner
 );
 router.post(
   "/update-eligibility",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.updateEligibility
 );
 router.post(
   "/get-agm-list",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getAgmList
 );
 router.post(
   "/update-agenda",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.updateAgenda
 );
 router.post(
   "/get-owner-list",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getOwnerList
 );
 router.post(
   "/get-agm-details",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getAgmDetails
 );
 router.post(
   "/owner-proxy-registration",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.ownerProxyRegistration
 );
 router.post(
   "/get-owner-details",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getOwnerDetails
 );
 router.post(
   "/get-agenda-list",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getAgendaList
 );
 router.post(
   "/toggle-eligibility",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.toggleEligibility
 );
 router.post(
   "/get-units-for-agm",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getUnitList
@@ -111,7 +116,7 @@ router.post(
 
 router.post(
   "/get-proxy-document-list",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getProxyDocumentList
@@ -119,7 +124,7 @@ router.post(
 
 router.post(
   "/get-unit-by-project",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getUnitListByCompanyAndProject
@@ -127,7 +132,7 @@ router.post(
 
 router.post(
   "/get-ownerlist-by-filter",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getOwnerListByUnit
@@ -135,7 +140,7 @@ router.post(
 
 router.post(
   "/owner-registration",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.ownerRegistration
@@ -143,7 +148,7 @@ router.post(
 
 router.post(
   "/get-owner-signature",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getOwnerSignature
@@ -151,15 +156,15 @@ router.post(
 
 router.post(
   "/get-proxy-document-images",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getProxyDocumentImages
-)
+);
 
 router.post(
   "/generate-pdf-of-voting-document",
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.generatePdfOfVotingDocument
@@ -171,7 +176,7 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.checkVotingStatus
-)
+);
 
 router.post(
   "/get-scanned-agenda-data",
@@ -179,8 +184,7 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getScannedAgendaDetail
-
-)
+);
 
 router.post(
   "/save-voting-data",
@@ -188,7 +192,7 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.saveVotingData
-)
+);
 
 router.get(
   "/get-owner-registration-list",
@@ -196,7 +200,7 @@ router.get(
   // roleMiddleware.parseUserPermission,
   // resourceAccessMiddleware.isAGMAccessible,
   agmController.getOwnerRegistrationList
-)
+);
 
 router.post(
   "/get-agenda-summary",
@@ -204,7 +208,7 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getAgendaVoteSummary
-)
+);
 
 router.post(
   "/get-registration-status",
@@ -212,7 +216,7 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getRegistrationStatus
-)
+);
 
 router.post(
   "/get-vote-result-list",
@@ -220,7 +224,7 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getVotingResultList
-)
+);
 
 /**IMPORT AGM OWNER DATA */
 const path = require("path");
@@ -249,13 +253,11 @@ var upload = multer({ storage: storage });
 router.post(
   "/import-owner-data",
   upload.single("file"),
-  authMiddleware.isAuthenticated, 
+  authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.importOwnerData
 );
-
-
 
 router.get(
   "/get-dashboard-basic-data/:id",
@@ -271,7 +273,7 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.getOwnerListbyId
-)
+);
 
 router.post(
   "/get-unit-list-for-agenda",
@@ -287,7 +289,7 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.agmVoteDetail
-)
+);
 
 router.post(
   "/get-agenda-choice",
@@ -295,6 +297,14 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.agmAgendaChoice
+);
+
+router.post(
+  "/cancle-owner-registration",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.cancleRegistration
 )
 
 module.exports = router;

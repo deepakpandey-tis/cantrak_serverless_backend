@@ -1255,7 +1255,7 @@ const agmController = {
       let insertResult;
       for (let owner of req.body.ownerId) {
         console.log("owner data===", owner);
-        insertData = await knex
+        insertResult = await knex
           .update(insertData)
           .where({ agmId: payload.agmId, id: owner })
           .returning(["*"])
@@ -3189,6 +3189,39 @@ const agmController = {
 
   //   }
   // }
+
+
+  cancleRegistration:async(req,res) =>{
+    try {
+      
+      let payload = req.body;
+
+      let updateRegistrationResult = await knex("agm_owner_master")
+      .update({
+        signature : null,
+        signatureAt : null,
+        registrationType : null
+      })
+      .where({id:payload.ownerId, agmId:payload.agmId});
+
+
+      return res.status(200).json({
+        data: {
+          updateRegistrationResult,
+        },
+        message: "Owner Registration Canceled Successfully !",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  }
 };
 
 module.exports = agmController;
