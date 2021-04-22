@@ -305,6 +305,14 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAGMAccessible,
   agmController.cancleRegistration
+);
+
+router.post(
+  "/adjust-voting",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.adjustAGMVoting
 )
 
 module.exports = router;

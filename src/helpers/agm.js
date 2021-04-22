@@ -568,7 +568,10 @@ const agmHelper = {
             let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
             // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
 
-            let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
+            // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
+            let sanitizedUnitNumber = pd.unitNumber;
+            sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-');
+            let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${unitNumber}.pdf`;
 
             const document = {
               html: htmlContents,
