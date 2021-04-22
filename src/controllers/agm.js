@@ -2189,7 +2189,7 @@ const agmController = {
       let payload = req.body;
       let insertVotingResult;
 
-      // payload = _.omit(payload, ["isUpdateVote"]);
+      payload = _.omit(payload, ["isUpdateVote"]);
 
       const schema = new Joi.object().keys({
         agmId: Joi.number().required(),
@@ -2274,56 +2274,77 @@ const agmController = {
         orgId: req.orgId,
       };
 
-      // let votingOption = await knex("agenda_master").where({
-      //   agmId: payload.agmId,
-      //   id: payload.agendaId,
-      // });
+      let votingOption = await knex("agenda_master").where({
+        agmId: payload.agmId,
+        id: payload.agendaId,
+      });
 
-      // console.log(
-      //   `[controllers][agm][saveVotingData]: Voting Option:`,
-      //   votingOption
-      // );
+      console.log(
+        `[controllers][agm][saveVotingData]: Voting Option:`,
+        votingOption
+      );
 
-      // if (
-      //   votingOption.isMultiSelect &&
-      //   req.body.isUpdateVote == false
-      // ) {
-        try {
-          insertVotingResult = await knex
-            .insert(insertVotingData)
-            .returning(["*"])
-            .into("agm_voting");
-        } catch (err) {
-          let uniqueErrorMsg = `duplicate key value violates unique constraint`;
-          if (err.message.includes(uniqueErrorMsg)) {
-            console.warn(
-              "Unique Constraint Error, We will have to perform an update............"
-            );
+      // console.log("called multiselect else",votingOption[0].isMultiSelect,req.body.isUpdateVote)
+
+
+      if (votingOption[0].isMultiSelect == true) {
+        if (req.body.isUpdateVote == false) {
+          try {
             insertVotingResult = await knex
-              .update({
-                votingPower: payload.votingPower,
-                selectedChoiceId: payload.selectedChoiceId,
-                updatedAt: currentTime,
-              })
-              .where({
-                agmId: payload.agmId,
-                ownerMasterId: payload.ownerMasterId,
-                agendaId: payload.agendaId,
-              })
+              .insert(insertVotingData)
               .returning(["*"])
               .into("agm_voting");
+          } catch (err) {
+            let uniqueErrorMsg = `duplicate key value violates unique constraint`;
+            if (err.message.includes(uniqueErrorMsg)) {
+              console.warn(
+                "Unique Constraint Error, We will have to perform an update............"
+              );
+              insertVotingResult = await knex
+                .update({
+                  votingPower: payload.votingPower,
+                  selectedChoiceId: payload.selectedChoiceId,
+                  updatedAt: currentTime,
+                })
+                .where({
+                  agmId: payload.agmId,
+                  ownerMasterId: payload.ownerMasterId,
+                  agendaId: payload.agendaId,
+                })
+                .returning(["*"])
+                .into("agm_voting");
+            }
           }
+        }else{
+          console.log("called multiselect else")
+          let delVoting = await knex("agm_voting").where({
+            agmId: payload.agmId,
+            ownerMasterId: payload.ownerMasterId,
+            agendaId: payload.agendaId
+          })
+          .del();
+
+          insertVotingResult = await knex
+              .insert(insertVotingData)
+              .returning(["*"])
+              .into("agm_voting");
+
         }
-      // } else if (
-      //   votingOption.isMultiSelect &&
-      //   req.body.isUpdateVote == true
-      // ) {
-      //   let delVoting = await knex("agm_voting").where({
-      //     agmId: payload.agmId,
-      //     ownerMasterId: payload.ownerMasterId,
-      //     agendaId: payload.agendaId,
-      //   });
-      // }
+
+      } else {
+
+        let delVoting = await knex("agm_voting").where({
+          agmId: payload.agmId,
+          ownerMasterId: payload.ownerMasterId,
+          agendaId: payload.agendaId,
+        })
+        .del();
+
+        insertVotingResult = await knex
+              .insert(insertVotingData)
+              .returning(["*"])
+              .into("agm_voting");
+      }
 
       return res.status(200).json({
         data: insertVotingResult,
