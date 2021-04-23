@@ -369,8 +369,8 @@ const agmController = {
         data[0].C === "HOUSE_NO" &&
         data[0].D == "ACTUAL_OWNERSHIP_RATIO" &&
         data[0].E === "OWNERSHIP_RATIO" &&
-        data[0].F === "CO_OWNER_NAME" &&
-        data[0].G === "ELIGIBILITY_TOGGLE"
+        data[0].G === "CO_OWNER_NAME" &&
+        data[0].H === "ELIGIBILITY_TOGGLE"
         // data[0].G === "ID_NO" &&
         // data[0].H === "JOIN_OWNER_NAME"
       ) {
@@ -417,7 +417,7 @@ const agmController = {
                 continue;
               }
 
-              if (!ownerData.F) {
+              if (!ownerData.G) {
                 let values = _.values(ownerData);
                 values.unshift(
                   "Co owner name can not be empty!"
@@ -451,13 +451,13 @@ const agmController = {
                 "ownerdata h====>>>>>",
                 ownerData.H
               );
-              if (ownerData.F == "Yes") {
+              if (ownerData.H == "Yes") {
                 eligibility = true;
               } else {
                 eligibility = false;
               }
 
-              let ownerName = ownerData.F.trim();
+              let ownerName = ownerData.G.trim();
 
               // console.log("owner name value",ownerName)
 
@@ -469,11 +469,12 @@ const agmController = {
                 unitNumber: ownerData.B,
                 houseId: ownerData.C,
                 ownerName: ownerName,
-                joinOwnerName: ownerData.I,
+                joinOwnerName: ownerData.J,
                 actualOwnershipRatio: ownerData.D,
                 ownershipRatio: ownerData.E,
-                ownerIdNo: ownerData.H,
+                ownerIdNo: ownerData.I,
                 eligibility: eligibility,
+                ownerGroupNo:ownerData.F,
                 orgId: req.orgId,
                 isActive: true,
                 createdAt: new Date().getTime(),
