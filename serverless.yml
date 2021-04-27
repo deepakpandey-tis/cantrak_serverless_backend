@@ -30,6 +30,16 @@ provider:
         - s3:*
       Resource: 
         - arn:aws:s3:::*
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource: 
+        - arn:aws:sqs:::*
+    - Effect: Allow
+      Action:
+        - sns:*
+      Resource: 
+        - arn:aws:sns:::*        
   environment:
     ENV: ${self:provider.stage}
     REGION: ${self:provider.region}
@@ -57,6 +67,8 @@ provider:
     CDN_URL: http://local-bucket.s3.amazonaws.com:8000
     REDIS_HOST: 127.0.0.1
     REDIS_PORT: 6379
+    THIRDPARTY_SNS_ARN: arn:aws:sns:ap-southeast-1:175922227966:servicemind-thirdparty-notifications
+    THIRDPARTY_SNS_ARN_REGION: ap-southeast-1
 
 custom:
   serviceName: tis-serverless-backend
@@ -177,8 +189,8 @@ functions:
     handler: src/socket.auth
 
   workOrderOverdueProcessor:
-    handler: src/app.workOrderOverdueProcessor
-    memorySize: 1024
+    handler: src/handlers/dailyTasks.workOrderOverdueProcessor
+    memorySize: 512
     timeout: 300
     events:
       - schedule:
@@ -187,9 +199,9 @@ functions:
 
 
   dailyDigestProcessor:
-    handler: src/app.dailyDigestProcessor
+    handler: src/handlers/dailyTasks.dailyDigestProcessor
     memorySize: 1024
-    timeout: 899                     # Max Time out is 15 mins..
+    timeout:  899                     # Max Time out is 15 mins..
     events:
       - schedule:
           rate: cron(0 1 * * ? *)    # Utc 1 am every day i.e 8 am Morning Thai Time..
