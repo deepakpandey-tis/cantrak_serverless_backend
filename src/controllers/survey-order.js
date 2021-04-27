@@ -18,15 +18,12 @@ const https = require("https");
 
 const imageHelper = require("../helpers/image");
 const { innerJoin } = require("../db/knex");
-const surveyAppointmentNotification = require('../notifications/service-request/survey-appointment-notification');
-const surveyAppointmentAssignUserNotification = require('../notifications/service-request/survey-appointment-assign-user-notification')
+const surveyAppointmentNotification = require("../notifications/service-request/survey-appointment-notification");
+const surveyAppointmentAssignUserNotification = require("../notifications/service-request/survey-appointment-assign-user-notification");
 
 const surveyOrderController = {
-
   addSurveyOrder: async (req, res) => {
-
     try {
-
       let surveyOrder = null;
       let additionalUsers = [];
       let userId = req.me.id;
@@ -40,44 +37,62 @@ const surveyOrderController = {
       let allUserIds = [];
       let assignUserResult;
 
-      let initialSurveyOrderPayload = _.omit(surveyOrderPayload, [
-        "additionalUsers",
-        "teamId",
-        "mainUserId"
-      ]);
+      let initialSurveyOrderPayload = _.omit(
+        surveyOrderPayload,
+        ["additionalUsers", "teamId", "mainUserId"]
+      );
 
       const schema = Joi.object().keys({
         serviceRequestId: Joi.string().required(),
         appointedDate: Joi.string().required(),
-        appointedTime: Joi.string().required()
+        appointedTime: Joi.string().required(),
       });
 
-      let result = Joi.validate(initialSurveyOrderPayload, schema);
+      let result = Joi.validate(
+        initialSurveyOrderPayload,
+        schema
+      );
       console.log(
         "[controllers][surveyOrder][addSurveyOrder]: JOi Result",
         result
       );
 
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
           errors: [
-            { code: "VALIDATION_ERROR", message: result.error.message }
-          ]
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
       let currentTime = new Date().getTime();
 
+      let sender = await knex
+        .from("users")
+        .where({ id: req.me.id })
+        .first();
+      let ALLOWED_CHANNELS = [
+        "IN_APP",
+        "EMAIL",
+        "WEB_PUSH",
+        "SOCKET_NOTIFY",
+      ];
 
-      let sender = await knex.from("users").where({ id: req.me.id }).first();
-      let ALLOWED_CHANNELS = ["IN_APP","EMAIL","WEB_PUSH","SOCKET_NOTIFY"];
-
-      await knex.transaction(async trx => {
-
+      await knex.transaction(async (trx) => {
         let propertyUnit = await knex
-          .select(['companyId'])
-          .where({ id: surveyOrderPayload.serviceRequestId })
-          .into("service_requests").first();
+          .select(["companyId"])
+          .where({
+            id: surveyOrderPayload.serviceRequestId,
+          })
+          .into("service_requests")
+          .first();
 
         let insertSurveyOrderData = {
           ...initialSurveyOrderPayload,
@@ -87,10 +102,8 @@ const surveyOrderController = {
           createdAt: currentTime,
           updatedAt: currentTime,
           isActive: true,
-          surveyOrderStatus: 'Pending'
+          surveyOrderStatus: "Pending",
         };
-
-
 
         // Insert into survey_orders table
         let surveyOrderResult = await knex
@@ -111,7 +124,7 @@ const surveyOrderController = {
           orgId: req.orgId,
           entityType: "survey_orders",
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
         };
 
         const assignedServiceTeamResult = await knex
@@ -123,7 +136,8 @@ const surveyOrderController = {
 
         // Insert into assigned_service_additional_users
 
-        let assignedServiceAdditionalUsers = surveyOrderPayload.additionalUsers;
+        let assignedServiceAdditionalUsers =
+          surveyOrderPayload.additionalUsers;
 
         for (user of assignedServiceAdditionalUsers) {
           let userResult = await knex
@@ -133,7 +147,7 @@ const surveyOrderController = {
               entityType: "survey_orders",
               orgId: req.orgId,
               createdAt: currentTime,
-              updatedAt: currentTime
+              updatedAt: currentTime,
             })
             .returning(["*"])
             .transacting(trx)
@@ -141,41 +155,75 @@ const surveyOrderController = {
           additionalUsers.push(userResult[0]);
         }
 
-        await knex('service_requests')
-          .update({ serviceStatusCode: 'US' })
-          .where({ id: surveyOrderPayload.serviceRequestId })
-          .returning(['*'])
+        await knex("service_requests")
+          .update({ serviceStatusCode: "US" })
+          .where({
+            id: surveyOrderPayload.serviceRequestId,
+          })
+          .returning(["*"]);
 
         /*GET REQUEST BY & CREATED BY ID OPEN */
-        let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
+        let orgMaster = await knex
+          .from("organisations")
+          .where({ id: req.orgId })
+          .first();
 
-        serviceRequestResult = await knex('service_requests').where({ id: surveyOrderPayload.serviceRequestId, orgId: req.orgId }).first();
+        serviceRequestResult = await knex(
+          "service_requests"
+        )
+          .where({
+            id: surveyOrderPayload.serviceRequestId,
+            orgId: req.orgId,
+          })
+          .first();
         if (serviceRequestResult) {
-
-          userResult = await knex('users')
+          userResult = await knex("users")
             .select([
               "users.*",
-              "application_user_roles.roleId"
+              "application_user_roles.roleId",
             ])
-            .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-            .where({ 'users.id': serviceRequestResult.createdBy, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
+            .innerJoin(
+              "application_user_roles",
+              "users.id",
+              "application_user_roles.userId"
+            )
+            .where({
+              "users.id": serviceRequestResult.createdBy,
+              "application_user_roles.roleId": 4,
+              "users.orgId": req.orgId,
+            })
+            .first();
 
-          requestResult = await knex('requested_by').where({ id: serviceRequestResult.requestedBy, orgId: req.orgId }).first();
+          requestResult = await knex("requested_by")
+            .where({
+              id: serviceRequestResult.requestedBy,
+              orgId: req.orgId,
+            })
+            .first();
           if (requestResult) {
-
-            userResult2 = await knex('users')
+            userResult2 = await knex("users")
               .select([
                 "users.*",
-                "application_user_roles.roleId"
+                "application_user_roles.roleId",
               ])
-              .innerJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
-              .where({ 'users.email': requestResult.email, 'application_user_roles.roleId': 4, 'users.orgId': req.orgId }).first();
-
+              .innerJoin(
+                "application_user_roles",
+                "users.id",
+                "application_user_roles.userId"
+              )
+              .where({
+                "users.email": requestResult.email,
+                "application_user_roles.roleId": 4,
+                "users.orgId": req.orgId,
+              })
+              .first();
           }
 
-
-          let appointmentDate = moment(initialSurveyOrderPayload.appointedDate).format("YYYY-MM-DD");
-          let appointmentTime = initialSurveyOrderPayload.appointedTime;
+          let appointmentDate = moment(
+            initialSurveyOrderPayload.appointedDate
+          ).format("YYYY-MM-DD");
+          let appointmentTime =
+            initialSurveyOrderPayload.appointedTime;
 
           let dataNos = {
             payload: {
@@ -184,8 +232,8 @@ const surveyOrderController = {
               description: `An Engineer as been appointed  for visit on ${appointmentDate} at ${appointmentTime} to Survey regarding your Service Request`,
               redirectUrl: "/user/service-request",
               orgData: orgMaster,
-              thaiTitle: 'นัดสำรวจ',
-              thaiDetails: `นัดหมายช่างซ่อมเพื่อตรวจสอบ ในวัน ${appointmentDate} เวลา ${appointmentTime} ตามใบแจ้งคำร้องของท่านเรียบร้อย`
+              thaiTitle: "นัดสำรวจ",
+              thaiDetails: `นัดหมายช่างซ่อมเพื่อตรวจสอบ ในวัน ${appointmentDate} เวลา ${appointmentTime} ตามใบแจ้งคำร้องของท่านเรียบร้อย`,
             },
           };
 
@@ -213,46 +261,39 @@ const surveyOrderController = {
         let addUser = surveyOrderPayload.additionalUsers;
         allUserIds.push(...addUser, mainUser);
 
-        assignUserResult = await knex('users')
+        assignUserResult = await knex("users")
           .where({ orgId: req.orgId })
-          .whereIn('id', allUserIds);
+          .whereIn("id", allUserIds);
 
         if (assignUserResult) {
-
           let dataNos2 = {
             payload: {
               title: "Survey Appointment Assigned",
               url: "",
               description: `A new survey appointment has been created and assigned to you.`,
               redirectUrl: "/admin/service-request",
-              orgData: orgMaster
+              orgData: orgMaster,
             },
           };
 
           for (u of assignUserResult) {
-
             await surveyAppointmentAssignUserNotification.send(
               sender,
               u,
               dataNos2,
               ALLOWED_CHANNELS
             );
-
           }
-
         }
 
-
         /*  SEND NOTIFICATION TO USER CLOSE */
-
-
 
         trx.commit;
       });
 
-      await knex('survey_orders')
+      await knex("survey_orders")
         .update({ surveyInProcess: null })
-        .where({ id: surveyOrderId })
+        .where({ id: surveyOrderId });
 
       res.status(200).json({
         data: {
@@ -260,14 +301,21 @@ const surveyOrderController = {
           assignedServiceTeam,
           assignedAdditionalUsers: additionalUsers,
         },
-        message: "Survey Order added successfully !"
+        message: "Survey Order added successfully !",
       });
-
     } catch (err) {
-      console.log("[controllers][surveyOrder][addSurveyOrder] :  Error", err);
+      console.log(
+        "[controllers][surveyOrder][addSurveyOrder] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -276,30 +324,41 @@ const surveyOrderController = {
       let surveyOrder = null;
       let additionalUsers = [];
 
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         let surveyOrderPayload = req.body;
         let id = req.body.id;
 
-        let initialSurveyOrderPayload = _.omit(surveyOrderPayload, [
-          "additionalUsers",
-          "teamId",
-          "mainUserId",
-          "id"
-        ]);
+        let initialSurveyOrderPayload = _.omit(
+          surveyOrderPayload,
+          ["additionalUsers", "teamId", "mainUserId", "id"]
+        );
 
         const schema = Joi.object().keys({
           appointedDate: Joi.string().required(),
-          appointedTime: Joi.string().required()
+          appointedTime: Joi.string().required(),
         });
 
-        let result = Joi.validate(initialSurveyOrderPayload, schema);
-        console.log("[controllers][surveyOrder][addSurveyOrder]: JOi Result", result);
+        let result = Joi.validate(
+          initialSurveyOrderPayload,
+          schema
+        );
+        console.log(
+          "[controllers][surveyOrder][addSurveyOrder]: JOi Result",
+          result
+        );
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
 
@@ -307,7 +366,7 @@ const surveyOrderController = {
         let insertSurveyOrderData = {
           ...initialSurveyOrderPayload,
           updatedAt: currentTime,
-          isActive: true
+          isActive: true,
         };
         // Update into survey_orders table
         let surveyOrderResult = await knex
@@ -318,17 +377,23 @@ const surveyOrderController = {
           .into("survey_orders");
         surveyOrder = surveyOrderResult[0];
 
-        // Update status service_requests table     
-        let resultRequest = await knex("survey_orders").where({
+        // Update status service_requests table
+        let resultRequest = await knex(
+          "survey_orders"
+        ).where({
           isActive: "true",
           id: incidentRequestPayload.id,
-          orgId: orgId
-        })
+          orgId: orgId,
+        });
 
-        serviceRequestId = resultRequest[0].serviceRequestId;
+        serviceRequestId =
+          resultRequest[0].serviceRequestId;
 
         let updateSRStatus = await knex
-          .update({ serviceStatusCode: "US", updatedAt: currentTime })
+          .update({
+            serviceStatusCode: "US",
+            updatedAt: currentTime,
+          })
           .where({ id: serviceRequestId, orgId: req.orgId })
           .returning(["*"])
           .transacting(trx)
@@ -339,14 +404,14 @@ const surveyOrderController = {
         let assignedServiceTeamPayload = {
           teamId: surveyOrderPayload.teamId,
           userId: surveyOrderPayload.mainUserId,
-          updatedAt: currentTime
+          updatedAt: currentTime,
         };
         const assignedServiceTeamResult = await knex
           .update(assignedServiceTeamPayload)
           .where({
             entityId: id,
             entityType: "survey_orders",
-            orgId: req.orgId
+            orgId: req.orgId,
           })
           .returning(["*"])
           .transacting(trx)
@@ -361,30 +426,36 @@ const surveyOrderController = {
             2. Remove Those users 
             3. Add new users                    
         */
-        let assignedServiceAdditionalUsers = surveyOrderPayload.additionalUsers;
+        let assignedServiceAdditionalUsers =
+          surveyOrderPayload.additionalUsers;
 
         let selectedUsers = await knex
           .select()
           .where({
             entityId: id,
             entityType: "survey_orders",
-            orgId: req.orgId
+            orgId: req.orgId,
           })
           .returning(["*"])
           .transacting(trx)
           .into("assigned_service_additional_users")
-          .map(user => user.userId);
+          .map((user) => user.userId);
 
-        if (_.isEqual(selectedUsers, assignedServiceAdditionalUsers)) {
+        if (
+          _.isEqual(
+            selectedUsers,
+            assignedServiceAdditionalUsers
+          )
+        ) {
           // trx.commit
           trx.commit;
           return res.status(200).json({
             data: {
               surveyOrder,
               assignedServiceTeam,
-              assignedAdditionalUsers: additionalUsers
+              assignedAdditionalUsers: additionalUsers,
             },
-            message: "Survey Order updated successfully !"
+            message: "Survey Order updated successfully !",
           });
         } else {
           // Remove old users
@@ -395,7 +466,7 @@ const surveyOrderController = {
               .where({
                 entityId: id,
                 entityType: "survey_orders",
-                orgId: req.orgId
+                orgId: req.orgId,
               })
               .returning(["*"])
               .transacting(trx)
@@ -412,7 +483,7 @@ const surveyOrderController = {
                 entityType: "survey_orders",
                 orgId: req.orgId,
                 createdAt: currentTime,
-                updatedAt: currentTime
+                updatedAt: currentTime,
               })
               .returning(["*"])
               .transacting(trx)
@@ -424,17 +495,25 @@ const surveyOrderController = {
             data: {
               surveyOrder,
               assignedServiceTeam,
-              assignedAdditionalUsers: additionalUsers
+              assignedAdditionalUsers: additionalUsers,
             },
-            message: "Survey Order updated successfully !"
+            message: "Survey Order updated successfully !",
           });
         }
       });
     } catch (err) {
-      console.log("[controllers][surveyOrder][addSurveyOrder] :  Error", err);
+      console.log(
+        "[controllers][surveyOrder][addSurveyOrder] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -450,12 +529,10 @@ const surveyOrderController = {
       let dueFromDate = "";
       let dueToDate = "";
       let compToDate = "";
-      const accessibleProjects = req.userProjectResources[0].projects
+      const accessibleProjects =
+        req.userProjectResources[0].projects;
 
       let projectIds = req.accessibleProjects;
-
-
-
 
       let pagination = {};
       let per_page = req.query.per_page || 10;
@@ -489,38 +566,54 @@ const surveyOrderController = {
           servicePayload.status != "" &&
           servicePayload.status
         ) {
-          filterList["o.surveyOrderStatus"] = servicePayload.status;
+          filterList["o.surveyOrderStatus"] =
+            servicePayload.status;
         }
 
         // PRIORITY
-        if (servicePayload.priority != "undefined" && servicePayload.priority) {
-          filterList["s.priority"] = servicePayload.priority;
+        if (
+          servicePayload.priority != "undefined" &&
+          servicePayload.priority
+        ) {
+          filterList["s.priority"] =
+            servicePayload.priority;
         }
 
         // LOCATION
-        if (servicePayload.location != "undefined" && servicePayload.location) {
-          filterList["s.location"] = servicePayload.location;
+        if (
+          servicePayload.location != "undefined" &&
+          servicePayload.location
+        ) {
+          filterList["s.location"] =
+            servicePayload.location;
         }
 
         // ARCHIVE
-        if (servicePayload.archive != "undefined" && servicePayload.archive) {
+        if (
+          servicePayload.archive != "undefined" &&
+          servicePayload.archive
+        ) {
           filterList["o.archive"] = servicePayload.archive;
         }
 
         // ASSIGNED BY
         if (
           (servicePayload.assignedBy != "undefined",
-            servicePayload.assignedBy != "" && servicePayload.assignedBy)
+          servicePayload.assignedBy != "" &&
+            servicePayload.assignedBy)
         ) {
-          filterList["o.createdBy"] = servicePayload.assignedBy;
+          filterList["o.createdBy"] =
+            servicePayload.assignedBy;
         }
 
         // CREATED BY
         if (
           (servicePayload.createdBy != "undefined",
-            servicePayload.createdBy != "" && servicePayload.createdBy)
+          servicePayload.createdBy != "" &&
+            servicePayload.createdBy)
         ) {
-          filterList["o.createdBy"] = servicePayload.createdBy;
+          filterList["o.createdBy"] =
+            servicePayload.createdBy;
         }
 
         // REQUESTED BY
@@ -529,7 +622,8 @@ const surveyOrderController = {
           servicePayload.requestedBy != "" &&
           servicePayload.requestedBy
         ) {
-          filterList["s.requestedBy"] = servicePayload.requestedBy;
+          filterList["s.requestedBy"] =
+            servicePayload.requestedBy;
         }
 
         // COMPLETED BY
@@ -538,7 +632,8 @@ const surveyOrderController = {
           servicePayload.completedBy != "" &&
           servicePayload.completedBy
         ) {
-          filterList["o.completedBy"] = servicePayload.completedBy;
+          filterList["o.completedBy"] =
+            servicePayload.completedBy;
         }
 
         // SURVEY BETWEEN DATES
@@ -567,7 +662,9 @@ const surveyOrderController = {
         ) {
           let compFromDate = servicePayload.completedFrom;
           console.log("comfromDate", compFromDate);
-          completedFromDate = new Date(compFromDate).getTime();
+          completedFromDate = new Date(
+            compFromDate
+          ).getTime();
 
           let compToDate = servicePayload.completedTo;
           console.log("comptoDate", compToDate);
@@ -600,7 +697,8 @@ const surveyOrderController = {
           servicePayload.assignedTo != "" &&
           servicePayload.assignedTo
         ) {
-          filterList["st.userId"] = servicePayload.assignedTo;
+          filterList["st.userId"] =
+            servicePayload.assignedTo;
         }
         console.log("Filter Query", filterList);
 
@@ -610,26 +708,33 @@ const surveyOrderController = {
         total = await knex
           .count("* as count")
           .from("survey_orders as o")
-          .where(qb => {
+          .where((qb) => {
             qb.where(filterList);
             if (newCreatedDate || newCreatedDateTo) {
               qb.whereBetween("o.createdAt", [
                 newCreatedDate,
-                newCreatedDateTo
+                newCreatedDateTo,
               ]);
             }
             if (completedFromDate || completedToDate) {
               qb.whereBetween("o.completedOn", [
                 completedFromDate,
-                completedToDate
+                completedToDate,
               ]);
             }
             if (dueFromDate || dueToDate) {
-              qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
+              qb.whereBetween("o.appointedDate", [
+                dueFromDate,
+                dueToDate,
+              ]);
             }
-            qb.where("o.orgId", req.orgId)
+            qb.where("o.orgId", req.orgId);
           })
-          .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
+          .innerJoin(
+            "service_requests as s",
+            "o.serviceRequestId",
+            "s.id"
+          )
           .leftJoin(
             "service_status AS status",
             "s.serviceStatusCode",
@@ -645,14 +750,22 @@ const surveyOrderController = {
             "assigned_service_team.teamId",
             "teams.teamId"
           )
-          .leftJoin("users", "assigned_service_team.userId", "users.id")
+          .leftJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
           .leftJoin("users AS u", "o.createdBy", "u.id")
           .leftJoin(
             "property_units",
             "s.houseId",
             "property_units.id"
           )
-          .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+          .leftJoin(
+            "buildings_and_phases",
+            "property_units.buildingPhaseId",
+            "buildings_and_phases.id"
+          )
           .leftJoin(
             "service_problems",
             "s.id",
@@ -668,8 +781,16 @@ const surveyOrderController = {
             "service_problems.categoryId",
             "incident_categories.id"
           )
-          .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
-          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+          .leftJoin(
+            "user_house_allocation",
+            "s.houseId",
+            "user_house_allocation.houseId"
+          )
+          .leftJoin(
+            "users as assignUser",
+            "user_house_allocation.userId",
+            "assignUser.id"
+          )
           .select(
             "o.id AS surveyId",
             "o.serviceRequestId",
@@ -687,8 +808,11 @@ const surveyOrderController = {
             "assignUser.name  as Tenant Name",
             "o.displayId as SU No"
           )
-          .where({ "assigned_service_team.entityType": "survey_orders" })
-          .whereIn('s.projectId', projectIds)
+          .where({
+            "assigned_service_team.entityType":
+              "survey_orders",
+          })
+          .whereIn("s.projectId", projectIds)
           .groupBy([
             "o.id",
             "s.id",
@@ -699,7 +823,7 @@ const surveyOrderController = {
             "teams.teamId",
             "assigned_service_team.entityType",
             "assignUser.id",
-            "user_house_allocation.id"
+            "user_house_allocation.id",
           ]);
 
         // For Get Rows In Pagination With Offset and Limit
@@ -724,29 +848,39 @@ const surveyOrderController = {
             "requested_by.name as requestedBy",
             "assignUser.name  as Tenant Name",
             "o.displayId as SU No"
-
           )
           .from("survey_orders As o")
-          .where(qb => {
+          .where((qb) => {
             qb.where(filterList);
             if (newCreatedDate || newCreatedDateTo) {
               qb.whereBetween("o.createdAt", [
                 newCreatedDate,
-                newCreatedDateTo
+                newCreatedDateTo,
               ]);
             }
             if (completedFromDate || completedToDate) {
               qb.whereBetween("o.completedOn", [
                 completedFromDate,
-                completedToDate
+                completedToDate,
               ]);
             }
             if (dueFromDate || dueToDate) {
-              qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
+              qb.whereBetween("o.appointedDate", [
+                dueFromDate,
+                dueToDate,
+              ]);
             }
             qb.where("o.orgId", req.orgId);
-          }).where({ "assigned_service_team.entityType": "survey_orders" })
-          .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
+          })
+          .where({
+            "assigned_service_team.entityType":
+              "survey_orders",
+          })
+          .innerJoin(
+            "service_requests as s",
+            "o.serviceRequestId",
+            "s.id"
+          )
           .leftJoin("users AS u", "o.createdBy", "u.id")
           .leftJoin(
             "service_status AS status",
@@ -763,13 +897,21 @@ const surveyOrderController = {
             "assigned_service_team.teamId",
             "teams.teamId"
           )
-          .leftJoin("users", "assigned_service_team.userId", "users.id")
+          .leftJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
           .leftJoin(
             "property_units",
             "s.houseId",
             "property_units.id"
           )
-          .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+          .leftJoin(
+            "buildings_and_phases",
+            "property_units.buildingPhaseId",
+            "buildings_and_phases.id"
+          )
           .leftJoin(
             "service_problems",
             "s.id",
@@ -785,10 +927,18 @@ const surveyOrderController = {
             "service_problems.categoryId",
             "incident_categories.id"
           )
-          .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
-          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
-          .whereIn('s.projectId', projectIds)
-          .orderBy('o.id', 'desc')
+          .leftJoin(
+            "user_house_allocation",
+            "s.houseId",
+            "user_house_allocation.houseId"
+          )
+          .leftJoin(
+            "users as assignUser",
+            "user_house_allocation.userId",
+            "assignUser.id"
+          )
+          .whereIn("s.projectId", projectIds)
+          .orderBy("o.id", "desc")
           .offset(offset)
           .limit(per_page);
       } else if (
@@ -801,7 +951,12 @@ const surveyOrderController = {
         total = await knex
           .count("* as count")
           .from("survey_orders")
-          .where({ "survey_orders.serviceRequestId": serviceRequestId, "survey_orders.orgId": req.orgId, "assigned_service_team.entityType": "survey_orders" })
+          .where({
+            "survey_orders.serviceRequestId": serviceRequestId,
+            "survey_orders.orgId": req.orgId,
+            "assigned_service_team.entityType":
+              "survey_orders",
+          })
           .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
@@ -812,15 +967,31 @@ const surveyOrderController = {
             "survey_orders.id",
             "assigned_service_team.entityId"
           )
-          .leftJoin("users", "assigned_service_team.userId", "users.id")
-          .leftJoin("users as u", "survey_orders.createdBy", "u.id")
+          .leftJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
+          .leftJoin(
+            "users as u",
+            "survey_orders.createdBy",
+            "u.id"
+          )
           .leftJoin(
             "teams",
             "assigned_service_team.teamId",
             "teams.teamId"
           )
-          .leftJoin('user_house_allocation', 's.houseId', 'user_house_allocation.houseId')
-          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+          .leftJoin(
+            "user_house_allocation",
+            "s.houseId",
+            "user_house_allocation.houseId"
+          )
+          .leftJoin(
+            "users as assignUser",
+            "user_house_allocation.userId",
+            "assignUser.id"
+          )
 
           .groupBy([
             "service_requests.id",
@@ -831,7 +1002,7 @@ const surveyOrderController = {
             "teams.teamId",
             "assigned_service_team.entityType",
             "assignUser.id",
-            "user_house_allocation.id"
+            "user_house_allocation.id",
           ])
           .select([
             "survey_orders.id as S Id",
@@ -847,15 +1018,22 @@ const surveyOrderController = {
             "survey_orders.createdAt as Date Created",
             "teams.teamName as teamName",
             "assignUser.name  as Tenant Name",
-            "survey_orders.displayId as SU No"
+            "survey_orders.displayId as SU No",
           ])
-          .whereIn('service_requests.projectId', projectIds)
-
+          .whereIn(
+            "service_requests.projectId",
+            projectIds
+          );
 
         // For get the rows With pagination
         rows = await knex
           .from("survey_orders")
-          .where({ "survey_orders.serviceRequestId": serviceRequestId, "survey_orders.orgId": req.orgId, "assigned_service_team.entityType": "survey_orders" })
+          .where({
+            "survey_orders.serviceRequestId": serviceRequestId,
+            "survey_orders.orgId": req.orgId,
+            "assigned_service_team.entityType":
+              "survey_orders",
+          })
           .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
@@ -866,8 +1044,16 @@ const surveyOrderController = {
             "survey_orders.id",
             "assigned_service_team.entityId"
           )
-          .leftJoin("users", "assigned_service_team.userId", "users.id")
-          .leftJoin("users as u", "survey_orders.createdBy", "u.id")
+          .leftJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
+          .leftJoin(
+            "users as u",
+            "survey_orders.createdBy",
+            "u.id"
+          )
           .leftJoin(
             "service_status AS status",
             "service_requests.serviceStatusCode",
@@ -878,8 +1064,16 @@ const surveyOrderController = {
             "assigned_service_team.teamId",
             "teams.teamId"
           )
-          .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+          .leftJoin(
+            "user_house_allocation",
+            "service_requests.houseId",
+            "user_house_allocation.houseId"
+          )
+          .leftJoin(
+            "users as assignUser",
+            "user_house_allocation.userId",
+            "assignUser.id"
+          )
 
           .select([
             "survey_orders.id as S Id",
@@ -895,12 +1089,11 @@ const surveyOrderController = {
             "survey_orders.createdAt as Date Created",
             "teams.teamName as teamName",
             "assignUser.name  as Tenant Name",
-            "survey_orders.displayId as SU No"
-
+            "survey_orders.displayId as SU No",
           ])
           .offset(offset)
-          .whereIn('service_requests.projectId', projectIds)
-          .limit(per_page)
+          .whereIn("service_requests.projectId", projectIds)
+          .limit(per_page);
       } else {
         /* Get List of All survey order With out Filter */
 
@@ -918,8 +1111,16 @@ const surveyOrderController = {
             "survey_orders.id",
             "assigned_service_team.entityId"
           )
-          .leftJoin("users", "assigned_service_team.userId", "users.id")
-          .leftJoin("users as u", "survey_orders.createdBy", "u.id")
+          .leftJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
+          .leftJoin(
+            "users as u",
+            "survey_orders.createdBy",
+            "u.id"
+          )
           .leftJoin(
             "service_status AS status",
             "service_requests.serviceStatusCode",
@@ -930,8 +1131,16 @@ const surveyOrderController = {
             "assigned_service_team.teamId",
             "teams.teamId"
           )
-          .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+          .leftJoin(
+            "user_house_allocation",
+            "service_requests.houseId",
+            "user_house_allocation.houseId"
+          )
+          .leftJoin(
+            "users as assignUser",
+            "user_house_allocation.userId",
+            "assignUser.id"
+          )
 
           .groupBy([
             "service_requests.id",
@@ -942,11 +1151,14 @@ const surveyOrderController = {
             "status.id",
             "teams.teamId",
             "assignUser.id",
-            "user_house_allocation.id"
-
+            "user_house_allocation.id",
           ])
-          .where({ "survey_orders.orgId": req.orgId, "assigned_service_team.entityType": "survey_orders" })
-          .whereIn('service_requests.projectId', projectIds)
+          .where({
+            "survey_orders.orgId": req.orgId,
+            "assigned_service_team.entityType":
+              "survey_orders",
+          })
+          .whereIn("service_requests.projectId", projectIds)
 
           .select([
             "survey_orders.id as S Id",
@@ -979,8 +1191,16 @@ const surveyOrderController = {
             "survey_orders.id",
             "assigned_service_team.entityId"
           )
-          .leftJoin("users", "assigned_service_team.userId", "users.id")
-          .leftJoin("users as u", "survey_orders.createdBy", "u.id")
+          .leftJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
+          .leftJoin(
+            "users as u",
+            "survey_orders.createdBy",
+            "u.id"
+          )
           .leftJoin(
             "service_status AS status",
             "service_requests.serviceStatusCode",
@@ -991,8 +1211,16 @@ const surveyOrderController = {
             "assigned_service_team.teamId",
             "teams.teamId"
           )
-          .leftJoin('user_house_allocation', 'service_requests.houseId', 'user_house_allocation.houseId')
-          .leftJoin('users as assignUser', 'user_house_allocation.userId', 'assignUser.id')
+          .leftJoin(
+            "user_house_allocation",
+            "service_requests.houseId",
+            "user_house_allocation.houseId"
+          )
+          .leftJoin(
+            "users as assignUser",
+            "user_house_allocation.userId",
+            "assignUser.id"
+          )
 
           .select([
             "survey_orders.id as S Id",
@@ -1010,10 +1238,13 @@ const surveyOrderController = {
             "assignUser.name  as Tenant Name",
             "survey_orders.displayId as SU No",
             "service_requests.displayId as SR#",
-
           ])
-          .where({ "survey_orders.orgId": req.orgId, "assigned_service_team.entityType": "survey_orders" })
-          .whereIn('service_requests.projectId', projectIds)
+          .where({
+            "survey_orders.orgId": req.orgId,
+            "assigned_service_team.entityType":
+              "survey_orders",
+          })
+          .whereIn("service_requests.projectId", projectIds)
 
           .offset(offset)
           .limit(per_page);
@@ -1027,11 +1258,11 @@ const surveyOrderController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      pagination.data = _.uniqBy(rows, 'S Id');
+      pagination.data = _.uniqBy(rows, "S Id");
 
       res.status(200).json({
         data: pagination,
-        message: "Survey Orders List"
+        message: "Survey Orders List",
       });
     } catch (err) {
       console.log(
@@ -1039,16 +1270,22 @@ const surveyOrderController = {
         err
       );
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
   getSurveyOrderListNew: async (req, res) => {
     try {
       let filterList = req.body;
-      let total
-      let rows
-      const accessibleProjects = req.userProjectResources[0].projects
+      let total;
+      let rows;
+      const accessibleProjects =
+        req.userProjectResources[0].projects;
       let projectIds = req.accessibleProjects;
 
       let pagination = {};
@@ -1065,47 +1302,72 @@ const surveyOrderController = {
       // console.log("duetoDate", compToDate);
       dueToDate = new Date(dueToDate).getTime();
 
-      let filters = {}
+      let filters = {};
       if (filterList.serviceRequestId) {
-        filters['s.displayId'] = filterList.serviceRequestId;
+        filters["s.displayId"] =
+          filterList.serviceRequestId;
       }
       if (filterList.surveyOrderId) {
-        filters['o.displayId'] = filterList.surveyOrderId
+        filters["o.displayId"] = filterList.surveyOrderId;
       }
       if (filterList.status) {
-        filters['o.surveyOrderStatus'] = filterList.status;
+        filters["o.surveyOrderStatus"] = filterList.status;
       }
       if (filterList.company) {
-        filters['o.companyId'] = filterList.company;
+        filters["o.companyId"] = filterList.company;
       }
       if (filterList.project) {
-        filters['property_units.projectId'] = filterList.project;
+        filters["property_units.projectId"] =
+          filterList.project;
       }
 
       [total, rows] = await Promise.all([
         knex
           .count("* as count")
           .from("survey_orders as o")
-          .where(qb => {
+          .where((qb) => {
             qb.where(filters);
             if (dueFromDate || dueToDate) {
-              qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
+              qb.whereBetween("o.appointedDate", [
+                dueFromDate,
+                dueToDate,
+              ]);
             }
-            qb.where("o.orgId", req.orgId)
+            qb.where("o.orgId", req.orgId);
             if (filterList.description) {
-              qb.where('s.description', 'ilike', `%${filterList.description}%`)
+              qb.where(
+                "s.description",
+                "ilike",
+                `%${filterList.description}%`
+              );
             }
             if (filterList.building) {
-              qb.where('buildings_and_phases.description', 'ilike', `%${filterList.building}%`)
+              qb.where(
+                "buildings_and_phases.description",
+                "ilike",
+                `%${filterList.building}%`
+              );
             }
             if (filterList.unitNo) {
-              qb.where('property_units.unitNumber', 'ilike', `%${filterList.unitNo}%`)
+              qb.where(
+                "property_units.unitNumber",
+                "ilike",
+                `%${filterList.unitNo}%`
+              );
             }
             if (filterList.tenantName) {
-              qb.where('assignUser.name', 'ilike', `%${filterList.tenantName}%`)
+              qb.where(
+                "assignUser.name",
+                "ilike",
+                `%${filterList.tenantName}%`
+              );
             }
           })
-          .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
+          .innerJoin(
+            "service_requests as s",
+            "o.serviceRequestId",
+            "s.id"
+          )
           .leftJoin(
             "service_status AS status",
             "s.serviceStatusCode",
@@ -1121,14 +1383,22 @@ const surveyOrderController = {
             "assigned_service_team.teamId",
             "teams.teamId"
           )
-          .leftJoin("users", "assigned_service_team.userId", "users.id")
+          .leftJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
           .leftJoin("users AS u", "o.createdBy", "u.id")
           .leftJoin(
             "property_units",
             "s.houseId",
             "property_units.id"
           )
-          .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
+          .leftJoin(
+            "buildings_and_phases",
+            "property_units.buildingPhaseId",
+            "buildings_and_phases.id"
+          )
           .leftJoin(
             "service_problems",
             "s.id",
@@ -1144,10 +1414,21 @@ const surveyOrderController = {
             "service_problems.categoryId",
             "incident_categories.id"
           )
-          .leftJoin('companies', 'o.companyId', 'companies.id')
-          .leftJoin('projects', 'property_units.projectId', 'projects.id')
-          .where({ "assigned_service_team.entityType": "survey_orders" })
-          .whereIn('s.projectId', projectIds)
+          .leftJoin(
+            "companies",
+            "o.companyId",
+            "companies.id"
+          )
+          .leftJoin(
+            "projects",
+            "property_units.projectId",
+            "projects.id"
+          )
+          .where({
+            "assigned_service_team.entityType":
+              "survey_orders",
+          })
+          .whereIn("s.projectId", projectIds)
           .groupBy([
             "o.id",
             "s.id",
@@ -1158,114 +1439,158 @@ const surveyOrderController = {
             "teams.teamId",
             "assigned_service_team.entityType",
             "companies.id",
+            "projects.id",
+          ]),
+        knex
+          .select(
+            "o.id as S Id",
+            "s.description as Description",
+            "o.appointedDate as Appointment Date",
+            "o.appointedTime as Appointment Time",
+            "users.name as Assigned To",
+            "s.id as SR Id",
+            "s.priority as Priority",
+            "u.name as Created By",
+            "o.surveyOrderStatus as Status",
+            "o.createdAt as Date Created",
+            "teams.teamName as teamName",
+            "buildings_and_phases.buildingPhaseCode",
+            "buildings_and_phases.description as buildingDescription",
+            "property_units.unitNumber",
+            "incident_categories.descriptionEng as problemDescription",
+            "requested_by.name as requestedBy",
+            "o.displayId as SU#",
+            "s.displayId as SR#",
+            "companies.companyName",
+            "companies.companyId",
+            "projects.project",
+            "projects.projectName"
+          )
+          .from("survey_orders As o")
+          .where((qb) => {
+            qb.where(filters);
+            if (dueFromDate || dueToDate) {
+              qb.whereBetween("o.appointedDate", [
+                dueFromDate,
+                dueToDate,
+              ]);
+            }
+            qb.where("o.orgId", req.orgId);
+            if (filterList.description) {
+              qb.where(
+                "s.description",
+                "ilike",
+                `%${filterList.description}%`
+              );
+            }
+            if (filterList.building) {
+              qb.where(
+                "buildings_and_phases.description",
+                "ilike",
+                `%${filterList.building}%`
+              );
+            }
+            if (filterList.unitNo) {
+              qb.where(
+                "property_units.unitNumber",
+                "ilike",
+                `%${filterList.unitNo}%`
+              );
+            }
+            if (filterList.tenantName) {
+              qb.where(
+                "assignUser.name",
+                "ilike",
+                `%${filterList.tenantName}%`
+              );
+            }
+          })
+          .where({
+            "assigned_service_team.entityType":
+              "survey_orders",
+          })
+          .innerJoin(
+            "service_requests as s",
+            "o.serviceRequestId",
+            "s.id"
+          )
+          .leftJoin("users AS u", "o.createdBy", "u.id")
+          .leftJoin(
+            "service_status AS status",
+            "s.serviceStatusCode",
+            "status.statusCode"
+          )
+          .leftJoin(
+            "assigned_service_team",
+            "o.id",
+            "assigned_service_team.entityId"
+          )
+          .leftJoin(
+            "teams",
+            "assigned_service_team.teamId",
+            "teams.teamId"
+          )
+          .leftJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
+          .leftJoin(
+            "property_units",
+            "s.houseId",
+            "property_units.id"
+          )
+          .leftJoin(
+            "buildings_and_phases",
+            "property_units.buildingPhaseId",
+            "buildings_and_phases.id"
+          )
+          .leftJoin(
+            "service_problems",
+            "s.id",
+            "service_problems.serviceRequestId"
+          )
+          .leftJoin(
+            "requested_by",
+            "s.requestedBy",
+            "requested_by.id"
+          )
+          .leftJoin(
+            "incident_categories",
+            "service_problems.categoryId",
+            "incident_categories.id"
+          )
+          .leftJoin(
+            "companies",
+            "o.companyId",
+            "companies.id"
+          )
+          .leftJoin(
+            "projects",
+            "property_units.projectId",
             "projects.id"
-          ]), knex
-            .select(
-              "o.id as S Id",
-              "s.description as Description",
-              "o.appointedDate as Appointment Date",
-              "o.appointedTime as Appointment Time",
-              "users.name as Assigned To",
-              "s.id as SR Id",
-              "s.priority as Priority",
-              "u.name as Created By",
-              "o.surveyOrderStatus as Status",
-              "o.createdAt as Date Created",
-              "teams.teamName as teamName",
-              "buildings_and_phases.buildingPhaseCode",
-              "buildings_and_phases.description as buildingDescription",
-              "property_units.unitNumber",
-              "incident_categories.descriptionEng as problemDescription",
-              "requested_by.name as requestedBy",
-              "o.displayId as SU#",
-              "s.displayId as SR#",
-              "companies.companyName",
-              "companies.companyId",
-              "projects.project",
-              "projects.projectName",
-            )
-            .from("survey_orders As o")
-            .where(qb => {
-              qb.where(filters);
-              if (dueFromDate || dueToDate) {
-                qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
-              }
-              qb.where("o.orgId", req.orgId);
-              if (filterList.description) {
-                qb.where('s.description', 'ilike', `%${filterList.description}%`)
-              }
-              if (filterList.building) {
-                qb.where('buildings_and_phases.description', 'ilike', `%${filterList.building}%`)
-              }
-              if (filterList.unitNo) {
-                qb.where('property_units.unitNumber', 'ilike', `%${filterList.unitNo}%`)
-              }
-              if (filterList.tenantName) {
-                qb.where('assignUser.name', 'ilike', `%${filterList.tenantName}%`)
-              }
-            }).where({ "assigned_service_team.entityType": "survey_orders" })
-            .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
-            .leftJoin("users AS u", "o.createdBy", "u.id")
-            .leftJoin(
-              "service_status AS status",
-              "s.serviceStatusCode",
-              "status.statusCode"
-            )
-            .leftJoin(
-              "assigned_service_team",
-              "o.id",
-              "assigned_service_team.entityId"
-            )
-            .leftJoin(
-              "teams",
-              "assigned_service_team.teamId",
-              "teams.teamId"
-            )
-            .leftJoin("users", "assigned_service_team.userId", "users.id")
-            .leftJoin(
-              "property_units",
-              "s.houseId",
-              "property_units.id"
-            )
-            .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "buildings_and_phases.id")
-            .leftJoin(
-              "service_problems",
-              "s.id",
-              "service_problems.serviceRequestId"
-            )
-            .leftJoin(
-              "requested_by",
-              "s.requestedBy",
-              "requested_by.id"
-            )
-            .leftJoin(
-              "incident_categories",
-              "service_problems.categoryId",
-              "incident_categories.id"
-            )
-            .leftJoin('companies', 'o.companyId', 'companies.id')
-            .leftJoin('projects', 'property_units.projectId', 'projects.id')
-            .groupBy([
-              "o.id",
-              "s.id",
-              "status.descriptionEng",
-              "status.statusCode",
-              "u.id",
-              "users.id",
-              "teams.teamId",
-              "assigned_service_team.entityType",
-              "companies.id",
-              "projects.id",
-              "buildings_and_phases.id",
-              "property_units.id",
-              "incident_categories.id",
-              "requested_by.id"
-
-            ])
-            .whereIn('s.projectId', projectIds)
-            .offset(offset)
-            .limit(per_page)
-      ])
+          )
+          .groupBy([
+            "o.id",
+            "s.id",
+            "status.descriptionEng",
+            "status.statusCode",
+            "u.id",
+            "users.id",
+            "teams.teamId",
+            "assigned_service_team.entityType",
+            "companies.id",
+            "projects.id",
+            "buildings_and_phases.id",
+            "property_units.id",
+            "incident_categories.id",
+            "requested_by.id",
+          ])
+          .whereIn("s.projectId", projectIds)
+          .orderBy("o.createdAt", "desc")
+          .offset(offset)
+          .limit(per_page),
+      ]);
 
       let count = total.length;
       pagination.total = count;
@@ -1278,13 +1603,20 @@ const surveyOrderController = {
       pagination.data = rows;
 
       return res.status(200).json({
-        data: pagination
-      })
-
+        data: pagination,
+      });
     } catch (err) {
-      console.log("[controllers][surveyOrder][addSurveyOrder] :  Error", err);
+      console.log(
+        "[controllers][surveyOrder][addSurveyOrder] :  Error",
+        err
+      );
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1297,7 +1629,7 @@ const surveyOrderController = {
       let surveyOrderid = req.body.id;
 
       const schema = Joi.object().keys({
-        id: Joi.string().required()
+        id: Joi.string().required(),
       });
       let result = Joi.validate(req.body, schema);
       console.log(
@@ -1305,14 +1637,27 @@ const surveyOrderController = {
         result
       );
 
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
-      let results = await knex.raw(`select "survey_orders"."id" as "SId","service_requests"."description" as "description","survey_orders"."appointedDate" as "appointedDate","survey_orders"."appointedTime" as "appointedTime","users"."name" as "assignedTo","users"."email" as "email", "users"."mobileNo" as "mobileNo","teams"."teamName" as "teamName","service_requests"."id" as "SRId","service_requests"."priority" as "priority","survey_orders"."createdBy" as "createdBy", "survey_orders"."surveyOrderStatus" as "status","survey_orders"."createdAt" as "dateCreated" from "survey_orders" inner join "service_requests" on "survey_orders"."serviceRequestId" = "service_requests"."id" left join "assigned_service_team" on "survey_orders"."id" = "assigned_service_team"."entityId" left join "teams" on "assigned_service_team"."teamId" = "teams"."teamId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "survey_orders"."orgId" = ${req.orgId} and "survey_orders"."id" = ${surveyOrderid} and "assigned_service_team"."entityType"='survey_orders'`)
-      let othersUserData = await knex.raw(`select "assigned_service_additional_users"."userId" as "userId","users"."name" as "addUsers","users"."email" as "email", "users"."mobileNo" as "mobileNo" from "assigned_service_additional_users" left join "users" on "assigned_service_additional_users"."userId" = "users"."id" where "assigned_service_additional_users"."orgId" = ${req.orgId} and "assigned_service_additional_users"."entityId" = ${surveyOrderid} and "assigned_service_additional_users"."entityType"='survey_orders'`)
+      let results = await knex.raw(
+        `select "survey_orders"."id" as "SId","service_requests"."description" as "description","survey_orders"."appointedDate" as "appointedDate","survey_orders"."appointedTime" as "appointedTime","users"."name" as "assignedTo","users"."email" as "email", "users"."mobileNo" as "mobileNo","teams"."teamName" as "teamName","service_requests"."id" as "SRId","service_requests"."priority" as "priority","survey_orders"."createdBy" as "createdBy", "survey_orders"."surveyOrderStatus" as "status","survey_orders"."createdAt" as "dateCreated" from "survey_orders" inner join "service_requests" on "survey_orders"."serviceRequestId" = "service_requests"."id" left join "assigned_service_team" on "survey_orders"."id" = "assigned_service_team"."entityId" left join "teams" on "assigned_service_team"."teamId" = "teams"."teamId" left join "users" on "assigned_service_team"."userId" = "users"."id" where "survey_orders"."orgId" = ${req.orgId} and "survey_orders"."id" = ${surveyOrderid} and "assigned_service_team"."entityType"='survey_orders'`
+      );
+      let othersUserData = await knex.raw(
+        `select "assigned_service_additional_users"."userId" as "userId","users"."name" as "addUsers","users"."email" as "email", "users"."mobileNo" as "mobileNo" from "assigned_service_additional_users" left join "users" on "assigned_service_additional_users"."userId" = "users"."id" where "assigned_service_additional_users"."orgId" = ${req.orgId} and "assigned_service_additional_users"."entityId" = ${surveyOrderid} and "assigned_service_additional_users"."entityType"='survey_orders'`
+      );
 
       console.log("results", results.rows);
 
@@ -1330,10 +1675,9 @@ const surveyOrderController = {
       let additionalUsers = othersUserData.rows;
       let resultData = { ...results.rows, additionalUsers };
 
-
       return res.status(200).json({
         data: { resultData },
-        message: "Survey Order Details"
+        message: "Survey Order Details",
       });
 
       //});
@@ -1344,7 +1688,12 @@ const surveyOrderController = {
       );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1354,19 +1703,31 @@ const surveyOrderController = {
     const filename = req.body.filename;
     const type = req.body.type;
     try {
-      const uploadUrlData = await imageHelper.getUploadURL(mimeType, filename, type);
+      const uploadUrlData = await imageHelper.getUploadURL(
+        mimeType,
+        filename,
+        type
+      );
 
       res.status(200).json({
         data: {
-          uploadUrlData: uploadUrlData
+          uploadUrlData: uploadUrlData,
         },
-        message: "Upload Url generated succesfully!"
+        message: "Upload Url generated succesfully!",
       });
     } catch (err) {
-      console.log("[controllers][service][getImageUploadUrl] :  Error", err);
+      console.log(
+        "[controllers][service][getImageUploadUrl] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1379,25 +1740,35 @@ const surveyOrderController = {
       let noteImagesData = [];
       let userId = req.me.id;
 
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         let upNotesPayload = _.omit(req.body, ["images"]);
-        console.log("[controllers][surveyOrder][updateRemarksNotes] : Request Body", upNotesPayload);
+        console.log(
+          "[controllers][surveyOrder][updateRemarksNotes] : Request Body",
+          upNotesPayload
+        );
 
         // validate keys
         const schema = Joi.object().keys({
           entityId: Joi.number().required(),
           entityType: Joi.string().required(),
-          description: Joi.string().required()
+          description: Joi.string().required(),
         });
 
         // // validate params
         const result = Joi.validate(upNotesPayload, schema);
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           res.status(400).json({
             errors: [
-              { code: "VALIDATION ERRORS", message: result.message.error }
-            ]
+              {
+                code: "VALIDATION ERRORS",
+                message: result.message.error,
+              },
+            ],
           });
         }
 
@@ -1410,9 +1781,12 @@ const surveyOrderController = {
           orgId: req.orgId,
           createdBy: userId,
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
         };
-        console.log("[controllers][surveyOrder][postRemarksNotes] : Insert Data", insertData);
+        console.log(
+          "[controllers][surveyOrder][postRemarksNotes] : Insert Data",
+          insertData
+        );
 
         const resultRemarksNotes = await knex
           .insert(insertData)
@@ -1422,10 +1796,14 @@ const surveyOrderController = {
         notesData = resultRemarksNotes;
         remarkNoteId = notesData[0];
 
-
-        let usernameRes = await knex('users').where({ id: notesData[0].createdBy }).select('name')
+        let usernameRes = await knex("users")
+          .where({ id: notesData[0].createdBy })
+          .select("name");
         let username = usernameRes[0].name;
-        notesData = { ...notesData[0], createdBy: username }
+        notesData = {
+          ...notesData[0],
+          createdBy: username,
+        };
 
         /*INSERT IMAGE TABLE DATA OPEN */
 
@@ -1439,7 +1817,7 @@ const surveyOrderController = {
                 entityType: upNotesPayload.entityType,
                 createdAt: currentTime,
                 updatedAt: currentTime,
-                orgId: req.orgId
+                orgId: req.orgId,
               })
               .returning(["*"])
               .transacting(trx)
@@ -1451,9 +1829,12 @@ const surveyOrderController = {
 
         /*INSERT IMAGE TABLE DATA CLOSE */
         if (problemImagesData.length) {
-          notesData = { ...notesData, s3Url: problemImagesData[0].s3Url }
+          notesData = {
+            ...notesData,
+            s3Url: problemImagesData[0].s3Url,
+          };
         } else {
-          notesData = { ...notesData, s3Url: '' }
+          notesData = { ...notesData, s3Url: "" };
         }
 
         trx.commit;
@@ -1461,17 +1842,25 @@ const surveyOrderController = {
         res.status(200).json({
           data: {
             remarksNotesResponse: {
-              notesData: [notesData]
-            }
+              notesData: [notesData],
+            },
           },
-          message: "Remarks Notes updated successfully !"
+          message: "Remarks Notes updated successfully !",
         });
       });
     } catch (err) {
-      console.log("[controllers][surveyOrder][addRemarks]:  : Error", err);
+      console.log(
+        "[controllers][surveyOrder][addRemarks]:  : Error",
+        err
+      );
 
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1482,65 +1871,101 @@ const surveyOrderController = {
 
       const schema = Joi.object().keys({
         entityId: Joi.number().required(),
-        entityType: Joi.string().required()
+        entityType: Joi.string().required(),
       });
 
       let result = Joi.validate(remarksData, schema);
-      console.log("[controllers][surveyOrder][getRemarksNotes]: JOi Result", result);
+      console.log(
+        "[controllers][surveyOrder][getRemarksNotes]: JOi Result",
+        result
+      );
 
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }]
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
       let entityId = remarksData.entityId;
       let entityType = remarksData.entityType;
 
-      let remarksNotesResult = await knex.raw(`select "remarks_master"."id","remarks_master"."description","remarks_master"."createdAt","remarks_master"."createdBy","users"."name" as "createdBy" from "remarks_master"  inner join "users" on "remarks_master"."createdBy" = "users"."id"  where "remarks_master"."orgId" = ${req.orgId} and "remarks_master"."entityId" = ${entityId} and "remarks_master"."entityType" = '${entityType}' and "remarks_master"."isActive" = 'true'  ORDER BY "remarks_master"."id"  DESC LIMIT 15 `)
+      let remarksNotesResult = await knex.raw(
+        `select "remarks_master"."id","remarks_master"."description","remarks_master"."createdAt","remarks_master"."createdBy","users"."name" as "createdBy" from "remarks_master"  inner join "users" on "remarks_master"."createdBy" = "users"."id"  where "remarks_master"."orgId" = ${req.orgId} and "remarks_master"."entityId" = ${entityId} and "remarks_master"."entityType" = '${entityType}' and "remarks_master"."isActive" = 'true'  ORDER BY "remarks_master"."id"  DESC LIMIT 15 `
+      );
       // let remarksNotesResult = await knex.raw(`select "remarks_master"."id","remarks_master"."description","remarks_master"."createdAt","remarks_master"."createdBy","images"."s3Url","users"."name" as "createdBy" from "remarks_master"  inner join "users" on "remarks_master"."createdBy" = "users"."id"  left join "images" on "remarks_master"."id" = "images"."entityId" where "remarks_master"."orgId" = ${req.orgId} and "remarks_master"."entityId" = ${entityId} and "remarks_master"."entityType" = '${entityType}' and "remarks_master"."isActive" = 'true' and "images"."entityType" = 'survey_order_notes' and "images"."orgId" = ${req.orgId} ORDER BY "remarks_master"."id"  DESC LIMIT 15 `)
       remarksNotesList = remarksNotesResult.rows;
       console.log("remakrs rows", remarksNotesList);
 
-      const Parallel = require('async-parallel');
-      remarksNotesList = await Parallel.map(remarksNotesList, async item => {
-        let images = await knex.raw(`select * from "images" where "images"."entityId"= ${item.id} and "images"."entityType" = '${entityType}' and "images"."orgId" = ${req.orgId} `);
-        item.images = images.rows;
-        return item;
-      });
+      const Parallel = require("async-parallel");
+      remarksNotesList = await Parallel.map(
+        remarksNotesList,
+        async (item) => {
+          let images = await knex.raw(
+            `select * from "images" where "images"."entityId"= ${item.id} and "images"."entityType" = '${entityType}' and "images"."orgId" = ${req.orgId} `
+          );
+          item.images = images.rows;
+          return item;
+        }
+      );
 
       console.log("remarksList", remarksNotesList);
 
       return res.status(200).json({
         data: remarksNotesList,
-        message: "Remarks Notes Details"
+        message: "Remarks Notes Details",
       });
-
     } catch (err) {
-      console.log("[controllers][surveyOrder][getRemarks]:  : Error", err);
+      console.log(
+        "[controllers][surveyOrder][getRemarks]:  : Error",
+        err
+      );
 
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
   deleteRemarksNotes: async (req, res) => {
     try {
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         let currentTime = new Date().getTime();
         const remarkPayload = req.body;
         const schema = Joi.object().keys({
-          remarkId: Joi.number().required()
+          remarkId: Joi.number().required(),
         });
 
         let result = Joi.validate(remarkPayload, schema);
-        console.log("[controllers][surveyOrder][deleteRemarks]: JOi Result", result);
+        console.log(
+          "[controllers][surveyOrder][deleteRemarks]: JOi Result",
+          result
+        );
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
 
@@ -1549,10 +1974,10 @@ const surveyOrderController = {
           .update({
             isActive: "false",
             updatedAt: currentTime,
-            orgId: req.orgId
+            orgId: req.orgId,
           })
           .where({
-            id: remarkPayload.remarkId
+            id: remarkPayload.remarkId,
           })
           .returning(["*"])
           .transacting(trx)
@@ -1562,16 +1987,24 @@ const surveyOrderController = {
 
         return res.status(200).json({
           data: {
-            deletedRemark: updatedRemark
+            deletedRemark: updatedRemark,
           },
-          message: "Remarks deleted successfully !"
+          message: "Remarks deleted successfully !",
         });
       });
     } catch (err) {
-      console.log("[controllers][surveyOrder][deleteRemarks]:  : Error", err);
+      console.log(
+        "[controllers][surveyOrder][deleteRemarks]:  : Error",
+        err
+      );
 
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1620,38 +2053,54 @@ const surveyOrderController = {
           servicePayload.status != "" &&
           servicePayload.status
         ) {
-          filterList["o.surveyOrderStatus"] = servicePayload.status;
+          filterList["o.surveyOrderStatus"] =
+            servicePayload.status;
         }
 
         // PRIORITY
-        if (servicePayload.priority != "undefined" && servicePayload.priority) {
-          filterList["s.priority"] = servicePayload.priority;
+        if (
+          servicePayload.priority != "undefined" &&
+          servicePayload.priority
+        ) {
+          filterList["s.priority"] =
+            servicePayload.priority;
         }
 
         // LOCATION
-        if (servicePayload.location != "undefined" && servicePayload.location) {
-          filterList["s.location"] = servicePayload.location;
+        if (
+          servicePayload.location != "undefined" &&
+          servicePayload.location
+        ) {
+          filterList["s.location"] =
+            servicePayload.location;
         }
 
         // ARCHIVE
-        if (servicePayload.archive != "undefined" && servicePayload.archive) {
+        if (
+          servicePayload.archive != "undefined" &&
+          servicePayload.archive
+        ) {
           filterList["o.archive"] = servicePayload.archive;
         }
 
         // ASSIGNED BY
         if (
           (servicePayload.assignedBy != "undefined",
-            servicePayload.assignedBy != "" && servicePayload.assignedBy)
+          servicePayload.assignedBy != "" &&
+            servicePayload.assignedBy)
         ) {
-          filterList["o.createdBy"] = servicePayload.assignedBy;
+          filterList["o.createdBy"] =
+            servicePayload.assignedBy;
         }
 
         // CREATED BY
         if (
           (servicePayload.createdBy != "undefined",
-            servicePayload.createdBy != "" && servicePayload.createdBy)
+          servicePayload.createdBy != "" &&
+            servicePayload.createdBy)
         ) {
-          filterList["o.createdBy"] = servicePayload.createdBy;
+          filterList["o.createdBy"] =
+            servicePayload.createdBy;
         }
 
         // REQUESTED BY
@@ -1660,7 +2109,8 @@ const surveyOrderController = {
           servicePayload.requestedBy != "" &&
           servicePayload.requestedBy
         ) {
-          filterList["s.requestedBy"] = servicePayload.requestedBy;
+          filterList["s.requestedBy"] =
+            servicePayload.requestedBy;
         }
 
         // COMPLETED BY
@@ -1669,7 +2119,8 @@ const surveyOrderController = {
           servicePayload.completedBy != "" &&
           servicePayload.completedBy
         ) {
-          filterList["o.completedBy"] = servicePayload.completedBy;
+          filterList["o.completedBy"] =
+            servicePayload.completedBy;
         }
 
         // SURVEY BETWEEN DATES
@@ -1698,7 +2149,9 @@ const surveyOrderController = {
         ) {
           let compFromDate = servicePayload.completedFrom;
           console.log("comfromDate", compFromDate);
-          completedFromDate = new Date(compFromDate).getTime();
+          completedFromDate = new Date(
+            compFromDate
+          ).getTime();
 
           let compToDate = servicePayload.completedTo;
           console.log("comptoDate", compToDate);
@@ -1731,7 +2184,8 @@ const surveyOrderController = {
           servicePayload.assignedTo != "" &&
           servicePayload.assignedTo
         ) {
-          filterList["st.userId"] = servicePayload.assignedTo;
+          filterList["st.userId"] =
+            servicePayload.assignedTo;
         }
         console.log("Filter Query", filterList);
 
@@ -1741,26 +2195,33 @@ const surveyOrderController = {
         total = await knex
           .count("* as count")
           .from("survey_orders as o")
-          .where(qb => {
+          .where((qb) => {
             qb.where(filterList);
             if (newCreatedDate || newCreatedDateTo) {
               qb.whereBetween("o.createdAt", [
                 newCreatedDate,
-                newCreatedDateTo
+                newCreatedDateTo,
               ]);
             }
             if (completedFromDate || completedToDate) {
               qb.whereBetween("o.completedOn", [
                 completedFromDate,
-                completedToDate
+                completedToDate,
               ]);
             }
             if (dueFromDate || dueToDate) {
-              qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
+              qb.whereBetween("o.appointedDate", [
+                dueFromDate,
+                dueToDate,
+              ]);
             }
             qb.where("orgId", req.orgId);
           })
-          .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
+          .innerJoin(
+            "service_requests as s",
+            "o.serviceRequestId",
+            "s.id"
+          )
           .leftJoin(
             "service_status AS status",
             "o.surveyOrderStatus",
@@ -1784,7 +2245,7 @@ const surveyOrderController = {
             "s.id",
             "status.descriptionEng",
             "status.statusCode",
-            "u.id"
+            "u.id",
           ]);
 
         // For Get Rows In Pagination With Offset and Limit
@@ -1801,26 +2262,33 @@ const surveyOrderController = {
             "o.createdAt as Date Created"
           )
           .from("survey_orders As o")
-          .where(qb => {
+          .where((qb) => {
             qb.where(filterList);
             if (newCreatedDate || newCreatedDateTo) {
               qb.whereBetween("o.createdAt", [
                 newCreatedDate,
-                newCreatedDateTo
+                newCreatedDateTo,
               ]);
             }
             if (completedFromDate || completedToDate) {
               qb.whereBetween("o.completedOn", [
                 completedFromDate,
-                completedToDate
+                completedToDate,
               ]);
             }
             if (dueFromDate || dueToDate) {
-              qb.whereBetween("o.appointedDate", [dueFromDate, dueToDate]);
+              qb.whereBetween("o.appointedDate", [
+                dueFromDate,
+                dueToDate,
+              ]);
             }
             qb.where("orgId", req.orgId);
           })
-          .innerJoin("service_requests as s", "o.serviceRequestId", "s.id")
+          .innerJoin(
+            "service_requests as s",
+            "o.serviceRequestId",
+            "s.id"
+          )
           .leftJoin(
             "service_status AS status",
             "o.surveyOrderStatus",
@@ -1831,7 +2299,11 @@ const surveyOrderController = {
             "s.id",
             "assigned_service_team.entityId"
           )
-          .innerJoin("users", "assigned_service_team.userId", "users.id")
+          .innerJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
           .leftJoin("users AS u", "o.createdBy", "u.id")
           .offset(offset)
           .limit(per_page);
@@ -1845,7 +2317,10 @@ const surveyOrderController = {
         total = await knex
           .count("* as count")
           .from("survey_orders")
-          .where({ serviceRequestId: serviceRequestId, orgId: req.orgId })
+          .where({
+            serviceRequestId: serviceRequestId,
+            orgId: req.orgId,
+          })
           .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
@@ -1856,12 +2331,16 @@ const surveyOrderController = {
             "service_requests.id",
             "assigned_service_team.entityId"
           )
-          .innerJoin("users", "assigned_service_team.userId", "users.id")
+          .innerJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
           .groupBy([
             "service_requests.id",
             "survey_orders.id",
             "assigned_service_team.id",
-            "users.id"
+            "users.id",
           ])
           .select([
             "survey_orders.id as S Id",
@@ -1872,14 +2351,17 @@ const surveyOrderController = {
             "service_requests.priority as Priority",
             "survey_orders.createdBy as Created by",
             "survey_orders.surveyOrderStatus as Status",
-            "survey_orders.createdAt as Date Created"
+            "survey_orders.createdAt as Date Created",
           ]);
 
         // For get the rows With pagination
         rows = await knex
           .select()
           .from("survey_orders")
-          .where({ serviceRequestId: serviceRequestId, orgId: req.orgId })
+          .where({
+            serviceRequestId: serviceRequestId,
+            orgId: req.orgId,
+          })
           .innerJoin(
             "service_requests",
             "survey_orders.serviceRequestId",
@@ -1890,7 +2372,11 @@ const surveyOrderController = {
             "service_requests.id",
             "assigned_service_team.entityId"
           )
-          .innerJoin("users", "assigned_service_team.userId", "users.id")
+          .innerJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
           .select([
             "survey_orders.id as S Id",
             "service_requests.description as Description",
@@ -1900,7 +2386,7 @@ const surveyOrderController = {
             "service_requests.priority as Priority",
             "survey_orders.createdBy as Created by",
             "survey_orders.surveyOrderStatus as Status",
-            "survey_orders.createdAt as Date Created"
+            "survey_orders.createdAt as Date Created",
           ])
           .offset(offset)
           .limit(per_page);
@@ -1921,13 +2407,17 @@ const surveyOrderController = {
             "service_requests.id",
             "assigned_service_team.entityId"
           )
-          .innerJoin("users", "assigned_service_team.userId", "users.id")
+          .innerJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
           .where({ orgId: req.orgId })
           .groupBy([
             "service_requests.id",
             "survey_orders.id",
             "assigned_service_team.id",
-            "users.id"
+            "users.id",
           ])
           .select([
             "survey_orders.id as S Id",
@@ -1938,7 +2428,7 @@ const surveyOrderController = {
             "service_requests.priority as Priority",
             "survey_orders.createdBy as Created by",
             "survey_orders.surveyOrderStatus as Status",
-            "survey_orders.createdAt as Date Created"
+            "survey_orders.createdAt as Date Created",
           ]);
 
         // For get the rows With pagination
@@ -1955,7 +2445,11 @@ const surveyOrderController = {
             "service_requests.id",
             "assigned_service_team.entityId"
           )
-          .innerJoin("users", "assigned_service_team.userId", "users.id")
+          .innerJoin(
+            "users",
+            "assigned_service_team.userId",
+            "users.id"
+          )
 
           .select([
             "survey_orders.id as S Id",
@@ -1966,7 +2460,7 @@ const surveyOrderController = {
             "service_requests.priority as Priority",
             "survey_orders.createdBy as Created by",
             "survey_orders.surveyOrderStatus as Status",
-            "survey_orders.createdAt as Date Created"
+            "survey_orders.createdAt as Date Created",
           ])
           .where({ orgId: req.orgId })
           .offset(offset)
@@ -1976,17 +2470,27 @@ const surveyOrderController = {
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
-      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "uploads/SurveyOrders-" + Date.now() + ".csv";
+      XLSX.write(wb, {
+        bookType: "csv",
+        bookSST: true,
+        type: "base64",
+      });
+      let filename =
+        "uploads/SurveyOrders-" + Date.now() + ".csv";
       let check = XLSX.writeFile(wb, filename);
 
       return res.status(200).json({
         data: rows,
-        message: "Survey Order Data Export Successfully!"
+        message: "Survey Order Data Export Successfully!",
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1995,23 +2499,35 @@ const surveyOrderController = {
       let surveyOrderId = req.body.data.surveyOrderId;
       let updateStatus = req.body.data.status;
       const currentTime = new Date().getTime();
-      console.log('REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7', req.body)
+      console.log(
+        "REQ>BODY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7",
+        req.body
+      );
 
       const status = await knex("survey_orders")
-        .update({ surveyOrderStatus: updateStatus, updatedAt: currentTime })
+        .update({
+          surveyOrderStatus: updateStatus,
+          updatedAt: currentTime,
+        })
         .where({ id: surveyOrderId });
       return res.status(200).json({
         data: {
-          status: updateStatus
+          status: updateStatus,
         },
-        message: "Survey order status updated successfully!"
+        message:
+          "Survey order status updated successfully!",
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
-  }
+  },
 };
 
 module.exports = surveyOrderController;
