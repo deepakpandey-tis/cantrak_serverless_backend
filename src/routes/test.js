@@ -192,4 +192,24 @@ router.get("/efs" ,async (req,res) =>{
   }
 });
 
+
+
+router.get("/sns-publish" ,async (req,res) =>{
+  try {
+
+    const testHelper = require('../helpers/test');
+    await testHelper.testSNSNotification();
+
+    return res.status(200).json({
+      data: {},
+      message:
+        "SNS Message test triggered",
+    });
+
+  } catch (err) {
+    res.status(200).json({ failed: true, error: err });
+    
+  }
+});
+
 module.exports = router;

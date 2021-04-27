@@ -36,6 +36,16 @@ provider:
         - s3:*
       Resource: 
         - arn:aws:s3:::*
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource: 
+        - arn:aws:sqs:::*
+    - Effect: Allow
+      Action:
+        - sns:*
+      Resource: 
+        - arn:aws:sns:::*
   iamManagedPolicies:
       - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
   environment:
@@ -66,6 +76,8 @@ provider:
     REDIS_HOST: tis-dev-redis.2okp6i.0001.use1.cache.amazonaws.com
     REDIS_PORT: 6379
     MNT_DIR: ${self:custom.localMountPath} 
+    THIRDPARTY_SNS_ARN: arn:aws:sns:ap-southeast-1:175922227966:servicemind-thirdparty-notifications
+    THIRDPARTY_SNS_ARN_REGION: ap-southeast-1
   vpc:
     securityGroupIds:
       - sg-6a527248

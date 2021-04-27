@@ -184,6 +184,32 @@ const testHelper = {
   },
 
 
+  testSNSNotification: async () => {
+    try {
+     
+      const snsHelper = require('../helpers/sns');
+
+      const message = {
+        orgId: 89,
+        module: 'PARCEL',
+        data: {
+          id: 1,
+          subject: 'You have recived new parcel',
+          user: {
+            email: 'deepak@tis.co.th'
+          },
+          status: 'Approved'
+        }
+      };
+
+      await snsHelper.sendSNSMessage(message, 'THIRDPARTY_NOTIFICATIONS');
+    
+    } catch (err) {
+      return { failed: true, error: err };
+    }
+  },
+
+
 };
 
 module.exports = testHelper;
