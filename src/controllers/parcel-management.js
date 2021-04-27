@@ -37,13 +37,20 @@ const parcelManagementController = {
 
       companyArr = companyHavingPU.map((v) => v.companyId);
       result = await knex("companies")
-        .innerJoin("property_units", "companies.id", "property_units.companyId")
+        .innerJoin(
+          "property_units",
+          "companies.id",
+          "property_units.companyId"
+        )
         .select(
           "companies.id",
           "companies.companyId",
           "companies.companyName as CompanyName"
         )
-        .where({ "companies.isActive": true, "companies.orgId": req.orgId })
+        .where({
+          "companies.isActive": true,
+          "companies.orgId": req.orgId,
+        })
         .whereIn("companies.id", companyArr)
         .groupBy([
           "companies.id",
@@ -65,7 +72,12 @@ const parcelManagementController = {
       );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -90,7 +102,7 @@ const parcelManagementController = {
         "non_org_user_data",
         "org_user_data",
         "newParcelId",
-        "isChecked"
+        "isChecked",
       ]);
       console.log("payloa data", payLoad);
       await knex.transaction(async (trx) => {
@@ -102,16 +114,25 @@ const parcelManagementController = {
           description: Joi.string().allow("").optional(),
           parcelCondition: Joi.string().required(),
           parcelStatus: Joi.number().required(),
-          parcelPriority: Joi.number().allow(null).optional(),
+          parcelPriority: Joi.number()
+            .allow(null)
+            .optional(),
           barcode: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payLoad, schema);
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message },
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
             ],
           });
         }
@@ -136,25 +157,22 @@ const parcelManagementController = {
           .returning(["*"])
           .transacting(trx)
           .into("parcel_management");
-        // console.log("add parcel result", addResult);
 
         parcelResult = addResult[0];
 
-        // console.log("parcel result id", parcelResult.id);
-
-        let noOrgUserDataPayload = req.body.non_org_user_data;
-        if(noOrgUserDataPayload){
-
-        noOrgUserData = await knex("parcel_user_non_tis")
-          .insert({
-            parcelId: parcelResult.id,
-            ...noOrgUserDataPayload,
-            updatedAt: currentTime,
-            createdAt: currentTime,
-            createdBy: req.me.id,
-            orgId: req.orgId,
-          })
-          .returning(["*"])
+        let noOrgUserDataPayload =
+          req.body.non_org_user_data;
+        if (noOrgUserDataPayload) {
+          noOrgUserData = await knex("parcel_user_non_tis")
+            .insert({
+              parcelId: parcelResult.id,
+              ...noOrgUserDataPayload,
+              updatedAt: currentTime,
+              createdAt: currentTime,
+              createdBy: req.me.id,
+              orgId: req.orgId,
+            })
+            .returning(["*"]);
         }
 
         let orgUserDataPayload = req.body.org_user_data;
@@ -168,9 +186,13 @@ const parcelManagementController = {
           orgId: req.orgId,
         });
 
-        let qrCode = "org-" + req.orgId + "-parcel-" + parcelResult.id;
+        let qrCode =
+          "org-" + req.orgId + "-parcel-" + parcelResult.id;
 
-        console.log("parcel result id for qr code", parcelResult.id);
+        console.log(
+          "parcel result id for qr code",
+          parcelResult.id
+        );
         let updateResult = await knex("parcel_management")
           .update({ qrCode: qrCode })
           .returning(["*"])
@@ -193,29 +215,43 @@ const parcelManagementController = {
                 orgId: req.orgId,
               })
               .returning(["*"]);
-            // .transacting(trx)
-            // .into("images");
             images.push(d[0]);
           }
         }
 
-        let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
+        let orgMaster = await knex
+          .from("organisations")
+          .where({ id: req.orgId })
+          .first();
 
         let dataNos = {
           payload: {
-            orgData : orgMaster
+            orgData: orgMaster,
+            parcelId: parcelResult.id,
           },
         };
 
-        console.log("OrgData+++++",dataNos);
-        let tenantId = req.body.org_user_data.tenantId
-        // console.log("tenantid for notification",tenantId)
+        console.log("OrgData+++++", dataNos);
+        let tenantId = req.body.org_user_data.tenantId;
 
-        if(req.body.pickedUpType[0] == 2 && req.body.isChecked == true){
-          const ALLOWED_CHANNELS = ['IN_APP','EMAIL', 'WEB_PUSH','SOCKET_NOTIFY']
-          let sender = await knex.from("users").where({ id: req.me.id }).first();
-
-          let receiver = await knex.from("users").where({ id: tenantId }).first();
+        let receiver = await knex
+          .from("users")
+          .where({ id: tenantId })
+          .first();
+        if (
+          req.body.pickedUpType[0] == 2 &&
+          req.body.isChecked == true
+        ) {
+          const ALLOWED_CHANNELS = [
+            "IN_APP",
+            "EMAIL",
+            "WEB_PUSH",
+            "SOCKET_NOTIFY",
+          ];
+          let sender = await knex
+            .from("users")
+            .where({ id: req.me.id })
+            .first();
 
           await addOutGoingNotification.send(
             sender,
@@ -224,16 +260,24 @@ const parcelManagementController = {
             ALLOWED_CHANNELS
           );
         }
-       
-      
+
+        //Import SNS Helper..
+        const parcelSNSHelper = require("../helpers/parcel");
+
+        await parcelSNSHelper.parcelSNSNotification({
+          orgId: req.orgId,
+          module: "PARCEL",
+          dataNos,
+          receiver,
+        });
+
         let updateResultss = await knex
-        .update({isActive : true})
-        .where({isActive :true})
-        .returning(["*"])
-        .into("parcel_user_tis");
+          .update({ isActive: true })
+          .where({ isActive: true })
+          .returning(["*"])
+          .into("parcel_user_tis");
 
         trx.commit;
-
       });
 
       // update public.parcel_user_tis  set "isActive" = true where "isActive"=true;
@@ -245,10 +289,18 @@ const parcelManagementController = {
         message: "Parcel added successfully !",
       });
     } catch (err) {
-      console.log("[controllers][parcel_management][addParcel] :  Error", err);
+      console.log(
+        "[controllers][parcel_management][addParcel] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -263,9 +315,17 @@ const parcelManagementController = {
         },
       });
     } catch (err) {
-      console.log("[controllers][parcelManagement][list] :  Error", err);
+      console.log(
+        "[controllers][parcelManagement][list] :  Error",
+        err
+      );
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -274,16 +334,19 @@ const parcelManagementController = {
 
   getParcelList: async (req, res) => {
     try {
-
       let projectIds = [];
-      let projectsForPracel = req.userProjectResources
-      projectsForPracel = projectsForPracel.find(pfp => pfp.id == 10)
-      console.log('Project For Parcel:', projectsForPracel);
+      let projectsForPracel = req.userProjectResources;
+      projectsForPracel = projectsForPracel.find(
+        (pfp) => pfp.id == 10
+      );
+      console.log("Project For Parcel:", projectsForPracel);
       let accessibleProjects = projectsForPracel.projects;
-      console.log('Project For Parcel:', accessibleProjects);
-      projectIds =  _.uniqBy(accessibleProjects);
-      console.log('ProjectIds:', projectIds);
-
+      console.log(
+        "Project For Parcel:",
+        accessibleProjects
+      );
+      projectIds = _.uniqBy(accessibleProjects);
+      console.log("ProjectIds:", projectIds);
 
       let reqData = req.query;
       // console.log("requested data parcel", reqData);
@@ -305,18 +368,12 @@ const parcelManagementController = {
         projectId,
         buildingPhaseId,
       } = req.body;
-      
 
       // let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
       // .whereIn('projects.id', projectIds)
       // .where({ orgId: req.orgId });
-      
-
-
-
 
       // const accessibleProjects = req.userProjectResources[0].projects;
-
 
       if (
         unitId ||
@@ -347,13 +404,21 @@ const parcelManagementController = {
                 "parcel_user_tis.unitId",
                 "property_units.id"
               )
-              .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+              .leftJoin(
+                "users",
+                "parcel_user_tis.tenantId",
+                "users.id"
+              )
               .leftJoin(
                 "companies",
                 "parcel_user_tis.companyId",
                 "companies.id"
               )
-              .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
+              .leftJoin(
+                "projects",
+                "parcel_user_tis.projectId",
+                "projects.id"
+              )
               .leftJoin(
                 "buildings_and_phases",
                 "parcel_user_tis.buildingPhaseId",
@@ -361,13 +426,16 @@ const parcelManagementController = {
               )
               // .leftJoin("images", "parcel_management.id", "images.entityId")
               .where("parcel_management.orgId", req.orgId)
-              .whereIn("projects.id",projectIds)
+              .whereIn("projects.id", projectIds)
               .where((qb) => {
                 if (unitId) {
                   qb.where("property_units.id", unitId);
                 }
                 if (trackingNo) {
-                  qb.where("parcel_management.trackingNumber", trackingNo);
+                  qb.where(
+                    "parcel_management.trackingNumber",
+                    trackingNo
+                  );
                 }
                 if (tenantId) {
                   qb.where("users.id", tenantId);
@@ -404,24 +472,39 @@ const parcelManagementController = {
                     });
                   }
                   if (status == 3) {
-                    qb.where({ "parcel_management.parcelStatus": 3 });
+                    qb.where({
+                      "parcel_management.parcelStatus": 3,
+                    });
                   }
                   if (status == 4) {
-                    qb.where({ "parcel_management.parcelStatus": 4 });
+                    qb.where({
+                      "parcel_management.parcelStatus": 4,
+                    });
                   }
                   if (status == 5) {
-                    qb.where({ "parcel_management.parcelStatus": 5 });
+                    qb.where({
+                      "parcel_management.parcelStatus": 5,
+                    });
                   }
                 }
                 if (companyId) {
                   console.log("company id", companyId);
-                  qb.where("parcel_user_tis.companyId", companyId);
+                  qb.where(
+                    "parcel_user_tis.companyId",
+                    companyId
+                  );
                 }
                 if (projectId) {
-                  qb.where("parcel_user_tis.projectId", projectId);
+                  qb.where(
+                    "parcel_user_tis.projectId",
+                    projectId
+                  );
                 }
                 if (buildingPhaseId) {
-                  qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
+                  qb.where(
+                    "parcel_user_tis.buildingPhaseId",
+                    buildingPhaseId
+                  );
                 }
               })
               .groupBy([
@@ -447,13 +530,21 @@ const parcelManagementController = {
                 "parcel_user_tis.unitId",
                 "property_units.id"
               )
-              .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+              .leftJoin(
+                "users",
+                "parcel_user_tis.tenantId",
+                "users.id"
+              )
               .leftJoin(
                 "companies",
                 "parcel_user_tis.companyId",
                 "companies.id"
               )
-              .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
+              .leftJoin(
+                "projects",
+                "parcel_user_tis.projectId",
+                "projects.id"
+              )
               .leftJoin(
                 "buildings_and_phases",
                 "parcel_user_tis.buildingPhaseId",
@@ -479,14 +570,20 @@ const parcelManagementController = {
                 // "images.s3Url",
               ])
               .where("parcel_management.orgId", req.orgId)
-              .whereIn("projects.id",projectIds)
+              .whereIn("projects.id", projectIds)
               .where((qb) => {
                 if (unitId) {
                   qb.where("property_units.id", unitId);
                 }
                 if (trackingNo) {
-                  console.log("tracking number", trackingNo);
-                  qb.where("parcel_management.trackingNumber", trackingNo);
+                  console.log(
+                    "tracking number",
+                    trackingNo
+                  );
+                  qb.where(
+                    "parcel_management.trackingNumber",
+                    trackingNo
+                  );
                 }
                 if (tenantId) {
                   qb.where("users.id", tenantId);
@@ -523,27 +620,45 @@ const parcelManagementController = {
                     });
                   }
                   if (status == 3) {
-                    qb.where({ "parcel_management.parcelStatus": 3 });
+                    qb.where({
+                      "parcel_management.parcelStatus": 3,
+                    });
                   }
                   if (status == 4) {
-                    qb.where({ "parcel_management.parcelStatus": 4 });
+                    qb.where({
+                      "parcel_management.parcelStatus": 4,
+                    });
                   }
                   if (status == 5) {
-                    qb.where({ "parcel_management.parcelStatus": 5 });
+                    qb.where({
+                      "parcel_management.parcelStatus": 5,
+                    });
                   }
                 }
                 if (companyId) {
                   console.log("company id", companyId);
-                  qb.where("parcel_user_tis.companyId", companyId);
+                  qb.where(
+                    "parcel_user_tis.companyId",
+                    companyId
+                  );
                 }
                 if (projectId) {
-                  qb.where("parcel_user_tis.projectId", projectId);
+                  qb.where(
+                    "parcel_user_tis.projectId",
+                    projectId
+                  );
                 }
                 if (buildingPhaseId) {
-                  qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
+                  qb.where(
+                    "parcel_user_tis.buildingPhaseId",
+                    buildingPhaseId
+                  );
                 }
               })
-              .orderBy("parcel_management.createdAt", "desc")
+              .orderBy(
+                "parcel_management.createdAt",
+                "desc"
+              )
               .offset(offset)
               .limit(per_page),
           ]);
@@ -571,7 +686,9 @@ const parcelManagementController = {
           pagination.per_page = per_page;
           pagination.offset = offset;
           pagination.to = offset + rows.length;
-          pagination.last_page = Math.ceil(count / per_page);
+          pagination.last_page = Math.ceil(
+            count / per_page
+          );
           pagination.current_page = page;
           pagination.from = offset;
           pagination.data = rows;
@@ -598,9 +715,21 @@ const parcelManagementController = {
               "parcel_user_tis.unitId",
               "property_units.id"
             )
-            .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
-            .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
-            .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
+            .leftJoin(
+              "users",
+              "parcel_user_tis.tenantId",
+              "users.id"
+            )
+            .leftJoin(
+              "companies",
+              "parcel_user_tis.companyId",
+              "companies.id"
+            )
+            .leftJoin(
+              "projects",
+              "parcel_user_tis.projectId",
+              "projects.id"
+            )
             .leftJoin(
               "buildings_and_phases",
               "parcel_user_tis.buildingPhaseId",
@@ -608,8 +737,12 @@ const parcelManagementController = {
             )
             // .leftJoin("images", "parcel_management.id", "images.entityId")
             .where("parcel_management.orgId", req.orgId)
-            .whereIn("projects.id",projectIds)
-            .groupBy(["parcel_management.id", "property_units.id", "users.id"]),
+            .whereIn("projects.id", projectIds)
+            .groupBy([
+              "parcel_management.id",
+              "property_units.id",
+              "users.id",
+            ]),
           knex
             .from("parcel_management")
             .leftJoin(
@@ -627,15 +760,31 @@ const parcelManagementController = {
               "parcel_user_tis.unitId",
               "property_units.id"
             )
-            .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
-            .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
-            .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
+            .leftJoin(
+              "users",
+              "parcel_user_tis.tenantId",
+              "users.id"
+            )
+            .leftJoin(
+              "companies",
+              "parcel_user_tis.companyId",
+              "companies.id"
+            )
+            .leftJoin(
+              "projects",
+              "parcel_user_tis.projectId",
+              "projects.id"
+            )
             .leftJoin(
               "buildings_and_phases",
               "parcel_user_tis.buildingPhaseId",
               "buildings_and_phases.id"
             )
-            .leftJoin("images", "parcel_management.id", "images.entityId")
+            .leftJoin(
+              "images",
+              "parcel_management.id",
+              "images.entityId"
+            )
             .select([
               "parcel_management.id",
               "parcel_user_tis.unitId",
@@ -654,7 +803,7 @@ const parcelManagementController = {
               "parcel_management.updatedAt",
             ])
             .where("parcel_management.orgId", req.orgId)
-            .whereIn("projects.id",projectIds)
+            .whereIn("projects.id", projectIds)
             .groupBy([
               "parcel_management.id",
               "property_units.id",
@@ -707,25 +856,36 @@ const parcelManagementController = {
         message: "parcel List!",
       });
     } catch (err) {
-      console.log("[controllers][parcel_management][list] :  Error", err);
+      console.log(
+        "[controllers][parcel_management][list] :  Error",
+        err
+      );
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
 
   getPendingParcelList: async (req, res) => {
     try {
-
       let projectIds = [];
-      let projectsForPracel = req.userProjectResources
-      projectsForPracel = projectsForPracel.find(pfp => pfp.id == 10)
-      console.log('Project For Parcel:', projectsForPracel);
+      let projectsForPracel = req.userProjectResources;
+      projectsForPracel = projectsForPracel.find(
+        (pfp) => pfp.id == 10
+      );
+      console.log("Project For Parcel:", projectsForPracel);
       let accessibleProjects = projectsForPracel.projects;
-      console.log('Project For pickup Parcel 1:', accessibleProjects);
-      projectIds =  _.uniqBy(accessibleProjects);
-      console.log('ProjectIds:', projectIds);
-
+      console.log(
+        "Project For pickup Parcel 1:",
+        accessibleProjects
+      );
+      projectIds = _.uniqBy(accessibleProjects);
+      console.log("ProjectIds:", projectIds);
 
       let payload = req.body;
       let parcelList;
@@ -741,7 +901,7 @@ const parcelManagementController = {
       // const accessibleProjects = req.userProjectResources[0].projects;
 
       // console.log('Project For pickup Parcel 2:', accessibleProjects);
-     
+
       if (
         unitId ||
         tenantId ||
@@ -778,9 +938,17 @@ const parcelManagementController = {
               "parcel_user_tis.unitId",
               "property_units.id"
             )
-            .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+            .leftJoin(
+              "users",
+              "parcel_user_tis.tenantId",
+              "users.id"
+            )
             // .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
-            .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
+            .leftJoin(
+              "projects",
+              "parcel_user_tis.projectId",
+              "projects.id"
+            )
             .leftJoin(
               "buildings_and_phases",
               "parcel_user_tis.buildingPhaseId",
@@ -802,24 +970,34 @@ const parcelManagementController = {
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
-            .whereIn("projects.id",projectIds)
+            .whereIn("projects.id", projectIds)
             .where((qb) => {
               if (unitId) {
-                qb.where("property_units.unitNumber", unitId);
+                qb.where(
+                  "property_units.unitNumber",
+                  unitId
+                );
               }
               if (trackingNumber) {
-                qb.where("parcel_management.trackingNumber", trackingNumber);
+                qb.where(
+                  "parcel_management.trackingNumber",
+                  trackingNumber
+                );
               }
               if (tenantId) {
                 qb.where("users.id", tenantId);
               }
               if (buildingPhaseId) {
-                qb.where("parcel_user_tis.buildingPhaseId", buildingPhaseId);
+                qb.where(
+                  "parcel_user_tis.buildingPhaseId",
+                  buildingPhaseId
+                );
               }
               if (id && parcelId) {
                 qb.where({
                   "property_units.unitNumber": id,
-                  "parcel_management.pickedUpType": parcelType[0].pickedUpType,
+                  "parcel_management.pickedUpType":
+                    parcelType[0].pickedUpType,
                 });
               }
             })
@@ -834,9 +1012,17 @@ const parcelManagementController = {
             ])
             .orderBy("parcel_management.createdAt", "desc");
         } catch (err) {
-          console.log("[controllers][parcel_management][list] :  Error", err);
+          console.log(
+            "[controllers][parcel_management][list] :  Error",
+            err
+          );
           return res.status(500).json({
-            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+            errors: [
+              {
+                code: "UNKNOWN_SERVER_ERROR",
+                message: err.message,
+              },
+            ],
           });
         }
       } else {
@@ -857,9 +1043,17 @@ const parcelManagementController = {
             "parcel_user_tis.unitId",
             "property_units.id"
           )
-          .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
+          .leftJoin(
+            "users",
+            "parcel_user_tis.tenantId",
+            "users.id"
+          )
           // .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
-            .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
+          .leftJoin(
+            "projects",
+            "parcel_user_tis.projectId",
+            "projects.id"
+          )
           .leftJoin(
             "buildings_and_phases",
             "parcel_user_tis.buildingPhaseId",
@@ -881,7 +1075,7 @@ const parcelManagementController = {
           ])
           .where("parcel_management.orgId", req.orgId)
           .where("parcel_management.parcelStatus", 1)
-          .whereIn("projects.id",projectIds)
+          .whereIn("projects.id", projectIds)
           .groupBy([
             "parcel_management.id",
             "property_units.id",
@@ -895,21 +1089,24 @@ const parcelManagementController = {
       }
 
       const Parallel = require("async-parallel");
-      parcelList = await Parallel.map(parcelList, async (pd) => {
-        let imageResult = await knex
-          .from("images")
-          .select("s3Url", "title", "name")
-          .where({
-            entityId: pd.id,
-            entityType: "parcel_management",
-            // orgId: req.orgId,
-          })
-          .first();
-        return {
-          ...pd,
-          uploadedImages: imageResult,
-        };
-      });
+      parcelList = await Parallel.map(
+        parcelList,
+        async (pd) => {
+          let imageResult = await knex
+            .from("images")
+            .select("s3Url", "title", "name")
+            .where({
+              entityId: pd.id,
+              entityType: "parcel_management",
+              // orgId: req.orgId,
+            })
+            .first();
+          return {
+            ...pd,
+            uploadedImages: imageResult,
+          };
+        }
+      );
 
       return res.status(200).json({
         data: {
@@ -918,25 +1115,36 @@ const parcelManagementController = {
         message: "parcel List!",
       });
     } catch (err) {
-      console.log("[controllers][parcel_management][list] :  Error", err);
+      console.log(
+        "[controllers][parcel_management][list] :  Error",
+        err
+      );
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
   /*Parcel Details */
   getParcelDetails: async (req, res) => {
     try {
-
       let projectIds = [];
-      let projectsForPracel = req.userProjectResources
-      projectsForPracel = projectsForPracel.find(pfp => pfp.id == 10)
-      console.log('Project For Parcel:', projectsForPracel);
+      let projectsForPracel = req.userProjectResources;
+      projectsForPracel = projectsForPracel.find(
+        (pfp) => pfp.id == 10
+      );
+      console.log("Project For Parcel:", projectsForPracel);
       let accessibleProjects = projectsForPracel.projects;
-      console.log('Project For Parcel:', accessibleProjects);
-      projectIds =  _.uniqBy(accessibleProjects);
-      console.log('ProjectIds:', projectIds);
-
+      console.log(
+        "Project For Parcel:",
+        accessibleProjects
+      );
+      projectIds = _.uniqBy(accessibleProjects);
+      console.log("ProjectIds:", projectIds);
 
       let payload = req.body;
       const schema = Joi.object().keys({
@@ -944,9 +1152,18 @@ const parcelManagementController = {
       });
       const result = Joi.validate(payload, schema);
 
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
@@ -973,9 +1190,21 @@ const parcelManagementController = {
             "parcel_user_tis.unitId",
             "property_units.id"
           )
-          .leftJoin("users", "parcel_user_tis.tenantId", "users.id")
-          .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
-          .leftJoin("projects", "parcel_user_tis.projectId", "projects.id")
+          .leftJoin(
+            "users",
+            "parcel_user_tis.tenantId",
+            "users.id"
+          )
+          .leftJoin(
+            "companies",
+            "parcel_user_tis.companyId",
+            "companies.id"
+          )
+          .leftJoin(
+            "projects",
+            "parcel_user_tis.projectId",
+            "projects.id"
+          )
           .leftJoin(
             "buildings_and_phases",
             "parcel_user_tis.buildingPhaseId",
@@ -986,7 +1215,11 @@ const parcelManagementController = {
             "parcel_user_tis.floorZoneId",
             "floor_and_zones.id"
           )
-          .leftJoin("courier", "parcel_management.carrierId", "courier.id")
+          .leftJoin(
+            "courier",
+            "parcel_management.carrierId",
+            "courier.id"
+          )
           .select([
             "parcel_management.*",
             "parcel_user_tis.*",
@@ -1009,15 +1242,17 @@ const parcelManagementController = {
             "parcel_management.barcode",
           ])
           .where("parcel_management.id", payload.id)
-          .whereIn("projects.id",projectIds)
+          .whereIn("projects.id", projectIds)
           .first(),
-        knex
-          .from("images")
-          .where({ entityId: payload.id, entityType: "parcel_management" }),
+        knex.from("images").where({
+          entityId: payload.id,
+          entityType: "parcel_management",
+        }),
 
-        knex
-          .from("images")
-          .where({ entityId: payload.id, entityType: "pickup_parcel" }),
+        knex.from("images").where({
+          entityId: payload.id,
+          entityType: "pickup_parcel",
+        }),
 
         knex.from("remarks_master").where({
           entityId: payload.id,
@@ -1036,10 +1271,17 @@ const parcelManagementController = {
         message: "Parcel Details !",
       });
     } catch (err) {
-      console.log("controller[parcel-management][parcelDetails]");
+      console.log(
+        "controller[parcel-management][parcelDetails]"
+      );
 
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1077,17 +1319,26 @@ const parcelManagementController = {
           description: Joi.string().allow("").optional(),
           parcelCondition: Joi.string().required(),
           parcelStatus: Joi.number().required(),
-          parcelPriority: Joi.number().allow(null).optional(),
+          parcelPriority: Joi.number()
+            .allow(null)
+            .optional(),
           barcode: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(parcelPayload, schema);
         console.log("result", result);
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message },
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
             ],
           });
         }
@@ -1109,15 +1360,16 @@ const parcelManagementController = {
           .into("parcel_management");
         parcelResult = updateResult[0];
 
-        let noOrgUserDataPayload = req.body.non_org_user_data;
-        if(noOrgUserDataPayload){
-        noOrgUserData = await knex("parcel_user_non_tis")
-          .update({
-            ...noOrgUserDataPayload,
-            updatedAt: currentTime,
-          })
-          .where({ parcelId: payload.id })
-          .returning(["*"])
+        let noOrgUserDataPayload =
+          req.body.non_org_user_data;
+        if (noOrgUserDataPayload) {
+          noOrgUserData = await knex("parcel_user_non_tis")
+            .update({
+              ...noOrgUserDataPayload,
+              updatedAt: currentTime,
+            })
+            .where({ parcelId: payload.id })
+            .returning(["*"]);
         }
 
         let orgUserDataPayload = req.body.org_user_data;
@@ -1163,7 +1415,12 @@ const parcelManagementController = {
       );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1181,7 +1438,10 @@ const parcelManagementController = {
           "parcel_management.id",
           "parcel_user_non_tis.parcelId"
         )
-        .select(["parcel_management.id", "parcel_management.trackingNumber"])
+        .select([
+          "parcel_management.id",
+          "parcel_management.trackingNumber",
+        ])
         .where("parcel_management.orgId", req.orgId)
         .where("parcel_management.parcelStatus", 1);
 
@@ -1193,7 +1453,12 @@ const parcelManagementController = {
       });
     } catch (err) {
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1204,7 +1469,11 @@ const parcelManagementController = {
       let id = req.body.id;
       let parcelResult = null;
       let parcelRemarks = [];
-      console.log("req parcel data", req.body.tenantId[0],req.body.pickedUpType[0]);
+      console.log(
+        "req parcel data",
+        req.body.tenantId[0],
+        req.body.pickedUpType[0]
+      );
 
       const payload = _.omit(req.body, [
         "id",
@@ -1214,7 +1483,7 @@ const parcelManagementController = {
         "description",
         "pickedUpType",
         "tenantId",
-        "isChecked"
+        "isChecked",
       ]);
 
       const schema = Joi.object().keys({
@@ -1223,14 +1492,25 @@ const parcelManagementController = {
       });
       const result = Joi.validate(payload, schema);
 
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
       const currentTime = new Date().getTime();
 
-      let deliverParcelResult = await knex("parcel_management")
+      let deliverParcelResult = await knex(
+        "parcel_management"
+      )
         .update({
           ...payload,
           updatedAt: currentTime,
@@ -1240,79 +1520,104 @@ const parcelManagementController = {
         .where("parcel_management.orgId", req.orgId)
         .returning(["*"]);
 
+      let orgMaster = await knex
+        .from("organisations")
+        .where({ id: req.orgId })
+        .first();
 
-        let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
-
-        
-        let dataNos = {
-          payload: {
-            orgData : orgMaster,
-            parcelId:id
-            
-          },
-        };
-        let tenantId = req.body.tenantId[0]
-        const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH','SOCKET_NOTIFY', 'EMAIL']
-        let sender = await knex.from("users").where({ id: req.me.id }).first();
-        let receiver = await knex.from("users").where({ id: tenantId }).first();
-        // console.log("parcel rejected=====>>>>>>",req.body.parcelStatus[0],req.body.isChecked)
-        if(req.body.pickedUpType[0] == 2 && req.body.parcelStatus == 2 && req.body.isChecked == true){
-          // console.log("parcel pickedup")
+      let dataNos = {
+        payload: {
+          orgData: orgMaster,
+          parcelId: id,
+        },
+      };
+      let tenantId = req.body.tenantId[0];
+      const ALLOWED_CHANNELS = [
+        "IN_APP",
+        "WEB_PUSH",
+        "SOCKET_NOTIFY",
+        "EMAIL",
+      ];
+      let sender = await knex
+        .from("users")
+        .where({ id: req.me.id })
+        .first();
+      let receiver = await knex
+        .from("users")
+        .where({ id: tenantId })
+        .first();
+      // console.log("parcel rejected=====>>>>>>",req.body.parcelStatus[0],req.body.isChecked)
+      if (
+        req.body.pickedUpType[0] == 2 &&
+        req.body.parcelStatus == 2 &&
+        req.body.isChecked == true
+      ) {
+        // console.log("parcel pickedup")
         await parcelCollectedNotification.send(
           sender,
           receiver,
           dataNos,
           ALLOWED_CHANNELS
         );
-        }else
-        if(req.body.pickedUpType[0] == 1 && req.body.parcelStatus == 2 && req.body.isChecked == true){
-          // console.log("parcel pickedup=====>>>>>",req.body.pickedUpType[0])
-          await parcelPickedUpNotification.send(
-            sender,
-            receiver,
-            dataNos,
-            ALLOWED_CHANNELS
-          );
-        }else
-        if(req.body.parcelStatus == 3 && req.body.isChecked == true){
-          // console.log("parcel rejected=====>>>>>",req.body.pickedUpType[0])
-          await parcelRejectedNotification.send(
-            sender,
-            receiver,
-            dataNos,
-            ALLOWED_CHANNELS
-          );
-        }else
-        if(req.body.parcelStatus == 4 && req.body.isChecked == true){
-          // console.log("parcel returned=====>>>>>",req.body.pickedUpType[0])
-          await parcelReturnedNotification.send(
-            sender,
-            receiver,
-            dataNos,
-            ALLOWED_CHANNELS
-          );
-        }else if(req.body.parcelStatus == 5 && req.body.isChecked == true){
-          await parcelCanceledNotification.send(
-            sender,
-            receiver,
-            dataNos,
-            ALLOWED_CHANNELS
-          )
-        }
-
-
+      } else if (
+        req.body.pickedUpType[0] == 1 &&
+        req.body.parcelStatus == 2 &&
+        req.body.isChecked == true
+      ) {
+        // console.log("parcel pickedup=====>>>>>",req.body.pickedUpType[0])
+        await parcelPickedUpNotification.send(
+          sender,
+          receiver,
+          dataNos,
+          ALLOWED_CHANNELS
+        );
+      } else if (
+        req.body.parcelStatus == 3 &&
+        req.body.isChecked == true
+      ) {
+        // console.log("parcel rejected=====>>>>>",req.body.pickedUpType[0])
+        await parcelRejectedNotification.send(
+          sender,
+          receiver,
+          dataNos,
+          ALLOWED_CHANNELS
+        );
+      } else if (
+        req.body.parcelStatus == 4 &&
+        req.body.isChecked == true
+      ) {
+        // console.log("parcel returned=====>>>>>",req.body.pickedUpType[0])
+        await parcelReturnedNotification.send(
+          sender,
+          receiver,
+          dataNos,
+          ALLOWED_CHANNELS
+        );
+      } else if (
+        req.body.parcelStatus == 5 &&
+        req.body.isChecked == true
+      ) {
+        await parcelCanceledNotification.send(
+          sender,
+          receiver,
+          dataNos,
+          ALLOWED_CHANNELS
+        );
+      }
 
       let description = req.body.description;
       let idLength = req.body.id.length;
       for (let i = 0; i < idLength; i++) {
-        parcelRemarks = await knex("remarks_master").insert({
-          description: description,
-          entityId: req.body.id[i],
-          entityType: "pickup_parcel_remarks",
-          createdAt: currentTime,
-          updatedAt: currentTime,
-          orgId: req.orgId,
-        });
+        parcelRemarks = await knex("remarks_master").insert(
+          {
+            description: description,
+            entityId: req.body.id[i],
+            entityType: "pickup_parcel_remarks",
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: req.orgId,
+          }
+        );
       }
 
       return res.status(200).json({
@@ -1332,7 +1637,10 @@ const parcelManagementController = {
 
       let parcelStatus = await knex
         .from("parcel_management")
-        .select(["parcel_management.id", "parcel_management.parcelStatus"])
+        .select([
+          "parcel_management.id",
+          "parcel_management.parcelStatus",
+        ])
         .where({
           "parcel_management.orgId": req.orgId,
           "parcel_management.id": parcelId,
@@ -1351,7 +1659,12 @@ const parcelManagementController = {
       });
     } catch (err) {
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1362,7 +1675,12 @@ const parcelManagementController = {
       let orgId = req.orgId;
 
       let qrCode1 =
-        "org~" + orgId + "~unitNumber~" + unitNumber + "~parcel~" + parcelId;
+        "org~" +
+        orgId +
+        "~unitNumber~" +
+        unitNumber +
+        "~parcel~" +
+        parcelId;
       let qrCode;
       if (qrCode1) {
         qrCode = await QRCODE.toDataURL(qrCode1);
@@ -1375,9 +1693,14 @@ const parcelManagementController = {
         base64Data = new Buffer.from(
           qrCode.replace(/^data:([A-Za-z-+/]+);base64,/, "")
         );
-        fs.writeFile("parcel.png", base64Data, "base64", (err) => {
-          console.log("error in file", err);
-        });
+        fs.writeFile(
+          "parcel.png",
+          base64Data,
+          "base64",
+          (err) => {
+            console.log("error in file", err);
+          }
+        );
       }
       const AWS = require("aws-sdk");
       fs.readFile(filePath, function (err, file) {
@@ -1391,13 +1714,24 @@ const parcelManagementController = {
 
         s3.putObject(params, function (err, data) {
           if (err) {
-            console.log("Error at uploadImageOnS3Bucket function", err);
+            console.log(
+              "Error at uploadImageOnS3Bucket function",
+              err
+            );
             res.status(500).json({
-              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+              errors: [
+                {
+                  code: "UNKNOWN_SERVER_ERROR",
+                  message: err.message,
+                },
+              ],
             });
           } else {
             console.log("File uploaded Successfully");
-            let url = process.env.S3_BUCKET_URL + "/parcel/" + fileName;
+            let url =
+              process.env.S3_BUCKET_URL +
+              "/parcel/" +
+              fileName;
 
             console.log("url of image", url);
 
@@ -1411,7 +1745,10 @@ const parcelManagementController = {
         });
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][exoportCompany] :  Error", err);
+      console.log(
+        "[controllers][generalsetup][exoportCompany] :  Error",
+        err
+      );
     }
   },
 
@@ -1426,7 +1763,10 @@ const parcelManagementController = {
       );
 
       const status = await knex("parcel_management")
-        .update({ parcelStatus: "2", receivedDate: currentTime })
+        .update({
+          parcelStatus: "2",
+          receivedDate: currentTime,
+        })
         .whereIn("parcel_management.id", parcelId);
 
       return res.status(200).json({
@@ -1437,7 +1777,12 @@ const parcelManagementController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1445,7 +1790,9 @@ const parcelManagementController = {
     try {
       let parcelId = req.body.parcelId;
 
-      const pendingApproval = await knex("parcel_management")
+      const pendingApproval = await knex(
+        "parcel_management"
+      )
         .update({ isPendingForApproval: true })
         .whereIn("parcel_management.id", parcelId);
 
@@ -1457,74 +1804,100 @@ const parcelManagementController = {
       });
     } catch (err) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
 
-  getUnitDetailsByUnitId: async(req,res) =>{
+  getUnitDetailsByUnitId: async (req, res) => {
     try {
-
       let projectIds = [];
-      let projectsForPracel = req.userProjectResources
-      projectsForPracel = projectsForPracel.find(pfp => pfp.id == 10)
-      console.log('Project For Parcel:', projectsForPracel);
+      let projectsForPracel = req.userProjectResources;
+      projectsForPracel = projectsForPracel.find(
+        (pfp) => pfp.id == 10
+      );
+      console.log("Project For Parcel:", projectsForPracel);
       let accessibleProjects = projectsForPracel.projects;
-      console.log('Project For Parcel:', accessibleProjects);
-      projectIds =  _.uniqBy(accessibleProjects);
-      console.log('ProjectIds:', projectIds);
+      console.log(
+        "Project For Parcel:",
+        accessibleProjects
+      );
+      projectIds = _.uniqBy(accessibleProjects);
+      console.log("ProjectIds:", projectIds);
 
+      let payload = req.body;
 
-      let payload = req.body
-
-      console.log("data in payload",payload)
+      console.log("data in payload", payload);
 
       let units = await knex
-      .from("property_units")
-      .leftJoin("companies", "property_units.companyId", "companies.id")
-      .leftJoin("projects", "property_units.projectId", "projects.id")
-      .leftJoin(
-        "buildings_and_phases",
-        "property_units.buildingPhaseId",
-        "buildings_and_phases.id"
-      )
-      .innerJoin(
-        "floor_and_zones",
-        "property_units.floorZoneId",
-        "floor_and_zones.id"
-      )
-      .select([
-        "property_units.companyId as companyId",
-        "companies.companyName as companyName",
-        "property_units.projectId as projectId",
-        "projects.projectName as projectName",
-        "property_units.buildingPhaseId as buildingPhaseId",
-        "buildings_and_phases.buildingPhaseCode as buildingPhaseCode",
-        "buildings_and_phases.description as buildingDescription",
-        "property_units.floorZoneId as floorZoneId",
-        "floor_and_zones.floorZoneCode as floorZoneCode",
-        "floor_and_zones.description",
-        "property_units.unitNumber as unitNumber",
-        "property_units.id as unitId"
-      ])
-      .where({"property_units.isActive":true,"property_units.orgId":req.orgId})
-      .where("property_units.unitNumber","iLIKE", `%${payload.unitNumber}%`)
-      // .where({"property_units.isActive":true,"property_units.orgId":req.orgId})
-      .whereIn("property_units.projectId",projectIds);
+        .from("property_units")
+        .leftJoin(
+          "companies",
+          "property_units.companyId",
+          "companies.id"
+        )
+        .leftJoin(
+          "projects",
+          "property_units.projectId",
+          "projects.id"
+        )
+        .leftJoin(
+          "buildings_and_phases",
+          "property_units.buildingPhaseId",
+          "buildings_and_phases.id"
+        )
+        .innerJoin(
+          "floor_and_zones",
+          "property_units.floorZoneId",
+          "floor_and_zones.id"
+        )
+        .select([
+          "property_units.companyId as companyId",
+          "companies.companyName as companyName",
+          "property_units.projectId as projectId",
+          "projects.projectName as projectName",
+          "property_units.buildingPhaseId as buildingPhaseId",
+          "buildings_and_phases.buildingPhaseCode as buildingPhaseCode",
+          "buildings_and_phases.description as buildingDescription",
+          "property_units.floorZoneId as floorZoneId",
+          "floor_and_zones.floorZoneCode as floorZoneCode",
+          "floor_and_zones.description",
+          "property_units.unitNumber as unitNumber",
+          "property_units.id as unitId",
+        ])
+        .where({
+          "property_units.isActive": true,
+          "property_units.orgId": req.orgId,
+        })
+        .where(
+          "property_units.unitNumber",
+          "iLIKE",
+          `%${payload.unitNumber}%`
+        )
+        // .where({"property_units.isActive":true,"property_units.orgId":req.orgId})
+        .whereIn("property_units.projectId", projectIds);
 
       return res.status(200).json({
         data: {
-          units
+          units,
         },
-        message: "Property units data"
+        message: "Property units data",
       });
     } catch (error) {
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
-  }
-
-
+  },
 };
 module.exports = parcelManagementController;
