@@ -5360,28 +5360,28 @@ const taskGroupController = {
       });
 
       // console.log("work order result length====>>>>>",workResult.length,workComplete.length)
-      if (workResult.length == workComplete.length) {
-        let scheduleStatus = null;
+      // if (workResult.length == workComplete.length) {
+      //   let scheduleStatus = null;
 
-        let workDate = moment(payload.workOrderDate).format("YYYY-MM-DD");
-        let currnetDate = moment().format("YYYY-MM-DD");
-        if (workDate == currnetDate || workDate > currnetDate) {
-          scheduleStatus = "on";
-        } else if (workDate < currnetDate) {
-          scheduleStatus = "off";
-        }
+      //   let workDate = moment(payload.workOrderDate).format("YYYY-MM-DD");
+      //   let currnetDate = moment().format("YYYY-MM-DD");
+      //   if (workDate == currnetDate || workDate > currnetDate) {
+      //     scheduleStatus = "on";
+      //   } else if (workDate < currnetDate) {
+      //     scheduleStatus = "off";
+      //   }
 
 
-        let workOrder = await knex("task_group_schedule_assign_assets")
-        .update({
-          status: "COM",
-          updatedAt: currentTime,
-          scheduleStatus: scheduleStatus,
-        })
-        .where({ id: payload.workOrderId, orgId: req.orgId })
-        .returning(["*"]);
+      //   let workOrder = await knex("task_group_schedule_assign_assets")
+      //   .update({
+      //     status: "COM",
+      //     updatedAt: currentTime,
+      //     scheduleStatus: scheduleStatus,
+      //   })
+      //   .where({ id: payload.workOrderId, orgId: req.orgId })
+      //   .returning(["*"]);
 
-      }
+      // }
       return res.status(200).json({
         data: {
           taskUpdated,
