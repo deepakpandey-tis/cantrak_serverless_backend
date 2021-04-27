@@ -54,26 +54,43 @@ const announcementController = {
           line: Joi.boolean().required(),
           sms: Joi.boolean().required(),
           userType: Joi.number().required(),
-          companyId: Joi.array().items(Joi.number().required()),
-          projectId: Joi.array().items(Joi.number().required()),
+          companyId: Joi.array().items(
+            Joi.number().required()
+          ),
+          projectId: Joi.array().items(
+            Joi.number().required()
+          ),
           buildingPhaseId: Joi.array().items(
             Joi.number().allow(null).optional()
           ),
-          floorZoneId: Joi.array().items(Joi.number().allow(null).optional()),
+          floorZoneId: Joi.array().items(
+            Joi.number().allow(null).optional()
+          ),
           propertyUnitId: Joi.array().items(
             Joi.number().allow(null).optional()
           ),
-          teamId: Joi.array().items(Joi.number().allow(null).optional()),
+          teamId: Joi.array().items(
+            Joi.number().allow(null).optional()
+          ),
           isGeneral: Joi.boolean().required(),
-          publishedDate: Joi.string().allow(null).optional()
+          publishedDate: Joi.string()
+            .allow(null)
+            .optional(),
         });
 
         let result = Joi.validate(payload, schema);
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message },
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
             ],
           });
         }
@@ -86,7 +103,7 @@ const announcementController = {
           updatedAt: currentTime,
           createdBy: req.me.id,
           orgId: req.orgId,
-          publishedDate: currentTime
+          publishedDate: currentTime,
         };
 
         let announcementNotificationResult = await knex
@@ -95,7 +112,8 @@ const announcementController = {
           .returning(["*"])
           .transacting(trx)
           .into("announcement_master");
-        announcementResult = announcementNotificationResult[0];
+        announcementResult =
+          announcementNotificationResult[0];
 
         let orgMaster = await knex
           .from("organisations")
@@ -109,11 +127,16 @@ const announcementController = {
             url: req.body.url,
             description: req.body.description,
             orgData: orgMaster,
-            redirectUrl: "/user/announcement/announcement/" + newAnnouncementId,
+            redirectUrl:
+              "/user/announcement/announcement/" +
+              newAnnouncementId,
           },
         };
 
-        let sender = await knex.from("users").where({ id: req.me.id }).first();
+        let sender = await knex
+          .from("users")
+          .where({ id: req.me.id })
+          .first();
 
         delUsers = await knex("announcement_user_master")
           .where({
@@ -133,15 +156,6 @@ const announcementController = {
               .returning(["*"]);
 
             userIds.push(d[0]);
-
-            // let receiver = await knex.from("users").where({ id: id }).first();
-
-            // await announcementNotification.send(
-            //   sender,
-            //   receiver,
-            //   dataNos,
-            //   ALLOWED_CHANNELS
-            // );
           }
 
           // Import SQS Helper..
@@ -158,8 +172,19 @@ const announcementController = {
             "long-jobs",
             "ANNOUNCEMENT_BROADCAST"
           );
-
         }
+
+        //Import SNS Helper..
+
+        const announcementSNSHelper = require("../helpers/announcement");
+
+        await announcementSNSHelper.announcementSNSNotification(
+          {
+            orgId: req.orgId,
+            module: "ANNOUNCEMENT",
+            dataNos,
+          }
+        );
 
         let imagesData = req.body.logoFile;
         console.log("imagesData", imagesData);
@@ -189,7 +214,10 @@ const announcementController = {
         message: "Announcement added successfully !",
       });
     } catch (err) {
-      console.log("[controllers][announcement][addAnnouncement] : Error", err);
+      console.log(
+        "[controllers][announcement][addAnnouncement] : Error",
+        err
+      );
     }
   },
 
@@ -232,26 +260,25 @@ const announcementController = {
         },
       };
 
-      let sender = await knex.from("users").where({ id: req.me.id }).first();
+      let sender = await knex
+        .from("users")
+        .where({ id: req.me.id })
+        .first();
 
       if (userId && userId.length > 0) {
-
-
-
         const queueHelper = require("../helpers/queue");
-          await queueHelper.addToQueue(
-            {
-              announcementId: newAnnouncementId,
-              dataNos,
-              ALLOWED_CHANNELS,
-              orgId,
-              requestedBy: req.me,
-              orgMaster: orgMaster,
-            },
-            "long-jobs",
-            "ANNOUNCEMENT_BROADCAST"
-          );
-
+        await queueHelper.addToQueue(
+          {
+            announcementId: newAnnouncementId,
+            dataNos,
+            ALLOWED_CHANNELS,
+            orgId,
+            requestedBy: req.me,
+            orgMaster: orgMaster,
+          },
+          "long-jobs",
+          "ANNOUNCEMENT_BROADCAST"
+        );
 
         // for (let id of userId) {
         //   let receiver = await knex.from("users").where({ id: id }).first();
@@ -269,10 +296,17 @@ const announcementController = {
         message: "Notification sent successfully !",
       });
     } catch (err) {
-      console.log("controller[announcement][announcementDetails]");
+      console.log(
+        "controller[announcement][announcementDetails]"
+      );
 
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -288,9 +322,17 @@ const announcementController = {
         },
       });
     } catch (err) {
-      console.log("[controllers][announcement][notification] :  Error", err);
+      console.log(
+        "[controllers][announcement][notification] :  Error",
+        err
+      );
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -320,24 +362,39 @@ const announcementController = {
           line: Joi.boolean().required(),
           sms: Joi.boolean().required(),
           userType: Joi.number().required(),
-          companyId: Joi.array().items(Joi.number().required()),
-          projectId: Joi.array().items(Joi.number().required()),
+          companyId: Joi.array().items(
+            Joi.number().required()
+          ),
+          projectId: Joi.array().items(
+            Joi.number().required()
+          ),
           buildingPhaseId: Joi.array().items(
             Joi.number().allow(null).optional()
           ),
-          floorZoneId: Joi.array().items(Joi.number().allow(null).optional()),
+          floorZoneId: Joi.array().items(
+            Joi.number().allow(null).optional()
+          ),
           propertyUnitId: Joi.array().items(
             Joi.number().allow(null).optional()
           ),
-          teamId: Joi.array().items(Joi.number().allow(null).optional()),
+          teamId: Joi.array().items(
+            Joi.number().allow(null).optional()
+          ),
         });
 
         let result = Joi.validate(payload, schema);
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message },
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
             ],
           });
         }
@@ -352,13 +409,16 @@ const announcementController = {
           orgId: req.orgId,
         };
 
-        let announcementNotificationResult = await knex("announcement_master")
+        let announcementNotificationResult = await knex(
+          "announcement_master"
+        )
           .update(insertAnnouncementPayload)
           .where({ id: newAnnouncementId })
           .returning(["*"]);
         // .transacting(trx)
         // .into("announcement_master");
-        announcementResult = announcementNotificationResult[0];
+        announcementResult =
+          announcementNotificationResult[0];
 
         let userId = req.body.userId;
 
@@ -419,15 +479,17 @@ const announcementController = {
         message: "Announcement Saved as draft !",
       });
     } catch (err) {
-      console.log("[controllers][announcement][addAnnouncement] : Error", err);
+      console.log(
+        "[controllers][announcement][addAnnouncement] : Error",
+        err
+      );
     }
   },
 
   getAnnouncementList: async (req, res) => {
     try {
-
       let projectIds = req.accessibleProjects;
-      console.log('ProjectIds:', projectIds);
+      console.log("ProjectIds:", projectIds);
 
       let reqData = req.query;
       let total, rows;
@@ -439,9 +501,19 @@ const announcementController = {
       let offset = (page - 1) * per_page;
       let filters = {};
 
-      let { title, announcementId, announcementType, createdDate } = req.body;
+      let {
+        title,
+        announcementId,
+        announcementType,
+        createdDate,
+      } = req.body;
 
-      if (title || announcementId || announcementType || createdDate) {
+      if (
+        title ||
+        announcementId ||
+        announcementType ||
+        createdDate
+      ) {
         try {
           [total, rows] = await Promise.all([
             knex
@@ -457,17 +529,29 @@ const announcementController = {
               .whereIn()
               .where((qb) => {
                 if (title) {
-                  qb.where("announcement_master.title", title);
+                  qb.where(
+                    "announcement_master.title",
+                    title
+                  );
                 }
                 if (announcementId) {
-                  qb.where("announcement_master.id", announcementId);
+                  qb.where(
+                    "announcement_master.id",
+                    announcementId
+                  );
                 }
                 if (announcementType) {
-                  qb.where("announcement_master.savedStatus", announcementType);
+                  qb.where(
+                    "announcement_master.savedStatus",
+                    announcementType
+                  );
                 }
 
                 if (createdDate) {
-                  qb.where("announcement_master.createdAt", createdDate);
+                  qb.where(
+                    "announcement_master.createdAt",
+                    createdDate
+                  );
                 }
               })
               .groupBy(["announcement_master.id"]),
@@ -485,26 +569,41 @@ const announcementController = {
                 "announcement_master.createdAt",
                 "announcement_master.url",
                 "announcement_master.userType",
-                "announcement_master.publishedDate"
+                "announcement_master.publishedDate",
               ])
               .where("announcement_master.orgId", req.orgId)
               .where("announcement_master.status", true)
               .where((qb) => {
                 if (title) {
-                  qb.where("announcement_master.title", title);
+                  qb.where(
+                    "announcement_master.title",
+                    title
+                  );
                 }
                 if (announcementId) {
-                  qb.where("announcement_master.id", announcementId);
+                  qb.where(
+                    "announcement_master.id",
+                    announcementId
+                  );
                 }
                 if (announcementType) {
-                  qb.where("announcement_master.savedStatus", announcementType);
+                  qb.where(
+                    "announcement_master.savedStatus",
+                    announcementType
+                  );
                 }
 
                 if (createdDate) {
-                  qb.where("announcement_master.createdAt", createdDate);
+                  qb.where(
+                    "announcement_master.createdAt",
+                    createdDate
+                  );
                 }
               })
-              .orderBy("announcement_master.createdAt", "desc")
+              .orderBy(
+                "announcement_master.createdAt",
+                "desc"
+              )
               .offset(offset)
               .limit(per_page),
           ]);
@@ -515,11 +614,13 @@ const announcementController = {
           pagination.per_page = per_page;
           pagination.offset = offset;
           pagination.to = offset + rows.length;
-          pagination.last_page = Math.ceil(count / per_page);
+          pagination.last_page = Math.ceil(
+            count / per_page
+          );
           pagination.current_page = page;
           pagination.from = offset;
           pagination.data = rows;
-        } catch (err) { }
+        } catch (err) {}
       } else {
         [total, rows] = await Promise.all([
           knex
@@ -548,12 +649,15 @@ const announcementController = {
               "announcement_master.createdAt",
               "announcement_master.url",
               "announcement_master.userType",
-              "announcement_master.publishedDate"
+              "announcement_master.publishedDate",
             ])
             .where("announcement_master.orgId", req.orgId)
             .where("announcement_master.status", true)
             .groupBy(["announcement_master.id"])
-            .orderBy("announcement_master.createdAt", "desc")
+            .orderBy(
+              "announcement_master.createdAt",
+              "desc"
+            )
             .offset(offset)
             .limit(per_page),
         ]);
@@ -576,9 +680,17 @@ const announcementController = {
         message: "Announcement List!",
       });
     } catch (err) {
-      console.log("[controllers][announcement][list] :  Error", err);
+      console.log(
+        "[controllers][announcement][list] :  Error",
+        err
+      );
       return res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -601,57 +713,84 @@ const announcementController = {
 
       const result = Joi.validate(payload, schema);
 
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
-      let [announcementDetails, images] = await Promise.all([
-        knex
-          .from("announcement_master")
-          // .leftJoin('announcement_user_master','announcement_master.id','announcement_user_master.announcementId')
-          // .leftJoin('users','announcement_user_master.userId','users.id')
-          .select([
-            "announcement_master.id",
-            "announcement_master.inApp",
-            "announcement_master.line",
-            "announcement_master.sms",
-            "announcement_master.email",
-            "announcement_master.webPush",
-            "announcement_master.title",
-            "announcement_master.url",
-            "announcement_master.userType",
-            "announcement_master.description",
-            "announcement_master.savedStatus",
-            "announcement_master.createdAt",
-            "announcement_master.updatedAt",
-            "announcement_master.companyId",
-            "announcement_master.projectId",
-            "announcement_master.buildingPhaseId",
-            "announcement_master.floorZoneId",
-            "announcement_master.propertyUnitId",
-            "announcement_master.teamId",
-            "announcement_master.isGeneral"
-          ])
-          .where("announcement_master.id", id)
-          .first(),
-        knex
-          .from("images")
-          .where({ entityId: id, entityType: "announcement_image" }),
-      ]);
+      let [announcementDetails, images] = await Promise.all(
+        [
+          knex
+            .from("announcement_master")
+            // .leftJoin('announcement_user_master','announcement_master.id','announcement_user_master.announcementId')
+            // .leftJoin('users','announcement_user_master.userId','users.id')
+            .select([
+              "announcement_master.id",
+              "announcement_master.inApp",
+              "announcement_master.line",
+              "announcement_master.sms",
+              "announcement_master.email",
+              "announcement_master.webPush",
+              "announcement_master.title",
+              "announcement_master.url",
+              "announcement_master.userType",
+              "announcement_master.description",
+              "announcement_master.savedStatus",
+              "announcement_master.createdAt",
+              "announcement_master.updatedAt",
+              "announcement_master.companyId",
+              "announcement_master.projectId",
+              "announcement_master.buildingPhaseId",
+              "announcement_master.floorZoneId",
+              "announcement_master.propertyUnitId",
+              "announcement_master.teamId",
+              "announcement_master.isGeneral",
+            ])
+            .where("announcement_master.id", id)
+            .first(),
+          knex
+            .from("images")
+            .where({
+              entityId: id,
+              entityType: "announcement_image",
+            }),
+        ]
+      );
       if (announcementDetails.companyId) {
         companies = await knex
           .from("companies")
-          .select(["companies.companyName", "companies.companyId"])
-          .whereIn("companies.id", announcementDetails.companyId);
+          .select([
+            "companies.companyName",
+            "companies.companyId",
+          ])
+          .whereIn(
+            "companies.id",
+            announcementDetails.companyId
+          );
       }
 
       if (announcementDetails.projectId) {
         projects = await knex
           .from("projects")
-          .select(["projects.id", "projects.projectName", "projects.project"])
-          .whereIn("projects.id", announcementDetails.projectId);
+          .select([
+            "projects.id",
+            "projects.projectName",
+            "projects.project",
+          ])
+          .whereIn(
+            "projects.id",
+            announcementDetails.projectId
+          );
       }
       if (announcementDetails.buildingPhaseId) {
         buildings = await knex
@@ -672,13 +811,22 @@ const announcementController = {
             "floor_and_zones.floorZoneCode",
             "floor_and_zones.description",
           ])
-          .whereIn("floor_and_zones.id", announcementDetails.floorZoneId);
+          .whereIn(
+            "floor_and_zones.id",
+            announcementDetails.floorZoneId
+          );
       }
       if (announcementDetails.propertyUnitId) {
         propertyUnit = await knex
           .from("property_units")
-          .select(["property_units.unitNumber", "property_units.description"])
-          .whereIn("property_units.id", announcementDetails.propertyUnitId);
+          .select([
+            "property_units.unitNumber",
+            "property_units.description",
+          ])
+          .whereIn(
+            "property_units.id",
+            announcementDetails.propertyUnitId
+          );
       }
       users = await knex
         .from("announcement_user_master")
@@ -692,7 +840,11 @@ const announcementController = {
       users = await Parallel.map(users, async (pd) => {
         let users = await knex
           .from("users")
-          .select(["users.id", "users.userName", "users.name as uName"])
+          .select([
+            "users.id",
+            "users.userName",
+            "users.name as uName",
+          ])
           .where("users.id", pd.userId)
           .first();
         return {
@@ -700,11 +852,17 @@ const announcementController = {
         };
       });
 
-      if (announcementDetails.userType == 1 && announcementDetails.teamId) {
+      if (
+        announcementDetails.userType == 1 &&
+        announcementDetails.teamId
+      ) {
         teams = await knex
           .from("teams")
           .select(["teams.teamId", "teams.teamName"])
-          .whereIn("teams.teamId", announcementDetails.teamId);
+          .whereIn(
+            "teams.teamId",
+            announcementDetails.teamId
+          );
       }
 
       return res.status(200).json({
@@ -722,10 +880,17 @@ const announcementController = {
         message: "Announcement Details !",
       });
     } catch (err) {
-      console.log("controller[announcement][announcementDetails]");
+      console.log(
+        "controller[announcement][announcementDetails]"
+      );
 
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -740,13 +905,24 @@ const announcementController = {
 
       const result = Joi.validate(payload, schema);
 
-      if (result && result.hasOwnProperty("error") && result.error) {
+      if (
+        result &&
+        result.hasOwnProperty("error") &&
+        result.error
+      ) {
         return res.status(400).json({
-          errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
+          errors: [
+            {
+              code: "VALIDATION_ERROR",
+              message: result.error.message,
+            },
+          ],
         });
       }
 
-      let announcementResult = await knex("announcement_master")
+      let announcementResult = await knex(
+        "announcement_master"
+      )
         .update({ status: false })
         .where({ id: id, orgId: req.orgId });
 
@@ -757,10 +933,17 @@ const announcementController = {
         },
       });
     } catch (err) {
-      console.log("controller[announcement][announcementDetails]");
+      console.log(
+        "controller[announcement][announcementDetails]"
+      );
 
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },

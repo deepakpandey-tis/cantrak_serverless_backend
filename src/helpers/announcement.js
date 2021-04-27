@@ -53,6 +53,34 @@ const announcementHelper = {
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };
     }
   },
+
+  
+  announcementSNSNotification: async ({orgId , module, dataNos}) => {
+    try {
+     
+      console.log("[ANNOUNCEMENT][SNS][NOTIFICATION]",orgId,module,dataNos)
+
+      const snsHelper = require('../helpers/sns');
+
+      const message = {
+        orgId: orgId,
+        module: module,
+        data: {
+          id: 1,
+          subject: dataNos.payload.title,
+          user: {
+            email: 'deepak@tis.co.th'
+          },
+          status: 'Approved'
+        }
+      };
+
+      await snsHelper.sendSNSMessage(message, 'THIRDPARTY_NOTIFICATIONS');
+    
+    } catch (err) {
+      return { failed: true, error: err };
+    }
+  },
 };
 
 module.exports = announcementHelper;
