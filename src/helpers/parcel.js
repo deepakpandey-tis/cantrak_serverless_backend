@@ -29,7 +29,6 @@ const parcelHelper = {
         orgId: orgId,
         module: module,
         data: {
-          // subject: dataNos.payload.title,
           parcelDetail : data.parcelDetail,
           receiverData : data. receiverData,
           senderData : data.senderData

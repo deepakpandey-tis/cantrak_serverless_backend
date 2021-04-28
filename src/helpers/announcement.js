@@ -55,10 +55,10 @@ const announcementHelper = {
   },
 
   
-  announcementSNSNotification: async ({orgId , module, dataNos}) => {
+  announcementSNSNotification: async ({orgId,module,announcementId,imagesData,dataNos,targetAudience}) => {
     try {
      
-      console.log("[ANNOUNCEMENT][SNS][NOTIFICATION]",orgId,module,dataNos)
+      console.log("[ANNOUNCEMENT][SNS][NOTIFICATION]",orgId,module,announcementId,imagesData,dataNos,targetAudience)
 
       const snsHelper = require('../helpers/sns');
 
@@ -66,12 +66,12 @@ const announcementHelper = {
         orgId: orgId,
         module: module,
         data: {
-          id: 1,
+          AnnouncementId : announcementId,
           subject: dataNos.payload.title,
-          user: {
-            email: 'deepak@tis.co.th'
-          },
-          status: 'Approved'
+          url : dataNos.payload.url,
+          description : dataNos.payload.description,
+          image : imagesData,
+          targetAudience
         }
       };
 

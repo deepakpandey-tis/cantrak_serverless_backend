@@ -14,6 +14,8 @@ const announcementController = {
   saveAnnouncementNotifications: async (req, res) => {
     try {
       let announcementPayload = req.body;
+
+      console.log("[ANNOUNCEMENT][PAYLOAD]",req.body)
       let orgId = req.orgId;
       let announcementResult = null;
       let id = req.body.userId;
@@ -174,6 +176,35 @@ const announcementController = {
           );
         }
 
+        let targetAudience;
+
+        let tenantList = await knex("user_house_allocation")
+        .leftJoin("users", "user_house_allocation.userId", "users.id")
+        .leftJoin("property_units","user_house_allocation.houseId","property_units.id")
+        .leftJoin("companies","property_units.companyId","companies.id")
+        .leftJoin("projects","property_units.projectId","projects.id")
+        .leftJoin("buildings_and_phases","property_units.buildingPhaseId","buildings_and_phases.id")
+        .leftJoin("floor_and_zones","property_units.floorZoneId","floor_and_zones.id")
+        .select([
+          "users.email",
+          "companies.companyId",
+          "projects.project",
+          "buildings_and_phases.buildingPhaseCode",
+          "property_units.unitNumber",
+          "floor_and_zones.floorZoneCode"
+        ])
+        .whereIn("users.id",req.body.userId)
+        .where({"user_house_allocation.orgId":orgId, "users.isActive": true});
+
+        tenantList = _.uniqBy(tenantList, "id")
+
+        console.log("[Announcement][targetAudience]",tenantList)
+  
+
+        if(payload.userType == 2){
+          targetAudience = tenantList
+        }
+
         //Import SNS Helper..
 
         const announcementSNSHelper = require("../helpers/announcement");
@@ -182,7 +213,10 @@ const announcementController = {
           {
             orgId: req.orgId,
             module: "ANNOUNCEMENT",
+            announcementId: newAnnouncementId,
+            imagesData : req.body.logoFile,
             dataNos,
+            targetAudience
           }
         );
 
