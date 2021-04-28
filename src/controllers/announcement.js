@@ -186,6 +186,7 @@ const announcementController = {
         .leftJoin("buildings_and_phases","property_units.buildingPhaseId","buildings_and_phases.id")
         .leftJoin("floor_and_zones","property_units.floorZoneId","floor_and_zones.id")
         .select([
+          // "users.id",
           "users.email",
           "companies.companyId",
           "projects.project",
@@ -196,12 +197,13 @@ const announcementController = {
         .whereIn("users.id",req.body.userId)
         .where({"user_house_allocation.orgId":orgId, "users.isActive": true});
 
-        tenantList = _.uniqBy(tenantList, "id")
+        // tenantList = _.uniqBy(tenantList, "id")
 
         console.log("[Announcement][targetAudience]",tenantList)
   
 
         if(payload.userType == 2){
+          // targetAudience = _.omit(tenantList,"id")
           targetAudience = tenantList
         }
 
