@@ -186,6 +186,7 @@ const announcementController = {
         .leftJoin("buildings_and_phases","property_units.buildingPhaseId","buildings_and_phases.id")
         .leftJoin("floor_and_zones","property_units.floorZoneId","floor_and_zones.id")
         .select([
+          "users.id",
           "users.email",
           "companies.companyId",
           "projects.project",
@@ -202,7 +203,7 @@ const announcementController = {
   
 
         if(payload.userType == 2){
-          targetAudience = tenantList
+          targetAudience = _.omit(tenantList,["id"])
         }
 
         //Import SNS Helper..
