@@ -12,7 +12,7 @@ const knex = require("../db/knex");
 
 const fs = require("fs");
 const https = require("https");
-const { whereIn } = require("../db/knex");
+const { whereIn, select } = require("../db/knex");
 const parcelCollectedNotification = require("../notifications/parcel/parcel-collected-notification");
 const addOutGoingNotification = require("../notifications/parcel/add-outgoing-parcel-notification");
 const parcelRejectedNotification = require("../notifications/parcel/parcel-rejected-notification");
@@ -261,13 +261,72 @@ const parcelManagementController = {
           );
         }
 
+
+        let propertyUnitData = await knex("property_units")
+        .leftJoin("companies","property_units.companyId","companies.id")
+        .leftJoin("projects","property_units.projectId","projects.id")
+        .select([
+          "companies.companyId",
+          "projects.project",
+          "property_units.unitNumber"
+        ])
+        .where({"property_units.id":orgUserDataPayload.unitId})
+        .first();
+
+        let receiverData;
+        let senderData;
+        let parcelDetail;
+        let priority;
+        if(payLoad.parcelPriority == 1){
+          priority = "Normal"
+        }else if(payLoad.parcelPriority == 2){
+          priority = "High"
+        }else {
+          priority = "Urgent"
+        }
+        if(pickedUpType == 1){
+          parcelDetail = {
+            parcelId : parcelResult.id,
+            parcelType : "Incoming Parcel",
+            trackingNumber: payLoad.trackingNumber,
+            parcelPriority : priority
+          }
+          senderData = {
+            ...noOrgUserDataPayload
+          }
+          receiverData = {
+            name : receiver.name,
+            email : receiver.email,
+            mobileNumber : receiver.mobileNo,
+            propertyUnitData
+          }
+        }else{
+          parcelDetail = {
+            parcelId : parcelResult.id,
+            parcelType : "Outgoing Parcel",
+            trackingNumber: payLoad.trackingNumber,
+            parcelPriority : priority
+          }
+          senderData = {
+            name : receiver.name,
+            email : receiver.email,
+            mobileNumber : receiver.mobileNo,
+            propertyUnitData
+          }
+          receiverData = {
+            ...noOrgUserDataPayload
+          }
+        }
+
+       
+
         //Import SNS Helper..
         const parcelSNSHelper = require("../helpers/parcel");
 
         await parcelSNSHelper.parcelSNSNotification({
           orgId: req.orgId,
           module: "PARCEL",
-          dataNos,
+          data: {parcelDetail,senderData,receiverData},
           receiver,
         });
 

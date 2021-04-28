@@ -11,7 +11,7 @@ const parcelHelper = {
   parcelSNSNotification: async ({
     orgId,
     module,
-    dataNos,
+    data,
     receiver,
   }) => {
     try {
@@ -19,7 +19,7 @@ const parcelHelper = {
         "[PARCEL][SNS][NOTIFICATION]",
         orgId,
         module,
-        dataNos,
+        data,
         receiver
       );
 
@@ -29,16 +29,11 @@ const parcelHelper = {
         orgId: orgId,
         module: module,
         data: {
-          id: dataNos.payload.parcelId,
-          subject: dataNos.payload.title,
-          user: {
-            userId: receiver.id,
-            name: receiver.name,
-            mobileNumber: receiver.mobileNo,
-            email: receiver.email,
-          },
-          status: "Approved",
-        },
+          // subject: dataNos.payload.title,
+          parcelDetail : data.parcelDetail,
+          receiverData : data. receiverData,
+          senderData : data.senderData
+        }
       };
 
       await snsHelper.sendSNSMessage(
