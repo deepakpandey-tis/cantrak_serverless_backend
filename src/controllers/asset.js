@@ -3850,18 +3850,29 @@ const assetController = {
                     orgId: req.orgId,
                   })
                   .select("id");
-                if (!locationResult.length) {
-                  fail++;
-                  let values = _.values(assetData);
-                  values.unshift(
-                    "Location Tag does not exists."
-                  );
-                  errors.push(values);
-                  continue;
-                }
+                // if (!locationResult.length) {
+                //   fail++;
+                //   let values = _.values(assetData);
+                //   values.unshift(
+                //     "Location Tag does not exists."
+                //   );
+                //   errors.push(values);
+                //   continue;
+                // }
 
-                if (locationResult.length) {
+                
+                if (locationResult && locationResult.length) {
                   locationId = locationResult[0].id;
+                }else{
+                  const locationData = await knex('location_tags_master')
+                  .insert({
+                    title: assetData.M,
+                    descriptionEng : assetData.M,
+                    orgId: req.orgId,
+                  })
+                  .returning(["id"]);
+                  locationId = locationData[0].id;
+
                 }
               }
               /*GET LOCATION ID BY LOCATION CODE CLOSE */
