@@ -4037,7 +4037,7 @@ const assetController = {
                 success++;
               }
 
-              console.log("[asset result data]===",resultData)
+              console.log("[asset result data]===",success)
 
             //   let houseResult = await knex("property_units")
             //   .select("id")
