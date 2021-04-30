@@ -4028,6 +4028,9 @@ const assetController = {
                 additionalInformation: assetData.Q,
               };
 
+
+              console.log("[Insert Data]==========",insertData)
+
               resultData = await knex
                 .insert(insertData)
                 .returning(["*"])
