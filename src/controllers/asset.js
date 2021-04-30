@@ -4028,6 +4028,9 @@ const assetController = {
                 additionalInformation: assetData.Q,
               };
 
+
+              console.log("[Insert Data]==========",insertData)
+
               resultData = await knex
                 .insert(insertData)
                 .returning(["*"])
@@ -4037,7 +4040,7 @@ const assetController = {
                 success++;
               }
 
-              console.log("[asset result data]===",resultData)
+              console.log("[asset result data]===",success)
 
             //   let houseResult = await knex("property_units")
             //   .select("id")
