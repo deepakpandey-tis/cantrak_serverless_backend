@@ -3768,6 +3768,8 @@ const assetController = {
                 .first();
                 if(projectResult && projectResult.id){
                   projectId = projectResult.id
+
+                  console.log("[Project======]",projectId)
                 }else{
                   fail++;
                   let values = _.values(assetData);
@@ -3793,6 +3795,9 @@ const assetController = {
                 .first();
                 if(buildingResult && buildingResult.id){
                   buildingId = buildingResult.id
+
+                  console.log("[Building======]",buildingId)
+
                 }else{
                   fail++;
                   let values = _.values(assetData);
@@ -3817,6 +3822,8 @@ const assetController = {
                 .first();
                 if(floorZoneResult && floorZoneResult.id){
                   floorZoneId = floorZoneResult.id
+                  console.log("[FloorZoneId======]",floorZoneId)
+
                 }else{
                   fail++;
                   let values = _.values(assetData);
@@ -3841,6 +3848,9 @@ const assetController = {
                 .first();
                 if(propertyUnitResult && propertyUnitResult.id){
                   propertyUnitId = propertyUnitResult.id
+
+                  console.log("[PropertyUnit======]",propertyUnitId)
+
                 }else{
                   fail++;
                   let values = _.values(assetData);
