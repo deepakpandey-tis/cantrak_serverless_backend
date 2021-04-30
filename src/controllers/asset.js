@@ -3757,7 +3757,7 @@ const assetController = {
               } else {
                 continue;
               }
-              let projectId = "" ;
+              let projectId ;
               if(assetData.S){
                 let projectResult = await knex('projects')
                 .select("id")
@@ -3782,7 +3782,7 @@ const assetController = {
                 continue;
               }
 
-              let buildingId = "";
+              let buildingId ;
               if(assetData.T){
                 let buildingResult = await knex("buildings_and_phases")
                 .select("id")
@@ -3806,7 +3806,7 @@ const assetController = {
                 continue;
               }
 
-              let floorZoneId = "";
+              let floorZoneId;
               if(assetData.U){
                 let floorZoneResult = await knex('floor_and_zones')
                 .select("id")
@@ -3830,7 +3830,7 @@ const assetController = {
                 continue;
               }
 
-              let propertyUnitId = "";
+              let propertyUnitId;
               if(assetData.V){
                 let propertyUnitResult = await knex('property_units')
                 .select("id")
