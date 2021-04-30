@@ -3784,85 +3784,85 @@ const assetController = {
                 continue;
               }
 
-              let buildingId ;
-              if(assetData.T){
-                let buildingResult = await knex("buildings_and_phases")
-                .select("id")
-                .where({
-                  buildingPhaseCode : assetData.T,
-                  orgId : req.orgId
-                })
-                .first();
-                if(buildingResult && buildingResult.id){
-                  buildingId = buildingResult.id
+              // let buildingId ;
+              // if(assetData.T){
+              //   let buildingResult = await knex("buildings_and_phases")
+              //   .select("id")
+              //   .where({
+              //     buildingPhaseCode : assetData.T,
+              //     orgId : req.orgId
+              //   })
+              //   .first();
+              //   if(buildingResult && buildingResult.id){
+              //     buildingId = buildingResult.id
 
-                  console.log("[Building======]",buildingId)
+              //     console.log("[Building======]",buildingId)
 
-                }else{
-                  fail++;
-                  let values = _.values(assetData);
-                  values.unshift(
-                    "Building ID does not exists."
-                  );
-                  errors.push(values);
-                  continue;
-                }
-              }else{
-                continue;
-              }
+              //   }else{
+              //     fail++;
+              //     let values = _.values(assetData);
+              //     values.unshift(
+              //       "Building ID does not exists."
+              //     );
+              //     errors.push(values);
+              //     continue;
+              //   }
+              // }else{
+              //   continue;
+              // }
 
-              let floorZoneId;
-              if(assetData.U){
-                let floorZoneResult = await knex('floor_and_zones')
-                .select("id")
-                .where({
-                  floorZoneCode : assetData.U,
-                  orgId : req.orgId
-                })
-                .first();
-                if(floorZoneResult && floorZoneResult.id){
-                  floorZoneId = floorZoneResult.id
-                  console.log("[FloorZoneId======]",floorZoneId)
+              // let floorZoneId;
+              // if(assetData.U){
+              //   let floorZoneResult = await knex('floor_and_zones')
+              //   .select("id")
+              //   .where({
+              //     floorZoneCode : assetData.U,
+              //     orgId : req.orgId
+              //   })
+              //   .first();
+              //   if(floorZoneResult && floorZoneResult.id){
+              //     floorZoneId = floorZoneResult.id
+              //     console.log("[FloorZoneId======]",floorZoneId)
 
-                }else{
-                  fail++;
-                  let values = _.values(assetData);
-                  values.unshift(
-                    "Floor Zone ID does not exists."
-                  );
-                  errors.push(values);
-                  continue;
-                }
-              }else{
-                continue;
-              }
+              //   }else{
+              //     fail++;
+              //     let values = _.values(assetData);
+              //     values.unshift(
+              //       "Floor Zone ID does not exists."
+              //     );
+              //     errors.push(values);
+              //     continue;
+              //   }
+              // }else{
+              //   continue;
+              // }
 
-              let propertyUnitId;
-              if(assetData.V){
-                let propertyUnitResult = await knex('property_units')
-                .select("id")
-                .where({
-                  unitNumber : assetData.V,
-                  orgId : req.orgId
-                })
-                .first();
-                if(propertyUnitResult && propertyUnitResult.id){
-                  propertyUnitId = propertyUnitResult.id
+              // let propertyUnitId;
+              // if(assetData.V){
+              //   let propertyUnitResult = await knex('property_units')
+              //   .select("id")
+              //   .where({
+              //     unitNumber : assetData.V,
+              //     orgId : req.orgId
+              //   })
+              //   .first();
+              //   if(propertyUnitResult && propertyUnitResult.id){
+              //     propertyUnitId = propertyUnitResult.id
 
-                  console.log("[PropertyUnit======]",propertyUnitId)
+              //     console.log("[PropertyUnit======]",propertyUnitId)
 
-                }else{
-                  fail++;
-                  let values = _.values(assetData);
-                  values.unshift(
-                    "Unit Number does not exists."
-                  );
-                  errors.push(values);
-                  continue;
-                }
-              }else{
-                continue;
-              }
+              //   }else{
+              //     fail++;
+              //     let values = _.values(assetData);
+              //     values.unshift(
+              //       "Unit Number does not exists."
+              //     );
+              //     errors.push(values);
+              //     continue;
+              //   }
+              // }else{
+              //   continue;
+              // }
 
               let assetCategoryId = "";
               const cat = await knex(
@@ -4097,7 +4097,7 @@ const assetController = {
             .where({ orgId: req.orgId, isActive: true })
             .returning(["*"]);
 
-            console.log("[update][asset]",update)
+            // console.log("[update][asset]",update)
 
           return res.status(200).json({
             message: message,
