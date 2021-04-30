@@ -93,7 +93,7 @@ const assetController = {
       let locationData;
       let location = null;
 
-      console.log("data for location",req.body)
+      console.log("data for location", req.body);
 
       await knex.transaction(async (trx) => {
         let assetPayload = req.body;
@@ -204,30 +204,33 @@ const assetController = {
 
         asset = assetResult;
 
-        console.log("req.body.locationdata",req.body.location_data)
+        console.log(
+          "req.body.locationdata",
+          req.body.location_data
+        );
 
-          if (req.body.location_data) {
-            let location_data = req.body.location_data;
-            console.log("location data",location_data)
+        if (req.body.location_data) {
+          let location_data = req.body.location_data;
+          console.log("location data", location_data);
 
-            locationData = await knex              
+          locationData = await knex
             .insert({
-                assetId : asset[0].id,
-                companyId: location_data.companyId,
-                projectId: location_data.projectId,
-                buildingId: location_data.buildingPhaseId,
-                floorId: location_data.floorZoneId,
-                unitId: location_data.unitId,
-                houseId: location_data.houseId,
-                // houseNo : location_data.houseNo,
-                createdAt: currentTime,
-                updatedAt: currentTime,
-                startDate: currentTime,
-                orgId: req.orgId,
-              })
-              .returning(["*"])
-              .into("asset_location");
-          }
+              assetId: asset[0].id,
+              companyId: location_data.companyId,
+              projectId: location_data.projectId,
+              buildingId: location_data.buildingPhaseId,
+              floorId: location_data.floorZoneId,
+              unitId: location_data.unitId,
+              houseId: location_data.houseId,
+              // houseNo : location_data.houseNo,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              startDate: currentTime,
+              orgId: req.orgId,
+            })
+            .returning(["*"])
+            .into("asset_location");
+        }
         // Add asset to a location with help of locationId
         let locationTagPayload = {
           entityId: asset[0].id,
@@ -362,7 +365,6 @@ const assetController = {
               .into("assigned_vendors");
             //.where({ orgId: req.orgId });
           }
-          
         }
 
         trx.commit;
@@ -383,7 +385,7 @@ const assetController = {
             images,
             files,
             location,
-            locationData
+            locationData,
           },
         },
         message: "Asset added successfully !",
@@ -1996,7 +1998,7 @@ const assetController = {
           "files",
           "vendorId",
           "additionalVendorId",
-          "location_data"
+          "location_data",
         ]);
         // validate keys
         const schema = Joi.object().keys({
@@ -2138,10 +2140,10 @@ const assetController = {
 
         if (req.body.location_data) {
           let location_data = req.body.location_data;
-          console.log("location data",location_data)
+          console.log("location data", location_data);
 
-          locationData = await knex              
-          .update({
+          locationData = await knex
+            .update({
               companyId: location_data.companyId,
               projectId: location_data.projectId,
               buildingId: location_data.buildingPhaseId,
@@ -2155,7 +2157,6 @@ const assetController = {
             .returning(["*"])
             .into("asset_location");
         }
-
 
         let additionalAttributes =
           req.body.additionalAttributes;
@@ -3757,20 +3758,20 @@ const assetController = {
               } else {
                 continue;
               }
-              let projectId ;
-              if(assetData.S){
-                let projectResult = await knex('projects')
-                .select("id")
-                .where({
-                  project : assetData.S,
-                  orgId : req.orgId
-                })
-                .first();
-                if(projectResult && projectResult.id){
-                  projectId = projectResult.id
+              let projectId;
+              if (assetData.S) {
+                let projectResult = await knex("projects")
+                  .select("id")
+                  .where({
+                    project: assetData.S,
+                    orgId: req.orgId,
+                  })
+                  .first();
+                if (projectResult && projectResult.id) {
+                  projectId = projectResult.id;
 
-                  console.log("[Project======]",projectId)
-                }else{
+                  console.log("[Project======]", projectId);
+                } else {
                   fail++;
                   let values = _.values(assetData);
                   values.unshift(
@@ -3779,63 +3780,70 @@ const assetController = {
                   errors.push(values);
                   continue;
                 }
-
-              }else{
+              } else {
                 continue;
               }
 
-              // let buildingId ;
-              // if(assetData.T){
-              //   let buildingResult = await knex("buildings_and_phases")
-              //   .select("id")
-              //   .where({
-              //     buildingPhaseCode : assetData.T,
-              //     orgId : req.orgId
-              //   })
-              //   .first();
-              //   if(buildingResult && buildingResult.id){
-              //     buildingId = buildingResult.id
+              let buildingId;
+              if (assetData.T) {
+                let buildingResult = await knex(
+                  "buildings_and_phases"
+                )
+                  .select("id")
+                  .where({
+                    buildingPhaseCode: assetData.T,
+                    orgId: req.orgId,
+                  })
+                  .first();
+                if (buildingResult && buildingResult.id) {
+                  buildingId = buildingResult.id;
 
-              //     console.log("[Building======]",buildingId)
+                  console.log(
+                    "[Building======]",
+                    buildingId
+                  );
+                } else {
+                  fail++;
+                  let values = _.values(assetData);
+                  values.unshift(
+                    "Building ID does not exists."
+                  );
+                  errors.push(values);
+                  continue;
+                }
+              } else {
+                continue;
+              }
 
-              //   }else{
-              //     fail++;
-              //     let values = _.values(assetData);
-              //     values.unshift(
-              //       "Building ID does not exists."
-              //     );
-              //     errors.push(values);
-              //     continue;
-              //   }
-              // }else{
-              //   continue;
-              // }
-
-              // let floorZoneId;
-              // if(assetData.U){
-              //   let floorZoneResult = await knex('floor_and_zones')
-              //   .select("id")
-              //   .where({
-              //     floorZoneCode : assetData.U,
-              //     orgId : req.orgId
-              //   })
-              //   .first();
-              //   if(floorZoneResult && floorZoneResult.id){
-              //     floorZoneId = floorZoneResult.id
-              //     console.log("[FloorZoneId======]",floorZoneId)
-
-              //   }else{
-              //     fail++;
-              //     let values = _.values(assetData);
-              //     values.unshift(
-              //       "Floor Zone ID does not exists."
-              //     );
-              //     errors.push(values);
-              //     continue;
-              //   }
-              // }else{
-              //   continue;
-              // }
+              let floorZoneId;
+              if (assetData.U) {
+                let floorZoneResult = await knex(
+                  "floor_and_zones"
+                )
+                  .select("id")
+                  .where({
+                    floorZoneCode: assetData.U,
+                    orgId: req.orgId,
+                  })
+                  .first();
+                if (floorZoneResult && floorZoneResult.id) {
+                  floorZoneId = floorZoneResult.id;
+                  console.log(
+                    "[FloorZoneId======]",
+                    floorZoneId
+                  );
+                } else {
+                  fail++;
+                  let values = _.values(assetData);
+                  values.unshift(
+                    "Floor Zone ID does not exists."
+                  );
+                  errors.push(values);
+                  continue;
+                }
+              } else {
+                continue;
+              }
 
               // let propertyUnitId;
               // if(assetData.V){
@@ -3966,19 +3974,22 @@ const assetController = {
                 //   continue;
                 // }
 
-                
-                if (locationResult && locationResult.length) {
+                if (
+                  locationResult &&
+                  locationResult.length
+                ) {
                   locationId = locationResult[0].id;
-                }else{
-                  const locationData = await knex('location_tags_master')
-                  .insert({
-                    title: assetData.M,
-                    descriptionEng : assetData.M,
-                    orgId: req.orgId,
-                  })
-                  .returning(["id"]);
+                } else {
+                  const locationData = await knex(
+                    "location_tags_master"
+                  )
+                    .insert({
+                      title: assetData.M,
+                      descriptionEng: assetData.M,
+                      orgId: req.orgId,
+                    })
+                    .returning(["id"]);
                   locationId = locationData[0].id;
-
                 }
               }
               /*GET LOCATION ID BY LOCATION CODE CLOSE */
@@ -4012,7 +4023,7 @@ const assetController = {
                 model: assetData.D,
                 price: assetData.G,
                 companyId: companyId,
-                projectId : projectId,
+                projectId: projectId,
                 assetCategoryId,
                 createdAt: currentTime,
                 updatedAt: currentTime,
@@ -4028,8 +4039,10 @@ const assetController = {
                 additionalInformation: assetData.Q,
               };
 
-
-              console.log("[Insert Data]==========",insertData)
+              console.log(
+                "[Insert Data]==========",
+                insertData
+              );
 
               resultData = await knex
                 .insert(insertData)
@@ -4040,31 +4053,36 @@ const assetController = {
                 success++;
               }
 
-              console.log("[asset result data]===",success)
+              // console.log("[asset result data]===",success)
 
-            //   let houseResult = await knex("property_units")
-            //   .select("id")
-            //   .where({ floorZoneId, orgId: orgId, isActive: true});
-            //   let houseId = houseResult.find(v => v.id === propertyUnitId).id;
+              // let houseResult = await knex("property_units")
+              // .select("id")
+              // .where({ floorZoneId, orgId: orgId, isActive: true});
+              // let houseId = houseResult.find(v => v.id === propertyUnitId).id;
 
+              // console.log("[HouseId]",houseId);
 
-            //   console.log("[HouseId]",houseId);
+              let assetLocationResult = await knex
+                .insert({
+                  assetId: resultData[0].id,
+                  //  houseId : houseId,
+                  floorId: floorZoneId,
+                  //  unitId : propertyUnitId,
+                  buildingId: buildingId,
+                  projectId: projectId,
+                  companyId: companyId,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  startDate: currentTime,
+                  orgId: req.orgId,
+                })
+                .returning(["*"])
+                .into("asset_location");
 
-            //  let assetLocationResult = await knex
-            //  .insert({
-            //    assetId : resultData[0].id,
-            //    houseId : houseId,
-            //    floorId: floorZoneId,
-            //    unitId : propertyUnitId,
-            //    buildingId : buildingId,
-            //    projectId:projectId,
-            //    companyId : companyId
-
-            //  })
-            //  .returning(["*"])
-            //  .into("asset_location");
-
-            //  console.log("[AssetLocation][HouseId]",assetLocationResult)
+              console.log(
+                "[AssetLocation][HouseId]",
+                assetLocationResult
+              );
 
               // } else {
               //   fail++;
@@ -4097,7 +4115,7 @@ const assetController = {
             .where({ orgId: req.orgId, isActive: true })
             .returning(["*"]);
 
-            // console.log("[update][asset]",update)
+          // console.log("[update][asset]",update)
 
           return res.status(200).json({
             message: message,
@@ -4384,18 +4402,18 @@ const assetController = {
         createdAt: currentTime,
         updatedAt: currentTime,
       });
-      location_update = await knex(
-        "asset_location"
-      ).insert({
-        ...newAssetLocation,
-        assetId: newAssetId,
-        createdAt: currentTime,
-        updatedAt: currentTime,
-        serviceRequestId,
-        startDate: currentTime,
-        orgId: req.orgId,
-        serviceRequestId,
-      });
+      location_update = await knex("asset_location").insert(
+        {
+          ...newAssetLocation,
+          assetId: newAssetId,
+          createdAt: currentTime,
+          updatedAt: currentTime,
+          serviceRequestId,
+          startDate: currentTime,
+          orgId: req.orgId,
+          serviceRequestId,
+        }
+      );
       // Change the old asset location to null
 
       return res.status(200).json({
@@ -4640,12 +4658,10 @@ const assetController = {
           .status(200)
           .json({ message: "Part removed succesfully" });
       } else {
-        return res
-          .status(200)
-          .json({
-            message:
-              "Something went wrong while removing part. Make sure you send partId and assetId in the body request.",
-          });
+        return res.status(200).json({
+          message:
+            "Something went wrong while removing part. Make sure you send partId and assetId in the body request.",
+        });
       }
     } catch (err) {
       return res.status(500).json({
@@ -4708,7 +4724,7 @@ const assetController = {
           "floor_and_zones.description",
           "property_units.unitNumber as unitNumber",
           "property_units.id as unitId",
-          "property_units.houseId"
+          "property_units.houseId",
         ])
         .where({
           "property_units.isActive": true,
@@ -4722,9 +4738,8 @@ const assetController = {
         .where(
           "property_units.companyId",
           payload.companyId
-        ).where(
-            "property_units.type",payload.type
-        );
+        )
+        .where("property_units.type", payload.type);
       //   .whereIn("property_units.projectId",projectIds);
 
       return res.status(200).json({
