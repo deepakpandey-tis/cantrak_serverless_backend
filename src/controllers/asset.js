@@ -4029,29 +4029,29 @@ const assetController = {
 
               console.log("[asset result data]===",resultData)
 
-              let houseResult = await knex("property_units")
-              .select("id")
-              .where({ floorZoneId, orgId: orgId, isActive: true});
-              let houseId = houseResult.find(v => v.id === propertyUnitId).id;
+            //   let houseResult = await knex("property_units")
+            //   .select("id")
+            //   .where({ floorZoneId, orgId: orgId, isActive: true});
+            //   let houseId = houseResult.find(v => v.id === propertyUnitId).id;
 
 
-              console.log("[HouseId]",houseId);
+            //   console.log("[HouseId]",houseId);
 
-             let assetLocationResult = await knex
-             .insert({
-               assetId : resultData[0].id,
-               houseId : houseId,
-               floorId: floorZoneId,
-               unitId : propertyUnitId,
-               buildingId : buildingId,
-               projectId:projectId,
-               companyId : companyId
+            //  let assetLocationResult = await knex
+            //  .insert({
+            //    assetId : resultData[0].id,
+            //    houseId : houseId,
+            //    floorId: floorZoneId,
+            //    unitId : propertyUnitId,
+            //    buildingId : buildingId,
+            //    projectId:projectId,
+            //    companyId : companyId
 
-             })
-             .returning(["*"])
-             .into("asset_location");
+            //  })
+            //  .returning(["*"])
+            //  .into("asset_location");
 
-             console.log("[AssetLocation][HouseId]",assetLocationResult)
+            //  console.log("[AssetLocation][HouseId]",assetLocationResult)
 
               // } else {
               //   fail++;
