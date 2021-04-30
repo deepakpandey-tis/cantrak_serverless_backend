@@ -3762,7 +3762,7 @@ const assetController = {
                 let projectResult = await knex('projects')
                 .select("id")
                 .where({
-                  project : assetData.s,
+                  project : assetData.S,
                   orgId : req.orgId
                 })
                 .first();
