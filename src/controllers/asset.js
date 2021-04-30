@@ -3757,6 +3757,102 @@ const assetController = {
               } else {
                 continue;
               }
+              let projectId = "" ;
+              if(assetData.S){
+                let projectResult = await knex('projects')
+                .select("id")
+                .where({
+                  project : assetData.S,
+                  orgId : req.orgId
+                })
+                .first();
+                if(projectResult && projectResult.id){
+                  projectId = projectResult.id
+                }else{
+                  fail++;
+                  let values = _.values(assetData);
+                  values.unshift(
+                    "Project ID does not exists."
+                  );
+                  errors.push(values);
+                  continue;
+                }
+
+              }else{
+                continue;
+              }
+
+              let buildingId = "";
+              if(assetData.T){
+                let buildingResult = await knex("buildings_and_phases")
+                .select("id")
+                .where({
+                  buildingPhaseCode : assetData.T,
+                  orgId : req.orgId
+                })
+                .first();
+                if(buildingResult && buildingResult.id){
+                  buildingId = buildingResult.id
+                }else{
+                  fail++;
+                  let values = _.values(assetData);
+                  values.unshift(
+                    "Building ID does not exists."
+                  );
+                  errors.push(values);
+                  continue;
+                }
+              }else{
+                continue;
+              }
+
+              let floorZoneId = "";
+              if(assetData.U){
+                let floorZoneResult = await knex('floor_and_zones')
+                .select("id")
+                .where({
+                  floorZoneCode : assetData.U,
+                  orgId : req.orgId
+                })
+                .first();
+                if(floorZoneResult && floorZoneResult.id){
+                  floorZoneId = floorZoneResult.id
+                }else{
+                  fail++;
+                  let values = _.values(assetData);
+                  values.unshift(
+                    "Floor Zone ID does not exists."
+                  );
+                  errors.push(values);
+                  continue;
+                }
+              }else{
+                continue;
+              }
+
+              let propertyUnitId = "";
+              if(assetData.V){
+                let propertyUnitResult = await knex('property_units')
+                .select("id")
+                .where({
+                  unitNumber : assetData.V,
+                  orgId : req.orgId
+                })
+                .first();
+                if(propertyUnitResult && propertyUnitResult.id){
+                  propertyUnitId = propertyUnitResult.id
+                }else{
+                  fail++;
+                  let values = _.values(assetData);
+                  values.unshift(
+                    "Unit Number does not exists."
+                  );
+                  errors.push(values);
+                  continue;
+                }
+              }else{
+                continue;
+              }
 
               let assetCategoryId = "";
               const cat = await knex(
@@ -3906,6 +4002,7 @@ const assetController = {
                 model: assetData.D,
                 price: assetData.G,
                 companyId: companyId,
+                projectId : projectId,
                 assetCategoryId,
                 createdAt: currentTime,
                 updatedAt: currentTime,
@@ -3929,6 +4026,32 @@ const assetController = {
               if (resultData && resultData.length) {
                 success++;
               }
+
+              console.log("[asset result data]===",resultData)
+
+              let houseResult = await knex("property_units")
+              .select("id")
+              .where({ floorZoneId, orgId: orgId, isActive: true});
+              let houseId = houseResult.find(v => v.id === propertyUnitId).id;
+
+
+              console.log("[HouseId]",houseId);
+
+             let assetLocationResult = await knex
+             .insert({
+               assetId : resultData[0].id,
+               houseId : houseId,
+               floorId: floorZoneId,
+               unitId : propertyUnitId,
+               buildingId : buildingId,
+               projectId:projectId,
+               companyId : companyId
+
+             })
+             .returning(["*"])
+             .into("asset_location");
+
+             console.log("[AssetLocation][HouseId]",assetLocationResult)
 
               // } else {
               //   fail++;
@@ -3960,6 +4083,8 @@ const assetController = {
             .update({ isActive: true })
             .where({ orgId: req.orgId, isActive: true })
             .returning(["*"]);
+
+            console.log("[update][asset]",update)
 
           return res.status(200).json({
             message: message,
