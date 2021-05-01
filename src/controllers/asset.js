@@ -3848,10 +3848,6 @@ const assetController = {
               // }
 
               let propertyUnitId;
-              console.log(
-                "[asset unit number]",
-                assetData.V
-              );
               if (assetData.V) {
                 let propertyUnitResult = await knex(
                   "property_units"
@@ -3861,7 +3857,7 @@ const assetController = {
                     // unitNumber: assetData.V,
                     orgId: req.orgId,
                   })
-                  .where( unitNumber,
+                  .where( "unitNumber",
                   "iLIKE",
                   `%${assetData.V}%`)
                   .first();
@@ -3870,11 +3866,6 @@ const assetController = {
                   propertyUnitResult.id
                 ) {
                   propertyUnitId = propertyUnitResult.id;
-
-                  console.log(
-                    "[PropertyUnit======]",
-                    propertyUnitId
-                  );
                 } else {
                   fail++;
                   let values = _.values(assetData);
