@@ -1110,6 +1110,8 @@ const companyController = {
       let companyHavingPU1
       let companyArr1 = []
 
+      console.log("[area name]",req.query)
+
       if (req.query.areaName === 'common') {
         companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 2 })
         companyArr1 = companyHavingPU1.map(v => v.companyId);
@@ -1128,8 +1130,8 @@ const companyController = {
           .groupBy(['companies.id', 'companies.companyName', 'companies.companyId'])
           .orderBy('companies.companyId', 'asc')
 
-      } else if (req.query.areaName === 'all') {
-        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 2 })
+      } else if (req.query.areaName === 'all' || req.query.areaName == '') {
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true})
         companyArr1 = companyHavingPU1.map(v => v.companyId)
         companyArr1 = _.uniq(companyArr1);
 
