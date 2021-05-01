@@ -89,7 +89,7 @@ provider:
   
 
 custom:
-  serviceName: servicemind-node
+  serviceName: servicemind-test
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
   bucket: servicemind-resources
