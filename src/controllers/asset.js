@@ -3811,9 +3811,10 @@ const assetController = {
                   errors.push(values);
                   continue;
                 }
-              } else {
-                continue;
               }
+              //  else {
+              //   continue;
+              // }
 
               let floorZoneId;
               if (assetData.U) {
@@ -3841,34 +3842,47 @@ const assetController = {
                   errors.push(values);
                   continue;
                 }
-              } else {
-                continue;
               }
+              //  else {
+              //   continue;
+              // }
 
-              // let propertyUnitId;
-              // if(assetData.V){
-              //   let propertyUnitResult = await knex('property_units')
-              //   .select("id")
-              //   .where({
-              //     unitNumber : assetData.V,
-              //     orgId : req.orgId
-              //   })
-              //   .first();
-              //   if(propertyUnitResult && propertyUnitResult.id){
-              //     propertyUnitId = propertyUnitResult.id
+              let propertyUnitId;
+              console.log(
+                "[asset unit number]",
+                assetData.V
+              );
+              if (assetData.V) {
+                let propertyUnitResult = await knex(
+                  "property_units"
+                )
+                  .select("id")
+                  .where({
+                    unitNumber: assetData.V,
+                    orgId: req.orgId,
+                  })
+                  .first();
+                if (
+                  propertyUnitResult &&
+                  propertyUnitResult.id
+                ) {
+                  propertyUnitId = propertyUnitResult.id;
 
-              //     console.log("[PropertyUnit======]",propertyUnitId)
-
-              //   }else{
-              //     fail++;
-              //     let values = _.values(assetData);
-              //     values.unshift(
-              //       "Unit Number does not exists."
-              //     );
-              //     errors.push(values);
-              //     continue;
-              //   }
-              // }else{
+                  console.log(
+                    "[PropertyUnit======]",
+                    propertyUnitId
+                  );
+                } else {
+                  fail++;
+                  let values = _.values(assetData);
+                  values.unshift(
+                    "Unit Number does not exists."
+                  );
+                  errors.push(values);
+                  continue;
+                }
+              }
+              // else{
               //   continue;
               // }
 
@@ -4062,13 +4076,13 @@ const assetController = {
 
               // console.log("[HouseId]",houseId);
 
-              if (projectId && buildingId && floorZoneId) {
+              if (projectId && buildingId && floorZoneId && propertyUnitId) {
                 let assetLocationResult = await knex
                   .insert({
                     assetId: resultData[0].id,
                     //  houseId : houseId,
                     floorId: floorZoneId,
-                    //  unitId : propertyUnitId,
+                    unitId: propertyUnitId,
                     buildingId: buildingId,
                     projectId: projectId,
                     companyId: companyId,
