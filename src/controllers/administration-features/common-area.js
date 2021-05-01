@@ -863,7 +863,7 @@ const commonAreaController = {
         data[0].C == "PROPERTY_TYPE_CODE" &&
         data[0].D == "BUILDING_PHASE_CODE" &&
         data[0].E == "FLOOR_ZONE_CODE" &&
-        data[0].F == "UNIT_NUMBER" &&
+        data[0].F == "COMMON_AREA_CODE" &&
         data[0].G == "DESCRIPTION"
       ) {
         if (data.length > 0) {

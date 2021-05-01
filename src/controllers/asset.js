@@ -4062,27 +4062,24 @@ const assetController = {
 
               // console.log("[HouseId]",houseId);
 
-              let assetLocationResult = await knex
-                .insert({
-                  assetId: resultData[0].id,
-                  //  houseId : houseId,
-                  floorId: floorZoneId,
-                  //  unitId : propertyUnitId,
-                  buildingId: buildingId,
-                  projectId: projectId,
-                  companyId: companyId,
-                  createdAt: currentTime,
-                  updatedAt: currentTime,
-                  startDate: currentTime,
-                  orgId: req.orgId,
-                })
-                .returning(["*"])
-                .into("asset_location");
-
-              console.log(
-                "[AssetLocation][HouseId]",
-                assetLocationResult
-              );
+              if (projectId && buildingId && floorZoneId) {
+                let assetLocationResult = await knex
+                  .insert({
+                    assetId: resultData[0].id,
+                    //  houseId : houseId,
+                    floorId: floorZoneId,
+                    //  unitId : propertyUnitId,
+                    buildingId: buildingId,
+                    projectId: projectId,
+                    companyId: companyId,
+                    createdAt: currentTime,
+                    updatedAt: currentTime,
+                    startDate: currentTime,
+                    orgId: req.orgId,
+                  })
+                  .returning(["*"])
+                  .into("asset_location");
+              }
 
               // } else {
               //   fail++;
