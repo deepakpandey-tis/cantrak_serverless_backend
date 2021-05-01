@@ -3858,9 +3858,12 @@ const assetController = {
                 )
                   .select("id")
                   .where({
-                    unitNumber: assetData.V,
+                    // unitNumber: assetData.V,
                     orgId: req.orgId,
                   })
+                  .where( unitNumber,
+                  "iLIKE",
+                  `%${assetData.V}%`)
                   .first();
                 if (
                   propertyUnitResult &&
@@ -4080,7 +4083,7 @@ const assetController = {
                 let assetLocationResult = await knex
                   .insert({
                     assetId: resultData[0].id,
-                    //  houseId : houseId,
+                    houseId : propertyUnitId,
                     floorId: floorZoneId,
                     unitId: propertyUnitId,
                     buildingId: buildingId,
