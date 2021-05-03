@@ -732,10 +732,10 @@ const assetController = {
           assetAssignedPm = assetAssignedPm.map((d) => {
             return d.pmName;
           });
-          console.log(
-            "PM data for assets=====>>>>>",
-            assetAssignedPm
-          );
+          // console.log(
+          //   "PM data for assets=====>>>>>",
+          //   assetAssignedPm
+          // );
           pmName.push(assetAssignedPm);
 
           return { ...pd, ...pmName };
@@ -3447,11 +3447,11 @@ const assetController = {
           "asset_master.assignedTeams",
           "teams.teamId"
         )
-        .leftJoin(
-          "location_tags_master",
-          "asset_master.locationId",
-          "location_tags_master.id"
-        )
+        // .leftJoin(
+        //   "location_tags_master",
+        //   "asset_master.locationId",
+        //   "location_tags_master.id"
+        // )
         .joinRaw(
           'left join asset_location al on al."assetId" = "asset_master".id and al.id = (select max(id) from asset_location al2 where al2."assetId" = "asset_master"."id")'
         )
@@ -3468,7 +3468,7 @@ const assetController = {
           "asset_master.warrentyExpiration as WARRANTY_DATE",
           "asset_master.barcode AS BARCODE",
           "asset2.assetCode as PARENT_ASSET_CODE",
-          "location_tags_master.title as LOCATION",
+          // "location_tags_master.title as LOCATION",
           "asset_master.assignedUsers as ASSIGN_USER",
           "teams.teamCode as ASSIGN_TEAM",
           "asset_master.assignedVendors as ASSIGN_VENDOR",
@@ -3596,7 +3596,7 @@ const assetController = {
             WARRANTY_DATE: "",
             BARCODE: "",
             PARENT_ASSET_CODE: "",
-            LOCATION: "",
+            // LOCATION: "",
             ASSIGN_USER: "",
             ASSIGN_TEAM: "",
             ASSIGN_VENDOR: "",
@@ -3718,7 +3718,7 @@ const assetController = {
           data[0].J == "WARRANTY_DATE" &&
           data[0].K == "BARCODE" &&
           data[0].L == "PARENT_ASSET_CODE" &&
-          data[0].M == "LOCATION" &&
+          // data[0].M == "LOCATION" &&
           data[0].N == "ASSIGN_USER" &&
           data[0].O == "ASSIGN_TEAM" &&
           data[0].P == "ASSIGN_VENDOR" &&
@@ -3962,44 +3962,35 @@ const assetController = {
 
               /*GET LOCATION ID BY LOCATION CODE OPEN */
 
-              let locationId = null;
-              if (assetData.M) {
-                let locationResult = await knex(
-                  "location_tags_master"
-                )
-                  .where({
-                    title: assetData.M,
-                    orgId: req.orgId,
-                  })
-                  .select("id");
-                // if (!locationResult.length) {
-                //   fail++;
-                //   let values = _.values(assetData);
-                //   values.unshift(
-                //     "Location Tag does not exists."
-                //   );
-                //   errors.push(values);
-                //   continue;
-                // }
+              // let locationId = null;
+              // if (assetData.M) {
+              //   let locationResult = await knex(
+              //     "location_tags_master"
+              //   )
+              //     .where({
+              //       title: assetData.M,
+              //       orgId: req.orgId,
+              //     })
+              //     .select("id");
 
-                if (
-                  locationResult &&
-                  locationResult.length
-                ) {
-                  locationId = locationResult[0].id;
-                } else {
-                  const locationData = await knex(
-                    "location_tags_master"
-                  )
-                    .insert({
-                      title: assetData.M,
-                      descriptionEng: assetData.M,
-                      orgId: req.orgId,
-                    })
-                    .returning(["id"]);
-                  locationId = locationData[0].id;
-                }
-              }
+              //   if (
+              //     locationResult &&
+              //     locationResult.length
+              //   ) {
+              //     locationId = locationResult[0].id;
+              //   } else {
+              //     const locationData = await knex(
+              //       "location_tags_master"
+              //     )
+              //       .insert({
+              //         title: assetData.M,
+              //         descriptionEng: assetData.M,
+              //         orgId: req.orgId,
+              //       })
+              //       .returning(["id"]);
+              //     locationId = locationData[0].id;
+              //   }
+              // }
               /*GET LOCATION ID BY LOCATION CODE CLOSE */
 
               let checkExist = await knex("asset_master")
@@ -4041,7 +4032,7 @@ const assetController = {
                 installationDate: installDate,
                 warrentyExpiration: expireDate,
                 barcode: assetData.K,
-                locationId: locationId,
+                // locationId: locationId,
                 assignedUsers: assetData.N,
                 assignedVendors: assetData.P,
                 additionalInformation: assetData.Q,
