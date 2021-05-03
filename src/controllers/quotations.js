@@ -271,8 +271,8 @@ const quotationsController = {
                         "quotation_service_charges", "quotation_service_charges.quotationId", "=",
                         "quotation_service_charges.quotationId"
                     )
-                    .leftJoin("organisation_user_roles", "astm.userId", "=", "organisation_user_roles.userId")
-                    .leftJoin("organisation_roles", "organisation_user_roles.roleId", "=", "organisation_roles.id")
+                    // .leftJoin("organisation_user_roles", "astm.userId", "=", "organisation_user_roles.userId")
+                    // .leftJoin("organisation_roles", "organisation_user_roles.roleId", "=", "organisation_roles.id")
                     .leftJoin("service_requests", 'quotations.serviceRequestId', 'service_requests.id')
                     .select(
                         "quotations.id as quotationId",
@@ -300,7 +300,7 @@ const quotationsController = {
                         "teams.teamName as assignTeam",
                         "astUser.name as assignedMainUsers",
                         "authUser.name as createdBy",
-                        "organisation_roles.name as userRole",
+                        // "organisation_roles.name as userRole",
                         "quotations.invoiceData as invoiceData",
                         "quotations.quotationValidityDate as validityDate",
                         "property_units.description as propertyUnitDescription",
@@ -320,9 +320,11 @@ const quotationsController = {
                 // Get addtional User list For Quotations
                 addtionalUser = await knex("assigned_service_additional_users")
                     .leftJoin("users", "assigned_service_additional_users.userId", "=", "users.id")
-                    .leftJoin("organisation_user_roles", "assigned_service_additional_users.userId", "=", "organisation_user_roles.userId")
-                    .leftJoin("organisation_roles", "organisation_user_roles.roleId", "=", "organisation_roles.id")
-                    .select("users.name as addtionalUsers", "organisation_roles.name as userRole")
+                    // .leftJoin("organisation_user_roles", "assigned_service_additional_users.userId", "=", "organisation_user_roles.userId")
+                    // .leftJoin("organisation_roles", "organisation_user_roles.roleId", "=", "organisation_roles.id")
+                    .select("users.name as addtionalUsers", 
+                    // "organisation_roles.name as userRole"
+                    )
                     .where({
                         "assigned_service_additional_users.entityId": quotationRequestId,
                         "assigned_service_additional_users.entityType": "quotations"
