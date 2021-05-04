@@ -226,7 +226,8 @@ const dashboardController = {
                     .where({
                         entityId: pp.Id,
                         entityType: "announcement_image"
-                    }).first();
+                    })
+                    // .first();
 
                 console.log("imagesResult", imageResult);
 
