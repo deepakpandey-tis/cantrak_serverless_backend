@@ -201,6 +201,8 @@ const dashboardController = {
             const Parallel = require("async-parallel");
             announcement = await Parallel.map(announcement, async (pp) => {
 
+                console.log("announcement Id",pp)
+
                 var yourString = pp.titles; //replace with your string.
                 var yourStringLength = pp.titles.length;
                 var maxLength = 110; // maximum number of characters to extract
