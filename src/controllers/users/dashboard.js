@@ -167,7 +167,7 @@ const dashboardController = {
 
             announcement = await knex
                 .from("announcement_master")
-                .innerJoin(
+                .leftJoin(
                     "announcement_user_master",
                     "announcement_master.id",
                     "announcement_user_master.announcementId"
@@ -177,15 +177,16 @@ const dashboardController = {
                     "announcement_user_master.orgId": req.orgId,
                     "announcement_user_master.userId": req.me.id,
                     "announcement_master.status": true,
-                    "announcement_master.userType": 2
+                    "announcement_master.userType": 2,
                 })
                 .orWhere({
                     "announcement_master.savedStatus": 2,
                     "announcement_user_master.orgId": req.orgId,
                     "announcement_master.status": true,
                     "announcement_master.userType": 2,
-                    // "announcement_master.isGeneral": true
+                    "announcement_master.isGeneral": true
                 })
+                .havingNotNull("announcement_master.title")
                 .whereRaw('? = ANY("announcement_master"."projectId")', [projectId.projectId])
                 .select(
                     "announcement_master.id as Id",
@@ -194,62 +195,65 @@ const dashboardController = {
                     "announcement_master.description as details",
                     "announcement_master.createdAt as announcementDate"
                 )
+                .groupBy([
+                    "announcement_master.id"
+                ])
                 .orderBy('announcement_master.id', 'desc')
                 .limit(10);
-
+                    console.log("announcement Ids=====>>>",announcement)
 
             const Parallel = require("async-parallel");
             announcement = await Parallel.map(announcement, async (pp) => {
 
-                console.log("announcement Id",pp)
-
-                var yourString = pp.titles; //replace with your string.
-                var yourStringLength = pp.titles.length;
-                var maxLength = 110; // maximum number of characters to extract
-                var trimmedString = yourString.substr(0, maxLength);
-                // console.log("yourString",yourString);
-                //console.log("trimmedString",trimmedString);
-                //Trim and re-trim only when necessary (prevent re-trim when string is shorted than maxLength, it causes last word cut) 
-                if (yourString.length > trimmedString.length) {
-                    //trim the string to the maximum length
-                    //re-trim if we are in the middle of a word and 
-                    trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")))
-                    //  console.log("If trimmedString", trimmedString);
+                if(pp.titles){
+                    var yourString = pp.titles; //replace with your string.
+                    var yourStringLength = pp.titles.length;
+                    var maxLength = 110; // maximum number of characters to extract
+                    var trimmedString = yourString.substr(0, maxLength);
+                    // console.log("yourString",yourString);
+                    //console.log("trimmedString",trimmedString);
+                    //Trim and re-trim only when necessary (prevent re-trim when string is shorted than maxLength, it causes last word cut) 
+                    if (yourString.length > trimmedString.length) {
+                        //trim the string to the maximum length
+                        //re-trim if we are in the middle of a word and 
+                        trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")))
+                        //  console.log("If trimmedString", trimmedString);
+                    }
+    
+                    if (yourStringLength > maxLength) {
+                        trimmedString = trimmedString + "...";
+                    }
+    
+    
+                    let imageResult = await knex
+                        .from("images")
+                        .select("s3Url", "title", "name")
+                        .where({
+                            entityId: pp.Id,
+                            entityType: "announcement_image"
+                        })
+                        .first();
+    
+                    console.log("imagesResult", imageResult);
+    
+    
+                    if (req.orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
+                        approvalUrl = 'https://cbreconnect.servicemind.asia';
+                    } else if (req.orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
+                        approvalUrl = 'https://senses.servicemind.asia';
+                    } else {
+                        approvalUrl = process.env.SITE_URL;
+                    }
+    
+                    return {
+                        ...pp,
+                        titles: trimmedString,
+                        titleLength: yourStringLength,
+                        maxLength: maxLength,
+                        img: imageResult,
+                        URL: approvalUrl
+                    };
                 }
-
-                if (yourStringLength > maxLength) {
-                    trimmedString = trimmedString + "...";
-                }
-
-
-                let imageResult = await knex
-                    .from("images")
-                    .select("s3Url", "title", "name")
-                    .where({
-                        entityId: pp.Id,
-                        entityType: "announcement_image"
-                    })
-                    .first();
-
-                console.log("imagesResult", imageResult);
-
-
-                if (req.orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
-                    approvalUrl = 'https://cbreconnect.servicemind.asia';
-                } else if (req.orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
-                    approvalUrl = 'https://senses.servicemind.asia';
-                } else {
-                    approvalUrl = process.env.SITE_URL;
-                }
-
-                return {
-                    ...pp,
-                    titles: trimmedString,
-                    titleLength: yourStringLength,
-                    maxLength: maxLength,
-                    img: imageResult,
-                    URL: approvalUrl
-                };
             });
 
 
