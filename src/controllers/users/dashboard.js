@@ -227,7 +227,7 @@ const dashboardController = {
                         entityId: pp.Id,
                         entityType: "announcement_image"
                     })
-                    // .first();
+                    .first();
 
                 console.log("imagesResult", imageResult);
 
