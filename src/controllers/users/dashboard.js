@@ -184,7 +184,7 @@ const dashboardController = {
                     "announcement_user_master.orgId": req.orgId,
                     "announcement_master.status": true,
                     "announcement_master.userType": 2,
-                    "announcement_master.isGeneral": true
+                    // "announcement_master.isGeneral": true
                 })
                 .whereRaw('? = ANY("announcement_master"."projectId")', [projectId.projectId])
                 .select(

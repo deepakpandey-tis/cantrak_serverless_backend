@@ -197,13 +197,10 @@ const announcementController = {
         .whereIn("users.id",req.body.userId)
         .where({"user_house_allocation.orgId":orgId, "users.isActive": true});
 
-        // tenantList = _.uniqBy(tenantList, "id")
-
         console.log("[Announcement][targetAudience]",tenantList)
   
 
         if(payload.userType == 2){
-          // targetAudience = _.omit(tenantList,"id")
           targetAudience = tenantList
         }
 
@@ -221,26 +218,6 @@ const announcementController = {
             targetAudience
           }
         );
-
-        // let imagesData = req.body.logoFile;
-        // console.log("imagesData", imagesData);
-        // if (imagesData && imagesData.length > 0) {
-        //   for (let image of imagesData) {
-        //     let d = await knex("images")
-        //       .insert({
-        //         entityType: "announcement_image",
-        //         entityId: newAnnouncementId,
-        //         s3Url: image.s3Url,
-        //         name: image.filename,
-        //         title: image.title,
-        //         createdAt: currentTime,
-        //         updatedAt: currentTime,
-        //         orgId: req.orgId,
-        //       })
-        //       .returning(["*"]);
-        //     images.push(d[0]);
-        //   }
-        // }
       });
 
       res.status(200).json({
