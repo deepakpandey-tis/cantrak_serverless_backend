@@ -58,7 +58,6 @@ const dashboardController = {
         .distinct("service_requests.id")
         .where({ orgId: req.orgId })
         .whereIn("service_requests.projectId", projectIds)
-        //.whereIn("service_requests.projectId", accessibleProjects)
         .where({
           orgId: orgId,
           moderationStatus: true,
@@ -76,7 +75,6 @@ const dashboardController = {
         .distinct("pm_master2.id")
         .where({ orgId: req.orgId })
         .whereIn("pm_master2.projectId", projectIds)
-      //.whereIn("service_requests.projectId", accessibleProjects)
       pmMaster = pmMaster.map((v) => v.id);
       pmMaster = _.uniqBy(pmMaster);
       console.log("pmMaster+!1111111", pmMaster);
@@ -89,7 +87,6 @@ const dashboardController = {
         .distinct("task_group_schedule.id")
         .where({ orgId: req.orgId })
         .whereIn("task_group_schedule.pmId", pmMaster)
-      //.whereIn("service_requests.projectId", accessibleProjects)
       pmScheduleMaster = pmScheduleMaster.map((v) => v.id);
       pmScheduleMaster = _.uniqBy(pmScheduleMaster);
       console.log("pmScheduleMaster+!1111111", pmScheduleMaster);
@@ -103,17 +100,6 @@ const dashboardController = {
           .where({ moderationStatus: true, orgId: req.orgId })
           .whereIn("service_requests.projectId", projectIds)
           .whereIn("serviceStatusCode", ["O"]),
-        //.whereIn("service_requests.projectId", accessibleProjects)
-        // .where({ serviceStatusCode: "US", orgId: orgId, "moderationStatus": true })
-        //.orWhere({ serviceStatusCode: "O", orgId: orgId, "moderationStatus": true }),
-        // knex
-        //   .from("service_requests")
-        //   .select("service_requests.serviceStatusCode as status")
-        //   .distinct("service_requests.id")
-        //   .where({ orgId: req.orgId })
-        //   .whereIn("service_requests.projectId", projectIds)
-        //   .whereIn("serviceStatusCode", ["A", "IP", "OH","O"]),
-
         knex
         .from("service_orders")
         .leftJoin(
@@ -126,41 +112,15 @@ const dashboardController = {
         .where({ "service_orders.orgId": req.orgId })
         .whereIn("service_requests.projectId", projectIds),
 
-        //.whereIn("service_requests.projectId", accessibleProjects)
-        ///.where({ serviceStatusCode: "A", orgId: orgId })
-        //.orWhere({ serviceStatusCode: "IP", orgId: orgId })
-        //.orWhere({ serviceStatusCode: "OH", orgId: orgId }),
         knex
           .from("survey_orders")
           .select("survey_orders.surveyOrderStatus as status")
           .distinct("survey_orders.id")
-          //.whereIn("service_requests.projectId", accessibleProjects)
           .where({
             orgId: orgId,
             surveyOrderStatus: 'Pending',
           })
           .whereIn("survey_orders.serviceRequestId", serviceReqId),
-
-        // .orWhere({
-        //   serviceStatusCode: "O",
-        //   orgId: orgId,
-        //   priority: priorityValue,
-        //   "moderationStatus": true
-        // }),
-        //.where({ serviceStatusCode: 'O', orgId, priority: priorityValue })
-        // .whereIn('service_requests.projectId', accessibleProjects)
-        //.distinct('service_requests.id')
-        // knex
-        //   .from("task_group_schedule_assign_assets")
-        //   .select("task_group_schedule_assign_assets.id")
-        //   .distinct("task_group_schedule_assign_assets.id")
-        //   .whereIn("task_group_schedule_assign_assets.scheduleId", pmScheduleMaster)
-        //   .where({
-        //     // serviceStatusCode: "A",
-        //     orgId: orgId,
-        //     status: 'O',
-        //     isOverdue: true
-        //   })
 
           knex
             .from("task_group_schedule")
@@ -186,20 +146,9 @@ const dashboardController = {
               "task_group_schedule_assign_assets.isOverdue" : true
             })
             .whereIn(
-              "pm_master2.projectId", accessibleProjects
+              "pm_master2.projectId", projectIds
             )  
 
-
-        // .orWhere({
-        //   serviceStatusCode: "IP",
-        //   orgId: orgId,
-        //   priority: priorityValue
-        // })
-        // .orWhere({
-        //   serviceStatusCode: "OH",
-        //   orgId: orgId,
-        //   priority: priorityValue
-        // })
       ]);
 
       let open_service_requests = projectIds.length ? openRequests.length : 0;
