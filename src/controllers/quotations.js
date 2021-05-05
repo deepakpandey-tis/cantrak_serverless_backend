@@ -93,7 +93,7 @@ const quotationsController = {
                 // quotationData: Joi.array().required()
             });
 
-            const result = Joi.validate(_.omit(quotationPayload, "serviceRequestId", "locationTags"), schema);
+            const result = Joi.validate(_.omit(quotationPayload, "serviceRequestId", "locationTags","serviceOrderId"), schema);
             console.log(
                 "[controllers][quotations][updateQuotation]: JOi Result",
                 result
@@ -111,6 +111,8 @@ const quotationsController = {
             const currentTime = new Date().getTime();
             let serId = 0
 
+            let serOrderId = 0
+
             if (quotationPayload.serviceRequestId) {
 
                 let srResult = await knex('service_requests').select('*').where({
@@ -118,16 +120,25 @@ const quotationsController = {
                     companyId: quotationPayload.company,
                     orgId: req.orgId
                 }).first();
-
                 if (srResult) {
                     serId = srResult.id;
                 } else {
-
                     serId = 0;
-
                 }
-
                 //serId = quotationPayload.serviceRequestId
+            }
+            if(quotationPayload.serviceOrderId){
+                let soResult = await knex('service_orders').select('*').where({
+                    displayId : quotationPayload.serviceOrderId,
+                    companyId : quotationPayload.company,
+                    orgId : req.orgId
+                }).first();
+
+                if(soResult){
+                    serOrderId = soResult.id
+                }else{
+                    serOrderId = 0;
+                }
             }
 
             let quotationValidityDate;
@@ -158,7 +169,8 @@ const quotationsController = {
                         isActive: true,
                         moderationStatus: 1,
                         quotationStatus: 'Pending',
-                        createdBy: userId
+                        createdBy: userId,
+                        serviceOrderId : serOrderId
                     })
                     .where({ id: quotationPayload.quotationId })
                     .returning(["*"])
