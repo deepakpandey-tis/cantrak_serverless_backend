@@ -200,7 +200,6 @@ const dashboardController = {
                 ])
                 .orderBy('announcement_master.id', 'desc')
                 .limit(10);
-                    console.log("announcement Ids=====>>>",announcement)
 
             const Parallel = require("async-parallel");
             announcement = await Parallel.map(announcement, async (pp) => {
