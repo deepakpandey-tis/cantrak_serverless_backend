@@ -175,7 +175,7 @@ functions:
 
 
   workOrderOverdueProcessor:
-    handler: src/handlers/dailyTasks.workOrderOverdueProcessor
+    handler: src/handlers/daily-tasks.workOrderOverdueProcessor
     memorySize: 512
     timeout: 300
     events:
@@ -185,7 +185,7 @@ functions:
 
 
   dailyDigestProcessor:
-    handler: src/handlers/dailyTasks.dailyDigestProcessor
+    handler: src/handlers/daily-tasks.dailyDigestProcessor
     memorySize: 1024
     timeout:  899                     # Max Time out is 15 mins..
     events:
@@ -194,7 +194,7 @@ functions:
           enabled: true        
 
 dailyDbWakeUpProcessor:
-    handler: src/handlers/dailyTasks.dBWakeUpTask
+    handler: src/handlers/daily-tasks.dBWakeUpTask
     memorySize: 256
     timeout:  300                     # Max Time out is 5 mins..
     events:
