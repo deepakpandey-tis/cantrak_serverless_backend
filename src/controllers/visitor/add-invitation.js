@@ -1,5 +1,7 @@
 const knex = require('../../db/knex');
 
+const addRegistrationNotification = require("../../notifications/visitor/add-registration-notification");
+
 const addInvitation = async (req, res) => {
     try {
         let userId = req.me.id;
@@ -69,6 +71,40 @@ const addInvitation = async (req, res) => {
 
             insertInvitation[additionalGuestNo] = insertResult[0];
           }
+
+          // Send registration notification
+          const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+          let arvDateStr = '';
+          let arvDate = new Date(+insertInvitation[0].arrivalDate);
+          //let curDate = new Date(+currentTime);
+          arvDate.setHours(0, 0, 0, 0);
+          /*
+          curDate.setHours(0, 0, 0, 0);
+          if(arvDate.getTime() != curDate.getTime()){
+            // Registration is for a future date
+            arvDateStr = arvDate.toLocaleDateString(undefined, options);
+          }
+          */
+          arvDateStr = arvDate.toLocaleDateString(undefined, options);
+
+          console.log('add invitation dates: ', arvDate, arvDateStr);
+          const registration = {
+            data: {
+              sender: {
+                orgId: req.orgId,
+                id: req.me.id,
+                name: req.me.name,
+              },
+              receiver: {
+                id: insertInvitation[0].tenantId,
+                visitorNames: insertInvitation.map(inv => inv.name).join(', ').replace(/,(?=[^,]*$)/, ' and'),   // replace last ',' with ' and'
+                visitorArrivalDate: arvDateStr,
+                visitorIds: insertInvitation.map(inv => inv.id),
+              },
+              payload: {}
+            }
+          };
+          await addRegistrationNotification.send(registration.data);
 
           trx.commit;
         });
