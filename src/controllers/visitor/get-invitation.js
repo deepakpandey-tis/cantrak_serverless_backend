@@ -1,5 +1,5 @@
 const knex = require('../../db/knex');
-const generateQRCode = require('../../helpers/generate-qrcode');
+// Now part of frontend const generateQRCode = require('../../helpers/generate-qrcode');
 
 const getInvitation = async (req, res) => {
     try {
