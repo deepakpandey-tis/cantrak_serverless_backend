@@ -474,7 +474,7 @@ const agmController = {
                 ownershipRatio: ownerData.E,
                 ownerIdNo: ownerData.I,
                 eligibility: eligibility,
-                ownerGroupNo:ownerData.F,
+                ownerGroupNo: ownerData.F,
                 orgId: req.orgId,
                 isActive: true,
                 createdAt: new Date().getTime(),
@@ -2287,7 +2287,6 @@ const agmController = {
 
       // console.log("called multiselect else",votingOption[0].isMultiSelect,req.body.isUpdateVote)
 
-
       if (votingOption[0].isMultiSelect == true) {
         if (req.body.isUpdateVote == false) {
           try {
@@ -2304,7 +2303,8 @@ const agmController = {
               insertVotingResult = await knex
                 .update({
                   votingPower: payload.votingPower,
-                  selectedChoiceId: payload.selectedChoiceId,
+                  selectedChoiceId:
+                    payload.selectedChoiceId,
                   updatedAt: currentTime,
                 })
                 .where({
@@ -2316,35 +2316,34 @@ const agmController = {
                 .into("agm_voting");
             }
           }
-        }else{
-          console.log("called multiselect else")
-          let delVoting = await knex("agm_voting").where({
+        } else {
+          console.log("called multiselect else");
+          let delVoting = await knex("agm_voting")
+            .where({
+              agmId: payload.agmId,
+              ownerMasterId: payload.ownerMasterId,
+              agendaId: payload.agendaId,
+            })
+            .del();
+
+          insertVotingResult = await knex
+            .insert(insertVotingData)
+            .returning(["*"])
+            .into("agm_voting");
+        }
+      } else {
+        let delVoting = await knex("agm_voting")
+          .where({
             agmId: payload.agmId,
             ownerMasterId: payload.ownerMasterId,
-            agendaId: payload.agendaId
+            agendaId: payload.agendaId,
           })
           .del();
 
-          insertVotingResult = await knex
-              .insert(insertVotingData)
-              .returning(["*"])
-              .into("agm_voting");
-
-        }
-
-      } else {
-
-        let delVoting = await knex("agm_voting").where({
-          agmId: payload.agmId,
-          ownerMasterId: payload.ownerMasterId,
-          agendaId: payload.agendaId,
-        })
-        .del();
-
         insertVotingResult = await knex
-              .insert(insertVotingData)
-              .returning(["*"])
-              .into("agm_voting");
+          .insert(insertVotingData)
+          .returning(["*"])
+          .into("agm_voting");
       }
 
       return res.status(200).json({
@@ -3369,6 +3368,195 @@ const agmController = {
         errors: [
           {
             code: "UNKNOWN SERVER ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
+  exportVoteResult: async (req, res) => {
+    try {
+      let payload = req.body;
+      let orgId = req.orgId;
+      let rows = null;
+
+      let votingId;
+      if (payload.unitId) {
+        console.log("voting id", votingId);
+
+        votingId = await knex("property_units")
+          .leftJoin(
+            "agm_owner_master",
+            "property_units.id",
+            "agm_owner_master.unitId"
+          )
+          .leftJoin(
+            "agenda_master",
+            "agm_owner_master.agmId",
+            "agenda_master.agmId"
+          )
+          .leftJoin(
+            "agm_voting",
+            "agenda_master.id",
+            "agm_voting.agendaId"
+          )
+          .select(["agm_voting.id"])
+          .where("property_units.id", payload.unitId)
+          .where({
+            "agm_owner_master.agmId": payload.agmId,
+            "agm_owner_master.orgId": orgId,
+            "agenda_master.id": payload.agendaId,
+          })
+          .first();
+
+        console.log("voting id2", votingId);
+      }
+
+      rows = await knex
+        .from("agm_voting")
+        .select([
+          "agm_voting.ownerMasterId",
+          "agm_voting.selectedChoiceId",
+          "agm_voting.votingPower",
+          "agm_voting.id"
+        ])
+        .where({
+          "agm_voting.agmId": payload.agmId,
+          "agm_voting.agendaId": payload.agendaId,
+          "agm_voting.orgId": orgId,
+        })
+        .where((qb) => {
+          if (payload.unitId) {
+            qb.where("agm_voting.id", votingId.id);
+          }
+        });
+
+      const Parallel = require("async-parallel");
+
+      rows = await Parallel.map(rows, async (pd) => {
+        let ownerData = await knex
+          .from("agm_owner_master")
+          .select([
+            "agm_owner_master.unitNumber",
+            "agm_owner_master.houseId",
+            "agm_owner_master.ownershipRatio",
+            "agm_owner_master.ownerName",
+            "agm_owner_master.joinOwnerName",
+            "agm_owner_master.registrationType"
+          ])
+          .where("agm_owner_master.id", pd.ownerMasterId)
+          .first();
+
+        return { ...pd, ...ownerData };
+      });
+
+      rows = await Parallel.map(rows, async (pd) => {
+        let choiceValue = await knex
+          .from("agenda_choice")
+          .select([
+            "agenda_choice.choiceValue",
+            "agenda_choice.choiceValueThai"
+          ])
+          .where({
+            "agenda_choice.id": pd.selectedChoiceId,
+          })
+          .first();
+
+        return { ...pd, ...choiceValue };
+      });
+
+      console.log(
+        "[controllers][agm][exportListForVoteResult]: Rows:",
+        rows
+      );
+
+      const { AsyncParser } = require("json2csv");
+
+      const fields = [
+        {
+          label: "Unit Number",
+          value: "unitNumber",
+        },
+        {
+          label: "House Id",
+          value: "houseId",
+        },
+        {
+          label: "Ownership Ratio",
+          value: "ownershipRatio",
+        },
+        {
+          label: "Co-Owner Name",
+          value: "ownerName",
+        },
+        {
+          label: "Join Owner Name",
+          value: "joinOwner",
+        },
+        {
+          label: "Registration Type",
+          value: "registerType",
+        },
+        {
+          label: "Selected Choice",
+          value: "choiceValue",
+        },
+        {
+          label: "Vote Power",
+          value: "votingPower",
+        },
+      ];
+
+      const opts = { fields };
+      const transformOpts = { highWaterMark: 8192 };
+
+      const asyncParser = new AsyncParser(
+        opts,
+        transformOpts
+      );
+
+      let csv = "";
+      asyncParser.processor
+        .on("data", (chunk) => (csv += chunk.toString()))
+        .on("end", () => {
+          console.log(
+            "[controllers][Vote Result][export]: Csv Export from JSON complete"
+          );
+        })
+        .on("error", (err) => console.error(err));
+
+      rows.map((v) => {
+        let joinOwner = " ";
+
+        let registerType = " ";
+
+        console.log("rows values",v)
+        asyncParser.input.push(
+          JSON.stringify([
+            {
+              ...v,
+              joinOwner: joinOwner,
+              registerType: registerType,
+            },
+          ])
+        );
+      });
+
+      asyncParser.input.push(null); // Sending `null` to a stream signal that no more data is expected and ends it.
+
+      // const output = fs.createWriteStream(outputPath, { encoding: 'utf8' });
+      asyncParser.toOutput(res);
+    } catch (err) {
+      console.error(
+        `[controllers]Vote Result][exportListForVoteResult]: Error:`,
+        err
+      );
+
+      res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
             message: err.message,
           },
         ],
