@@ -3719,10 +3719,10 @@ const assetController = {
           data[0].K == "BARCODE" &&
           data[0].L == "PARENT_ASSET_CODE" &&
           // data[0].M == "LOCATION" &&
-          data[0].N == "ASSIGN_USER" &&
-          data[0].O == "ASSIGN_TEAM" &&
-          data[0].P == "ASSIGN_VENDOR" &&
-          data[0].Q == "ASSIGN_INFORMATION")
+          data[0].M == "ASSIGN_USER" &&
+          data[0].N == "ASSIGN_TEAM" &&
+          data[0].O == "ASSIGN_VENDOR" &&
+          data[0].P == "ASSIGN_INFORMATION")
       ) {
         if (data.length > 0) {
           let i = 0;
@@ -3759,7 +3759,7 @@ const assetController = {
                 continue;
               }
               let projectId;
-              if (assetData.S) {
+              if (assetData.R) {
                 let projectResult = await knex("projects")
                   .select("id")
                   .where({
@@ -3785,7 +3785,7 @@ const assetController = {
               }
 
               let buildingId;
-              if (assetData.T) {
+              if (assetData.S) {
                 let buildingResult = await knex(
                   "buildings_and_phases"
                 )
@@ -3817,7 +3817,7 @@ const assetController = {
               // }
 
               let floorZoneId;
-              if (assetData.U) {
+              if (assetData.T) {
                 let floorZoneResult = await knex(
                   "floor_and_zones"
                 )
@@ -3848,7 +3848,7 @@ const assetController = {
               // }
 
               let propertyUnitId;
-              if (assetData.V) {
+              if (assetData.U) {
                 let propertyUnitResult = await knex(
                   "property_units"
                 )
@@ -3909,7 +3909,7 @@ const assetController = {
 
               /*GET TEAM ID TO TEAM CODE OPEN */
               let teamId = null;
-              if (assetData.O) {
+              if (assetData.N) {
                 let teamResult = await knex("teams")
                   .where({
                     teamCode: assetData.O,
@@ -4033,9 +4033,9 @@ const assetController = {
                 warrentyExpiration: expireDate,
                 barcode: assetData.K,
                 // locationId: locationId,
-                assignedUsers: assetData.N,
-                assignedVendors: assetData.P,
-                additionalInformation: assetData.Q,
+                assignedUsers: assetData.M,
+                assignedVendors: assetData.O,
+                additionalInformation: assetData.P,
               };
 
               console.log(
