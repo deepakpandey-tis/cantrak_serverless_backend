@@ -12,7 +12,6 @@ const fs = require("fs");
 const path = require("path");
 const request = require("request");
 
-
 const serviceDetailsController = {
   addPriorities: async (req, res) => {
     try {
@@ -20,15 +19,20 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
-        const payload = _.omit(req.body, 'editMode');
+      await knex.transaction(async (trx) => {
+        const payload = _.omit(req.body, "editMode");
 
         const schema = Joi.object().keys({
           incidentPriorityCode: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").allow(null).optional(),
+          descriptionThai: Joi.string()
+            .allow("")
+            .allow(null)
+            .optional(),
           descriptionEng: Joi.string().required(),
-          sequenceNo: Joi.number().allow("").allow(null).optional(),
-
+          sequenceNo: Joi.number()
+            .allow("")
+            .allow(null)
+            .optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -37,19 +41,30 @@ const serviceDetailsController = {
           result
         );
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
 
         const existCode = await knex("incident_priority")
-          .where('incidentPriorityCode', 'iLIKE', payload.incidentPriorityCode)
+          .where(
+            "incidentPriorityCode",
+            "iLIKE",
+            payload.incidentPriorityCode
+          )
           .where({
             //incidentPriorityCode: payload.incidentPriorityCode,
-            orgId: req.orgId
+            orgId: req.orgId,
           });
 
         console.log(
@@ -64,25 +79,29 @@ const serviceDetailsController = {
             errors: [
               {
                 code: "PRIORITY_CODE_EXIST_ERROR",
-                message: "Priority Code already exist !"
-              }
-            ]
+                message: "Priority Code already exist !",
+              },
+            ],
           });
         }
 
         /* CHECK DUPLICATE SEQUENCE NO. OPEN */
         if (payload.sequenceNo) {
-          let checkSequence = await knex.from('incident_priority').where({ sequenceNo: payload.sequenceNo, orgId: req.orgId });
+          let checkSequence = await knex
+            .from("incident_priority")
+            .where({
+              sequenceNo: payload.sequenceNo,
+              orgId: req.orgId,
+            });
           if (checkSequence && checkSequence.length) {
-
             return res.status(400).json({
               errors: [
                 {
                   code: "SEQUENCE_NO_EXIST_ERROR",
-                  message: "Sequence no already exist!"
-                }
-              ]
-            })
+                  message: "Sequence no already exist!",
+                },
+              ],
+            });
           }
         }
         /* CHECK DUPLICATE SEQUENCE NO. CLOSE */
@@ -92,7 +111,6 @@ const serviceDetailsController = {
           seqNo = payload.sequenceNo;
         }
 
-
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
@@ -100,7 +118,7 @@ const serviceDetailsController = {
           orgId: orgId,
           createdBy: userId,
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
         };
         let insertResult = await knex
           .insert(insertData)
@@ -114,15 +132,23 @@ const serviceDetailsController = {
 
       return res.status(200).json({
         data: {
-          priorities: Priorities
+          priorities: Priorities,
         },
-        message: "Priorities added successfully."
+        message: "Priorities added successfully.",
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][addPriorities] :  Error", err);
+      console.log(
+        "[controllers][generalsetup][addPriorities] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -132,15 +158,33 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
-        const payload = _.omit(req.body, 'editMode', 'createdAt', 'updatedAt', 'createdBy', 'isActive', 'name', 'orgId');
+      await knex.transaction(async (trx) => {
+        const payload = _.omit(
+          req.body,
+          "editMode",
+          "createdAt",
+          "updatedAt",
+          "createdBy",
+          "isActive",
+          "name",
+          "orgId"
+        );
 
         const schema = Joi.object().keys({
           id: Joi.string().required(),
           incidentPriorityCode: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").allow(null).optional(),
-          descriptionEng: Joi.string().allow("").allow(null).optional(),
-          sequenceNo: Joi.number().allow("").allow(null).optional(),
+          descriptionThai: Joi.string()
+            .allow("")
+            .allow(null)
+            .optional(),
+          descriptionEng: Joi.string()
+            .allow("")
+            .allow(null)
+            .optional(),
+          sequenceNo: Joi.number()
+            .allow("")
+            .allow(null)
+            .optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -149,23 +193,32 @@ const serviceDetailsController = {
           result
         );
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
 
-
         const existCode = await knex("incident_priority")
-          .where('incidentPriorityCode', 'iLIKE', payload.incidentPriorityCode)
+          .where(
+            "incidentPriorityCode",
+            "iLIKE",
+            payload.incidentPriorityCode
+          )
           .where({
             //incidentPriorityCode: payload.incidentPriorityCode,
-            orgId: req.orgId
+            orgId: req.orgId,
           })
           .whereNot({ id: payload.id });
-
 
         console.log(
           "[controllers][servicdetails][priority]: priority ",
@@ -179,34 +232,38 @@ const serviceDetailsController = {
             errors: [
               {
                 code: "PRIORITY_CODE_EXIST_ERROR",
-                message: "Priority Code already exist !"
-              }
-            ]
+                message: "Priority Code already exist !",
+              },
+            ],
           });
         }
         /* CHECK DUPLICATE SEQUENCE NO. OPEN */
         if (payload.sequenceNo) {
-          let checkSequence = await knex.from('incident_priority')
-            .where({ sequenceNo: payload.sequenceNo, orgId: req.orgId })
+          let checkSequence = await knex
+            .from("incident_priority")
+            .where({
+              sequenceNo: payload.sequenceNo,
+              orgId: req.orgId,
+            })
             .whereNot({ id: payload.id });
           if (checkSequence && checkSequence.length) {
-
             return res.status(400).json({
               errors: [
                 {
                   code: "SEQUENCE_NO_EXIST_ERROR",
-                  message: "Sequence no already exist!"
-                }
-              ]
-            })
+                  message: "Sequence no already exist!",
+                },
+              ],
+            });
           }
         }
         /* CHECK DUPLICATE SEQUENCE NO. CLOSE */
 
-
-
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, updatedAt: currentTime };
+        let insertData = {
+          ...payload,
+          updatedAt: currentTime,
+        };
         let insertResult = await knex
           .update(insertData)
           .where({ id: payload.id })
@@ -220,9 +277,9 @@ const serviceDetailsController = {
 
       return res.status(200).json({
         data: {
-          Priorities: Priorities
+          Priorities: Priorities,
         },
-        message: "Priorities details updated successfully."
+        message: "Priorities details updated successfully.",
       });
     } catch (err) {
       console.log(
@@ -231,7 +288,12 @@ const serviceDetailsController = {
       );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -241,42 +303,59 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         let payload = req.body;
         const schema = Joi.object().keys({
-          id: Joi.string().required()
+          id: Joi.string().required(),
         });
         const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
         let current = new Date().getTime();
-        let PrioritiesResult = await knex("incident_priority")
+        let PrioritiesResult = await knex(
+          "incident_priority"
+        )
           .select("incident_priority.*")
           .where({ id: payload.id, orgId: orgId });
 
         Priorities = _.omit(PrioritiesResult[0], [
           "createdAt",
-          "updatedAt"
+          "updatedAt",
         ]);
         trx.commit;
       });
 
       return res.status(200).json({
         data: {
-          Priorities: Priorities
+          Priorities: Priorities,
         },
-        message: "Priorities details"
+        message: "Priorities details",
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewPriorities] :  Error", err);
+      console.log(
+        "[controllers][generalsetup][viewPriorities] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -286,12 +365,14 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         const payload = req.body;
 
         const schema = Joi.object().keys({
           title: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").optional(),
+          descriptionThai: Joi.string()
+            .allow("")
+            .optional(),
           descriptionEng: Joi.string().allow("").optional(),
         });
 
@@ -301,31 +382,39 @@ const serviceDetailsController = {
           result
         );
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
 
-        const existCode = await knex("location_tags_master")
-          .where({
-            title: payload.title.toUpperCase(),
-            orgId: req.orgId
-          })
+        const existCode = await knex(
+          "location_tags_master"
+        ).where({
+          title: payload.title.toUpperCase(),
+          orgId: req.orgId,
+        });
 
         if (existCode && existCode.length) {
           return res.status(400).json({
             errors: [
               {
                 code: "LOCATION_TAG_CODE_EXIST_ERROR",
-                message: "Location tag Code already exist !"
-              }
-            ]
+                message:
+                  "Location tag Code already exist !",
+              },
+            ],
           });
         }
-
 
         let currentTime = new Date().getTime();
         let insertData = {
@@ -334,7 +423,7 @@ const serviceDetailsController = {
           orgId: orgId,
           createdBy: userId,
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
         };
         let insertResult = await knex
           .insert(insertData)
@@ -348,15 +437,23 @@ const serviceDetailsController = {
 
       return res.status(200).json({
         data: {
-          locationTag: LocationTag
+          locationTag: LocationTag,
         },
-        message: "LocationTag added successfully."
+        message: "LocationTag added successfully.",
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][addLocationTag] :  Error", err);
+      console.log(
+        "[controllers][generalsetup][addLocationTag] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -366,14 +463,20 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         const payload = req.body;
 
         const schema = Joi.object().keys({
           id: Joi.number().required(),
           title: Joi.string().required(),
-          descriptionThai: Joi.string().allow("").allow(null).optional(),
-          descriptionEng: Joi.string().allow("").allow(null).optional(),
+          descriptionThai: Joi.string()
+            .allow("")
+            .allow(null)
+            .optional(),
+          descriptionEng: Joi.string()
+            .allow("")
+            .allow(null)
+            .optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -382,19 +485,25 @@ const serviceDetailsController = {
           result
         );
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
-
 
         const existCode = await knex("location_tags_master")
           .where({
             title: payload.title.toUpperCase(),
-            orgId: req.orgId
+            orgId: req.orgId,
           })
           .whereNot({ id: payload.id });
 
@@ -403,15 +512,19 @@ const serviceDetailsController = {
             errors: [
               {
                 code: "LOCATION_TAG_CODE_EXIST_ERROR",
-                message: "Location tag Code already exist !"
-              }
-            ]
+                message:
+                  "Location tag Code already exist !",
+              },
+            ],
           });
         }
 
-
         let currentTime = new Date().getTime();
-        let insertData = { ...payload, title: payload.title.toUpperCase(), updatedAt: currentTime };
+        let insertData = {
+          ...payload,
+          title: payload.title.toUpperCase(),
+          updatedAt: currentTime,
+        };
         let insertResult = await knex
           .update(insertData)
           .where({ id: payload.id })
@@ -425,15 +538,24 @@ const serviceDetailsController = {
 
       return res.status(200).json({
         data: {
-          LocationTag: LocationTag
+          LocationTag: LocationTag,
         },
-        message: "Location Tag details updated successfully."
+        message:
+          "Location Tag details updated successfully.",
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][LocationTag] :  Error", err);
+      console.log(
+        "[controllers][generalsetup][LocationTag] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -443,42 +565,59 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         let payload = req.body;
         const schema = Joi.object().keys({
-          id: Joi.string().required()
+          id: Joi.string().required(),
         });
         const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
         let current = new Date().getTime();
-        let LocationTagResult = await knex("location_tags_master")
+        let LocationTagResult = await knex(
+          "location_tags_master"
+        )
           .select("location_tags_master.*")
           .where({ id: payload.id, orgId: orgId });
 
         LocationTag = _.omit(LocationTagResult[0], [
           "createdAt",
-          "updatedAt"
+          "updatedAt",
         ]);
         trx.commit;
       });
 
       return res.status(200).json({
         data: {
-          LocationTag: LocationTag
+          LocationTag: LocationTag,
         },
-        message: "Location Tag details"
+        message: "Location Tag details",
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewLocationTag] :  Error", err);
+      console.log(
+        "[controllers][generalsetup][viewLocationTag] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -489,36 +628,91 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         // Insert in users table,
         const incidentRequestPayload = req.body;
 
         // Get HouseId By Service Request Id
 
-        const requestResult = await knex("service_requests")
-          .where({
-            "service_requests.isActive": "true",
-            "service_requests.id": incidentRequestPayload.id,
-            "service_requests.orgId": orgId
-          })
+        const requestResult = await knex(
+          "service_requests"
+        ).where({
+          "service_requests.isActive": "true",
+          "service_requests.id": incidentRequestPayload.id,
+          "service_requests.orgId": orgId,
+        });
 
         console.log("serviceRequest", requestResult);
         let houseId = requestResult[0].houseId;
 
         DataResult = await knex("property_units")
-          .leftJoin("companies", "property_units.companyId", "=", "companies.id")
-          .leftJoin("projects", "property_units.projectId", "=", "projects.id")
-          .leftJoin("property_types", "property_units.propertyTypeId", "=", "property_types.id")
-          .leftJoin("buildings_and_phases", "property_units.buildingPhaseId", "=", "buildings_and_phases.id")
-          .leftJoin("floor_and_zones", "property_units.floorZoneId", "=", "floor_and_zones.id")
-          .leftJoin("service_requests", "property_units.id", "=", "service_requests.houseId")
-          .leftJoin('users', 'service_requests.createdBy', 'users.id')
+          .leftJoin(
+            "companies",
+            "property_units.companyId",
+            "=",
+            "companies.id"
+          )
+          .leftJoin(
+            "projects",
+            "property_units.projectId",
+            "=",
+            "projects.id"
+          )
+          .leftJoin(
+            "property_types",
+            "property_units.propertyTypeId",
+            "=",
+            "property_types.id"
+          )
+          .leftJoin(
+            "buildings_and_phases",
+            "property_units.buildingPhaseId",
+            "=",
+            "buildings_and_phases.id"
+          )
+          .leftJoin(
+            "floor_and_zones",
+            "property_units.floorZoneId",
+            "=",
+            "floor_and_zones.id"
+          )
+          .leftJoin(
+            "service_requests",
+            "property_units.id",
+            "=",
+            "service_requests.houseId"
+          )
+          .leftJoin(
+            "users",
+            "service_requests.createdBy",
+            "users.id"
+          )
           //.leftJoin("requested_by AS reqBy", "service_requests.requestedBy", "reqBy.id")
-          .leftJoin("source_of_request", "service_requests.serviceType", "source_of_request.id")
-          .leftJoin("images", "service_requests.id", "images.entityId")
-          .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-          .leftJoin('users as u', 'service_requests.cancelledBy', 'u.id')
-          .leftJoin('service_orders', 'service_requests.id', 'service_orders.serviceRequestId')
+          .leftJoin(
+            "source_of_request",
+            "service_requests.serviceType",
+            "source_of_request.id"
+          )
+          .leftJoin(
+            "images",
+            "service_requests.id",
+            "images.entityId"
+          )
+          .leftJoin(
+            "service_status AS status",
+            "service_requests.serviceStatusCode",
+            "status.statusCode"
+          )
+          .leftJoin(
+            "users as u",
+            "service_requests.cancelledBy",
+            "u.id"
+          )
+          .leftJoin(
+            "service_orders",
+            "service_requests.id",
+            "service_orders.serviceRequestId"
+          )
           .select(
             "companies.companyName",
             "projects.projectName",
@@ -546,22 +740,25 @@ const serviceDetailsController = {
             "property_units.*",
             "service_requests.requestedBy",
             "property_types.descriptionEng as propertyDescription",
-            'status.descriptionEng as Status',
+            "status.descriptionEng as Status",
             "service_requests.displayId as SRS",
             "companies.id as comId",
-            'service_orders.comment',
-            'service_orders.calculatedDuration',
-            'service_orders.pauseDuration'
-
+            "service_orders.comment",
+            "service_orders.calculatedDuration",
+            "service_orders.pauseDuration",
+            "service_orders.serviceStartTime"
           )
           .where({
             "property_units.id": houseId,
             "service_requests.orgId": orgId,
-            "service_requests.id": incidentRequestPayload.id
-          }).first();
+            "service_requests.id":
+              incidentRequestPayload.id,
+          })
+          .first();
 
         console.log(
-          "[controllers][servicedetails][generaldetails]: View Data", DataResult
+          "[controllers][servicedetails][generaldetails]: View Data",
+          DataResult
         );
 
         //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
@@ -577,63 +774,92 @@ const serviceDetailsController = {
         );
 
         let locationResult = await knex("location_tags")
-          .leftJoin("location_tags_master", "location_tags.locationTagId", "location_tags_master.id")
+          .leftJoin(
+            "location_tags_master",
+            "location_tags.locationTagId",
+            "location_tags_master.id"
+          )
           .where({
             "location_tags.entityType": "service_requests",
-            "location_tags.entityId": incidentRequestPayload.id
+            "location_tags.entityId":
+              incidentRequestPayload.id,
           })
-          .select("location_tags_master.title")
-        let tags = _.uniq(locationResult.map(v => v.title))//[userHouseId.houseId];
+          .select("location_tags_master.title");
+        let tags = _.uniq(
+          locationResult.map((v) => v.title)
+        ); //[userHouseId.houseId];
 
         DataResult.locationTags = tags;
         console.log("locationResult", tags);
 
-
         // Get Requested By:
         DataResult.requestedBy = await knex("requested_by")
           .where({
-            "id": DataResult.requestedBy
-          }).select("*").first();
+            id: DataResult.requestedBy,
+          })
+          .select("*")
+          .first();
 
         /*GET UPLOADED IMAGES OPEN  */
         let imagesResult;
         if (incidentRequestPayload.id) {
-          imagesResult = await knex.from('images')
+          imagesResult = await knex
+            .from("images")
             // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests", orgId: orgId })
             // .where({ "entityId": incidentRequestPayload.id, "entityType": "service_requests" })
-            .where({"entityId": incidentRequestPayload.id, orgId: orgId})
-            .select('s3Url', 'title', 'name');
+            .where({
+              entityId: incidentRequestPayload.id,
+              orgId: orgId,
+            })
+            .select("s3Url", "title", "name");
         }
 
         /*GET UPLOADED IMAGES CLOSE  */
+        let currentTime = new Date().getTime();
 
         generalDetails = DataResult;
+        console.log("times",currentTime,generalDetails.serviceStartTime)
         generalDetails.uploadedImages = imagesResult;
-        trx.commit;
+        if (generalDetails.calculatedDuration == 0) {
+          let totalTimeInMiliSec =
+            currentTime - generalDetails.serviceStartTime;
 
+          let totalTimeInSec = Math.floor(
+            totalTimeInMiliSec / 1000
+          );
+          generalDetails.calculatedDuration = totalTimeInSec;
+        }
+        trx.commit;
       });
 
       res.status(200).json({
         data: {
-          generalDetails: generalDetails
+          generalDetails: generalDetails,
         },
-        message: "General details list successfully !"
+        message: "General details list successfully !",
       });
     } catch (err) {
-      console.log("[controllers][entrance][signup] :  Error", err);
+      console.log(
+        "[controllers][entrance][signup] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
   getLocationTags: async (req, res) => {
     try {
-
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
         sortPayload.sortBy = "location_tags_master.title";
-        sortPayload.orderBy = "asc"
+        sortPayload.orderBy = "asc";
       }
       let locationTags = null;
       let userId = req.me.id;
@@ -658,18 +884,38 @@ const serviceDetailsController = {
         knex
           .count("* as count")
           .from("location_tags_master")
-          .leftJoin("users", "location_tags_master.createdBy", "users.id")
+          .leftJoin(
+            "users",
+            "location_tags_master.createdBy",
+            "users.id"
+          )
           .where({ "location_tags_master.orgId": orgId })
-          .where(qb => {
+          .where((qb) => {
             if (searchValue) {
-              qb.where('location_tags_master.title', 'iLike', `%${searchValue}%`)
-              qb.orWhere('location_tags_master.descriptionEng', 'iLike', `%${searchValue}%`)
-              qb.orWhere('location_tags_master.descriptionThai', 'iLike', `%${searchValue}%`)
+              qb.where(
+                "location_tags_master.title",
+                "iLike",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "location_tags_master.descriptionEng",
+                "iLike",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "location_tags_master.descriptionThai",
+                "iLike",
+                `%${searchValue}%`
+              );
             }
           })
           .first(),
         knex("location_tags_master")
-          .leftJoin("users", "location_tags_master.createdBy", "users.id")
+          .leftJoin(
+            "users",
+            "location_tags_master.createdBy",
+            "users.id"
+          )
           .where({ "location_tags_master.orgId": orgId })
           .select([
             "location_tags_master.id as ID",
@@ -678,18 +924,30 @@ const serviceDetailsController = {
             "location_tags_master.descriptionThai as Description Thai",
             "location_tags_master.isActive as Status",
             "location_tags_master.createdAt as Date Created",
-            "users.name as Created By"
+            "users.name as Created By",
           ])
-          .where(qb => {
+          .where((qb) => {
             if (searchValue) {
-              qb.where('location_tags_master.title', 'iLike', `%${searchValue}%`)
-              qb.orWhere('location_tags_master.descriptionEng', 'iLike', `%${searchValue}%`)
-              qb.orWhere('location_tags_master.descriptionThai', 'iLike', `%${searchValue}%`)
+              qb.where(
+                "location_tags_master.title",
+                "iLike",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "location_tags_master.descriptionEng",
+                "iLike",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "location_tags_master.descriptionThai",
+                "iLike",
+                `%${searchValue}%`
+              );
             }
           })
           .orderBy(sortPayload.sortBy, sortPayload.orderBy)
           .offset(offset)
-          .limit(per_page)
+          .limit(per_page),
       ]);
 
       let count = total.count;
@@ -704,9 +962,9 @@ const serviceDetailsController = {
 
       return res.status(200).json({
         data: {
-          location_tags: pagination
+          location_tags: pagination,
         },
-        message: "Location Tags List!"
+        message: "Location Tags List!",
       });
       //console.log('[controllers][servicedetails][locationtags]: View Data', DataResult);
 
@@ -722,10 +980,18 @@ const serviceDetailsController = {
       //     message: "Location Tags list successfully !"
       // });
     } catch (err) {
-      console.log("[controllers][servicedetails][signup] :  Error", err);
+      console.log(
+        "[controllers][servicedetails][signup] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -735,11 +1001,13 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         // Get Location Tag List,
-        const DataResult = await knex("source_of_request").where({
+        const DataResult = await knex(
+          "source_of_request"
+        ).where({
           isActive: "true",
-          orgId: orgId
+          orgId: orgId,
         });
 
         //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
@@ -761,15 +1029,23 @@ const serviceDetailsController = {
 
       res.status(200).json({
         data: {
-          sourceRequest: sourceRequest
+          sourceRequest: sourceRequest,
         },
-        message: "Source Of Request list successfully !"
+        message: "Source Of Request list successfully !",
       });
     } catch (err) {
-      console.log("[controllers][servicedetails][signup] :  Error", err);
+      console.log(
+        "[controllers][servicedetails][signup] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -798,11 +1074,19 @@ const serviceDetailsController = {
         knex
           .count("* as count")
           .from("incident_priority")
-          .leftJoin("users", "incident_priority.createdBy", "users.id")
+          .leftJoin(
+            "users",
+            "incident_priority.createdBy",
+            "users.id"
+          )
           .where({ "incident_priority.orgId": orgId })
           .first(),
         knex("incident_priority")
-          .leftJoin("users", "incident_priority.createdBy", "users.id")
+          .leftJoin(
+            "users",
+            "incident_priority.createdBy",
+            "users.id"
+          )
           .where({ "incident_priority.orgId": orgId })
           .select([
             "incident_priority.id as id",
@@ -811,11 +1095,11 @@ const serviceDetailsController = {
             "incident_priority.descriptionThai as Description Thai",
             "incident_priority.isActive as Status",
             "users.name as Created By",
-            "incident_priority.createdAt as Date Created"
+            "incident_priority.createdAt as Date Created",
           ])
-          .orderBy('incident_priority.id', 'desc')
+          .orderBy("incident_priority.id", "desc")
           .offset(offset)
-          .limit(per_page)
+          .limit(per_page),
       ]);
 
       let count = total.count;
@@ -830,9 +1114,9 @@ const serviceDetailsController = {
 
       return res.status(200).json({
         data: {
-          priorities: pagination
+          priorities: pagination,
         },
-        message: "Priorities List!"
+        message: "Priorities List!",
       });
       //console.log('[controllers][servicedetails][locationtags]: View Data', DataResult);
 
@@ -848,10 +1132,18 @@ const serviceDetailsController = {
       //     message: "Location Tags list successfully !"
       // });
     } catch (err) {
-      console.log("[controllers][servicedetails][signup] :  Error", err);
+      console.log(
+        "[controllers][servicedetails][signup] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -861,12 +1153,14 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         // Get Location Tag List,
-        const DataResult = await knex("service_requests").where({
+        const DataResult = await knex(
+          "service_requests"
+        ).where({
           isActive: "true",
           moderationStatus: "true",
-          orgId: orgId
+          orgId: orgId,
         });
 
         //const updateDataResult = await knex.table('incident_type').where({ id: incidentTypePayload.id }).update({ ...incidentTypePayload }).transacting(trx);
@@ -888,9 +1182,9 @@ const serviceDetailsController = {
 
       res.status(200).json({
         data: {
-          serviceRequestList: serviceRequestList
+          serviceRequestList: serviceRequestList,
         },
-        message: "Service Request List Successfully !"
+        message: "Service Request List Successfully !",
       });
     } catch (err) {
       console.log(
@@ -899,7 +1193,12 @@ const serviceDetailsController = {
       );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -912,7 +1211,7 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         const viewRequestPayload = req.body;
         console.log(
           "[controllers][servicedetails][viewrequest]",
@@ -920,10 +1219,12 @@ const serviceDetailsController = {
         );
 
         // Get Location Tag List,
-        const DataResult = await knex("service_requests").where({
+        const DataResult = await knex(
+          "service_requests"
+        ).where({
           id: viewRequestPayload.serviceRequestId,
           isActive: "true",
-          moderationStatus: "true"
+          moderationStatus: "true",
         });
 
         console.log(
@@ -938,8 +1239,18 @@ const serviceDetailsController = {
         // General Details
 
         generalResult = await knex("property_units")
-          .join("companies", "property_units.companyId", "=", "companies.id")
-          .join("projects", "property_units.projectId", "=", "projects.id")
+          .join(
+            "companies",
+            "property_units.companyId",
+            "=",
+            "companies.id"
+          )
+          .join(
+            "projects",
+            "property_units.projectId",
+            "=",
+            "projects.id"
+          )
           .join(
             "property_types",
             "property_units.propertyTypeId",
@@ -968,7 +1279,7 @@ const serviceDetailsController = {
           )
           .where({
             "property_units.id": DataResult[0].houseId,
-            "property_units.orgId": orgId
+            "property_units.orgId": orgId,
           });
 
         console.log(
@@ -1018,8 +1329,9 @@ const serviceDetailsController = {
             "service_problems.*"
           )
           .where({
-            "service_problems.serviceRequestId": DataResult[0].id,
-            "service_problems.orgId": orgId
+            "service_problems.serviceRequestId":
+              DataResult[0].id,
+            "service_problems.orgId": orgId,
           });
 
         console.log(
@@ -1052,7 +1364,7 @@ const serviceDetailsController = {
           .select("images.s3Url")
           .where({
             "images.entityType": "service_problems",
-            "images.orgId": orgId
+            "images.orgId": orgId,
           });
 
         console.log(
@@ -1070,9 +1382,9 @@ const serviceDetailsController = {
 
       res.status(200).json({
         data: {
-          serviceRequestDetails: serviceRequestDetails
+          serviceRequestDetails: serviceRequestDetails,
         },
-        message: "Service Request List Successfully !"
+        message: "Service Request List Successfully !",
       });
     } catch (err) {
       console.log(
@@ -1081,7 +1393,12 @@ const serviceDetailsController = {
       );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1097,9 +1414,9 @@ const serviceDetailsController = {
           .select([
             "title as TITLE",
             "descriptionEng as DESCRIPTION",
-            "descriptionThai as ALTERNATE_DESCRIPTION"
+            "descriptionThai as ALTERNATE_DESCRIPTION",
           ])
-          .where({ "location_tags_master.orgId": orgId })
+          .where({ "location_tags_master.orgId": orgId }),
       ]);
 
       let tempraryDirectory = null;
@@ -1121,14 +1438,19 @@ const serviceDetailsController = {
           {
             TITLE: "",
             DESCRIPTION: "",
-            ALTERNATE_DESCRIPTION: ""
-          }
+            ALTERNATE_DESCRIPTION: "",
+          },
         ]);
       }
 
       XLSX.utils.book_append_sheet(wb, ws, "pres");
-      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "LocationTagData-" + Date.now() + ".csv";
+      XLSX.write(wb, {
+        bookType: "csv",
+        bookSST: true,
+        type: "base64",
+      });
+      let filename =
+        "LocationTagData-" + Date.now() + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require("aws-sdk");
@@ -1139,22 +1461,32 @@ const serviceDetailsController = {
           Bucket: bucketName,
           Key: "Export/LocationTag/" + filename,
           Body: file_buffer,
-          ACL: "public-read"
+          ACL: "public-read",
         };
         s3.putObject(params, function (err, data) {
           if (err) {
-            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            console.log(
+              "Error at uploadCSVFileOnS3Bucket function",
+              err
+            );
             res.status(500).json({
-              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+              errors: [
+                {
+                  code: "UNKNOWN_SERVER_ERROR",
+                  message: err.message,
+                },
+              ],
             });
             //next(err);
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, err => {
+            let deleteFile = fs.unlink(filepath, (err) => {
               console.log("File Deleting Error " + err);
             });
-            let url = process.env.S3_BUCKET_URL + "/Export/LocationTag/" +
+            let url =
+              process.env.S3_BUCKET_URL +
+              "/Export/LocationTag/" +
               filename;
 
             // let url =
@@ -1163,16 +1495,24 @@ const serviceDetailsController = {
             res.status(200).json({
               data: rows,
               message: "Location Tags List!",
-              url: url
+              url: url,
             });
           }
         });
       });
     } catch (err) {
-      console.log("[controllers][servicedetails][signup] :  Error", err);
+      console.log(
+        "[controllers][servicedetails][signup] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1192,9 +1532,9 @@ const serviceDetailsController = {
           .select([
             "incidentPriorityCode as PRIORITY_CODE",
             "descriptionEng as DESCRIPTION",
-            "descriptionThai as ALTERNATE_DESCRIPTION"
+            "descriptionThai as ALTERNATE_DESCRIPTION",
           ])
-          .where({ orgId: orgId })
+          .where({ orgId: orgId }),
       ]);
 
       let tempraryDirectory = null;
@@ -1210,7 +1550,11 @@ const serviceDetailsController = {
       var wb = XLSX.utils.book_new({ sheet: "Sheet JS" });
       var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
-      XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
+      XLSX.write(wb, {
+        bookType: "csv",
+        bookSST: true,
+        type: "base64",
+      });
       let filename = "PriorityData-" + Date.now() + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
@@ -1222,19 +1566,27 @@ const serviceDetailsController = {
           Bucket: bucketName,
           Key: "Export/Priority/" + filename,
           Body: file_buffer,
-          ACL: "public-read"
+          ACL: "public-read",
         };
         s3.putObject(params, function (err, data) {
           if (err) {
-            console.log("Error at uploadCSVFileOnS3Bucket function", err);
+            console.log(
+              "Error at uploadCSVFileOnS3Bucket function",
+              err
+            );
             res.status(500).json({
-              errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+              errors: [
+                {
+                  code: "UNKNOWN_SERVER_ERROR",
+                  message: err.message,
+                },
+              ],
             });
             //next(err);
           } else {
             console.log("File uploaded Successfully");
             //next(null, filePath);
-            let deleteFile = fs.unlink(filepath, err => {
+            let deleteFile = fs.unlink(filepath, (err) => {
               console.log("File Deleting Error " + err);
             });
             let url =
@@ -1243,16 +1595,24 @@ const serviceDetailsController = {
             res.status(200).json({
               data: rows,
               message: "Priority List",
-              url: url
+              url: url,
             });
           }
         });
       });
     } catch (err) {
-      console.log("[controllers][servicedetails][signup] :  Error", err);
+      console.log(
+        "[controllers][servicedetails][signup] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1270,13 +1630,16 @@ const serviceDetailsController = {
           tempraryDirectory = "/tmp/";
         }
         let resultData = null;
-        let file_path = tempraryDirectory + req.file.filename;
-        let wb = XLSX.readFile(file_path, { type: "binary" });
+        let file_path =
+          tempraryDirectory + req.file.filename;
+        let wb = XLSX.readFile(file_path, {
+          type: "binary",
+        });
         let ws = wb.Sheets[wb.SheetNames[0]];
         let data = XLSX.utils.sheet_to_json(ws, {
           type: "string",
           header: "A",
-          raw: false
+          raw: false,
         });
         //data         = JSON.stringify(data);
         let result = null;
@@ -1284,9 +1647,10 @@ const serviceDetailsController = {
         //console.log('DATA: ',data)
 
         if (
-          data[0].A == "Ã¯Â»Â¿PRIORITY_CODE" || data[0].A == "PRIORITY_CODE" &&
-          data[0].B == "DESCRIPTION" &&
-          data[0].C == "ALTERNATE_DESCRIPTION"
+          data[0].A == "Ã¯Â»Â¿PRIORITY_CODE" ||
+          (data[0].A == "PRIORITY_CODE" &&
+            data[0].B == "DESCRIPTION" &&
+            data[0].C == "ALTERNATE_DESCRIPTION")
         ) {
           if (data.length > 0) {
             let i = 0;
@@ -1295,11 +1659,13 @@ const serviceDetailsController = {
               i++;
 
               if (i > 1) {
-                let checkExist = await knex("incident_priority")
+                let checkExist = await knex(
+                  "incident_priority"
+                )
                   .select("incidentPriorityCode")
                   .where({
                     incidentPriorityCode: priorityData.A,
-                    orgId: req.orgId
+                    orgId: req.orgId,
                   });
                 if (checkExist.length < 1) {
                   let insertData = {
@@ -1310,7 +1676,7 @@ const serviceDetailsController = {
                     isActive: true,
                     createdBy: req.me.id,
                     createdAt: currentTime,
-                    updatedAt: currentTime
+                    updatedAt: currentTime,
                   };
 
                   resultData = await knex
@@ -1321,29 +1687,34 @@ const serviceDetailsController = {
               }
             }
 
-
-
-            let deleteFile = await fs.unlink(file_path, err => {
-              console.log("File Deleting Error " + err);
-            });
+            let deleteFile = await fs.unlink(
+              file_path,
+              (err) => {
+                console.log("File Deleting Error " + err);
+              }
+            );
             return res.status(200).json({
-              message: "Priority Data Import Successfully!"
+              message: "Priority Data Import Successfully!",
             });
-
-
           }
         } else {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: "Please Choose valid File!",
+              },
+            ],
           });
         }
       } else {
         return res.status(400).json({
           errors: [
-            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-          ]
+            {
+              code: "VALIDATION_ERROR",
+              message: "Please Choose valid File!",
+            },
+          ],
         });
       }
     } catch (err) {
@@ -1353,27 +1724,30 @@ const serviceDetailsController = {
       );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
 
   // End
 
-
   /**Import Priorities Data  */
 
   importLocationTag: async (req, res) => {
     try {
-
       let resultData = null;
       let data = req.body;
       //data         = JSON.stringify(data);
       let result = null;
-      let errors = []
+      let errors = [];
       let header = Object.values(data[0]);
-      header.unshift('Error');
-      errors.push(header)
+      header.unshift("Error");
+      errors.push(header);
       let currentTime = new Date().getTime();
       //console.log('DATA: ',data)
       let totalData = data.length - 1;
@@ -1381,9 +1755,10 @@ const serviceDetailsController = {
       let success = 0;
 
       if (
-        data[0].A == "Ã¯Â»Â¿TITLE" || data[0].A == "TITLE" &&
-        data[0].B == "DESCRIPTION" &&
-        data[0].C == "ALTERNATE_DESCRIPTION"
+        data[0].A == "Ã¯Â»Â¿TITLE" ||
+        (data[0].A == "TITLE" &&
+          data[0].B == "DESCRIPTION" &&
+          data[0].C == "ALTERNATE_DESCRIPTION")
       ) {
         if (data.length > 0) {
           let i = 0;
@@ -1392,21 +1767,21 @@ const serviceDetailsController = {
             i++;
 
             if (i > 1) {
-
-
               if (!locationTagData.A) {
-                let values = _.values(locationTagData)
-                values.unshift('title can not empty')
+                let values = _.values(locationTagData);
+                values.unshift("title can not empty");
                 errors.push(values);
                 fail++;
                 continue;
               }
 
-              let checkExist = await knex("location_tags_master")
+              let checkExist = await knex(
+                "location_tags_master"
+              )
                 .select("title")
                 .where({
                   title: locationTagData.A.toUpperCase(),
-                  orgId: req.orgId
+                  orgId: req.orgId,
                 });
               if (checkExist.length < 1) {
                 let insertData = {
@@ -1417,7 +1792,7 @@ const serviceDetailsController = {
                   isActive: true,
                   createdBy: req.me.id,
                   createdAt: currentTime,
-                  updatedAt: currentTime
+                  updatedAt: currentTime,
                 };
 
                 resultData = await knex
@@ -1427,8 +1802,10 @@ const serviceDetailsController = {
                 success++;
               } else {
                 fail++;
-                let values = _.values(locationTagData)
-                values.unshift('Location tag already exists.')
+                let values = _.values(locationTagData);
+                values.unshift(
+                  "Location tag already exists."
+                );
                 errors.push(values);
               }
             }
@@ -1452,17 +1829,19 @@ const serviceDetailsController = {
           }
           return res.status(200).json({
             message: message,
-            errors
+            errors,
           });
         }
       } else {
         return res.status(400).json({
           errors: [
-            { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-          ]
+            {
+              code: "VALIDATION_ERROR",
+              message: "Please Choose valid File!",
+            },
+          ],
         });
       }
-
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importCompanyData] :  Error",
@@ -1470,29 +1849,36 @@ const serviceDetailsController = {
       );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
   /***GET LOCATION TAG ALL LIST */
   getLocatioTagAllList: async (req, res) => {
-
     try {
-
       let orgId = req.orgId;
-      let result = await knex('location_tags_master').where({ 'orgId': orgId, isActive: true })
+      let result = await knex(
+        "location_tags_master"
+      ).where({ orgId: orgId, isActive: true });
       return res.status(200).json({
         data: result,
-        message: "Location list!"
+        message: "Location list!",
       });
-
     } catch (err) {
-
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
-
   },
 
   /** Get Service Request Problem Details */
@@ -1507,11 +1893,21 @@ const serviceDetailsController = {
 
       const serviceRequestPayload = req.body;
 
-      // Get HouseId By Service Request Id    
+      // Get HouseId By Service Request Id
 
       DataResult = await knex("service_problems")
-        .leftJoin("incident_categories", "service_problems.categoryId", "=", "incident_categories.id")
-        .leftJoin("incident_sub_categories", "service_problems.problemId", "=", "incident_sub_categories.id")
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "=",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "service_problems.problemId",
+          "=",
+          "incident_sub_categories.id"
+        )
         .select(
           "incident_categories.categoryCode ",
           "incident_categories.descriptionEng",
@@ -1520,15 +1916,15 @@ const serviceDetailsController = {
           "service_problems.description"
         )
         .where({
-          "service_problems.serviceRequestId": serviceRequestPayload.id,
-          "service_problems.orgId": orgId
+          "service_problems.serviceRequestId":
+            serviceRequestPayload.id,
+          "service_problems.orgId": orgId,
         });
 
       console.log(
-        "[controllers][servicedetails][problemdetails]: View Data", DataResult
+        "[controllers][servicedetails][problemdetails]: View Data",
+        DataResult
       );
-
-
 
       /*GET UPLOADED IMAGES OPEN  */
       let imagesResult;
@@ -1536,31 +1932,46 @@ const serviceDetailsController = {
       /*GET UPLOADED IMAGES CLOSE  */
       problemDetails = DataResult;
 
-      const Parallel = require('async-parallel');
+      const Parallel = require("async-parallel");
       if (serviceRequestPayload.id) {
-        problemDetails = await Parallel.map(problemDetails, async pd => {
-          imagesResult = await knex.from('images')
-            // .where({ "entityId": serviceRequestPayload.id, "entityType": "service_problems", orgId: orgId })
-            .where({ "entityId": serviceRequestPayload.id, "entityType": "service_problems" })
-            .select('s3Url', 'title', 'name');
-          return {
-            ...pd,
-            uploadedImages: imagesResult
-          };
-        });
+        problemDetails = await Parallel.map(
+          problemDetails,
+          async (pd) => {
+            imagesResult = await knex
+              .from("images")
+              // .where({ "entityId": serviceRequestPayload.id, "entityType": "service_problems", orgId: orgId })
+              .where({
+                entityId: serviceRequestPayload.id,
+                entityType: "service_problems",
+              })
+              .select("s3Url", "title", "name");
+            return {
+              ...pd,
+              uploadedImages: imagesResult,
+            };
+          }
+        );
       }
 
       res.status(200).json({
         data: {
           problemDetails: problemDetails,
         },
-        message: "Problem category & subcategory details !"
+        message: "Problem category & subcategory details !",
       });
     } catch (err) {
-      console.log("[controllers][entrance][signup] :  Error", err);
+      console.log(
+        "[controllers][entrance][signup] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1574,18 +1985,24 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         // Insert in users table,
         const incidentRequestPayload = req.body;
 
-        // Get Service Request Status      
+        // Get Service Request Status
 
-        DataResult = await knex("service_requests").where({
-          "service_requests.isActive": "true",
-          "service_requests.id": incidentRequestPayload.id,
-          "service_requests.orgId": orgId
-        })
-          .leftJoin('users as u', 'service_requests.cancelledBy', 'u.id')
+        DataResult = await knex("service_requests")
+          .where({
+            "service_requests.isActive": "true",
+            "service_requests.id":
+              incidentRequestPayload.id,
+            "service_requests.orgId": orgId,
+          })
+          .leftJoin(
+            "users as u",
+            "service_requests.cancelledBy",
+            "u.id"
+          )
           .select(
             "service_requests.id",
             "service_requests.description",
@@ -1597,10 +2014,11 @@ const serviceDetailsController = {
             "service_requests.cancelledOn as sCancelledOn",
             "u.name as cancelledBy",
             "displayId as srNo"
-          )
+          );
 
         console.log(
-          "[controllers][servicedetails][status]: View Data", DataResult
+          "[controllers][servicedetails][status]: View Data",
+          DataResult
         );
         statusDetails = DataResult;
         trx.commit;
@@ -1608,15 +2026,23 @@ const serviceDetailsController = {
 
       res.status(200).json({
         data: {
-          serviceStatus: statusDetails
+          serviceStatus: statusDetails,
         },
-        message: "Service request current status!"
+        message: "Service request current status!",
       });
     } catch (err) {
-      console.log("[controllers][entrance][signup] :  Error", err);
+      console.log(
+        "[controllers][entrance][signup] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1624,41 +2050,58 @@ const serviceDetailsController = {
   /***GET PRIORITY ALL LIST */
   getPriorityAllList: async (req, res) => {
     try {
-      let result = await knex('incident_priority')
-        .where({ 'orgId': req.orgId, 'isActive': true })
-        .orderBy('sequenceNo', 'asc')
+      let result = await knex("incident_priority")
+        .where({ orgId: req.orgId, isActive: true })
+        .orderBy("sequenceNo", "asc");
       return res.status(200).json({
         data: result,
-        message: "Priority list!"
+        message: "Priority list!",
       });
     } catch (err) {
-      console.log("[controllers][servicedetails][signup] :  Error", err);
+      console.log(
+        "[controllers][servicedetails][signup] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
 
   getPriority: async (req, res) => {
     try {
-      let result = await knex('incident_priority')
-        .leftJoin('users', 'incident_priority.createdBy', 'users.id')
-        .select([
-          'incident_priority.*',
-          'users.name'
-        ])
-        .where({ 'incident_priority.orgId': req.orgId })
-        .orderBy('incident_priority.sequenceNo', 'asc')
+      let result = await knex("incident_priority")
+        .leftJoin(
+          "users",
+          "incident_priority.createdBy",
+          "users.id"
+        )
+        .select(["incident_priority.*", "users.name"])
+        .where({ "incident_priority.orgId": req.orgId })
+        .orderBy("incident_priority.sequenceNo", "asc");
       return res.status(200).json({
         data: result,
-        message: "Priority list!"
+        message: "Priority list!",
       });
     } catch (err) {
-      console.log("[controllers][servicedetails][signup] :  Error", err);
+      console.log(
+        "[controllers][servicedetails][signup] :  Error",
+        err
+      );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1668,26 +2111,34 @@ const serviceDetailsController = {
       let priority = null;
       let orgId = req.orgId;
       let message;
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         let payload = req.body;
         const schema = Joi.object().keys({
-          id: Joi.string().required()
+          id: Joi.string().required(),
         });
         const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
         let priorityResult;
 
-        let checkStatus = await knex.from('incident_priority').where({ id: payload.id }).returning(['*'])
+        let checkStatus = await knex
+          .from("incident_priority")
+          .where({ id: payload.id })
+          .returning(["*"]);
         if (checkStatus && checkStatus.length) {
-
           if (checkStatus[0].isActive == true) {
-
             priorityResult = await knex
               .update({ isActive: false })
               .where({ id: payload.id })
@@ -1695,10 +2146,8 @@ const serviceDetailsController = {
               .transacting(trx)
               .into("incident_priority");
             priority = priorityResult[0];
-            message = "Priority Deactivate successfully!"
-
+            message = "Priority Deactivate successfully!";
           } else {
-
             priorityResult = await knex
               .update({ isActive: true })
               .where({ id: payload.id })
@@ -1706,17 +2155,16 @@ const serviceDetailsController = {
               .transacting(trx)
               .into("incident_priority");
             priority = priorityResult[0];
-            message = "Priority Activate successfully!"
-
+            message = "Priority Activate successfully!";
           }
         }
         trx.commit;
       });
       return res.status(200).json({
         data: {
-          priority: priority
+          priority: priority,
         },
-        message: message
+        message: message,
       });
     } catch (err) {
       console.log(
@@ -1725,7 +2173,12 @@ const serviceDetailsController = {
       );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1735,25 +2188,33 @@ const serviceDetailsController = {
       let location = null;
       let orgId = req.orgId;
       let message;
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         let payload = req.body;
         const schema = Joi.object().keys({
-          id: Joi.string().required()
+          id: Joi.string().required(),
         });
         const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
         let locationResult;
-        let checkStatus = await knex.from('location_tags_master').where({ id: payload.id }).returning(['*'])
+        let checkStatus = await knex
+          .from("location_tags_master")
+          .where({ id: payload.id })
+          .returning(["*"]);
         if (checkStatus && checkStatus.length) {
-
           if (checkStatus[0].isActive == true) {
-
             locationResult = await knex
               .update({ isActive: false })
               .where({ id: payload.id })
@@ -1761,7 +2222,8 @@ const serviceDetailsController = {
               .transacting(trx)
               .into("location_tags_master");
             location = locationResult[0];
-            message = "Location tag Deactivate successfully!"
+            message =
+              "Location tag Deactivate successfully!";
           } else {
             locationResult = await knex
               .update({ isActive: true })
@@ -1770,16 +2232,16 @@ const serviceDetailsController = {
               .transacting(trx)
               .into("location_tags_master");
             location = locationResult[0];
-            message = "Location tag Activate successfully!"
+            message = "Location tag Activate successfully!";
           }
         }
         trx.commit;
       });
       return res.status(200).json({
         data: {
-          location: location
+          location: location,
         },
-        message: message
+        message: message,
       });
     } catch (err) {
       console.log(
@@ -1788,7 +2250,12 @@ const serviceDetailsController = {
       );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1797,25 +2264,33 @@ const serviceDetailsController = {
       let sourceOfRequest = null;
       let orgId = req.orgId;
       let message;
-      await knex.transaction(async trx => {
+      await knex.transaction(async (trx) => {
         let payload = req.body;
         const schema = Joi.object().keys({
-          id: Joi.string().required()
+          id: Joi.string().required(),
         });
         const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (
+          result &&
+          result.hasOwnProperty("error") &&
+          result.error
+        ) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
+              {
+                code: "VALIDATION_ERROR",
+                message: result.error.message,
+              },
+            ],
           });
         }
         let requestResult;
-        let checkStatus = await knex.from('source_of_request').where({ id: payload.id }).returning(['*'])
+        let checkStatus = await knex
+          .from("source_of_request")
+          .where({ id: payload.id })
+          .returning(["*"]);
         if (checkStatus && checkStatus.length) {
-
           if (checkStatus[0].isActive == true) {
-
             requestResult = await knex
               .update({ isActive: false })
               .where({ id: payload.id })
@@ -1823,7 +2298,8 @@ const serviceDetailsController = {
               .transacting(trx)
               .into("source_of_request");
             sourceOfRequest = requestResult[0];
-            message = "Source Of Request Deactivate successfully!"
+            message =
+              "Source Of Request Deactivate successfully!";
           } else {
             requestResult = await knex
               .update({ isActive: true })
@@ -1832,16 +2308,17 @@ const serviceDetailsController = {
               .transacting(trx)
               .into("source_of_request");
             sourceOfRequest = requestResult[0];
-            message = "Source Of Request Activate successfully!"
+            message =
+              "Source Of Request Activate successfully!";
           }
         }
         trx.commit;
       });
       return res.status(200).json({
         data: {
-          sourceOfRequest: sourceOfRequest
+          sourceOfRequest: sourceOfRequest,
         },
-        message: message
+        message: message,
       });
     } catch (err) {
       console.log(
@@ -1850,7 +2327,12 @@ const serviceDetailsController = {
       );
       //trx.rollback
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },
@@ -1858,45 +2340,48 @@ const serviceDetailsController = {
     try {
       const { serviceOrderId, orderDueDate } = req.body;
       newDueDate = new Date(orderDueDate).getTime();
-      let result = await knex('service_orders').update({ orderDueDate: newDueDate }).where({ id: serviceOrderId }).returning(['*'])
+      let result = await knex("service_orders")
+        .update({ orderDueDate: newDueDate })
+        .where({ id: serviceOrderId })
+        .returning(["*"]);
       return res.status(200).json({
         data: {
           updated: true,
-          result
-        }
-      })
+          result,
+        },
+      });
     } catch (err) {
       return res.status(200).json({
         data: {
-          update: false
-        }
-      })
+          update: false,
+        },
+      });
     }
   },
 
   getServiceId: async (req, res) => {
-
     try {
       let displayId = req.query.displayId;
 
       let result;
 
-      result = await knex.from('service_requests').select('id').where({ displayId: displayId, orgId: req.orgId }).first();
+      result = await knex
+        .from("service_requests")
+        .select("id")
+        .where({ displayId: displayId, orgId: req.orgId })
+        .first();
 
       return res.status(200).json({
-        data: result
-      })
-
+        data: result,
+      });
     } catch (err) {
       return res.status(200).json({
         data: {
-          update: false
-        }
-      })
+          update: false,
+        },
+      });
     }
-
-  }
-
+  },
 };
 
 module.exports = serviceDetailsController;
