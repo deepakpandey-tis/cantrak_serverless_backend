@@ -3473,7 +3473,7 @@ const assetController = {
           "teams.teamCode as ASSIGN_TEAM",
           "asset_master.assignedVendors as ASSIGN_VENDOR",
           "asset_master.additionalInformation as ASSIGN_INFORMATION",
-          "asset_master.id as ID",
+          // "asset_master.id as ID",
           "al.unitId",
         ])
         .where({ "asset_master.orgId": req.orgId })
@@ -3528,11 +3528,11 @@ const assetController = {
       let assets = await knex
         .select([
           "asset.*",
-          "pu.unitNumber as UNIT_NUMBER",
-          "faz.floorZoneCode as FLOOR_CODE",
-          "bap.buildingPhaseCode as BUILDING_CODE",
-          "p2.project as PROJECT_CODE",
           "c2.companyId as COMPANY_CODE",
+          "p2.project as PROJECT_CODE",
+          "bap.buildingPhaseCode as BUILDING_CODE",
+          "faz.floorZoneCode as FLOOR_CODE",
+          "pu.unitNumber as UNIT_NUMBER",
         ])
         .from(subQuery1.as("asset"))
         .leftJoin(
