@@ -3763,7 +3763,7 @@ const assetController = {
                 let projectResult = await knex("projects")
                   .select("id")
                   .where({
-                    project: assetData.S,
+                    project: assetData.R,
                     orgId: req.orgId,
                   })
                   .first();
@@ -3791,7 +3791,7 @@ const assetController = {
                 )
                   .select("id")
                   .where({
-                    buildingPhaseCode: assetData.T,
+                    buildingPhaseCode: assetData.S,
                     orgId: req.orgId,
                   })
                   .first();
@@ -3823,7 +3823,7 @@ const assetController = {
                 )
                   .select("id")
                   .where({
-                    floorZoneCode: assetData.U,
+                    floorZoneCode: assetData.T,
                     orgId: req.orgId,
                   })
                   .first();
@@ -3859,7 +3859,7 @@ const assetController = {
                   })
                   .where( "unitNumber",
                   "iLIKE",
-                  `%${assetData.V}%`)
+                  `%${assetData.U}%`)
                   .first();
                 if (
                   propertyUnitResult &&
@@ -3912,7 +3912,7 @@ const assetController = {
               if (assetData.N) {
                 let teamResult = await knex("teams")
                   .where({
-                    teamCode: assetData.O,
+                    teamCode: assetData.N,
                     orgId: req.orgId,
                   })
                   .select("teamId");
