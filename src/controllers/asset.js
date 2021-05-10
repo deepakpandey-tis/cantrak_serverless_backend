@@ -3679,21 +3679,6 @@ const assetController = {
   },
   importAssetData: async (req, res) => {
     try {
-      // if (req.file) {
-      // console.log(req.file)
-      // let tempraryDirectory = null;
-      // if (process.env.IS_OFFLINE) {
-      //   tempraryDirectory = 'tmp/';
-      // } else {
-      //   tempraryDirectory = '/tmp/';
-      // }
-      //  let resultData = null;
-      //    let file_path = tempraryDirectory + req.file.filename;
-      //  let wb = XLSX.readFile(file_path, { type: "base64", cellDates: true });
-      //  let ws = wb.Sheets[wb.SheetNames[0]];
-      //  let data = XLSX.utils.sheet_to_json(ws, { type: 'string', header: 'A', raw: false });
-      //data         = JSON.stringify(data);
-      ///   console.log("+++++++++++++", data, "=========")
       let data = req.body;
       let totalData = data.length - 1;
       let fail = 0;
@@ -3704,429 +3689,458 @@ const assetController = {
       header.unshift("Error");
       errors.push(header);
 
-      if (
-        data[0].A == "ASSET_CODE" ||
-        (data[0].A == "Ã¯Â»Â¿ASSET_CODE" &&
-          data[0].B == "ASSET_NAME" &&
-          data[0].C == "UNIT_OF_MEASURE" &&
-          data[0].D == "MODEL_CODE" &&
-          data[0].E == "ASSET_CATEGORY_NAME" &&
-          data[0].F == "COMPANY" &&
-          data[0].G == "PRICE" &&
-          data[0].H == "ASSET_SERIAL_NO" &&
-          data[0].I == "INSTALMENT_DATE" &&
-          data[0].J == "WARRANTY_DATE" &&
-          data[0].K == "BARCODE" &&
-          data[0].L == "PARENT_ASSET_CODE" &&
-          // data[0].M == "LOCATION" &&
-          data[0].M == "ASSIGN_USER" &&
-          data[0].N == "ASSIGN_TEAM" &&
-          data[0].O == "ASSIGN_VENDOR" &&
-          data[0].P == "ASSIGN_INFORMATION")
-      ) {
-        if (data.length > 0) {
-          let i = 0;
-          for (let assetData of data) {
-            i++;
-
-            console.log(
-              "ASSET DATA:**************************************",
-              assetData
-            );
-
-            if (i > 1) {
-              let companyId = "";
-              if (assetData.F) {
-                let companyResult = await knex("companies")
-                  .select("id")
-                  .where({
-                    companyId: assetData.F,
-                    orgId: req.orgId,
-                  })
-                  .first();
-                if (companyResult && companyResult.id) {
-                  companyId = companyResult.id;
-                } else {
-                  fail++;
-                  let values = _.values(assetData);
-                  values.unshift(
-                    "Company ID does not exists."
-                  );
-                  errors.push(values);
-                  continue;
-                }
-              } else {
-                continue;
-              }
-              let projectId;
-              if (assetData.R) {
-                let projectResult = await knex("projects")
-                  .select("id")
-                  .where({
-                    project: assetData.R,
-                    orgId: req.orgId,
-                  })
-                  .first();
-                if (projectResult && projectResult.id) {
-                  projectId = projectResult.id;
-
-                  console.log("[Project======]", projectId);
-                } else {
-                  fail++;
-                  let values = _.values(assetData);
-                  values.unshift(
-                    "Project ID does not exists."
-                  );
-                  errors.push(values);
-                  continue;
-                }
-              } else {
-                continue;
-              }
-
-              let buildingId;
-              if (assetData.S) {
-                let buildingResult = await knex(
-                  "buildings_and_phases"
-                )
-                  .select("id")
-                  .where({
-                    buildingPhaseCode: assetData.S,
-                    orgId: req.orgId,
-                  })
-                  .first();
-                if (buildingResult && buildingResult.id) {
-                  buildingId = buildingResult.id;
-
-                  console.log(
-                    "[Building======]",
-                    buildingId
-                  );
-                } else {
-                  fail++;
-                  let values = _.values(assetData);
-                  values.unshift(
-                    "Building ID does not exists."
-                  );
-                  errors.push(values);
-                  continue;
-                }
-              }
-              //  else {
-              //   continue;
-              // }
-
-              let floorZoneId;
-              if (assetData.T) {
-                let floorZoneResult = await knex(
-                  "floor_and_zones"
-                )
-                  .select("id")
-                  .where({
-                    floorZoneCode: assetData.T,
-                    orgId: req.orgId,
-                  })
-                  .first();
-                if (floorZoneResult && floorZoneResult.id) {
-                  floorZoneId = floorZoneResult.id;
-                  console.log(
-                    "[FloorZoneId======]",
-                    floorZoneId
-                  );
-                } else {
-                  fail++;
-                  let values = _.values(assetData);
-                  values.unshift(
-                    "Floor Zone ID does not exists."
-                  );
-                  errors.push(values);
-                  continue;
-                }
-              }
-              //  else {
-              //   continue;
-              // }
-
-              let propertyUnitId;
-              if (assetData.U) {
-                let propertyUnitResult = await knex(
-                  "property_units"
-                )
-                  .select("id")
-                  .where({
-                    // unitNumber: assetData.V,
-                    orgId: req.orgId,
-                  })
-                  .where( "unitNumber",
-                  "iLIKE",
-                  `%${assetData.U}%`)
-                  .first();
-                if (
-                  propertyUnitResult &&
-                  propertyUnitResult.id
-                ) {
-                  propertyUnitId = propertyUnitResult.id;
-                } else {
-                  fail++;
-                  let values = _.values(assetData);
-                  values.unshift(
-                    "Unit Number does not exists."
-                  );
-                  errors.push(values);
-                  continue;
-                }
-              }
-              // else{
-              //   continue;
-              // }
-
-              let assetCategoryId = "";
-              const cat = await knex(
-                "asset_category_master"
-              )
-                .where({
-                  categoryName: assetData.E,
-                  orgId: req.orgId,
-                })
-                .select("id");
-              if (cat && cat.length) {
-                assetCategoryId = cat[0].id;
-              } else {
-                const catResult = await knex(
-                  "asset_category_master"
-                )
-                  .insert({
-                    categoryName: assetData.E,
-                    orgId: req.orgId,
-                  })
-                  .returning(["id"]);
-                assetCategoryId = catResult[0].id;
-              }
-              let price = 0;
-              if (assetData.G) {
-                price = assetData.G;
-              }
-
-              /*GET TEAM ID TO TEAM CODE OPEN */
-              let teamId = null;
-              if (assetData.N) {
-                let teamResult = await knex("teams")
-                  .where({
-                    teamCode: assetData.N,
-                    orgId: req.orgId,
-                  })
-                  .select("teamId");
-                if (!teamResult.length) {
-                  fail++;
-                  let values = _.values(assetData);
-                  values.unshift(
-                    "Team ID does not exists."
-                  );
-                  errors.push(values);
-                  continue;
-                }
-
-                if (teamResult.length) {
-                  teamId = teamResult[0].teamId;
-                }
-              }
-              /*GET TEAM ID TO TEAM CODE CLOSE */
-
-              /*GET PARENT ID TO PARENT ASSET CODE OPEN */
-
-              let parentId = null;
-              if (assetData.L) {
-                let parentResult = await knex(
-                  "asset_master"
-                )
-                  .where({
-                    assetCode: assetData.L,
-                    orgId: req.orgId,
-                  })
-                  .select("id");
-                if (!parentResult.length) {
-                  fail++;
-                  let values = _.values(assetData);
-                  values.unshift(
-                    "Parent asset id does not exists."
-                  );
-                  errors.push(values);
-                  continue;
-                }
-
-                if (parentResult.length) {
-                  parentId = parentResult[0].id;
-                }
-              }
-              /*GET PARENT ID TO PARENT CODE CLOSE */
-
-              /*GET LOCATION ID BY LOCATION CODE OPEN */
-
-              // let locationId = null;
-              // if (assetData.M) {
-              //   let locationResult = await knex(
-              //     "location_tags_master"
-              //   )
-              //     .where({
-              //       title: assetData.M,
-              //       orgId: req.orgId,
-              //     })
-              //     .select("id");
-
-              //   if (
-              //     locationResult &&
-              //     locationResult.length
-              //   ) {
-              //     locationId = locationResult[0].id;
-              //   } else {
-              //     const locationData = await knex(
-              //       "location_tags_master"
-              //     )
-              //       .insert({
-              //         title: assetData.M,
-              //         descriptionEng: assetData.M,
-              //         orgId: req.orgId,
-              //       })
-              //       .returning(["id"]);
-              //     locationId = locationData[0].id;
-              //   }
-              // }
-              /*GET LOCATION ID BY LOCATION CODE CLOSE */
-
-              let checkExist = await knex("asset_master")
-                .select("id")
-                .where({
-                  assetCode: assetData.A,
-                  assetName: assetData.B,
-                  orgId: req.orgId,
-                });
-
-              // if (checkExist.length < 1) {
-
-              let currentTime = new Date().getTime();
-
-              let installDate = "";
-              let expireDate = "";
-              if (assetData.I) {
-                installDate = moment(assetData.I).format();
-              }
-              if (assetData.J) {
-                expireDate = moment(assetData.J).format();
-              }
-
-              let insertData = {
-                orgId: req.orgId,
-                assetCode: assetData.A,
-                assetName: assetData.B,
-                unitOfMeasure: assetData.C,
-                model: assetData.D,
-                price: assetData.G,
-                companyId: companyId,
-                projectId: projectId,
-                assetCategoryId,
-                createdAt: currentTime,
-                updatedAt: currentTime,
-                assignedTeams: teamId,
-                parentAssetId: parentId,
-                assetSerial: assetData.H,
-                installationDate: installDate,
-                warrentyExpiration: expireDate,
-                barcode: assetData.K,
-                // locationId: locationId,
-                assignedUsers: assetData.M,
-                assignedVendors: assetData.O,
-                additionalInformation: assetData.P,
-              };
-
-              console.log(
-                "[Insert Data]==========",
-                insertData
-              );
-
-              resultData = await knex
-                .insert(insertData)
-                .returning(["*"])
-                .into("asset_master");
-
-              if (resultData && resultData.length) {
-                success++;
-              }
-
-              // console.log("[asset result data]===",success)
-
-              // let houseResult = await knex("property_units")
-              // .select("id")
-              // .where({ floorZoneId, orgId: orgId, isActive: true});
-              // let houseId = houseResult.find(v => v.id === propertyUnitId).id;
-
-              // console.log("[HouseId]",houseId);
-
-              if (projectId && buildingId && floorZoneId && propertyUnitId) {
-                let assetLocationResult = await knex
-                  .insert({
-                    assetId: resultData[0].id,
-                    houseId : propertyUnitId,
-                    floorId: floorZoneId,
-                    unitId: propertyUnitId,
-                    buildingId: buildingId,
-                    projectId: projectId,
-                    companyId: companyId,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                    startDate: currentTime,
-                    orgId: req.orgId,
-                  })
-                  .returning(["*"])
-                  .into("asset_location");
-              }
-
-              // } else {
-              //   fail++;
-              //   let values = _.values(assetData)
-              //   values.unshift('Asset name with corresponding asset code already exists.')
-              //   errors.push(values);
-              // }
-            }
-          }
-          let message = null;
-          if (totalData == success) {
-            message =
-              "System has processed processed ( " +
-              totalData +
-              " ) entries and added them successfully!";
-          } else {
-            message =
-              "System has processed processed ( " +
-              totalData +
-              " ) entries out of which only ( " +
-              success +
-              " ) are added and others are failed ( " +
-              fail +
-              " ) due to validation!";
-          }
-          //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
-
-          const update = await knex("asset_master")
-            .update({ isActive: true })
-            .where({ orgId: req.orgId, isActive: true })
-            .returning(["*"]);
-
-          // console.log("[update][asset]",update)
-
-          return res.status(200).json({
-            message: message,
-            errors,
-          });
-        }
-      } else {
+      if (totalData > 1000) {
         return res.status(400).json({
           errors: [
             {
               code: "VALIDATION_ERROR",
-              message: "Please Choose valid File!",
+              message:
+                "Number of assets should be less than or equal to 1000.",
             },
           ],
         });
+      } else {
+        if (
+          data[0].A == "ASSET_CODE" ||
+          (data[0].A == "Ã¯Â»Â¿ASSET_CODE" &&
+            data[0].B == "ASSET_NAME" &&
+            data[0].C == "UNIT_OF_MEASURE" &&
+            data[0].D == "MODEL_CODE" &&
+            data[0].E == "ASSET_CATEGORY_NAME" &&
+            data[0].F == "COMPANY" &&
+            data[0].G == "PRICE" &&
+            data[0].H == "ASSET_SERIAL_NO" &&
+            data[0].I == "INSTALMENT_DATE" &&
+            data[0].J == "WARRANTY_DATE" &&
+            data[0].K == "BARCODE" &&
+            data[0].L == "PARENT_ASSET_CODE" &&
+            // data[0].M == "LOCATION" &&
+            data[0].M == "ASSIGN_USER" &&
+            data[0].N == "ASSIGN_TEAM" &&
+            data[0].O == "ASSIGN_VENDOR" &&
+            data[0].P == "ASSIGN_INFORMATION")
+        ) {
+          if (data.length > 0) {
+            let i = 0;
+            for (let assetData of data) {
+              i++;
+
+              console.log(
+                "ASSET DATA:**************************************",
+                assetData
+              );
+
+              if (i > 1) {
+                let companyId = "";
+                if (assetData.F) {
+                  let companyResult = await knex(
+                    "companies"
+                  )
+                    .select("id")
+                    .where({
+                      companyId: assetData.F,
+                      orgId: req.orgId,
+                    })
+                    .first();
+                  if (companyResult && companyResult.id) {
+                    companyId = companyResult.id;
+                  } else {
+                    fail++;
+                    let values = _.values(assetData);
+                    values.unshift(
+                      "Company ID does not exists."
+                    );
+                    errors.push(values);
+                    continue;
+                  }
+                } else {
+                  continue;
+                }
+                let projectId;
+                if (assetData.R) {
+                  let projectResult = await knex("projects")
+                    .select("id")
+                    .where({
+                      project: assetData.R,
+                      orgId: req.orgId,
+                    })
+                    .first();
+                  if (projectResult && projectResult.id) {
+                    projectId = projectResult.id;
+
+                    console.log(
+                      "[Project======]",
+                      projectId
+                    );
+                  } else {
+                    fail++;
+                    let values = _.values(assetData);
+                    values.unshift(
+                      "Project ID does not exists."
+                    );
+                    errors.push(values);
+                    continue;
+                  }
+                } else {
+                  continue;
+                }
+
+                let buildingId;
+                if (assetData.S) {
+                  let buildingResult = await knex(
+                    "buildings_and_phases"
+                  )
+                    .select("id")
+                    .where({
+                      buildingPhaseCode: assetData.S,
+                      orgId: req.orgId,
+                    })
+                    .first();
+                  if (buildingResult && buildingResult.id) {
+                    buildingId = buildingResult.id;
+
+                    console.log(
+                      "[Building======]",
+                      buildingId
+                    );
+                  } else {
+                    fail++;
+                    let values = _.values(assetData);
+                    values.unshift(
+                      "Building ID does not exists."
+                    );
+                    errors.push(values);
+                    continue;
+                  }
+                }
+                //  else {
+                //   continue;
+                // }
+
+                let floorZoneId;
+                if (assetData.T) {
+                  let floorZoneResult = await knex(
+                    "floor_and_zones"
+                  )
+                    .select("id")
+                    .where({
+                      floorZoneCode: assetData.T,
+                      orgId: req.orgId,
+                    })
+                    .first();
+                  if (
+                    floorZoneResult &&
+                    floorZoneResult.id
+                  ) {
+                    floorZoneId = floorZoneResult.id;
+                    console.log(
+                      "[FloorZoneId======]",
+                      floorZoneId
+                    );
+                  } else {
+                    fail++;
+                    let values = _.values(assetData);
+                    values.unshift(
+                      "Floor Zone ID does not exists."
+                    );
+                    errors.push(values);
+                    continue;
+                  }
+                }
+                //  else {
+                //   continue;
+                // }
+
+                let propertyUnitId;
+                if (assetData.U) {
+                  let propertyUnitResult = await knex(
+                    "property_units"
+                  )
+                    .select("id")
+                    .where({
+                      // unitNumber: assetData.V,
+                      orgId: req.orgId,
+                    })
+                    .where(
+                      "unitNumber",
+                      "iLIKE",
+                      `%${assetData.U}%`
+                    )
+                    .first();
+                  if (
+                    propertyUnitResult &&
+                    propertyUnitResult.id
+                  ) {
+                    propertyUnitId = propertyUnitResult.id;
+                  } else {
+                    fail++;
+                    let values = _.values(assetData);
+                    values.unshift(
+                      "Unit Number does not exists."
+                    );
+                    errors.push(values);
+                    continue;
+                  }
+                }
+                // else{
+                //   continue;
+                // }
+
+                let assetCategoryId = "";
+                const cat = await knex(
+                  "asset_category_master"
+                )
+                  .where({
+                    categoryName: assetData.E,
+                    orgId: req.orgId,
+                  })
+                  .select("id");
+                if (cat && cat.length) {
+                  assetCategoryId = cat[0].id;
+                } else {
+                  const catResult = await knex(
+                    "asset_category_master"
+                  )
+                    .insert({
+                      categoryName: assetData.E,
+                      orgId: req.orgId,
+                    })
+                    .returning(["id"]);
+                  assetCategoryId = catResult[0].id;
+                }
+                let price = 0;
+                if (assetData.G) {
+                  price = assetData.G;
+                }
+
+                /*GET TEAM ID TO TEAM CODE OPEN */
+                let teamId = null;
+                if (assetData.N) {
+                  let teamResult = await knex("teams")
+                    .where({
+                      teamCode: assetData.N,
+                      orgId: req.orgId,
+                    })
+                    .select("teamId");
+                  if (!teamResult.length) {
+                    fail++;
+                    let values = _.values(assetData);
+                    values.unshift(
+                      "Team ID does not exists."
+                    );
+                    errors.push(values);
+                    continue;
+                  }
+
+                  if (teamResult.length) {
+                    teamId = teamResult[0].teamId;
+                  }
+                }
+                /*GET TEAM ID TO TEAM CODE CLOSE */
+
+                /*GET PARENT ID TO PARENT ASSET CODE OPEN */
+
+                let parentId = null;
+                if (assetData.L) {
+                  let parentResult = await knex(
+                    "asset_master"
+                  )
+                    .where({
+                      assetCode: assetData.L,
+                      orgId: req.orgId,
+                    })
+                    .select("id");
+                  if (!parentResult.length) {
+                    fail++;
+                    let values = _.values(assetData);
+                    values.unshift(
+                      "Parent asset id does not exists."
+                    );
+                    errors.push(values);
+                    continue;
+                  }
+
+                  if (parentResult.length) {
+                    parentId = parentResult[0].id;
+                  }
+                }
+                /*GET PARENT ID TO PARENT CODE CLOSE */
+
+                /*GET LOCATION ID BY LOCATION CODE OPEN */
+
+                // let locationId = null;
+                // if (assetData.M) {
+                //   let locationResult = await knex(
+                //     "location_tags_master"
+                //   )
+                //     .where({
+                //       title: assetData.M,
+                //       orgId: req.orgId,
+                //     })
+                //     .select("id");
+
+                //   if (
+                //     locationResult &&
+                //     locationResult.length
+                //   ) {
+                //     locationId = locationResult[0].id;
+                //   } else {
+                //     const locationData = await knex(
+                //       "location_tags_master"
+                //     )
+                //       .insert({
+                //         title: assetData.M,
+                //         descriptionEng: assetData.M,
+                //         orgId: req.orgId,
+                //       })
+                //       .returning(["id"]);
+                //     locationId = locationData[0].id;
+                //   }
+                // }
+                /*GET LOCATION ID BY LOCATION CODE CLOSE */
+
+                let checkExist = await knex("asset_master")
+                  .select("id")
+                  .where({
+                    assetCode: assetData.A,
+                    assetName: assetData.B,
+                    orgId: req.orgId,
+                  });
+
+                // if (checkExist.length < 1) {
+
+                let currentTime = new Date().getTime();
+
+                let installDate = "";
+                let expireDate = "";
+                if (assetData.I) {
+                  installDate = moment(
+                    assetData.I
+                  ).format();
+                }
+                if (assetData.J) {
+                  expireDate = moment(assetData.J).format();
+                }
+
+                let insertData = {
+                  orgId: req.orgId,
+                  assetCode: assetData.A,
+                  assetName: assetData.B,
+                  unitOfMeasure: assetData.C,
+                  model: assetData.D,
+                  price: assetData.G,
+                  companyId: companyId,
+                  projectId: projectId,
+                  assetCategoryId,
+                  createdAt: currentTime,
+                  updatedAt: currentTime,
+                  assignedTeams: teamId,
+                  parentAssetId: parentId,
+                  assetSerial: assetData.H,
+                  installationDate: installDate,
+                  warrentyExpiration: expireDate,
+                  barcode: assetData.K,
+                  // locationId: locationId,
+                  assignedUsers: assetData.M,
+                  assignedVendors: assetData.O,
+                  additionalInformation: assetData.P,
+                };
+
+                console.log(
+                  "[Insert Data]==========",
+                  insertData
+                );
+
+                resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("asset_master");
+
+                if (resultData && resultData.length) {
+                  success++;
+                }
+
+                // console.log("[asset result data]===",success)
+
+                // let houseResult = await knex("property_units")
+                // .select("id")
+                // .where({ floorZoneId, orgId: orgId, isActive: true});
+                // let houseId = houseResult.find(v => v.id === propertyUnitId).id;
+
+                // console.log("[HouseId]",houseId);
+
+                if (
+                  projectId &&
+                  buildingId &&
+                  floorZoneId &&
+                  propertyUnitId
+                ) {
+                  let assetLocationResult = await knex
+                    .insert({
+                      assetId: resultData[0].id,
+                      houseId: propertyUnitId,
+                      floorId: floorZoneId,
+                      unitId: propertyUnitId,
+                      buildingId: buildingId,
+                      projectId: projectId,
+                      companyId: companyId,
+                      createdAt: currentTime,
+                      updatedAt: currentTime,
+                      startDate: currentTime,
+                      orgId: req.orgId,
+                    })
+                    .returning(["*"])
+                    .into("asset_location");
+                }
+
+                // } else {
+                //   fail++;
+                //   let values = _.values(assetData)
+                //   values.unshift('Asset name with corresponding asset code already exists.')
+                //   errors.push(values);
+                // }
+              }
+            }
+            let message = null;
+            if (totalData == success) {
+              message =
+                "System has processed processed ( " +
+                totalData +
+                " ) entries and added them successfully!";
+            } else {
+              message =
+                "System has processed processed ( " +
+                totalData +
+                " ) entries out of which only ( " +
+                success +
+                " ) are added and others are failed ( " +
+                fail +
+                " ) due to validation!";
+            }
+            //let deleteFile = await fs.unlink(file_path, (err) => { console.log("File Deleting Error " + err) })
+
+            const update = await knex("asset_master")
+              .update({ isActive: true })
+              .where({ orgId: req.orgId, isActive: true })
+              .returning(["*"]);
+
+            // console.log("[update][asset]",update)
+
+            return res.status(200).json({
+              message: message,
+              errors,
+            });
+          }
+        } else {
+          return res.status(400).json({
+            errors: [
+              {
+                code: "VALIDATION_ERROR",
+                message: "Please Choose valid File!",
+              },
+            ],
+          });
+        }
       }
       // } else {
 
