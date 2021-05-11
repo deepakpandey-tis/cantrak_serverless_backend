@@ -558,6 +558,10 @@ const dashboardController = {
       let telInfo;
       let lineInfo;
 
+      let contact = [];
+
+      for(let b of buildingArray){
+          
       contactInfo = await knex
         .from("contact_info")
         .innerJoin(
@@ -570,7 +574,7 @@ const dashboardController = {
           "contact_info.contactId": 1,
           "contact_info.isActive": true,
         })
-        .whereIn("contact_info.buildingId", buildingArray)
+        .where("contact_info.buildingId", b)
         .select(
           "contact_info.contactId as Id",
           "contact_info.contactValue as contactValue"
@@ -589,7 +593,7 @@ const dashboardController = {
           "contact_info.contactId": 2,
           "contact_info.isActive": true,
         })
-        .whereIn("contact_info.buildingId", buildingArray)
+        .where("contact_info.buildingId", b)
         .select(
           "contact_info.contactId as Id",
           "contact_info.contactValue as contactValue"
@@ -608,7 +612,7 @@ const dashboardController = {
           "contact_info.isActive": true,
           "contact_info.contactId": 3,
         })
-        .whereIn("contact_info.buildingId", buildingArray)
+        .where("contact_info.buildingId", b)
         .select(
           "contact_info.contactId as Id",
           "contact_info.contactValue as contactValue"
@@ -627,7 +631,7 @@ const dashboardController = {
           "contact_info.isActive": true,
           "contact_info.contactId": 4,
         })
-        .whereIn("contact_info.buildingId", buildingArray)
+        .where("contact_info.buildingId", b)
         .select(
           "contact_info.contactId as Id",
           "contact_info.contactValue as contactValue"
@@ -646,7 +650,7 @@ const dashboardController = {
           "contact_info.isActive": true,
           "contact_info.contactId": 5,
         })
-        .whereIn("contact_info.buildingId", buildingArray)
+        .where("contact_info.buildingId", b)
         .select(
           "contact_info.contactId as Id",
           "contact_info.contactValue as contactValue"
@@ -665,7 +669,7 @@ const dashboardController = {
           "contact_info.isActive": true,
           "contact_info.contactId": 0,
         })
-        .whereIn("contact_info.buildingId", buildingArray)
+        .where("contact_info.buildingId", b)
         .select(
           "contact_info.contactId as Id",
           "contact_info.contactValue as contactValue"
@@ -678,19 +682,34 @@ const dashboardController = {
         .where({
           entityType: "contact_info",
         })
-        .whereIn("images.entityId", buildingArray);
+        .where("images.entityId", b);
 
-      return res.status(200).json({
-        data: {
-          contactData: {
-            phoneData: contactInfo,
+        contact.push({
+          phoneData: contactInfo,
             faxData: faxInfo,
             emailData: emailInfo,
             description: descriptionInfo,
             telData: telInfo,
             lineData: lineInfo,
             imageResult,
-          },
+        })
+
+      }
+
+
+      return res.status(200).json({
+        data: {
+
+          contact
+          // contactData: {
+          //   phoneData: contactInfo,
+          //   faxData: faxInfo,
+          //   emailData: emailInfo,
+          //   description: descriptionInfo,
+          //   telData: telInfo,
+          //   lineData: lineInfo,
+          //   imageResult,
+          // },
         },
         message: "Contact Information!",
       });
