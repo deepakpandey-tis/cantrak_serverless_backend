@@ -457,59 +457,65 @@ const dashboardController = {
         "buildingPhaseId"
       ).map((v) => v.buildingPhaseId);
 
-      let buildingInfo;
+      let buildingInfo = [];
 
-      buildingInfo = await knex
-        .from("building_info")
-        .innerJoin(
-          "buildings_and_phases",
-          "building_info.buildingId",
-          "buildings_and_phases.id"
-        )
-        .where({
-          "building_info.orgId": req.orgId,
-          "building_info.isActive": true,
-        })
-        .whereIn("building_info.buildingId", buildingArray)
-        .select(
-          "building_info.id as Id",
-          "building_info.title as titles",
-          "building_info.description as details",
-          "building_info.buildingId"
-        )
-        .orderBy("building_info.id", "asc");
+      for (let b of buildingArray) {
+        buildingInfoData = await knex
+          .from("building_info")
+          .innerJoin(
+            "buildings_and_phases",
+            "building_info.buildingId",
+            "buildings_and_phases.id"
+          )
+          .where({
+            "building_info.orgId": req.orgId,
+            "building_info.isActive": true,
+          })
+          // .whereIn("building_info.buildingId", buildingArray)
+          .where("building_info.buildingId", b)
+          .select(
+            "building_info.id as Id",
+            "building_info.title as titles",
+            "building_info.description as details",
+            "building_info.buildingId"
+          )
+          .orderBy("building_info.id", "asc");
+
+
+        buildingInfo.push({info:buildingInfoData});
+      }
 
       const Parallel = require("async-parallel");
 
       buildingInfo = await Parallel.map(
         buildingInfo,
         async (b) => {
-          let buildingImage = await knex("images")
+          console.log("building ids===", b.info[0].buildingId);
+          let images = await knex("images")
             .select("s3Url", "title", "name")
             .where({
               entityType: "building_info",
-              entityId : b.buildingId
+              entityId: b.info[0].buildingId
             })
-            // .where("images.entityId", b.buildingId)
             .first();
 
-            return {...b , ...buildingImage}
+            return {...b , images}
         }
       );
 
-      let imageResult = await knex
-        .from("images")
-        .select("s3Url", "title", "name")
-        .where({
-          entityType: "building_info",
-        })
-        .whereIn("images.entityId", buildingArray);
+    //   let imageResult = await knex
+    //     .from("images")
+    //     .select("s3Url", "title", "name")
+    //     .where({
+    //       entityType: "building_info",
+    //     })
+    //     .whereIn("images.entityId", buildingArray);
 
       return res.status(200).json({
         data: {
           buildingData: {
             buildingInfo,
-            imageResult,
+            // imageResult,
           },
         },
         message: "Building Information!",
