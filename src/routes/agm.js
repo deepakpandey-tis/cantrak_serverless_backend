@@ -323,4 +323,12 @@ router.post(
   agmController.exportVoteResult
 )
 
+router.post(
+  "/get-Vote-result",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAGMAccessible,
+  agmController.getVoteRsult
+)
+
 module.exports = router;

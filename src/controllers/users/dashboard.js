@@ -455,7 +455,7 @@ const dashboardController = {
       let buildingArray = _.uniqBy(
         propertyUnitFinalResult,
         "buildingPhaseId"
-      ).map((v) => v.buildingPhaseId);
+      ).map((v) => v);
 
       let buildingInfo = [];
 
@@ -472,7 +472,7 @@ const dashboardController = {
             "building_info.isActive": true,
           })
           // .whereIn("building_info.buildingId", buildingArray)
-          .where("building_info.buildingId", b)
+          .where("building_info.buildingId", b.buildingPhaseId)
           .select(
             "building_info.id as Id",
             "building_info.title as titles",
@@ -481,8 +481,23 @@ const dashboardController = {
           )
           .orderBy("building_info.id", "asc");
 
+          let propertyDetails = await knex.from("property_units")
+          .leftJoin("floor_and_zones","property_units.floorZoneId","floor_and_zones.id")
+          .leftJoin("buildings_and_phases","property_units.buildingPhaseId","buildings_and_phases.id")
+          .leftJoin("projects","property_units.projectId","projects.id")
+          .select([
+            "property_units.unitNumber",
+            "property_units.description",
+            "floor_and_zones.floorZoneCode",
+            "buildings_and_phases.buildingPhaseCode",
+            "projects.projectName"
+          ])
+          .where({
+            "property_units.buildingPhaseId":b.buildingPhaseId,
+            "property_units.id":b.id
+          });
 
-        buildingInfo.push({info:buildingInfoData});
+        buildingInfo.push({ info: buildingInfoData ,propertyDetails});
       }
 
       const Parallel = require("async-parallel");
@@ -490,26 +505,29 @@ const dashboardController = {
       buildingInfo = await Parallel.map(
         buildingInfo,
         async (b) => {
-          console.log("building ids===", b.info[0].buildingId);
+          console.log(
+            "building ids===",
+            b.info[0].buildingId
+          );
           let images = await knex("images")
             .select("s3Url", "title", "name")
             .where({
               entityType: "building_info",
-              entityId: b.info[0].buildingId
+              entityId: b.info[0].buildingId,
             })
             .first();
 
-            return {...b , images}
+          return { ...b, images };
         }
       );
 
-    //   let imageResult = await knex
-    //     .from("images")
-    //     .select("s3Url", "title", "name")
-    //     .where({
-    //       entityType: "building_info",
-    //     })
-    //     .whereIn("images.entityId", buildingArray);
+      //   let imageResult = await knex
+      //     .from("images")
+      //     .select("s3Url", "title", "name")
+      //     .where({
+      //       entityType: "building_info",
+      //     })
+      //     .whereIn("images.entityId", buildingArray);
 
       return res.status(200).json({
         data: {
@@ -549,7 +567,7 @@ const dashboardController = {
       let buildingArray = _.uniqBy(
         propertyUnitFinalResult,
         "buildingPhaseId"
-      ).map((v) => v.buildingPhaseId);
+      ).map((v) => v);
 
       let contactInfo;
       let faxInfo;
@@ -560,156 +578,162 @@ const dashboardController = {
 
       let contact = [];
 
-      for(let b of buildingArray){
-          
-      contactInfo = await knex
-        .from("contact_info")
-        .innerJoin(
-          "buildings_and_phases",
-          "contact_info.buildingId",
-          "buildings_and_phases.id"
-        )
-        .where({
-          "contact_info.orgId": req.orgId,
-          "contact_info.contactId": 1,
-          "contact_info.isActive": true,
-        })
-        .where("contact_info.buildingId", b)
-        .select(
-          "contact_info.contactId as Id",
-          "contact_info.contactValue as contactValue"
-        )
-        .orderBy("contact_info.id", "desc");
+      for (let b of buildingArray) {
 
-      faxInfo = await knex
-        .from("contact_info")
-        .innerJoin(
-          "buildings_and_phases",
-          "contact_info.buildingId",
-          "buildings_and_phases.id"
-        )
-        .where({
-          "contact_info.orgId": req.orgId,
-          "contact_info.contactId": 2,
-          "contact_info.isActive": true,
-        })
-        .where("contact_info.buildingId", b)
-        .select(
-          "contact_info.contactId as Id",
-          "contact_info.contactValue as contactValue"
-        )
-        .orderBy("contact_info.id", "desc");
+        // console.log("value of B",b)
+        contactInfo = await knex
+          .from("contact_info")
+          .innerJoin(
+            "buildings_and_phases",
+            "contact_info.buildingId",
+            "buildings_and_phases.id"
+          )
+          .where({
+            "contact_info.orgId": req.orgId,
+            "contact_info.contactId": 1,
+            "contact_info.isActive": true,
+          })
+          .where("contact_info.buildingId", b.buildingPhaseId)
+          .select(
+            "contact_info.contactId as Id",
+            "contact_info.contactValue as contactValue"
+          )
+          .orderBy("contact_info.id", "desc");
 
-      emailInfo = await knex
-        .from("contact_info")
-        .innerJoin(
-          "buildings_and_phases",
-          "contact_info.buildingId",
-          "buildings_and_phases.id"
-        )
-        .where({
-          "contact_info.orgId": req.orgId,
-          "contact_info.isActive": true,
-          "contact_info.contactId": 3,
-        })
-        .where("contact_info.buildingId", b)
-        .select(
-          "contact_info.contactId as Id",
-          "contact_info.contactValue as contactValue"
-        )
-        .orderBy("contact_info.id", "desc");
+        faxInfo = await knex
+          .from("contact_info")
+          .innerJoin(
+            "buildings_and_phases",
+            "contact_info.buildingId",
+            "buildings_and_phases.id"
+          )
+          .where({
+            "contact_info.orgId": req.orgId,
+            "contact_info.contactId": 2,
+            "contact_info.isActive": true,
+          })
+          .where("contact_info.buildingId", b.buildingPhaseId)
+          .select(
+            "contact_info.contactId as Id",
+            "contact_info.contactValue as contactValue"
+          )
+          .orderBy("contact_info.id", "desc");
 
-      telInfo = await knex
-        .from("contact_info")
-        .innerJoin(
-          "buildings_and_phases",
-          "contact_info.buildingId",
-          "buildings_and_phases.id"
-        )
-        .where({
-          "contact_info.orgId": req.orgId,
-          "contact_info.isActive": true,
-          "contact_info.contactId": 4,
-        })
-        .where("contact_info.buildingId", b)
-        .select(
-          "contact_info.contactId as Id",
-          "contact_info.contactValue as contactValue"
-        )
-        .orderBy("contact_info.id", "desc");
+        emailInfo = await knex
+          .from("contact_info")
+          .innerJoin(
+            "buildings_and_phases",
+            "contact_info.buildingId",
+            "buildings_and_phases.id"
+          )
+          .where({
+            "contact_info.orgId": req.orgId,
+            "contact_info.isActive": true,
+            "contact_info.contactId": 3,
+          })
+          .where("contact_info.buildingId", b.buildingPhaseId)
+          .select(
+            "contact_info.contactId as Id",
+            "contact_info.contactValue as contactValue"
+          )
+          .orderBy("contact_info.id", "desc");
 
-      lineInfo = await knex
-        .from("contact_info")
-        .innerJoin(
-          "buildings_and_phases",
-          "contact_info.buildingId",
-          "buildings_and_phases.id"
-        )
-        .where({
-          "contact_info.orgId": req.orgId,
-          "contact_info.isActive": true,
-          "contact_info.contactId": 5,
-        })
-        .where("contact_info.buildingId", b)
-        .select(
-          "contact_info.contactId as Id",
-          "contact_info.contactValue as contactValue"
-        )
-        .orderBy("contact_info.id", "desc");
+        telInfo = await knex
+          .from("contact_info")
+          .innerJoin(
+            "buildings_and_phases",
+            "contact_info.buildingId",
+            "buildings_and_phases.id"
+          )
+          .where({
+            "contact_info.orgId": req.orgId,
+            "contact_info.isActive": true,
+            "contact_info.contactId": 4,
+          })
+          .where("contact_info.buildingId", b.buildingPhaseId)
+          .select(
+            "contact_info.contactId as Id",
+            "contact_info.contactValue as contactValue"
+          )
+          .orderBy("contact_info.id", "desc");
 
-      descriptionInfo = await knex
-        .from("contact_info")
-        .innerJoin(
-          "buildings_and_phases",
-          "contact_info.buildingId",
-          "buildings_and_phases.id"
-        )
-        .where({
-          "contact_info.orgId": req.orgId,
-          "contact_info.isActive": true,
-          "contact_info.contactId": 0,
-        })
-        .where("contact_info.buildingId", b)
-        .select(
-          "contact_info.contactId as Id",
-          "contact_info.contactValue as contactValue"
-        )
-        .orderBy("contact_info.id", "desc");
+        lineInfo = await knex
+          .from("contact_info")
+          .innerJoin(
+            "buildings_and_phases",
+            "contact_info.buildingId",
+            "buildings_and_phases.id"
+          )
+          .where({
+            "contact_info.orgId": req.orgId,
+            "contact_info.isActive": true,
+            "contact_info.contactId": 5,
+          })
+          .where("contact_info.buildingId", b.buildingPhaseId)
+          .select(
+            "contact_info.contactId as Id",
+            "contact_info.contactValue as contactValue"
+          )
+          .orderBy("contact_info.id", "desc");
 
-      let imageResult = await knex
-        .from("images")
-        .select("s3Url", "title", "name")
+        descriptionInfo = await knex
+          .from("contact_info")
+          .innerJoin(
+            "buildings_and_phases",
+            "contact_info.buildingId",
+            "buildings_and_phases.id"
+          )
+          .where({
+            "contact_info.orgId": req.orgId,
+            "contact_info.isActive": true,
+            "contact_info.contactId": 0,
+          })
+          .where("contact_info.buildingId", b.buildingPhaseId)
+          .select(
+            "contact_info.contactId as Id",
+            "contact_info.contactValue as contactValue"
+          )
+          .orderBy("contact_info.id", "desc");
+
+        let imageResult = await knex
+          .from("images")
+          .select("s3Url", "title", "name")
+          .where({
+            entityType: "contact_info",
+          })
+          .where("images.entityId", b.buildingPhaseId);
+
+        let propertyDetails = await knex.from("property_units")
+        .leftJoin("floor_and_zones","property_units.floorZoneId","floor_and_zones.id")
+        .leftJoin("buildings_and_phases","property_units.buildingPhaseId","buildings_and_phases.id")
+        .leftJoin("projects","property_units.projectId","projects.id")
+        .select([
+          "property_units.unitNumber",
+          "property_units.description",
+          "floor_and_zones.floorZoneCode",
+          "buildings_and_phases.buildingPhaseCode",
+          "projects.projectName"
+        ])
         .where({
-          entityType: "contact_info",
-        })
-        .where("images.entityId", b);
+          "property_units.buildingPhaseId":b.buildingPhaseId,
+          "property_units.id":b.id
+        });
 
         contact.push({
           phoneData: contactInfo,
-            faxData: faxInfo,
-            emailData: emailInfo,
-            description: descriptionInfo,
-            telData: telInfo,
-            lineData: lineInfo,
-            imageResult,
-        })
-
+          faxData: faxInfo,
+          emailData: emailInfo,
+          description: descriptionInfo,
+          telData: telInfo,
+          lineData: lineInfo,
+          imageResult,
+          propertyDetails
+        });
       }
-
 
       return res.status(200).json({
         data: {
-
-          contact
-          // contactData: {
-          //   phoneData: contactInfo,
-          //   faxData: faxInfo,
-          //   emailData: emailInfo,
-          //   description: descriptionInfo,
-          //   telData: telInfo,
-          //   lineData: lineInfo,
-          //   imageResult,
-          // },
+          contact,
         },
         message: "Contact Information!",
       });

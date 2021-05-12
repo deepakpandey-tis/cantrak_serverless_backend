@@ -1312,12 +1312,16 @@ const propertyUnitController = {
       let userBuildingInfo = await knex('user_house_allocation')
       .leftJoin('property_units','user_house_allocation.houseId','property_units.id')
       .leftJoin('buildings_and_phases','property_units.buildingPhaseId','buildings_and_phases.id')
+      .leftJoin('projects',"property_units.projectId","projects.id")
+      .leftJoin("floor_and_zones","property_units.floorZoneId","floor_and_zones.id")
       .select([
         'property_units.unitNumber',
         'buildings_and_phases.buildingPhaseCode',
-        'buildings_and_phases.description'
+        'buildings_and_phases.description',
+        'projects.projectName',
+        'floor_and_zones.floorZoneCode'
       ])
-      .where({'user_house_allocation.userId':req.body.id,'user_house_allocation.orgId':orgId}).first()
+      .where({'user_house_allocation.userId':req.body.id,'user_house_allocation.orgId':orgId})
 
       return res.status(200).json({
         data : {
