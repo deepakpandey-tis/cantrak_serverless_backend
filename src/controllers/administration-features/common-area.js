@@ -679,39 +679,6 @@ const commonAreaController = {
       let orgId = req.orgId;
       let payload = req.body;
 
-      // if (companyId) {
-      //   [rows] = await Promise.all([
-      //     knex("property_units")
-      //       .leftJoin(
-      //         "floor_and_zones",
-      //         "property_units.floorZoneId",
-      //         "floor_and_zones.id"
-      //       )
-      //       .leftJoin(
-      //         "buildings_and_phases",
-      //         "property_units.buildingPhaseId",
-      //         "buildings_and_phases.id"
-      //       )
-      //       .leftJoin("projects", "property_units.projectId", "projects.id")
-      //       .leftJoin(
-      //         "companies",
-      //         "property_units.companyId",
-      //         "companies.id"
-      //       )
-      //       .leftJoin("property_types", "property_units.propertyTypeId", "property_types.id")
-      //       .select([
-      //         "companies.companyId as COMPANY",
-      //         "projects.project as PROJECT",
-      //         "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
-      //         "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
-      //         "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
-      //         "property_units.unitNumber as UNIT_NUMBER",
-      //         "property_units.description as DESCRIPTION",
-      //       ])
-      //       .where({ "property_units.companyId": companyId, "property_units.orgId": orgId, type: 2 })
-      //       .where({ "floor_and_zones.isActive": true })
-      //   ]);
-      // } else {
       [rows] = await Promise.all([
         knex("property_units")
           .leftJoin(
@@ -737,7 +704,7 @@ const commonAreaController = {
             "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
             "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
             "floor_and_zones.floorZoneCode as FLOOR_ZONE_CODE",
-            "property_units.unitNumber as UNIT_NUMBER",
+            "property_units.unitNumber as COMMON_AREA_CODE",
             "property_units.description as DESCRIPTION",
           ])
           .where(qb => {
