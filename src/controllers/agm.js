@@ -3563,6 +3563,127 @@ const agmController = {
       });
     }
   },
+
+  getVoteRsult:async(req,res) =>{
+    try {
+      let payload = req.body;
+      let orgId = req.orgId;
+      let rows = null;
+
+      let votingId;
+      if (payload.unitId) {
+        console.log("voting id", votingId);
+
+        votingId = await knex("property_units")
+          .leftJoin(
+            "agm_owner_master",
+            "property_units.id",
+            "agm_owner_master.unitId"
+          )
+          .leftJoin(
+            "agenda_master",
+            "agm_owner_master.agmId",
+            "agenda_master.agmId"
+          )
+          .leftJoin(
+            "agm_voting",
+            "agenda_master.id",
+            "agm_voting.agendaId"
+          )
+          .select(["agm_voting.id"])
+          .where("property_units.id", payload.unitId)
+          .where({
+            "agm_owner_master.agmId": payload.agmId,
+            "agm_owner_master.orgId": orgId,
+            "agenda_master.id": payload.agendaId,
+          })
+          .first();
+
+        console.log("voting id2", votingId);
+      }
+
+      rows = await knex
+        .from("agm_voting")
+        .select([
+          "agm_voting.ownerMasterId",
+          "agm_voting.selectedChoiceId",
+          "agm_voting.votingPower",
+          "agm_voting.id"
+        ])
+        .where({
+          "agm_voting.agmId": payload.agmId,
+          "agm_voting.agendaId": payload.agendaId,
+          "agm_voting.orgId": orgId,
+        })
+        .where((qb) => {
+          if (payload.unitId) {
+            qb.where("agm_voting.id", votingId.id);
+          }
+        });
+
+      const Parallel = require("async-parallel");
+
+      rows = await Parallel.map(rows, async (pd) => {
+        let ownerData = await knex
+          .from("agm_owner_master")
+          .select([
+            "agm_owner_master.unitNumber",
+            "agm_owner_master.houseId",
+            "agm_owner_master.ownershipRatio",
+            "agm_owner_master.ownerName",
+            "agm_owner_master.joinOwnerName",
+            "agm_owner_master.registrationType"
+          ])
+          .where("agm_owner_master.id", pd.ownerMasterId)
+          .first();
+
+        return { ...pd, ...ownerData };
+      });
+
+      rows = await Parallel.map(rows, async (pd) => {
+        let choiceValue = await knex
+          .from("agenda_choice")
+          .select([
+            "agenda_choice.choiceValue",
+            "agenda_choice.choiceValueThai"
+          ])
+          .where({
+            "agenda_choice.id": pd.selectedChoiceId,
+          })
+          .first();
+
+        return { ...pd, ...choiceValue };
+      });
+
+      console.log(
+        "[controllers][agm][exportListForVoteResult]: Rows:",
+        rows
+      );
+
+      return res.status(200).json({
+        data: {
+          rows,
+        },
+        message:
+          "AGM Vote Result",
+      });
+
+    } catch (err) {
+      console.error(
+        `[controllers]Vote Result][exportListForVoteResult]: Error:`,
+        err
+      );
+
+      res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  }
 };
 
 module.exports = agmController;
