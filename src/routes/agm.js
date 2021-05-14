@@ -196,9 +196,6 @@ router.post(
 
 router.get(
   "/get-owner-registration-list",
-  // authMiddleware.isAuthenticated,
-  // roleMiddleware.parseUserPermission,
-  // resourceAccessMiddleware.isAGMAccessible,
   agmController.getOwnerRegistrationList
 );
 

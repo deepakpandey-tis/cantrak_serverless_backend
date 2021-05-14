@@ -2546,7 +2546,7 @@ const agmController = {
             );
           }
           if (payload.type == 3) {
-            qb.orWhere(
+            qb.where(
               "agm_owner_master.registrationType",
               2
             );
@@ -2595,13 +2595,8 @@ const agmController = {
       );
 
       columns = req.query.columns.split(",");
-      console.log("columns", columns);
-
-      console.log(
-        "ownerRegistrationList====>>>",
-        ownerRegistrationList
-      );
-      console.log("agmDetails====>>>", agmDetails);
+      
+      console.log("[owner][details]",ownerRegistrationList,"[agm][details]", agmDetails)
       const path = require("path");
       // Read HTML Template
       const templatePath = path.join(
@@ -2616,9 +2611,7 @@ const agmController = {
         data: ownerRegistrationList,
         agmDetails: agmDetails,
       });
-      // return {
-      //   data:ownerRegistrationList
-      // }
+     
     } catch (err) {
       console.log("error==", err);
     }

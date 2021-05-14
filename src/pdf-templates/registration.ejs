@@ -79,19 +79,11 @@
                         <% for (let c of columns) { %>
 
                             <th><%= c %></th>
-                            <!-- <th>Name</th>
-                            <th>Unit No.</th>
-                            <th>House Id</th>
-                            <th>Registration Type</th>
-                            <th>Signature</th> -->
                         <% } %>
 
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- <tr>
-                            <td><%= data.length %></td>
-                        </tr> -->
                         <% for (var i = 0; i < data.length;  i++ ) { %>
                         <tr>
                             <% if(columns.includes('Sr.No.')){ %>
@@ -114,7 +106,7 @@
                                 <% if(data[i].registrationType == 1){ %>
                                     Owner
                                 <% }else if(data[i].registrationType == 2){ %>
-                                    Proxy(<%= data[i].proxyData.proxyName; %>)
+                                    Proxy(<%= data[i].proxyData.proxyName %>)
                                 <% } %>
                             </td>
                             <% } %>
@@ -150,13 +142,7 @@
             window.print();
 
             document.body.innerHTML = originalContents;
-            // alert('print')
         }
     </script>
-    <!-- Option 2: Separate Popper and Bootstrap JS -->
-    <!--
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc" crossorigin="anonymous"></script>
-    -->
   </body>
 </html>
