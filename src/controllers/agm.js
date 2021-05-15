@@ -371,8 +371,6 @@ const agmController = {
         data[0].E === "OWNERSHIP_RATIO" &&
         data[0].G === "CO_OWNER_NAME" &&
         data[0].H === "ELIGIBILITY_TOGGLE"
-        // data[0].G === "ID_NO" &&
-        // data[0].H === "JOIN_OWNER_NAME"
       ) {
         if (data.length > 0) {
           let i = 0;
@@ -459,34 +457,68 @@ const agmController = {
 
               let ownerName = ownerData.G.trim();
 
-              // console.log("owner name value",ownerName)
+              let checkUpdate = await knex(
+                "agm_owner_master"
+              )
+                .where({ unitId: unitId, orgId: req.orgId,agmId:req.body.agmId})
+                .first();
 
-              let insertData = {
-                agmId: req.body.agmId,
-                companyId: req.body.companyId,
-                projectId: req.body.projectId,
-                unitId: unitId,
-                unitNumber: ownerData.B,
-                houseId: ownerData.C,
-                ownerName: ownerName,
-                joinOwnerName: ownerData.J,
-                actualOwnershipRatio: ownerData.D,
-                ownershipRatio: ownerData.E,
-                ownerIdNo: ownerData.I,
-                eligibility: eligibility,
-                ownerGroupNo: ownerData.F,
-                orgId: req.orgId,
-                isActive: true,
-                createdAt: new Date().getTime(),
-                updatedAt: new Date().getTime(),
-                createdBy: req.me.id,
-              };
+              console.log(
+                "[check update data]1",
+                checkUpdate
+              );
 
-              let resultData = await knex
-                .insert(insertData)
+              if (!checkUpdate) {
+                let insertData = {
+                  agmId: req.body.agmId,
+                  companyId: req.body.companyId,
+                  projectId: req.body.projectId,
+                  unitId: unitId,
+                  unitNumber: ownerData.B,
+                  houseId: ownerData.C,
+                  ownerName: ownerName,
+                  joinOwnerName: ownerData.J,
+                  actualOwnershipRatio: ownerData.D,
+                  ownershipRatio: ownerData.E,
+                  ownerIdNo: ownerData.I,
+                  eligibility: eligibility,
+                  ownerGroupNo: ownerData.F,
+                  orgId: req.orgId,
+                  isActive: true,
+                  createdAt: new Date().getTime(),
+                  updatedAt: new Date().getTime(),
+                  createdBy: req.me.id,
+                };
+
+                let resultData = await knex
+                  .insert(insertData)
+                  .returning(["*"])
+                  .into("agm_owner_master");
+                success++;
+              }else{
+                let updateData = {
+                  companyId: req.body.companyId,
+                  projectId: req.body.projectId,
+                  unitNumber: ownerData.B,
+                  houseId: ownerData.C,
+                  ownerName: ownerName,
+                  joinOwnerName: ownerData.J,
+                  actualOwnershipRatio: ownerData.D,
+                  ownershipRatio: ownerData.E,
+                  ownerIdNo: ownerData.I,
+                  eligibility: eligibility,
+                  ownerGroupNo: ownerData.F,
+                  isActive: true,
+                  updatedAt: new Date().getTime()
+                }
+
+                let updateOwner = await knex
+                .update(updateData)
+                .where({unitId: unitId, orgId: req.orgId,agmId:req.body.agmId})
                 .returning(["*"])
-                .into("agm_owner_master");
-              success++;
+                .into("agm_owner_master")
+                success++;
+              }
             }
           }
 
@@ -2595,8 +2627,13 @@ const agmController = {
       );
 
       columns = req.query.columns.split(",");
-      
-      console.log("[owner][details]",ownerRegistrationList,"[agm][details]", agmDetails)
+
+      console.log(
+        "[owner][details]",
+        ownerRegistrationList,
+        "[agm][details]",
+        agmDetails
+      );
       const path = require("path");
       // Read HTML Template
       const templatePath = path.join(
@@ -2611,7 +2648,6 @@ const agmController = {
         data: ownerRegistrationList,
         agmDetails: agmDetails,
       });
-     
     } catch (err) {
       console.log("error==", err);
     }
@@ -2746,9 +2782,10 @@ const agmController = {
       stats.totalUnits = totalUnits.count
         ? totalUnits.count
         : 0;
-      stats.registeredOwnerShipRatio = registeredOwnerShipRatio.sum
-        ? registeredOwnerShipRatio.sum
-        : 0;
+      stats.registeredOwnerShipRatio =
+        registeredOwnerShipRatio.sum
+          ? registeredOwnerShipRatio.sum
+          : 0;
       if (stats.totalOwnershipRatio) {
         stats.registeredOwnerShipRatioPerentage = (
           (stats.registeredOwnerShipRatio /
@@ -2756,12 +2793,14 @@ const agmController = {
           100
         ).toFixed(2);
       }
-      stats.registeredOwnersSelf = registeredOwnersSelf.count
-        ? registeredOwnersSelf.count
-        : 0;
-      stats.registeredOwnersProxy = registeredOwnersProxy.count
-        ? registeredOwnersProxy.count
-        : 0;
+      stats.registeredOwnersSelf =
+        registeredOwnersSelf.count
+          ? registeredOwnersSelf.count
+          : 0;
+      stats.registeredOwnersProxy =
+        registeredOwnersProxy.count
+          ? registeredOwnersProxy.count
+          : 0;
 
       stats.coOwnerPercentage = (
         (stats.registeredOwnersSelf /
@@ -3412,7 +3451,7 @@ const agmController = {
           "agm_voting.ownerMasterId",
           "agm_voting.selectedChoiceId",
           "agm_voting.votingPower",
-          "agm_voting.id"
+          "agm_voting.id",
         ])
         .where({
           "agm_voting.agmId": payload.agmId,
@@ -3436,7 +3475,7 @@ const agmController = {
             "agm_owner_master.ownershipRatio",
             "agm_owner_master.ownerName",
             "agm_owner_master.joinOwnerName",
-            "agm_owner_master.registrationType"
+            "agm_owner_master.registrationType",
           ])
           .where("agm_owner_master.id", pd.ownerMasterId)
           .first();
@@ -3449,7 +3488,7 @@ const agmController = {
           .from("agenda_choice")
           .select([
             "agenda_choice.choiceValue",
-            "agenda_choice.choiceValueThai"
+            "agenda_choice.choiceValueThai",
           ])
           .where({
             "agenda_choice.id": pd.selectedChoiceId,
@@ -3524,7 +3563,7 @@ const agmController = {
 
         let registerType = " ";
 
-        console.log("rows values",v)
+        console.log("rows values", v);
         asyncParser.input.push(
           JSON.stringify([
             {
@@ -3557,7 +3596,7 @@ const agmController = {
     }
   },
 
-  getVoteRsult:async(req,res) =>{
+  getVoteRsult: async (req, res) => {
     try {
       let payload = req.body;
       let orgId = req.orgId;
@@ -3601,7 +3640,7 @@ const agmController = {
           "agm_voting.ownerMasterId",
           "agm_voting.selectedChoiceId",
           "agm_voting.votingPower",
-          "agm_voting.id"
+          "agm_voting.id",
         ])
         .where({
           "agm_voting.agmId": payload.agmId,
@@ -3625,7 +3664,7 @@ const agmController = {
             "agm_owner_master.ownershipRatio",
             "agm_owner_master.ownerName",
             "agm_owner_master.joinOwnerName",
-            "agm_owner_master.registrationType"
+            "agm_owner_master.registrationType",
           ])
           .where("agm_owner_master.id", pd.ownerMasterId)
           .first();
@@ -3638,7 +3677,7 @@ const agmController = {
           .from("agenda_choice")
           .select([
             "agenda_choice.choiceValue",
-            "agenda_choice.choiceValueThai"
+            "agenda_choice.choiceValueThai",
           ])
           .where({
             "agenda_choice.id": pd.selectedChoiceId,
@@ -3657,10 +3696,8 @@ const agmController = {
         data: {
           rows,
         },
-        message:
-          "AGM Vote Result",
+        message: "AGM Vote Result",
       });
-
     } catch (err) {
       console.error(
         `[controllers]Vote Result][exportListForVoteResult]: Error:`,
@@ -3676,7 +3713,7 @@ const agmController = {
         ],
       });
     }
-  }
+  },
 };
 
 module.exports = agmController;

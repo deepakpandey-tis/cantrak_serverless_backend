@@ -148,7 +148,6 @@ var upload = multer({ storage: storage });
 
 router.post(
     "/import-part-data",
-    // upload.single("file"),
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
     resourceAccessMiddleware.isPartAccessible,
