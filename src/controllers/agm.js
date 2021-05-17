@@ -2512,7 +2512,7 @@ const agmController = {
 
       let payload = req.query;
 
-      console.log("payload value", payload);
+      console.log("[payload][value]==", payload);
 
       let agmDetails = await knex("agm_master")
         .leftJoin(
@@ -2538,8 +2538,6 @@ const agmController = {
 
       agmDetails.map((r, i) => {
         console.log("-- agm --", r);
-        // const date = new Date(r.createdAt);
-        // agmDetails[i].createdAt = date.getFullYear();
         const timezone = "Asia/Bangkok";
         moment.tz.setDefault(timezone);
         agmDetails[i].createdAt = moment(
@@ -2561,7 +2559,13 @@ const agmController = {
           "property_units.id"
         )
         .select([
-          "agm_owner_master.*",
+          "agm_owner_master.id",
+          "agm_owner_master.houseId",
+          "agm_owner_master.ownerName",
+          "agm_owner_master.joinOwnerName",
+          "agm_owner_master.ownershipRatio",
+          "agm_owner_master.registrationType",
+          "agm_owner_master.signature",
           "property_units.unitNumber",
           "property_units.description as unitDescription",
         ])
@@ -2570,6 +2574,17 @@ const agmController = {
         })
         .where((qb) => {
           if (payload.type == 1) {
+            qb.where(
+              "agm_owner_master.registrationType",
+              1
+            );
+            qb.orWhere(
+              "agm_owner_master.registrationType",
+              2
+            );
+            qb.orWhere(
+              "agm_owner_master.registrationType",null
+            )
           }
           if (payload.type == 2) {
             qb.where(
@@ -2578,6 +2593,7 @@ const agmController = {
             );
           }
           if (payload.type == 3) {
+            // console.log("registration type",payload.type)
             qb.where(
               "agm_owner_master.registrationType",
               2
@@ -2594,12 +2610,12 @@ const agmController = {
             );
           }
 
-          if (payload.agmId) {
-            qb.where(
-              "agm_owner_master.agmId",
-              payload.agmId
-            );
-          }
+          // if (payload.agmId) {
+          //   qb.where(
+          //     "agm_owner_master.agmId",
+          //     payload.agmId
+          //   );
+          // }
         })
         .orderBy("property_units.unitNumber", "asc");
 
@@ -2617,7 +2633,7 @@ const agmController = {
             )
             .first();
 
-          return { ...pd, proxyData };
+          return { ...pd, ...proxyData };
         }
       );
 
@@ -2628,12 +2644,12 @@ const agmController = {
 
       columns = req.query.columns.split(",");
 
-      console.log(
-        "[owner][details]",
-        ownerRegistrationList,
-        "[agm][details]",
-        agmDetails
-      );
+      // console.log(
+      //   "[owner][details]",
+      //   ownerRegistrationList,
+      //   "[agm][details]",
+      //   agmDetails
+      // );
       const path = require("path");
       // Read HTML Template
       const templatePath = path.join(
@@ -2642,6 +2658,7 @@ const agmController = {
         "pdf-templates",
         "registration.ejs"
       );
+      console.log("[AGM Details]",agmDetails,"[owner list]",ownerRegistrationList, "[Columns]===",columns)
       res.render(templatePath, {
         title: "Registration",
         columns: columns,
