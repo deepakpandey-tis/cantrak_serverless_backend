@@ -106,7 +106,8 @@
                                 <% if(data[i].registrationType == 1){ %>
                                     Owner
                                 <% }else if(data[i].registrationType == 2){ %>
-                                    Proxy(<%= data[i].proxyData.proxyName %>)
+                                    
+                                    Proxy(<%= data[i].proxyName %>)
                                 <% } %>
                             </td>
                             <% } %>
