@@ -6,6 +6,7 @@ const moment = require("moment");
 const { join, orderBy, trim } = require("lodash");
 const redisHelper = require("../helpers/redis");
 const { leftJoin } = require("../db/knex");
+const { Console } = require("console");
 
 const agmController = {
   generateAGMId: async (req, res) => {
@@ -460,7 +461,11 @@ const agmController = {
               let checkUpdate = await knex(
                 "agm_owner_master"
               )
-                .where({ unitId: unitId, orgId: req.orgId,agmId:req.body.agmId})
+                .where({
+                  unitId: unitId,
+                  orgId: req.orgId,
+                  agmId: req.body.agmId,
+                })
                 .first();
 
               console.log(
@@ -495,7 +500,7 @@ const agmController = {
                   .returning(["*"])
                   .into("agm_owner_master");
                 success++;
-              }else{
+              } else {
                 let updateData = {
                   companyId: req.body.companyId,
                   projectId: req.body.projectId,
@@ -509,14 +514,18 @@ const agmController = {
                   eligibility: eligibility,
                   ownerGroupNo: ownerData.F,
                   isActive: true,
-                  updatedAt: new Date().getTime()
-                }
+                  updatedAt: new Date().getTime(),
+                };
 
                 let updateOwner = await knex
-                .update(updateData)
-                .where({unitId: unitId, orgId: req.orgId,agmId:req.body.agmId})
-                .returning(["*"])
-                .into("agm_owner_master")
+                  .update(updateData)
+                  .where({
+                    unitId: unitId,
+                    orgId: req.orgId,
+                    agmId: req.body.agmId,
+                  })
+                  .returning(["*"])
+                  .into("agm_owner_master");
                 success++;
               }
             }
@@ -1323,6 +1332,7 @@ const agmController = {
         "proxyId",
         "ownerProxyId",
         "imagesArray",
+        "submitProxy",
       ]);
 
       const schema = new Joi.object().keys({
@@ -1346,65 +1356,93 @@ const agmController = {
           ],
         });
       }
-      let currentTime = new Date().getTime();
-
-      let insertData = {
-        signature: payload.signature,
-        signatureAt: currentTime,
-        registrationType: payload.type,
-      };
-
       let insertResult;
       let insertProxyResult;
+      let currentTime = new Date().getTime();
 
-      for (let owner of req.body.ownerId) {
-        insertResult = await knex
-          .update(insertData)
-          .where({ agmId: payload.agmId, id: owner })
-          .returning(["*"])
-          .into("agm_owner_master");
-
-        for (let proxy of req.body.ownerProxyId) {
-          let insertProxyData = {
-            agmId: payload.agmId,
-            ownerMasterId: owner,
-            proxyDocumentMasterId: proxy,
-            proxyName: req.body.proxyName,
-            proxyIdentificationNumber: req.body.proxyId,
-            createdAt: currentTime,
-            updatedAt: currentTime,
-            orgId: req.orgId,
-          };
-
-          insertProxyResult = await knex
-            .insert(insertProxyData)
-            .returning(["*"])
-            .into("agm_proxy_documents");
-        }
-
-        let insertImages;
-        if (req.body.imagesArray) {
-          console.log(
-            "images====>>>>",
-            req.body.imagesArray
+      let proxyCheck = await knex("agm_proxy_documents")
+        .where({
+          agmId: payload.agmId,
+          orgId: req.orgId,
+        })
+        .where((qb) => {
+          qb.where(
+            "proxyName",
+            "iLIKE",
+            `%${req.body.proxyName}%`
           );
-          for (let image of req.body.imagesArray) {
-            console.log("value in image===>>>", image);
-            insertImages = await knex
-              .insert({
-                title: image.filename,
-                name: image.filename,
-                s3Url: image.s3Url,
-                entityId: owner,
-                entityType: "agm_proxy_documents",
-                orgId: req.orgId,
-              })
+          qb.orWhere({
+            proxyIdentificationNumber: req.body.proxyId,
+          });
+        });
+      console.log("[PROXY][CHECK]1", proxyCheck.length);
+
+      if (
+        proxyCheck &&
+        proxyCheck.length > 3 &&
+        req.body.submitProxy == false
+      ) {
+        let alertMessage =
+          "Proxy registered more than three rooms.";
+        return res.status(200).json({
+          alertMessage: alertMessage,
+          proxyCheck
+        });
+      } else {
+        let insertData = {
+          signature: payload.signature,
+          signatureAt: currentTime,
+          registrationType: payload.type,
+        };
+
+        for (let owner of req.body.ownerId) {
+          insertResult = await knex
+            .update(insertData)
+            .where({ agmId: payload.agmId, id: owner })
+            .returning(["*"])
+            .into("agm_owner_master");
+
+          for (let proxy of req.body.ownerProxyId) {
+            let insertProxyData = {
+              agmId: payload.agmId,
+              ownerMasterId: owner,
+              proxyDocumentMasterId: proxy,
+              proxyName: req.body.proxyName,
+              proxyIdentificationNumber: req.body.proxyId,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              orgId: req.orgId,
+            };
+
+            insertProxyResult = await knex
+              .insert(insertProxyData)
               .returning(["*"])
-              .into("images");
+              .into("agm_proxy_documents");
+          }
+
+          let insertImages;
+          if (req.body.imagesArray) {
+            console.log(
+              "images====>>>>",
+              req.body.imagesArray
+            );
+            for (let image of req.body.imagesArray) {
+              console.log("value in image===>>>", image);
+              insertImages = await knex
+                .insert({
+                  title: image.filename,
+                  name: image.filename,
+                  s3Url: image.s3Url,
+                  entityId: owner,
+                  entityType: "agm_proxy_documents",
+                  orgId: req.orgId,
+                })
+                .returning(["*"])
+                .into("images");
+            }
           }
         }
       }
-
       return res.status(200).json({
         data: {
           insertResult: insertResult,
@@ -2583,8 +2621,9 @@ const agmController = {
               2
             );
             qb.orWhere(
-              "agm_owner_master.registrationType",null
-            )
+              "agm_owner_master.registrationType",
+              null
+            );
           }
           if (payload.type == 2) {
             qb.where(
@@ -2643,13 +2682,6 @@ const agmController = {
       );
 
       columns = req.query.columns.split(",");
-
-      // console.log(
-      //   "[owner][details]",
-      //   ownerRegistrationList,
-      //   "[agm][details]",
-      //   agmDetails
-      // );
       const path = require("path");
       // Read HTML Template
       const templatePath = path.join(
@@ -2658,7 +2690,7 @@ const agmController = {
         "pdf-templates",
         "registration.ejs"
       );
-      console.log("[AGM Details]",agmDetails,"[owner list]",ownerRegistrationList, "[Columns]===",columns)
+      // console.log("[AGM Details]",agmDetails,"[owner list]",ownerRegistrationList, "[Columns]===",columns)
       res.render(templatePath, {
         title: "Registration",
         columns: columns,
