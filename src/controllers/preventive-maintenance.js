@@ -945,6 +945,7 @@ const pmController = {
         };
       });
 
+      console.log("[preventive-maintenance][PMReport][PMResult]",pmResult)
       res.json({
         data: pmResult,
         // a: pmIds,
