@@ -947,10 +947,10 @@ const pmController = {
 
       res.json({
         data: pmResult,
-        a: pmIds,
-        n,
-        pmResult,
-        message: "Prenventive Maintenance report succesully!",
+        // a: pmIds,
+        // n,
+        // pmResult,
+        message: "Succesfull!",
       });
     } catch (err) {
       res.status(500).json({
