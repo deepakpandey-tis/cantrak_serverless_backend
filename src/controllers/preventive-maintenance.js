@@ -758,6 +758,13 @@ const pmController = {
       let toTime = new Date(toNewDate).getTime();
       let filterProblem;
 
+      let reqData = req.query;
+      let per_page = reqData.per_page || 100;
+      let page = reqData.current_page || 1;
+      let offset = (page - 1) * per_page;
+
+      console.log("page size1",offset)
+
       moment.tz.setDefault(payload.timezone);
       let startNewDate = moment(fromDate).startOf("date").format();
       let endNewDate = moment(toDate).endOf("date", "day").format();
@@ -829,9 +836,7 @@ const pmController = {
         ])
         .whereIn("task_group_schedule.pmId", pmIds)
         .where({ "task_group_schedule.orgId": req.orgId });
-      //pmSchedule.push({on:"",off:""})
-      //pmSchedule = pmSchedule.map(v => ({ ...v, on: 0, off: 0}))
-
+      
       filterProblem = pmSchedule.filter((v) => v.status == "COM");
 
       let mapData = _.chain(pmSchedule)
@@ -860,20 +865,6 @@ const pmController = {
 
       final.push(grouped);
 
-      // let chartData = _.flatten(
-      //   final
-      //     .filter(v => !_.isEmpty(v))
-      //     .map(v => _.keys(v).map(p => ({ [p]: (100 * v[p].map(ite => ite.status).filter(v => v == 'COM').length / pmSchedule.length).toFixed(2) })))
-      // ).reduce((a, p) => {
-      //   let l = _.keys(p)[0];
-      //   if (a[l]) {
-      //     a[l] += p[l];
-
-      //   } else {
-      //     a[l] = p[l];
-      //   }
-      //   return a;
-      // }, {});
 
       let chartData = _.flatten(
         final
@@ -945,9 +936,21 @@ const pmController = {
         };
       });
 
+      let total = pmResult.length;
+      let lastIndex ;
+
+      if(total <= 100){
+        lastIndex = total;
+      }else{
+        lastIndex = Math.floor(parseInt(total%100)+ offset)
+      }
+      console.log("last index value",lastIndex)
+      pmResult = pmResult.slice(offset,lastIndex)
+
       console.log("[preventive-maintenance][PMReport][PMResult][Length]",pmResult.length)
       res.json({
         data: pmResult,
+        total:total,
         // a: pmIds,
         // n,
         // pmResult,
