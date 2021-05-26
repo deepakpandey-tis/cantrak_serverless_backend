@@ -284,12 +284,39 @@ const parcelManagementController = {
         }else {
           priority = "Urgent"
         }
+        let parcelType;
+          if(payLoad.parcelType == 1){
+            parcelType = "Envelope"
+          }else if(payLoad.parcelType == 2){
+            parcelType = "Bag"
+          }else if(payLoad.parcelType == 3){
+            parcelType = "Small Box (Box)"
+          }else if(payLoad.parcelType == 4){
+            parcelType = "Large Box (Crate)"
+          }
+          let parcelCondition ;
+
+          if(payLoad.parcelCondition == 1){
+            parcelCondition = "Appears Fine"
+          }else if(payLoad.parcelCondition == 2){
+            parcelCondition = "Minor Damage"
+          }else if(payLoad.parcelCondition == 3){
+            parcelCondition = "Moderate Damage"
+          }else if(payLoad,parcelCondition == 4){
+            parcelCondition = "Major Damage"
+          }else if(payLoad.parcelCondition == 5){
+            parcelCondition = "Water Damage"
+          }
         if(pickedUpType == 1){
+          
           parcelDetail = {
             parcelId : parcelResult.id,
             parcelType : "Incoming Parcel",
             trackingNumber: payLoad.trackingNumber,
-            parcelPriority : priority
+            parcelPriority : priority,
+            parcelType : parcelType,
+            parcelCondition: parcelCondition,
+            remark : payLoad.description
           }
           senderData = {
             ...noOrgUserDataPayload
@@ -305,7 +332,10 @@ const parcelManagementController = {
             parcelId : parcelResult.id,
             parcelType : "Outgoing Parcel",
             trackingNumber: payLoad.trackingNumber,
-            parcelPriority : priority
+            parcelPriority : priority,
+            parcelType : parcelType,
+            parcelCondition: parcelCondition,
+            remark : payLoad.description
           }
           senderData = {
             name : receiver.name,
