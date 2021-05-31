@@ -358,7 +358,7 @@ const parcelManagementController = {
             parcelCondition: parcelCondition,
             remark: payLoad.description,
             qrcode:qrCode,
-            imageUrl : imageUrl[0]?.s3Url
+            imageUrl : imageUrl && imageUrl[0] ? imageUrl[0].s3Url : null
           };
           senderData = {
             ...noOrgUserDataPayload,
@@ -388,7 +388,7 @@ const parcelManagementController = {
             parcelCondition: parcelCondition,
             remark: payLoad.description,
             qrcode:qrCode,
-            imageUrl:imageUrl[0]?.s3Url
+            imageUrl:imageUrl && imageUrl[0] ? imageUrl[0].s3Url : null
           };
           senderData = {
             name: receiver.name,
