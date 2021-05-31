@@ -343,8 +343,8 @@ const parcelManagementController = {
           parcelCondition = "Water Damage";
         }
         let imageUrl =  knex.from("images").where({
-          entityId: parcelResult.id,
-          entityType: "parcel_management",
+          entityId: req.body.newParcelId,
+          entityType: "parcel_management"
         });
         
         console.log("[Image][URL]",imageUrl)
