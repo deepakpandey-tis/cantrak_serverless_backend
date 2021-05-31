@@ -946,8 +946,8 @@ const parcelManagementController = {
               "parcel_management.updatedAt",
             ])
             .where("parcel_management.orgId", req.orgId)
-            .where("parcel_user_non_tis.type",2)
-            .orWhere("parcel_user_non_tis.type",null)
+            .where("parcel_user_non_tis.type", 2)
+            .orWhere("parcel_user_non_tis.type", null)
             .whereIn("projects.id", projectIds)
             .groupBy([
               "parcel_management.id",
@@ -1128,6 +1128,8 @@ const parcelManagementController = {
             .where("parcel_management.parcelStatus", 1)
             .whereIn("projects.id", projectIds)
             .where((qb) => {
+              qb.where("parcel_user_non_tis.type", 2);
+              qb.orWhere("parcel_user_non_tis.type", null);
               if (unitId) {
                 qb.where(
                   "property_units.unitNumber",
@@ -1167,6 +1169,22 @@ const parcelManagementController = {
               "parcel_user_non_tis.name",
             ])
             .orderBy("parcel_management.createdAt", "desc");
+
+          const Parallel = require("async-parallel");
+          parcelList = await Parallel.map(
+            parcelList,
+            async (pd) => {
+              let tenantData = await knex
+                .from("parcel_user_non_tis")
+                .select("*")
+                .where({
+                  parcelId: pd.id,
+                  type: 1,
+                });
+
+              return { ...pd, tenantData };
+            }
+          );
         } catch (err) {
           console.log(
             "[controllers][parcel_management][list] :  Error",
@@ -1232,6 +1250,8 @@ const parcelManagementController = {
           .where("parcel_management.orgId", req.orgId)
           .where("parcel_management.parcelStatus", 1)
           .whereIn("projects.id", projectIds)
+          .where("parcel_user_non_tis.type", 2)
+          .orWhere("parcel_user_non_tis.type", null)
           .groupBy([
             "parcel_management.id",
             "property_units.id",
@@ -1245,6 +1265,20 @@ const parcelManagementController = {
       }
 
       const Parallel = require("async-parallel");
+      parcelList = await Parallel.map(
+        parcelList,
+        async (pd) => {
+          let tenantData = await knex
+            .from("parcel_user_non_tis")
+            .select("*")
+            .where({
+              parcelId: pd.id,
+              type: 1,
+            });
+
+          return { ...pd, tenantData };
+        }
+      );
       parcelList = await Parallel.map(
         parcelList,
         async (pd) => {
@@ -1470,6 +1504,7 @@ const parcelManagementController = {
 
       let parcelResult = null;
       let noOrgUserData = [];
+      let noOrgUserDataTenant = [];
       let orgUserData = [];
       parcelRemarks = [];
       // let qrUpdateResult ;
@@ -1542,10 +1577,29 @@ const parcelManagementController = {
         if (noOrgUserDataPayload) {
           noOrgUserData = await knex("parcel_user_non_tis")
             .update({
-              ...noOrgUserDataPayload,
+              // ...noOrgUserDataPayload,
+              name: noOrgUserDataPayload.name,
+              email: noOrgUserDataPayload.email,
+              phoneNo: noOrgUserDataPayload.phoneNo,
+              address: noOrgUserDataPayload.address,
               updatedAt: currentTime,
             })
-            .where({ parcelId: payload.id })
+            .where({ parcelId: payload.id, type: 2 })
+            .orWhere({ parcelId: payload.id, type: null })
+            .returning(["*"]);
+
+          noOrgUserDataTenant = await knex(
+            "parcel_user_non_tis"
+          )
+            .update({
+              name: noOrgUserDataPayload.tenantName,
+              email: noOrgUserDataPayload.tenantEmail,
+              phoneNo: noOrgUserDataPayload.tenantPhoneNo,
+              address: noOrgUserDataPayload.tenantAddress,
+              updatedAt: currentTime,
+            })
+            .where({ parcelId: payload.id, type: 1 })
+            // .orWhere({parcelId: payload.id , type:null})
             .returning(["*"]);
         }
 
