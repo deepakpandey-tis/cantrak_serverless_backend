@@ -342,6 +342,12 @@ const parcelManagementController = {
         } else if (payLoad.parcelCondition == 5) {
           parcelCondition = "Water Damage";
         }
+        let imageUrl =  knex.from("images").where({
+          entityId: parcelResult.id,
+          entityType: "parcel_management",
+        });
+        
+
         if (pickedUpType == 1) {
           parcelDetail = {
             parcelId: parcelResult.id,
@@ -351,6 +357,8 @@ const parcelManagementController = {
             parcelType: parcelType,
             parcelCondition: parcelCondition,
             remark: payLoad.description,
+            qrcode:qrCode,
+            imageUrl : imageUrl[0].s3Url
           };
           senderData = {
             ...noOrgUserDataPayload,
@@ -374,6 +382,8 @@ const parcelManagementController = {
             parcelType: parcelType,
             parcelCondition: parcelCondition,
             remark: payLoad.description,
+            qrcode:qrCode,
+            imageUrl:imageUrl[0].s3Url
           };
           senderData = {
             name: receiver.name,
