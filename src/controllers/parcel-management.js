@@ -308,6 +308,14 @@ const parcelManagementController = {
           })
           .first();
 
+        let imageUrl = [];
+        imageUrl = knex.from("images").where({
+          entityId: req.body.newParcelId,
+          entityType: "parcel_management",
+        });
+
+        console.log("[Image][URL]", imageUrl);
+
         let receiverData;
         let senderData;
         let parcelDetail;
@@ -342,12 +350,6 @@ const parcelManagementController = {
         } else if (payLoad.parcelCondition == 5) {
           parcelCondition = "Water Damage";
         }
-        let imageUrl =  knex.from("images").where({
-          entityId: req.body.newParcelId,
-          entityType: "parcel_management"
-        });
-        
-        console.log("[Image][URL]",imageUrl)
 
         if (pickedUpType == 1) {
           parcelDetail = {
@@ -358,8 +360,11 @@ const parcelManagementController = {
             parcelType: parcelType,
             parcelCondition: parcelCondition,
             remark: payLoad.description,
-            qrcode:qrCode,
-            imageUrl : imageUrl && imageUrl[0] ? imageUrl[0].s3Url : null
+            qrcode: qrCode,
+            imageUrl:
+              imageUrl && imageUrl[0]
+                ? imageUrl[0].s3Url
+                : null,
           };
           senderData = {
             ...noOrgUserDataPayload,
@@ -375,7 +380,8 @@ const parcelManagementController = {
             receiverData = {
               name: noOrgUserDataPayload.tenantName,
               email: noOrgUserDataPayload.tenantEmail,
-              mobileNumber: noOrgUserDataPayload.tenantPhoneNo,
+              mobileNumber:
+                noOrgUserDataPayload.tenantPhoneNo,
               address: noOrgUserDataPayload.tenantAddress,
             };
           }
@@ -388,8 +394,11 @@ const parcelManagementController = {
             parcelType: parcelType,
             parcelCondition: parcelCondition,
             remark: payLoad.description,
-            qrcode:qrCode,
-            imageUrl:imageUrl && imageUrl[0] ? imageUrl[0].s3Url : null
+            qrcode: qrCode,
+            imageUrl:
+              imageUrl && imageUrl[0]
+                ? imageUrl[0].s3Url
+                : null,
           };
           senderData = {
             name: receiver.name,
@@ -1143,7 +1152,10 @@ const parcelManagementController = {
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
             .whereIn("projects.id", projectIds)
-            .whereNot("parcel_management.pickedUpType",null)
+            .whereNot(
+              "parcel_management.pickedUpType",
+              null
+            )
             .where((qb) => {
               qb.where("parcel_user_non_tis.type", 2);
               qb.orWhere("parcel_user_non_tis.type", null);
@@ -1269,7 +1281,7 @@ const parcelManagementController = {
           .whereIn("projects.id", projectIds)
           .where("parcel_user_non_tis.type", 2)
           .orWhere("parcel_user_non_tis.type", null)
-          .whereNot("parcel_management.pickedUpType",null)
+          .whereNot("parcel_management.pickedUpType", null)
           .groupBy([
             "parcel_management.id",
             "property_units.id",
