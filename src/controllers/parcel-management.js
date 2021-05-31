@@ -309,7 +309,7 @@ const parcelManagementController = {
           .first();
 
         let imageUrl = [];
-        imageUrl = knex.from("images").where({
+        imageUrl = await knex.from("images").where({
           entityId: req.body.newParcelId,
           entityType: "parcel_management",
         });
