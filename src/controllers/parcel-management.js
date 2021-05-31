@@ -90,6 +90,7 @@ const parcelManagementController = {
       let parcelResult = null;
       let noOrgUserData = [];
       let orgUserData = [];
+      let noOrgUserTenant = [];
       // let qrUpdateResult ;
       let images = [];
       let orgId = req.orgId;
@@ -166,13 +167,34 @@ const parcelManagementController = {
           noOrgUserData = await knex("parcel_user_non_tis")
             .insert({
               parcelId: parcelResult.id,
-              ...noOrgUserDataPayload,
+              // ...noOrgUserDataPayload,
+              name: noOrgUserDataPayload.name,
+              email: noOrgUserDataPayload.email,
+              phoneNo: noOrgUserDataPayload.phoneNo,
+              address: noOrgUserDataPayload.address,
               updatedAt: currentTime,
               createdAt: currentTime,
               createdBy: req.me.id,
               orgId: req.orgId,
+              type: 2,
             })
             .returning(["*"]);
+
+          noOrgUserTenant = await knex(
+            "parcel_user_non_tis"
+          ).insert({
+            parcelId: parcelResult.id,
+            // ...noOrgUserDataPayload,
+            name: noOrgUserDataPayload.tenantName,
+            email: noOrgUserDataPayload.tenantEmail,
+            phoneNo: noOrgUserDataPayload.tenantPhoneNo,
+            address: noOrgUserDataPayload.tenantAddress,
+            updatedAt: currentTime,
+            createdAt: currentTime,
+            createdBy: req.me.id,
+            orgId: req.orgId,
+            type: 1,
+          });
         }
 
         let orgUserDataPayload = req.body.org_user_data;
@@ -238,6 +260,8 @@ const parcelManagementController = {
           .from("users")
           .where({ id: tenantId })
           .first();
+
+        console.log("[Reciever]", receiver);
         if (
           req.body.pickedUpType[0] == 2 &&
           req.body.isChecked == true
@@ -253,102 +277,114 @@ const parcelManagementController = {
             .where({ id: req.me.id })
             .first();
 
-          await addOutGoingNotification.send(
-            sender,
-            receiver,
-            dataNos,
-            ALLOWED_CHANNELS
-          );
+          if (receiver) {
+            await addOutGoingNotification.send(
+              sender,
+              receiver,
+              dataNos,
+              ALLOWED_CHANNELS
+            );
+          }
         }
 
-
         let propertyUnitData = await knex("property_units")
-        .leftJoin("companies","property_units.companyId","companies.id")
-        .leftJoin("projects","property_units.projectId","projects.id")
-        .select([
-          "companies.companyId",
-          "projects.project",
-          "property_units.unitNumber"
-        ])
-        .where({"property_units.id":orgUserDataPayload.unitId})
-        .first();
+          .leftJoin(
+            "companies",
+            "property_units.companyId",
+            "companies.id"
+          )
+          .leftJoin(
+            "projects",
+            "property_units.projectId",
+            "projects.id"
+          )
+          .select([
+            "companies.companyId",
+            "projects.project",
+            "property_units.unitNumber",
+          ])
+          .where({
+            "property_units.id": orgUserDataPayload.unitId,
+          })
+          .first();
 
         let receiverData;
         let senderData;
         let parcelDetail;
         let priority;
-        if(payLoad.parcelPriority == 1){
-          priority = "Normal"
-        }else if(payLoad.parcelPriority == 2){
-          priority = "High"
-        }else {
-          priority = "Urgent"
+        if (payLoad.parcelPriority == 1) {
+          priority = "Normal";
+        } else if (payLoad.parcelPriority == 2) {
+          priority = "High";
+        } else {
+          priority = "Urgent";
         }
         let parcelType;
-          if(payLoad.parcelType == 1){
-            parcelType = "Envelope"
-          }else if(payLoad.parcelType == 2){
-            parcelType = "Bag"
-          }else if(payLoad.parcelType == 3){
-            parcelType = "Small Box (Box)"
-          }else if(payLoad.parcelType == 4){
-            parcelType = "Large Box (Crate)"
-          }
-          let parcelCondition ;
-
-          if(payLoad.parcelCondition == 1){
-            parcelCondition = "Appears Fine"
-          }else if(payLoad.parcelCondition == 2){
-            parcelCondition = "Minor Damage"
-          }else if(payLoad.parcelCondition == 3){
-            parcelCondition = "Moderate Damage"
-          }else if(payLoad,parcelCondition == 4){
-            parcelCondition = "Major Damage"
-          }else if(payLoad.parcelCondition == 5){
-            parcelCondition = "Water Damage"
-          }
-        if(pickedUpType == 1){
-          
-          parcelDetail = {
-            parcelId : parcelResult.id,
-            parcelType : "Incoming Parcel",
-            trackingNumber: payLoad.trackingNumber,
-            parcelPriority : priority,
-            parcelType : parcelType,
-            parcelCondition: parcelCondition,
-            remark : payLoad.description
-          }
-          senderData = {
-            ...noOrgUserDataPayload
-          }
-          receiverData = {
-            name : receiver.name,
-            email : receiver.email,
-            mobileNumber : receiver.mobileNo,
-            propertyUnitData
-          }
-        }else{
-          parcelDetail = {
-            parcelId : parcelResult.id,
-            parcelType : "Outgoing Parcel",
-            trackingNumber: payLoad.trackingNumber,
-            parcelPriority : priority,
-            parcelType : parcelType,
-            parcelCondition: parcelCondition,
-            remark : payLoad.description
-          }
-          senderData = {
-            name : receiver.name,
-            email : receiver.email,
-            mobileNumber : receiver.mobileNo,
-            propertyUnitData
-          }
-          receiverData = {
-            ...noOrgUserDataPayload
-          }
+        if (payLoad.parcelType == 1) {
+          parcelType = "Envelope";
+        } else if (payLoad.parcelType == 2) {
+          parcelType = "Bag";
+        } else if (payLoad.parcelType == 3) {
+          parcelType = "Small Box (Box)";
+        } else if (payLoad.parcelType == 4) {
+          parcelType = "Large Box (Crate)";
         }
+        let parcelCondition;
 
-       
+        if (payLoad.parcelCondition == 1) {
+          parcelCondition = "Appears Fine";
+        } else if (payLoad.parcelCondition == 2) {
+          parcelCondition = "Minor Damage";
+        } else if (payLoad.parcelCondition == 3) {
+          parcelCondition = "Moderate Damage";
+        } else if ((payLoad, parcelCondition == 4)) {
+          parcelCondition = "Major Damage";
+        } else if (payLoad.parcelCondition == 5) {
+          parcelCondition = "Water Damage";
+        }
+        if (pickedUpType == 1) {
+          parcelDetail = {
+            parcelId: parcelResult.id,
+            parcelType: "Incoming Parcel",
+            trackingNumber: payLoad.trackingNumber,
+            parcelPriority: priority,
+            parcelType: parcelType,
+            parcelCondition: parcelCondition,
+            remark: payLoad.description,
+          };
+          senderData = {
+            ...noOrgUserDataPayload,
+          };
+          if (receiver) {
+            receiverData = {
+              name: receiver.name,
+              email: receiver.email,
+              mobileNumber: receiver.mobileNo,
+              propertyUnitData,
+            };
+          } else {
+            receiverData = {};
+          }
+        } else {
+          parcelDetail = {
+            parcelId: parcelResult.id,
+            parcelType: "Outgoing Parcel",
+            trackingNumber: payLoad.trackingNumber,
+            parcelPriority: priority,
+            parcelType: parcelType,
+            parcelCondition: parcelCondition,
+            remark: payLoad.description,
+          };
+          senderData = {
+            name: receiver.name,
+            email: receiver.email,
+            mobileNumber: receiver.mobileNo,
+            propertyUnitData,
+          };
+          receiverData = {
+            ...noOrgUserDataPayload,
+          };
+        }
 
         //Import SNS Helper..
         const parcelSNSHelper = require("../helpers/parcel");
@@ -356,7 +392,7 @@ const parcelManagementController = {
         await parcelSNSHelper.parcelSNSNotification({
           orgId: req.orgId,
           module: "PARCEL",
-          data: {parcelDetail,senderData,receiverData},
+          data: { parcelDetail, senderData, receiverData },
           receiver,
         });
 
@@ -373,7 +409,7 @@ const parcelManagementController = {
 
       res.status(200).json({
         data: parcelResult,
-        noOrgUserData: noOrgUserData,
+        noOrgUserData: { noOrgUserData, noOrgUserTenant },
         orgUserData: orgUserData,
         message: "Parcel added successfully !",
       });
@@ -661,6 +697,11 @@ const parcelManagementController = {
               .where("parcel_management.orgId", req.orgId)
               .whereIn("projects.id", projectIds)
               .where((qb) => {
+                qb.where("parcel_user_non_tis.type", 2);
+                qb.orWhere(
+                  "parcel_user_non_tis.type",
+                  null
+                );
                 if (unitId) {
                   qb.where("property_units.id", unitId);
                 }
@@ -752,7 +793,20 @@ const parcelManagementController = {
               .limit(per_page),
           ]);
           console.log("rows", rows);
+
           const Parallel = require("async-parallel");
+
+          rows = await Parallel.map(rows, async (pd) => {
+            let tenantData = await knex
+              .from("parcel_user_non_tis")
+              .select("*")
+              .where({
+                parcelId: pd.id,
+                type: 1,
+              });
+
+            return { ...pd, tenantData };
+          });
           rows = await Parallel.map(rows, async (pd) => {
             let imageResult = await knex
               .from("images")
@@ -892,6 +946,8 @@ const parcelManagementController = {
               "parcel_management.updatedAt",
             ])
             .where("parcel_management.orgId", req.orgId)
+            .where("parcel_user_non_tis.type",2)
+            .orWhere("parcel_user_non_tis.type",null)
             .whereIn("projects.id", projectIds)
             .groupBy([
               "parcel_management.id",
@@ -910,6 +966,17 @@ const parcelManagementController = {
         ]);
         // console.log("rows", rows);
         const Parallel = require("async-parallel");
+        rows = await Parallel.map(rows, async (pd) => {
+          let tenantData = await knex
+            .from("parcel_user_non_tis")
+            .select("*")
+            .where({
+              parcelId: pd.id,
+              type: 1,
+            });
+
+          return { ...pd, tenantData };
+        });
         rows = await Parallel.map(rows, async (pd) => {
           let imageResult = await knex
             .from("images")
@@ -1269,11 +1336,11 @@ const parcelManagementController = {
             "parcel_management.id",
             "parcel_user_tis.parcelId"
           )
-          .leftJoin(
-            "parcel_user_non_tis",
-            "parcel_management.id",
-            "parcel_user_non_tis.parcelId"
-          )
+          // .leftJoin(
+          //   "parcel_user_non_tis",
+          //   "parcel_management.id",
+          //   "parcel_user_non_tis.parcelId"
+          // )
           .leftJoin(
             "property_units",
             "parcel_user_tis.unitId",
@@ -1312,7 +1379,8 @@ const parcelManagementController = {
           .select([
             "parcel_management.*",
             "parcel_user_tis.*",
-            "parcel_user_non_tis.*",
+            "parcel_management.id as parcelId",
+            // "parcel_user_non_tis.*",
             "companies.companyId",
             "companies.id as cid",
             "projects.id as pid",
@@ -1330,6 +1398,8 @@ const parcelManagementController = {
             "courier.courierName",
             "parcel_management.barcode",
           ])
+          // .where("parcel_user_non_tis.type",2)
+          // .orWhere("parcel_user_non_tis.type",null)
           .where("parcel_management.id", payload.id)
           .whereIn("projects.id", projectIds)
           .first(),
@@ -1350,9 +1420,27 @@ const parcelManagementController = {
         }),
       ]);
 
+      let parcel_non_user_tis_tenant = await knex
+        .from("parcel_user_non_tis")
+        .select("*")
+        .where({
+          "parcel_user_non_tis.parcelId": payload.id,
+          "parcel_user_non_tis.type": 1,
+        });
+
+      let parcel_non_user_tis = await knex
+        .from("parcel_user_non_tis")
+        .select("*")
+        .where({
+          "parcel_user_non_tis.parcelId": payload.id,
+          "parcel_user_non_tis.type": 2,
+        });
+
       return res.status(200).json({
         parcelDetails: {
           ...parcelDetails,
+          parcel_non_user_tis,
+          parcel_non_user_tis_tenant,
           parcelImages,
           pickedUpImages,
           pickedUpRemark,

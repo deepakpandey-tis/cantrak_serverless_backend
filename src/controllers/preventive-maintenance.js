@@ -944,7 +944,7 @@ const pmController = {
       }else{
         lastIndex = Math.floor(parseInt(total%100)+ offset)
       }
-      console.log("last index value",lastIndex)
+      console.log("offset",offset,"last index value",lastIndex)
       pmResult = pmResult.slice(offset,lastIndex)
 
       console.log("[preventive-maintenance][PMReport][PMResult][Length]",pmResult.length)
