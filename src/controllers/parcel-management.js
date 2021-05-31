@@ -1127,6 +1127,7 @@ const parcelManagementController = {
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
             .whereIn("projects.id", projectIds)
+            .whereNot("parcel_management.pickedUpType",null)
             .where((qb) => {
               qb.where("parcel_user_non_tis.type", 2);
               qb.orWhere("parcel_user_non_tis.type", null);
@@ -1252,6 +1253,7 @@ const parcelManagementController = {
           .whereIn("projects.id", projectIds)
           .where("parcel_user_non_tis.type", 2)
           .orWhere("parcel_user_non_tis.type", null)
+          .whereNot("parcel_management.pickedUpType",null)
           .groupBy([
             "parcel_management.id",
             "property_units.id",
