@@ -347,6 +347,7 @@ const parcelManagementController = {
           entityType: "parcel_management",
         });
         
+        console.log("[Image][URL]",imageUrl)
 
         if (pickedUpType == 1) {
           parcelDetail = {
