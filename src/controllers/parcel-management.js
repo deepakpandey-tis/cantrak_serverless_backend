@@ -371,7 +371,12 @@ const parcelManagementController = {
               propertyUnitData,
             };
           } else {
-            receiverData = {};
+            receiverData = {
+              name: noOrgUserDataPayload.tenantName,
+              email: noOrgUserDataPayload.tenantEmail,
+              mobileNumber: noOrgUserDataPayload.tenantPhoneNo,
+              address: noOrgUserDataPayload.tenantAddress,
+            };
           }
         } else {
           parcelDetail = {
