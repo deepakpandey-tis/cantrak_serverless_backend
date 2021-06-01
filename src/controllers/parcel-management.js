@@ -485,17 +485,18 @@ const parcelManagementController = {
   getParcelList: async (req, res) => {
     try {
       let projectIds = [];
-      let projectsForPracel = req.userProjectResources;
-      projectsForPracel = projectsForPracel.find(
-        (pfp) => pfp.id == 10
-      );
-      console.log("Project For Parcel:", projectsForPracel);
-      let accessibleProjects = projectsForPracel.projects;
-      console.log(
-        "Project For Parcel:",
-        accessibleProjects
-      );
-      projectIds = _.uniqBy(accessibleProjects);
+      // let projectsForPracel = req.userProjectResources;
+      // projectsForPracel = projectsForPracel.find(
+      //   (pfp) => pfp.id == 10
+      // );
+      // console.log("Project For Parcel:", projectsForPracel);
+      // let accessibleProjects = projectsForPracel.projects;
+      // console.log(
+      //   "Project For Parcel:",
+      //   accessibleProjects
+      // );
+      // projectIds = _.uniqBy(accessibleProjects);
+      projectIds = req.accessibleProjects;
       console.log("ProjectIds:", projectIds);
 
       let reqData = req.query;
@@ -578,6 +579,11 @@ const parcelManagementController = {
               .where("parcel_management.orgId", req.orgId)
               .whereIn("projects.id", projectIds)
               .where((qb) => {
+                qb.where("parcel_user_non_tis.type", 2);
+                qb.orWhere(
+                  "parcel_user_non_tis.type",
+                  null
+                );
                 if (unitId) {
                   qb.where("property_units.id", unitId);
                 }
@@ -662,7 +668,7 @@ const parcelManagementController = {
                 "property_units.id",
                 "users.id",
                 "parcel_user_tis.unitId",
-              ]),
+              ]).first(),
             knex
               .from("parcel_management")
               .leftJoin(
@@ -906,6 +912,13 @@ const parcelManagementController = {
             // .leftJoin("images", "parcel_management.id", "images.entityId")
             .where("parcel_management.orgId", req.orgId)
             .whereIn("projects.id", projectIds)
+            .where((qb)=>{
+              qb.where("parcel_user_non_tis.type", 2);
+              qb.orWhere(
+                "parcel_user_non_tis.type",
+                null
+              );
+            })
             .groupBy([
               "parcel_management.id",
               "property_units.id",
@@ -971,9 +984,16 @@ const parcelManagementController = {
               "parcel_management.updatedAt",
             ])
             .where("parcel_management.orgId", req.orgId)
-            .where("parcel_user_non_tis.type", 2)
-            .orWhere("parcel_user_non_tis.type", null)
+            // .where("parcel_user_non_tis.type", 2)
+            // .orWhere("parcel_user_non_tis.type", null)
             .whereIn("projects.id", projectIds)
+            .where((qb)=>{
+              qb.where("parcel_user_non_tis.type", 2);
+              qb.orWhere(
+                "parcel_user_non_tis.type",
+                null
+              );
+            })
             .groupBy([
               "parcel_management.id",
               "property_units.id",
@@ -1055,17 +1075,18 @@ const parcelManagementController = {
   getPendingParcelList: async (req, res) => {
     try {
       let projectIds = [];
-      let projectsForPracel = req.userProjectResources;
-      projectsForPracel = projectsForPracel.find(
-        (pfp) => pfp.id == 10
-      );
-      console.log("Project For Parcel:", projectsForPracel);
-      let accessibleProjects = projectsForPracel.projects;
-      console.log(
-        "Project For pickup Parcel 1:",
-        accessibleProjects
-      );
-      projectIds = _.uniqBy(accessibleProjects);
+      // let projectsForPracel = req.userProjectResources;
+      // projectsForPracel = projectsForPracel.find(
+      //   (pfp) => pfp.id == 10
+      // );
+      // console.log("Project For Parcel:", projectsForPracel);
+      // let accessibleProjects = projectsForPracel.projects;
+      // console.log(
+      //   "Project For pickup Parcel 1:",
+      //   accessibleProjects
+      // );
+      // projectIds = _.uniqBy(accessibleProjects);
+      projectIds = req.accessibleProjects;
       console.log("ProjectIds:", projectIds);
 
       let payload = req.body;
@@ -1135,6 +1156,7 @@ const parcelManagementController = {
               "parcel_user_tis.buildingPhaseId",
               "buildings_and_phases.id"
             )
+           
             .select([
               "parcel_management.id",
               "parcel_user_tis.unitId",
@@ -1148,6 +1170,8 @@ const parcelManagementController = {
               "buildings_and_phases.description as buildingName",
               "parcel_user_non_tis.name",
               "property_units.unitNumber",
+              "parcel_management.description as remarks",
+              
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
@@ -1262,6 +1286,7 @@ const parcelManagementController = {
             "parcel_user_tis.buildingPhaseId",
             "buildings_and_phases.id"
           )
+          
           .select([
             "parcel_management.id",
             "parcel_user_tis.unitId",
@@ -1275,6 +1300,8 @@ const parcelManagementController = {
             "buildings_and_phases.description as buildingName",
             "parcel_user_non_tis.name",
             "property_units.unitNumber",
+            "parcel_management.description as remarks",
+            
           ])
           .where("parcel_management.orgId", req.orgId)
           .where("parcel_management.parcelStatus", 1)
@@ -2240,55 +2267,73 @@ const parcelManagementController = {
   },
   getBuildingPhaseListForParcel: async (req, res) => {
     try {
-        const { projectId } = req.body;
-        let orgId = req.orgId;
-        let projectIds = req.accessibleProjects;
+      const { projectId } = req.body;
+      let orgId = req.orgId;
+      let projectIds = req.accessibleProjects;
 
-        console.log("project ids",projectIds)
+      console.log("project ids", projectIds);
 
-        let parcelBuildings = await knex('parcel_user_tis')
-        .select([
-          "buildingPhaseId"
-        ]);
+      let parcelBuildings = await knex(
+        "parcel_user_tis"
+      ).select(["buildingPhaseId"]);
 
-        parcelBuildings = _.uniqBy(parcelBuildings,"buildingPhaseId")
+      parcelBuildings = _.uniqBy(
+        parcelBuildings,
+        "buildingPhaseId"
+      );
 
-        parcelBuildings = parcelBuildings.map((d)=>{
-          return d.buildingPhaseId;
-        })
-      
-        let buildings;
-        if (projectId) {
-            // console.log("projec id fpr building",projectId)
-            buildings = await knex("buildings_and_phases")
-                .select("*")
-                .where({ projectId:projectId, orgId: orgId, isActive: true })
-                .whereIn("projectId",projectIds)
-                .whereIn("id",parcelBuildings)
-                .orderBy('buildings_and_phases.description', 'asc');
+      parcelBuildings = parcelBuildings.map((d) => {
+        return d.buildingPhaseId;
+      });
 
-
-        } else {
-            buildings = await knex("buildings_and_phases")
-                .select("*")
-                .where({ "orgId": orgId, "isActive": true })
-                .whereIn("projectId",projectIds)
-                .whereIn("id",parcelBuildings)
-                .orderBy('buildings_and_phases.description', 'asc');
-        }
-        return res
-            .status(200)
-            .json({ data: { buildings }, message: "Buildings list" });
-    } catch (err) {
-        console.log(
-            "[controllers][generalsetup][viewbuildingPhase] :  Error",
-            err
-        );
-        //trx.rollback
-        res.status(500).json({
-            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      let buildings;
+      if (projectId) {
+        // console.log("projec id fpr building",projectId)
+        buildings = await knex("buildings_and_phases")
+          .select("*")
+          .where({
+            projectId: projectId,
+            orgId: orgId,
+            isActive: true,
+          })
+          .whereIn("projectId", projectIds)
+          .whereIn("id", parcelBuildings)
+          .orderBy(
+            "buildings_and_phases.description",
+            "asc"
+          );
+      } else {
+        buildings = await knex("buildings_and_phases")
+          .select("*")
+          .where({ orgId: orgId, isActive: true })
+          .whereIn("projectId", projectIds)
+          .whereIn("id", parcelBuildings)
+          .orderBy(
+            "buildings_and_phases.description",
+            "asc"
+          );
+      }
+      return res
+        .status(200)
+        .json({
+          data: { buildings },
+          message: "Buildings list",
         });
+    } catch (err) {
+      console.log(
+        "[controllers][generalsetup][viewbuildingPhase] :  Error",
+        err
+      );
+      //trx.rollback
+      res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
     }
-},
+  },
 };
 module.exports = parcelManagementController;
