@@ -1728,6 +1728,8 @@ const parcelManagementController = {
     try {
       let insertedImages = [];
       let id = req.body.id;
+      let pickedUpType = req.body.pickedUpType;
+      // let { id, pickedUpType } = req.body;
       let parcelResult = null;
       let parcelRemarks = [];
       console.log(
@@ -1811,7 +1813,8 @@ const parcelManagementController = {
       if (
         req.body.pickedUpType[0] == 2 &&
         req.body.parcelStatus == 2 &&
-        req.body.isChecked == true
+        req.body.isChecked == true &&
+        receiver
       ) {
         // console.log("parcel pickedup")
         await parcelCollectedNotification.send(
@@ -1823,7 +1826,8 @@ const parcelManagementController = {
       } else if (
         req.body.pickedUpType[0] == 1 &&
         req.body.parcelStatus == 2 &&
-        req.body.isChecked == true
+        req.body.isChecked == true &&
+        receiver
       ) {
         // console.log("parcel pickedup=====>>>>>",req.body.pickedUpType[0])
         await parcelPickedUpNotification.send(
@@ -1834,7 +1838,8 @@ const parcelManagementController = {
         );
       } else if (
         req.body.parcelStatus == 3 &&
-        req.body.isChecked == true
+        req.body.isChecked == true &&
+        receiver
       ) {
         // console.log("parcel rejected=====>>>>>",req.body.pickedUpType[0])
         await parcelRejectedNotification.send(
@@ -1845,7 +1850,8 @@ const parcelManagementController = {
         );
       } else if (
         req.body.parcelStatus == 4 &&
-        req.body.isChecked == true
+        req.body.isChecked == true &&
+        receiver
       ) {
         // console.log("parcel returned=====>>>>>",req.body.pickedUpType[0])
         await parcelReturnedNotification.send(
@@ -1856,7 +1862,8 @@ const parcelManagementController = {
         );
       } else if (
         req.body.parcelStatus == 5 &&
-        req.body.isChecked == true
+        req.body.isChecked == true &&
+        receiver
       ) {
         await parcelCanceledNotification.send(
           sender,
@@ -1880,6 +1887,77 @@ const parcelManagementController = {
           }
         );
       }
+
+      let parcelStatus;
+      let parcelDetail;
+
+      let imageUrl = [];
+      imageUrl = await knex
+        .from("images")
+        .where({
+          entityType: "pickup_parcel",
+        })
+        .whereIn("entityId", id);
+
+      console.log("[Image][URL]", imageUrl);
+      if (pickedUpType == 1) {
+        if (payload.parcelStatus == 1) {
+          parcelStatus = "Ready for Pick-up";
+        } else if (payload.parcelStatus == 2) {
+          parcelStatus = "Picked up";
+        } else if (payload.parcelStatus == 3) {
+          parcelStatus = "Reject";
+        } else if (payload.parcelStatus == 4) {
+          parcelStatus = "Return";
+        } else if (payload.parcelStatus == 5) {
+          parcelStatus = "Cancel";
+        }
+        parcelDetail = {
+          parcelId: id,
+          parcelType: "Incoming Parcel",
+          status: parcelStatus,
+          pickedUpImages:
+            imageUrl && imageUrl[0]
+              ? imageUrl[0].s3Url
+              : null,
+          signature: payload.signature,
+          remarks: req.body.description,
+        };
+      } else {
+        if (payload.parcelStatus == 1) {
+          parcelStatus = "Awaiting Collection";
+        } else if (payload.parcelStatus == 2) {
+          parcelStatus = "Collected";
+        } else if (payload.parcelStatus == 3) {
+          parcelStatus = "Reject";
+        } else if (payload.parcelStatus == 4) {
+          parcelStatus = "Return";
+        } else if (payload.parcelStatus == 5) {
+          parcelStatus = "Cancel";
+        }
+        parcelDetail = {
+          parcelId: id,
+          parcelType: "Outgoing Parcel",
+          status: parcelStatus,
+          pickedUpImages:
+            imageUrl && imageUrl[0]
+              ? imageUrl[0].s3Url
+              : null,
+          signature: payload.signature,
+          remarks: req.body.description,
+        };
+      }
+
+      const parcelSNSHelper = require("../helpers/parcel");
+      await parcelSNSHelper.parcelSNSNotification({
+        orgId: req.orgId,
+        module: "PARCEL",
+        data: {
+          parcelDetail,
+          //  senderData, receiverData
+        },
+        receiver,
+      });
 
       return res.status(200).json({
         data: {
