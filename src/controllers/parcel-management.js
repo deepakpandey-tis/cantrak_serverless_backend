@@ -578,6 +578,7 @@ const parcelManagementController = {
               // .leftJoin("images", "parcel_management.id", "images.entityId")
               .where("parcel_management.orgId", req.orgId)
               .whereIn("projects.id", projectIds)
+              .whereNot("parcel_management.pickedUpType",null)
               .where((qb) => {
                 qb.where("parcel_user_non_tis.type", 2);
                 qb.orWhere(
@@ -727,6 +728,7 @@ const parcelManagementController = {
               ])
               .where("parcel_management.orgId", req.orgId)
               .whereIn("projects.id", projectIds)
+              .whereNot("parcel_management.pickedUpType",null)
               .where((qb) => {
                 qb.where("parcel_user_non_tis.type", 2);
                 qb.orWhere(
@@ -911,6 +913,7 @@ const parcelManagementController = {
             )
             // .leftJoin("images", "parcel_management.id", "images.entityId")
             .where("parcel_management.orgId", req.orgId)
+            .whereNot("parcel_management.pickedUpType",null)
             .whereIn("projects.id", projectIds)
             .where((qb)=>{
               qb.where("parcel_user_non_tis.type", 2);
@@ -987,6 +990,7 @@ const parcelManagementController = {
             // .where("parcel_user_non_tis.type", 2)
             // .orWhere("parcel_user_non_tis.type", null)
             .whereIn("projects.id", projectIds)
+            .whereNot("parcel_management.pickedUpType",null)
             .where((qb)=>{
               qb.where("parcel_user_non_tis.type", 2);
               qb.orWhere(
