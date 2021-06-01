@@ -741,11 +741,11 @@ const pmController = {
   },
 
   //pm dashboard
-  getPMDashboardData: async (req, res) => {
-    try {
-      //calculate number of pms pending
-    } catch (err) {}
-  },
+  // getPMDashboardData: async (req, res) => {
+  //   try {
+  //     calculate number of pms pending
+  //   } catch (err) {}
+  // },
   /*GET Pm REPORT */
   pmReport: async (req, res) => {
     try {

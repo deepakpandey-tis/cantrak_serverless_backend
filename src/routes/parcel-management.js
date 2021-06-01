@@ -110,4 +110,12 @@ router.post(
   parcelManageController.getUnitDetailsByUnitId
 );
 
+router.post(
+  "/get-building-list-for-parcel",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isParcelManagementAccessible,
+  parcelManagementController.getBuildingPhaseListForParcel
+)
+
 module.exports = router;

@@ -1074,10 +1074,11 @@ const buildingPhaseController = {
         try {
             const { projectId } = req.body;
             let orgId = req.orgId;
+            
 
             let buildings;
             if (projectId) {
-                console.log("projec id fpr building",projectId)
+                // console.log("projec id fpr building",projectId)
                 buildings = await knex("buildings_and_phases")
                     .select("*")
                     .where({ projectId:projectId, orgId: orgId, isActive: true })

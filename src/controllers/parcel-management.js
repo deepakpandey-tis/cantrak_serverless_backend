@@ -2238,5 +2238,57 @@ const parcelManagementController = {
       });
     }
   },
+  getBuildingPhaseListForParcel: async (req, res) => {
+    try {
+        const { projectId } = req.body;
+        let orgId = req.orgId;
+        let projectIds = req.accessibleProjects;
+
+        console.log("project ids",projectIds)
+
+        let parcelBuildings = await knex('parcel_user_tis')
+        .select([
+          "buildingPhaseId"
+        ]);
+
+        parcelBuildings = _.uniqBy(parcelBuildings,"buildingPhaseId")
+
+        parcelBuildings = parcelBuildings.map((d)=>{
+          return d.buildingPhaseId;
+        })
+      
+        let buildings;
+        if (projectId) {
+            // console.log("projec id fpr building",projectId)
+            buildings = await knex("buildings_and_phases")
+                .select("*")
+                .where({ projectId:projectId, orgId: orgId, isActive: true })
+                .whereIn("projectId",projectIds)
+                .whereIn("id",parcelBuildings)
+                .orderBy('buildings_and_phases.description', 'asc');
+
+
+        } else {
+            buildings = await knex("buildings_and_phases")
+                .select("*")
+                .where({ "orgId": orgId, "isActive": true })
+                .whereIn("projectId",projectIds)
+                .whereIn("id",parcelBuildings)
+                .orderBy('buildings_and_phases.description', 'asc');
+        }
+        return res
+            .status(200)
+            .json({ data: { buildings }, message: "Buildings list" });
+    } catch (err) {
+        console.log(
+            "[controllers][generalsetup][viewbuildingPhase] :  Error",
+            err
+        );
+        //trx.rollback
+        res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        });
+    }
+},
 };
 module.exports = parcelManagementController;
