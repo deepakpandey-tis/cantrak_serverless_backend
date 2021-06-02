@@ -400,12 +400,23 @@ const parcelManagementController = {
                 ? imageUrl[0].s3Url
                 : null,
           };
-          senderData = {
-            name: receiver.name,
-            email: receiver.email,
-            mobileNumber: receiver.mobileNo,
-            propertyUnitData,
-          };
+          if (receiver) {
+            senderData = {
+              name: receiver.name,
+              email: receiver.email,
+              mobileNumber: receiver.mobileNo,
+              propertyUnitData,
+            };
+          } else {
+            senderData = {
+              name: noOrgUserDataPayload.tenantName,
+              email: noOrgUserDataPayload.tenantEmail,
+              mobileNumber:
+                noOrgUserDataPayload.tenantPhoneNo,
+              address: noOrgUserDataPayload.tenantAddress,
+            };
+          }
+
           receiverData = {
             ...noOrgUserDataPayload,
           };
@@ -578,7 +589,10 @@ const parcelManagementController = {
               // .leftJoin("images", "parcel_management.id", "images.entityId")
               .where("parcel_management.orgId", req.orgId)
               .whereIn("projects.id", projectIds)
-              .whereNot("parcel_management.pickedUpType",null)
+              .whereNot(
+                "parcel_management.pickedUpType",
+                null
+              )
               .where((qb) => {
                 qb.where("parcel_user_non_tis.type", 2);
                 qb.orWhere(
@@ -669,7 +683,8 @@ const parcelManagementController = {
                 "property_units.id",
                 "users.id",
                 "parcel_user_tis.unitId",
-              ]).first(),
+              ])
+              .first(),
             knex
               .from("parcel_management")
               .leftJoin(
@@ -728,7 +743,10 @@ const parcelManagementController = {
               ])
               .where("parcel_management.orgId", req.orgId)
               .whereIn("projects.id", projectIds)
-              .whereNot("parcel_management.pickedUpType",null)
+              .whereNot(
+                "parcel_management.pickedUpType",
+                null
+              )
               .where((qb) => {
                 qb.where("parcel_user_non_tis.type", 2);
                 qb.orWhere(
@@ -913,14 +931,14 @@ const parcelManagementController = {
             )
             // .leftJoin("images", "parcel_management.id", "images.entityId")
             .where("parcel_management.orgId", req.orgId)
-            .whereNot("parcel_management.pickedUpType",null)
+            .whereNot(
+              "parcel_management.pickedUpType",
+              null
+            )
             .whereIn("projects.id", projectIds)
-            .where((qb)=>{
+            .where((qb) => {
               qb.where("parcel_user_non_tis.type", 2);
-              qb.orWhere(
-                "parcel_user_non_tis.type",
-                null
-              );
+              qb.orWhere("parcel_user_non_tis.type", null);
             })
             .groupBy([
               "parcel_management.id",
@@ -990,13 +1008,13 @@ const parcelManagementController = {
             // .where("parcel_user_non_tis.type", 2)
             // .orWhere("parcel_user_non_tis.type", null)
             .whereIn("projects.id", projectIds)
-            .whereNot("parcel_management.pickedUpType",null)
-            .where((qb)=>{
+            .whereNot(
+              "parcel_management.pickedUpType",
+              null
+            )
+            .where((qb) => {
               qb.where("parcel_user_non_tis.type", 2);
-              qb.orWhere(
-                "parcel_user_non_tis.type",
-                null
-              );
+              qb.orWhere("parcel_user_non_tis.type", null);
             })
             .groupBy([
               "parcel_management.id",
@@ -1160,7 +1178,7 @@ const parcelManagementController = {
               "parcel_user_tis.buildingPhaseId",
               "buildings_and_phases.id"
             )
-           
+
             .select([
               "parcel_management.id",
               "parcel_user_tis.unitId",
@@ -1175,7 +1193,6 @@ const parcelManagementController = {
               "parcel_user_non_tis.name",
               "property_units.unitNumber",
               "parcel_management.description as remarks",
-              
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
@@ -1290,7 +1307,7 @@ const parcelManagementController = {
             "parcel_user_tis.buildingPhaseId",
             "buildings_and_phases.id"
           )
-          
+
           .select([
             "parcel_management.id",
             "parcel_user_tis.unitId",
@@ -1305,7 +1322,6 @@ const parcelManagementController = {
             "parcel_user_non_tis.name",
             "property_units.unitNumber",
             "parcel_management.description as remarks",
-            
           ])
           .where("parcel_management.orgId", req.orgId)
           .where("parcel_management.parcelStatus", 1)
@@ -2317,12 +2333,10 @@ const parcelManagementController = {
             "asc"
           );
       }
-      return res
-        .status(200)
-        .json({
-          data: { buildings },
-          message: "Buildings list",
-        });
+      return res.status(200).json({
+        data: { buildings },
+        message: "Buildings list",
+      });
     } catch (err) {
       console.log(
         "[controllers][generalsetup][viewbuildingPhase] :  Error",
