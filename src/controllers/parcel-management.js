@@ -529,7 +529,15 @@ const parcelManagementController = {
         companyId,
         projectId,
         buildingPhaseId,
+        createdDateFrom,
+        createdDateTo,
       } = req.body;
+
+      let createDateFrom = moment(createdDateFrom).startOf("date").format();
+      let createDateTo = moment(createdDateTo).endOf("date", "days").format();
+        
+      let fromNewDate = new Date(createDateFrom).getTime()
+      let toNewDate = new Date(createDateTo).getTime()
 
       // let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
       // .whereIn('projects.id', projectIds)
@@ -544,7 +552,9 @@ const parcelManagementController = {
         status ||
         companyId ||
         projectId ||
-        buildingPhaseId
+        buildingPhaseId ||
+        createdDateFrom ||
+        createdDateTo
       ) {
         try {
           [total, rows] = await Promise.all([
@@ -677,14 +687,20 @@ const parcelManagementController = {
                     buildingPhaseId
                   );
                 }
+                if (createdDateFrom && createdDateTo) {
+                  qb.whereBetween("parcel_management.createdAt", [
+                    fromNewDate,
+                    toNewDate
+                  ]);
+                }
               })
               .groupBy([
                 "parcel_management.id",
                 "property_units.id",
                 "users.id",
                 "parcel_user_tis.unitId",
-              ])
-              .first(),
+              ]),
+              // .first(),
             knex
               .from("parcel_management")
               .leftJoin(
@@ -834,6 +850,12 @@ const parcelManagementController = {
                     "parcel_user_tis.buildingPhaseId",
                     buildingPhaseId
                   );
+                }
+                if (createdDateFrom && createdDateTo) {
+                  qb.whereBetween("parcel_management.createdAt", [
+                    fromNewDate,
+                    toNewDate
+                  ]);
                 }
               })
               .orderBy(
@@ -1074,7 +1096,7 @@ const parcelManagementController = {
 
       return res.status(200).json({
         data: {
-          parcel: pagination,
+          parcel: pagination,createDateFrom
         },
         message: "parcel List!",
       });
@@ -1329,9 +1351,9 @@ const parcelManagementController = {
           // .where("parcel_user_non_tis.type", 2)
           // .orWhere("parcel_user_non_tis.type", null)
           .whereNot("parcel_management.pickedUpType", null)
-          .where((qb)=>{
-            qb.where("parcel_user_non_tis.type", 2)
-            qb.orWhere("parcel_user_non_tis.type", null)
+          .where((qb) => {
+            qb.where("parcel_user_non_tis.type", 2);
+            qb.orWhere("parcel_user_non_tis.type", null);
           })
           .groupBy([
             "parcel_management.id",
@@ -2295,8 +2317,6 @@ const parcelManagementController = {
       let orgId = req.orgId;
       let projectIds = req.accessibleProjects;
 
-      
-
       let parcelBuildings = await knex(
         "parcel_user_tis"
       ).select(["buildingPhaseId"]);
@@ -2338,7 +2358,7 @@ const parcelManagementController = {
           );
       }
       return res.status(200).json({
-        data: { buildings,projectIds },
+        data: { buildings, projectIds },
         message: "Buildings list",
       });
     } catch (err) {
