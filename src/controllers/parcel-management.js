@@ -1326,9 +1326,13 @@ const parcelManagementController = {
           .where("parcel_management.orgId", req.orgId)
           .where("parcel_management.parcelStatus", 1)
           .whereIn("projects.id", projectIds)
-          .where("parcel_user_non_tis.type", 2)
-          .orWhere("parcel_user_non_tis.type", null)
+          // .where("parcel_user_non_tis.type", 2)
+          // .orWhere("parcel_user_non_tis.type", null)
           .whereNot("parcel_management.pickedUpType", null)
+          .where((qb)=>{
+            qb.where("parcel_user_non_tis.type", 2)
+            qb.orWhere("parcel_user_non_tis.type", null)
+          })
           .groupBy([
             "parcel_management.id",
             "property_units.id",
@@ -2291,7 +2295,7 @@ const parcelManagementController = {
       let orgId = req.orgId;
       let projectIds = req.accessibleProjects;
 
-      console.log("project ids", projectIds);
+      
 
       let parcelBuildings = await knex(
         "parcel_user_tis"
@@ -2327,14 +2331,14 @@ const parcelManagementController = {
           .select("*")
           .where({ orgId: orgId, isActive: true })
           .whereIn("projectId", projectIds)
-          .whereIn("id", parcelBuildings)
+          // .whereIn("id", parcelBuildings)
           .orderBy(
             "buildings_and_phases.description",
             "asc"
           );
       }
       return res.status(200).json({
-        data: { buildings },
+        data: { buildings,projectIds },
         message: "Buildings list",
       });
     } catch (err) {
