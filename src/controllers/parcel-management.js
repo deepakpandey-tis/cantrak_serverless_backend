@@ -142,6 +142,7 @@ const parcelManagementController = {
 
         const insertData = {
           ...payLoad,
+          companyId:req.body.org_user_data.companyId,
           orgId: orgId,
           createdBy: req.me.id,
           createdAt: currentTime,
@@ -441,6 +442,9 @@ const parcelManagementController = {
         trx.commit;
       });
 
+      await knex("parcel_management")
+      .update({ isActive: true })
+      .where({ isActive: true });
       // update public.parcel_user_tis  set "isActive" = true where "isActive"=true;
 
       res.status(200).json({
@@ -739,7 +743,8 @@ const parcelManagementController = {
                 "buildings_and_phases.description",
                 "parcel_user_non_tis.name",
                 "parcel_management.updatedAt",
-                "parcel_management.description as remarks"
+                "parcel_management.description as remarks",
+                "parcel_management.displayId"
                 // "images.s3Url",
               ])
               .where("parcel_management.orgId", req.orgId)
@@ -1010,7 +1015,8 @@ const parcelManagementController = {
               "buildings_and_phases.description",
               "parcel_user_non_tis.name",
               "parcel_management.updatedAt",
-              "parcel_management.description as remarks"
+              "parcel_management.description as remarks",
+              "parcel_management.displayId"
             ])
             .where("parcel_management.orgId", req.orgId)
             // .where("parcel_user_non_tis.type", 2)
