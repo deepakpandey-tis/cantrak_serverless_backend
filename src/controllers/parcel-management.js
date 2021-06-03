@@ -142,6 +142,7 @@ const parcelManagementController = {
 
         const insertData = {
           ...payLoad,
+          companyId:req.body.org_user_data.companyId,
           orgId: orgId,
           createdBy: req.me.id,
           createdAt: currentTime,
@@ -441,6 +442,9 @@ const parcelManagementController = {
         trx.commit;
       });
 
+      await knex("parcel_management")
+      .update({ isActive: true })
+      .where({ isActive: true });
       // update public.parcel_user_tis  set "isActive" = true where "isActive"=true;
 
       res.status(200).json({
@@ -496,19 +500,8 @@ const parcelManagementController = {
   getParcelList: async (req, res) => {
     try {
       let projectIds = [];
-      // let projectsForPracel = req.userProjectResources;
-      // projectsForPracel = projectsForPracel.find(
-      //   (pfp) => pfp.id == 10
-      // );
-      // console.log("Project For Parcel:", projectsForPracel);
-      // let accessibleProjects = projectsForPracel.projects;
-      // console.log(
-      //   "Project For Parcel:",
-      //   accessibleProjects
-      // );
-      // projectIds = _.uniqBy(accessibleProjects);
       projectIds = req.accessibleProjects;
-      console.log("ProjectIds:", projectIds);
+      // console.log("ProjectIds:", projectIds);
 
       let reqData = req.query;
       // console.log("requested data parcel", reqData);
@@ -533,17 +526,15 @@ const parcelManagementController = {
         createdDateTo,
       } = req.body;
 
-      let createDateFrom = moment(createdDateFrom).startOf("date").format();
-      let createDateTo = moment(createdDateTo).endOf("date", "days").format();
-        
-      let fromNewDate = new Date(createDateFrom).getTime()
-      let toNewDate = new Date(createDateTo).getTime()
+      let createDateFrom = moment(createdDateFrom)
+        .startOf("date")
+        .format();
+      let createDateTo = moment(createdDateTo)
+        .endOf("date", "days")
+        .format();
 
-      // let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
-      // .whereIn('projects.id', projectIds)
-      // .where({ orgId: req.orgId });
-
-      // const accessibleProjects = req.userProjectResources[0].projects;
+      let fromNewDate = new Date(createDateFrom).getTime();
+      let toNewDate = new Date(createDateTo).getTime();
 
       if (
         unitId ||
@@ -621,11 +612,8 @@ const parcelManagementController = {
                 if (tenantId) {
                   qb.where("users.id", tenantId);
                 }
-                // if (status) {
-                //   qb.where("parcel_management.parcelStatus", status);
-                // }
                 if (status) {
-                  console.log("value of status", status);
+                  // console.log("value of status", status);
                   if (status == 1) {
                     qb.where({
                       "parcel_management.parcelStatus": 1,
@@ -688,10 +676,10 @@ const parcelManagementController = {
                   );
                 }
                 if (createdDateFrom && createdDateTo) {
-                  qb.whereBetween("parcel_management.createdAt", [
-                    fromNewDate,
-                    toNewDate
-                  ]);
+                  qb.whereBetween(
+                    "parcel_management.createdAt",
+                    [fromNewDate, toNewDate]
+                  );
                 }
               })
               .groupBy([
@@ -700,7 +688,7 @@ const parcelManagementController = {
                 "users.id",
                 "parcel_user_tis.unitId",
               ]),
-              // .first(),
+            // .first(),
             knex
               .from("parcel_management")
               .leftJoin(
@@ -755,6 +743,8 @@ const parcelManagementController = {
                 "buildings_and_phases.description",
                 "parcel_user_non_tis.name",
                 "parcel_management.updatedAt",
+                "parcel_management.description as remarks",
+                "parcel_management.displayId"
                 // "images.s3Url",
               ])
               .where("parcel_management.orgId", req.orgId)
@@ -852,10 +842,10 @@ const parcelManagementController = {
                   );
                 }
                 if (createdDateFrom && createdDateTo) {
-                  qb.whereBetween("parcel_management.createdAt", [
-                    fromNewDate,
-                    toNewDate
-                  ]);
+                  qb.whereBetween(
+                    "parcel_management.createdAt",
+                    [fromNewDate, toNewDate]
+                  );
                 }
               })
               .orderBy(
@@ -1025,6 +1015,8 @@ const parcelManagementController = {
               "buildings_and_phases.description",
               "parcel_user_non_tis.name",
               "parcel_management.updatedAt",
+              "parcel_management.description as remarks",
+              "parcel_management.displayId"
             ])
             .where("parcel_management.orgId", req.orgId)
             // .where("parcel_user_non_tis.type", 2)
@@ -1096,7 +1088,7 @@ const parcelManagementController = {
 
       return res.status(200).json({
         data: {
-          parcel: pagination,createDateFrom
+          parcel: pagination,
         },
         message: "parcel List!",
       });
