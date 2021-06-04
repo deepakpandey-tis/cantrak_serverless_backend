@@ -312,6 +312,7 @@ const parcelManagementController = {
             "projects.project",
             "property_units.unitNumber",
             "property_units.description as houseIdDescription",
+            "property_units.houseId"
           ])
           .where({
             "property_units.id": orgUserDataPayload.unitId,
