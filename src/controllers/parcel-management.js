@@ -86,7 +86,7 @@ const parcelManagementController = {
 
   addParcelRequest: async (req, res) => {
     try {
-      console.log("add parcel body", req.body);
+      // console.log("add parcel body", req.body);
       let parcelResult = null;
       let noOrgUserData = [];
       let orgUserData = [];
@@ -95,7 +95,7 @@ const parcelManagementController = {
       let images = [];
       let orgId = req.orgId;
       let payLoad = req.body;
-      console.log("payload data for image", payLoad);
+      // console.log("payload data for image", payLoad);
       let pickedUpType = req.body.pickedUpType;
       payLoad = _.omit(req.body, [
         "image",
@@ -138,11 +138,19 @@ const parcelManagementController = {
           });
         }
         // let qrCode = "org-" + req.orgId + "-parcel-" + payload.id
+
+        let qrCode =
+          "org-" +
+          req.orgId +
+          "-parcel-" +
+          req.body.newParcelId;
+
         const currentTime = new Date().getTime();
 
         const insertData = {
           ...payLoad,
           companyId: req.body.org_user_data.companyId,
+          qrCode: qrCode,
           orgId: orgId,
           createdBy: req.me.id,
           createdAt: currentTime,
@@ -209,38 +217,38 @@ const parcelManagementController = {
           orgId: req.orgId,
         });
 
-        let qrCode =
-          "org-" + req.orgId + "-parcel-" + parcelResult.id;
+        // let qrCode =
+        //   "org-" + req.orgId + "-parcel-" + parcelResult.id;
 
         console.log(
           "parcel result id for qr code",
           parcelResult.id
         );
-        let updateResult = await knex("parcel_management")
-          .update({ qrCode: qrCode })
-          .returning(["*"])
-          .transacting(trx)
-          .where({ id: parcelResult.id });
+        // let updateResult = await knex("parcel_management")
+        //   .update({ qrCode: qrCode })
+        //   .returning(["*"])
+        //   .transacting(trx)
+        //   .where({ id: parcelResult.id });
 
-        let imagesData = req.body.image;
-        console.log("imagesData", imagesData);
-        if (imagesData && imagesData.length > 0) {
-          for (let image of imagesData) {
-            let d = await knex("images")
-              .insert({
-                entityType: "parcel_management",
-                entityId: parcelResult.id,
-                s3Url: image.s3Url,
-                name: image.filename,
-                title: image.title,
-                createdAt: currentTime,
-                updatedAt: currentTime,
-                orgId: req.orgId,
-              })
-              .returning(["*"]);
-            images.push(d[0]);
-          }
-        }
+        // let imagesData = req.body.image;
+        // console.log("imagesData", imagesData);
+        // if (imagesData && imagesData.length > 0) {
+        //   for (let image of imagesData) {
+        //     let d = await knex("images")
+        //       .insert({
+        //         entityType: "parcel_management",
+        //         entityId: parcelResult.id,
+        //         s3Url: image.s3Url,
+        //         name: image.filename,
+        //         title: image.title,
+        //         createdAt: currentTime,
+        //         updatedAt: currentTime,
+        //         orgId: req.orgId,
+        //       })
+        //       .returning(["*"]);
+        //     images.push(d[0]);
+        //   }
+        // }
 
         let orgMaster = await knex
           .from("organisations")
@@ -303,7 +311,7 @@ const parcelManagementController = {
             "companies.companyId",
             "projects.project",
             "property_units.unitNumber",
-            "property_units.description as houseIdDescription"
+            "property_units.description as houseIdDescription",
           ])
           .where({
             "property_units.id": orgUserDataPayload.unitId,
@@ -443,9 +451,9 @@ const parcelManagementController = {
         trx.commit;
       });
 
-      await knex("parcel_management")
-        .update({ isActive: true })
-        .where({ isActive: true });
+      // await knex("parcel_management")
+      //   .update({ isActive: true })
+      //   .where({ isActive: true });
       // update public.parcel_user_tis  set "isActive" = true where "isActive"=true;
 
       res.status(200).json({
@@ -1244,7 +1252,7 @@ const parcelManagementController = {
                 "buildings_and_phases.description",
                 "parcel_user_non_tis.name",
               ]),
-              // .first(),
+            // .first(),
             knex
               .from("parcel_management")
               .leftJoin(
@@ -1536,7 +1544,7 @@ const parcelManagementController = {
               "buildings_and_phases.description",
               "parcel_user_non_tis.name",
             ]),
-            // .first(),
+          // .first(),
           knex
             .from("parcel_management")
             .leftJoin(
