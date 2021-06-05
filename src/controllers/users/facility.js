@@ -85,7 +85,8 @@ const facilityBookingController = {
                     "parcel_management.description",
                     "courier.courierName",
                     "parcel_management.receivedDate",
-                    "parcel_management.qrCode"
+                    "parcel_management.qrCode",
+                    "parcel_management.displayId"
 
                 ])
                 .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1',  'parcel_management.pickedUpType': parcelType })
@@ -240,7 +241,8 @@ const facilityBookingController = {
                     "parcel_management.description",
                     "courier.courierName",
                     "parcel_management.receivedDate",
-                    "parcel_management.qrCode"
+                    "parcel_management.qrCode",
+                    "parcel_management.displayId"
 
                 ])
                 .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1',  'parcel_management.pickedUpType': parcelType })
