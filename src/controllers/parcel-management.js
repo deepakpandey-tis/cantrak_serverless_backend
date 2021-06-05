@@ -312,7 +312,7 @@ const parcelManagementController = {
             "projects.project",
             "property_units.unitNumber",
             "property_units.description as houseIdDescription",
-            "property_units.houseId"
+            "property_units.houseId",
           ])
           .where({
             "property_units.id": orgUserDataPayload.unitId,
@@ -1131,7 +1131,7 @@ const parcelManagementController = {
       let projectIds = [];
 
       projectIds = req.accessibleProjects;
-      console.log("ProjectIds:", projectIds);
+      // console.log("ProjectIds:", projectIds);
 
       let payload = req.body;
       let parcelList;
@@ -1144,6 +1144,8 @@ const parcelManagementController = {
         parcelId,
       } = req.body;
 
+
+      
       // const accessibleProjects = req.userProjectResources[0].projects;
 
       // console.log('Project For pickup Parcel 2:', accessibleProjects);
@@ -1158,12 +1160,25 @@ const parcelManagementController = {
       ) {
         try {
           let parcelType;
+          let parcelUserData;
 
           if (parcelId) {
             parcelType = await knex
               .from("parcel_management")
               .select("parcel_management.pickedUpType")
               .where("parcel_management.id", parcelId);
+
+            parcelUserData = await knex("parcel_user_tis")
+              .select([
+                "parcel_user_tis.tenantId",
+                "parcel_user_tis.unitId",
+              ])
+              .where("parcel_user_tis.parcelId", parcelId);
+
+            console.log(
+              "parcel user data",
+              parcelUserData[0]
+            );
           }
           // console.log("parcelType1",parcelType[0].pickedUpType)
 
@@ -1210,11 +1225,11 @@ const parcelManagementController = {
                 null
               )
               .where((qb) => {
-                qb.where("parcel_user_non_tis.type", 2);
-                qb.orWhere(
-                  "parcel_user_non_tis.type",
-                  null
-                );
+                // qb.where("parcel_user_non_tis.type", 2);
+                // qb.orWhere(
+                //   "parcel_user_non_tis.type",
+                //   null
+                // );
                 if (unitId) {
                   qb.where(
                     "property_units.unitNumber",
@@ -1236,13 +1251,28 @@ const parcelManagementController = {
                     buildingPhaseId
                   );
                 }
-                if (id && parcelId) {
+                if (parcelUserData) {
+
+                  console.log("parcel and unit id")
                   qb.where({
                     "property_units.unitNumber": id,
                     "parcel_management.pickedUpType":
                       parcelType[0].pickedUpType,
+                    // "parcel_user_tis.tenantId":
+                    //   parcelUserData[0].tenantId,
+                    // "parcel_user_tis.unitId":
+                    //   parcelUserData[0].unitId,
                   });
+                  qb.where("users.id",parcelUserData[0].tenantId)
+                  qb.where("property_units.id", parcelUserData[0].unitId)
                 }
+              })
+              .where((qb)=>{
+                qb.where("parcel_user_non_tis.type", 2);
+                qb.orWhere(
+                  "parcel_user_non_tis.type",
+                  null
+                );
               })
               .groupBy([
                 "parcel_management.id",
@@ -1302,7 +1332,7 @@ const parcelManagementController = {
                 "parcel_user_non_tis.name",
                 "property_units.unitNumber",
                 "parcel_management.description as remarks",
-                "parcel_management.displayId"
+                "parcel_management.displayId",
               ])
               .where("parcel_management.orgId", req.orgId)
               .where("parcel_management.parcelStatus", 1)
@@ -1312,11 +1342,11 @@ const parcelManagementController = {
                 null
               )
               .where((qb) => {
-                qb.where("parcel_user_non_tis.type", 2);
-                qb.orWhere(
-                  "parcel_user_non_tis.type",
-                  null
-                );
+                // qb.where("parcel_user_non_tis.type", 2);
+                // qb.orWhere(
+                //   "parcel_user_non_tis.type",
+                //   null
+                // );
                 if (unitId) {
                   qb.where(
                     "property_units.unitNumber",
@@ -1338,13 +1368,28 @@ const parcelManagementController = {
                     buildingPhaseId
                   );
                 }
-                if (id && parcelId) {
+                if (parcelUserData) {
+
+                  console.log("parcel user data1",parcelUserData)
                   qb.where({
-                    "property_units.unitNumber": id,
+                    // "property_units.unitNumber": id,
                     "parcel_management.pickedUpType":
                       parcelType[0].pickedUpType,
+                    // "parcel_user_tis.tenantId":
+                    //   parcelUserData[0].tenantId,
+                    // "parcel_user_tis.unitId":
+                    //   parcelUserData[0].unitId,
                   });
+                  qb.where("users.id",parcelUserData[0].tenantId)
+                  qb.where("property_units.id", parcelUserData[0].unitId)
                 }
+              })
+              .where((qb)=>{
+                qb.where("parcel_user_non_tis.type", 2);
+                qb.orWhere(
+                  "parcel_user_non_tis.type",
+                  null
+                );
               })
               .groupBy([
                 "parcel_management.id",
@@ -1594,7 +1639,7 @@ const parcelManagementController = {
               "parcel_user_non_tis.name",
               "property_units.unitNumber",
               "parcel_management.description as remarks",
-              "parcel_management.displayId"
+              "parcel_management.displayId",
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
