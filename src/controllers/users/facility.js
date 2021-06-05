@@ -90,6 +90,13 @@ const facilityBookingController = {
                 ])
                 .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1',  'parcel_management.pickedUpType': parcelType })
                 .where({ 'parcel_user_tis.tenantId': id })
+                .where((qb)=>{
+                    qb.where("parcel_user_non_tis.type", 2);
+                    qb.orWhere(
+                      "parcel_user_non_tis.type",
+                      null
+                    );
+                })
                 .orderBy('parcel_management.id', 'desc')
 
                 totalNewParcel = await knex.from('parcel_management')
@@ -238,6 +245,13 @@ const facilityBookingController = {
                 ])
                 .where({ 'parcel_management.orgId': req.orgId, 'parcel_management.parcelStatus': '1',  'parcel_management.pickedUpType': parcelType })
                 .where({ 'parcel_user_tis.tenantId': id })
+                .where((qb)=>{
+                    qb.where("parcel_user_non_tis.type", 2);
+                    qb.orWhere(
+                      "parcel_user_non_tis.type",
+                      null
+                    );
+                })
                 .orderBy('parcel_management.id', 'desc')
 
                 totalNewParcel = await knex.from('parcel_management')

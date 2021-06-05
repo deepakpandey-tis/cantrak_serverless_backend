@@ -1302,6 +1302,7 @@ const parcelManagementController = {
                 "parcel_user_non_tis.name",
                 "property_units.unitNumber",
                 "parcel_management.description as remarks",
+                "parcel_management.displayId"
               ])
               .where("parcel_management.orgId", req.orgId)
               .where("parcel_management.parcelStatus", 1)
@@ -1593,6 +1594,7 @@ const parcelManagementController = {
               "parcel_user_non_tis.name",
               "property_units.unitNumber",
               "parcel_management.description as remarks",
+              "parcel_management.displayId"
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
