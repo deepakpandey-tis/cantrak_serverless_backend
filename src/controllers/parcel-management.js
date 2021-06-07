@@ -534,6 +534,7 @@ const parcelManagementController = {
         buildingPhaseId,
         createdDateFrom,
         createdDateTo,
+        tenantName,
       } = req.body;
 
       let createDateFrom = moment(createdDateFrom)
@@ -546,6 +547,22 @@ const parcelManagementController = {
       let fromNewDate = new Date(createDateFrom).getTime();
       let toNewDate = new Date(createDateTo).getTime();
 
+      let parcelId;
+
+      if (tenantName) {
+        parcelId = await knex("parcel_user_non_tis")
+          .select("parcel_user_non_tis.parcelId")
+          .where(
+            "parcel_user_non_tis.name",
+            "iLIKE",
+            `%${tenantName}%`
+          )
+          .where("parcel_user_non_tis.type", 1)
+          .first();
+      }
+
+      console.log("parcel id for tenant", parcelId);
+
       if (
         unitId ||
         trackingNo ||
@@ -555,7 +572,8 @@ const parcelManagementController = {
         projectId ||
         buildingPhaseId ||
         createdDateFrom ||
-        createdDateTo
+        createdDateTo ||
+        tenantName
       ) {
         try {
           [total, rows] = await Promise.all([
@@ -614,7 +632,10 @@ const parcelManagementController = {
                   qb.where("property_units.id", unitId);
                 }
                 if (trackingNo) {
-                  console.log("Tracking Number1",trackingNo)
+                  console.log(
+                    "Tracking Number1",
+                    trackingNo
+                  );
                   qb.where(
                     "parcel_management.trackingNumber",
                     trackingNo
@@ -692,8 +713,14 @@ const parcelManagementController = {
                     [fromNewDate, toNewDate]
                   );
                 }
+                if (tenantName) {
+                  qb.where(
+                    "parcel_management.id",
+                    parcelId.parcelId
+                  );
+                }
               })
-              .where((qb)=>{
+              .where((qb) => {
                 qb.where("parcel_user_non_tis.type", 2);
                 qb.orWhere(
                   "parcel_user_non_tis.type",
@@ -865,8 +892,16 @@ const parcelManagementController = {
                     [fromNewDate, toNewDate]
                   );
                 }
+                if (tenantName) {
+                  if (tenantName) {
+                    qb.where(
+                      "parcel_management.id",
+                      parcelId.parcelId
+                    );
+                  }
+                }
               })
-              .where((qb)=>{
+              .where((qb) => {
                 qb.where("parcel_user_non_tis.type", 2);
                 qb.orWhere(
                   "parcel_user_non_tis.type",
@@ -892,6 +927,15 @@ const parcelManagementController = {
                 parcelId: pd.id,
                 type: 1,
               });
+            // .where((qb)=>{
+            //   if(tenantName){
+            //     qb.where(
+            //       "parcel_user_non_tis.name",
+            //       "iLIKE",
+            //       `%${tenantName}%`
+            //     )
+            //   }
+            // });
 
             return { ...pd, tenantData };
           });
@@ -1157,10 +1201,37 @@ const parcelManagementController = {
         trackingNumber,
         id,
         parcelId,
+        tenantName,
+        createdDateFrom,
+        createdDateTo,
       } = req.body;
 
+      let parcel;
 
-      
+      let createDateFrom = moment(createdDateFrom)
+        .startOf("date")
+        .format();
+      let createDateTo = moment(createdDateTo)
+        .endOf("date", "days")
+        .format();
+
+      let fromNewDate = new Date(createDateFrom).getTime();
+      let toNewDate = new Date(createDateTo).getTime();
+
+      if (tenantName) {
+        parcel = await knex("parcel_user_non_tis")
+          .select("parcel_user_non_tis.parcelId")
+          .where(
+            "parcel_user_non_tis.name",
+            "iLIKE",
+            `%${tenantName}%`
+          )
+          .where("parcel_user_non_tis.type", 1)
+          .first();
+      }
+
+      console.log("parcel id for tenant", parcelId);
+
       // const accessibleProjects = req.userProjectResources[0].projects;
 
       // console.log('Project For pickup Parcel 2:', accessibleProjects);
@@ -1171,7 +1242,8 @@ const parcelManagementController = {
         buildingPhaseId ||
         trackingNumber ||
         id ||
-        parcelId
+        parcelId ||
+        tenantName
       ) {
         try {
           let parcelType;
@@ -1266,9 +1338,14 @@ const parcelManagementController = {
                     buildingPhaseId
                   );
                 }
+                if (tenantName) {
+                  qb.where(
+                    "parcel_management.id",
+                    parcel.parcelId
+                  );
+                }
                 if (parcelUserData) {
-
-                  console.log("parcel and unit id")
+                  console.log("parcel and unit id");
                   qb.where({
                     "property_units.unitNumber": id,
                     "parcel_management.pickedUpType":
@@ -1278,11 +1355,23 @@ const parcelManagementController = {
                     // "parcel_user_tis.unitId":
                     //   parcelUserData[0].unitId,
                   });
-                  qb.where("users.id",parcelUserData[0].tenantId)
-                  qb.where("property_units.id", parcelUserData[0].unitId)
+                  qb.where(
+                    "users.id",
+                    parcelUserData[0].tenantId
+                  );
+                  qb.where(
+                    "property_units.id",
+                    parcelUserData[0].unitId
+                  );
+                }
+                if (createdDateFrom && createdDateTo) {
+                  qb.whereBetween(
+                    "parcel_management.createdAt",
+                    [fromNewDate, toNewDate]
+                  );
                 }
               })
-              .where((qb)=>{
+              .where((qb) => {
                 qb.where("parcel_user_non_tis.type", 2);
                 qb.orWhere(
                   "parcel_user_non_tis.type",
@@ -1383,9 +1472,17 @@ const parcelManagementController = {
                     buildingPhaseId
                   );
                 }
+                if (tenantName) {
+                  qb.where(
+                    "parcel_management.id",
+                    parcel.parcelId
+                  );
+                }
                 if (parcelUserData) {
-
-                  console.log("parcel user data1",parcelUserData)
+                  console.log(
+                    "parcel user data1",
+                    parcelUserData
+                  );
                   qb.where({
                     // "property_units.unitNumber": id,
                     "parcel_management.pickedUpType":
@@ -1395,11 +1492,23 @@ const parcelManagementController = {
                     // "parcel_user_tis.unitId":
                     //   parcelUserData[0].unitId,
                   });
-                  qb.where("users.id",parcelUserData[0].tenantId)
-                  qb.where("property_units.id", parcelUserData[0].unitId)
+                  qb.where(
+                    "users.id",
+                    parcelUserData[0].tenantId
+                  );
+                  qb.where(
+                    "property_units.id",
+                    parcelUserData[0].unitId
+                  );
+                }
+                if (createdDateFrom && createdDateTo) {
+                  qb.whereBetween(
+                    "parcel_management.createdAt",
+                    [fromNewDate, toNewDate]
+                  );
                 }
               })
-              .where((qb)=>{
+              .where((qb) => {
                 qb.where("parcel_user_non_tis.type", 2);
                 qb.orWhere(
                   "parcel_user_non_tis.type",
