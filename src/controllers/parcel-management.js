@@ -614,6 +614,7 @@ const parcelManagementController = {
                   qb.where("property_units.id", unitId);
                 }
                 if (trackingNo) {
+                  console.log("Tracking Number1",trackingNo)
                   qb.where(
                     "parcel_management.trackingNumber",
                     trackingNo
@@ -692,6 +693,13 @@ const parcelManagementController = {
                   );
                 }
               })
+              .where((qb)=>{
+                qb.where("parcel_user_non_tis.type", 2);
+                qb.orWhere(
+                  "parcel_user_non_tis.type",
+                  null
+                );
+              })
               .groupBy([
                 "parcel_management.id",
                 "property_units.id",
@@ -764,11 +772,11 @@ const parcelManagementController = {
                 null
               )
               .where((qb) => {
-                qb.where("parcel_user_non_tis.type", 2);
-                qb.orWhere(
-                  "parcel_user_non_tis.type",
-                  null
-                );
+                // qb.where("parcel_user_non_tis.type", 2);
+                // qb.orWhere(
+                //   "parcel_user_non_tis.type",
+                //   null
+                // );
                 if (unitId) {
                   qb.where("property_units.id", unitId);
                 }
@@ -857,6 +865,13 @@ const parcelManagementController = {
                     [fromNewDate, toNewDate]
                   );
                 }
+              })
+              .where((qb)=>{
+                qb.where("parcel_user_non_tis.type", 2);
+                qb.orWhere(
+                  "parcel_user_non_tis.type",
+                  null
+                );
               })
               .orderBy(
                 "parcel_management.createdAt",
