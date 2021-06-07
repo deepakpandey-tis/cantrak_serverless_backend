@@ -561,7 +561,7 @@ const parcelManagementController = {
           .first();
       }
 
-      console.log("parcel id for tenant", parcelId);
+      // console.log("parcel id for tenant", parcelId);
 
       if (
         unitId ||
@@ -713,7 +713,7 @@ const parcelManagementController = {
                     [fromNewDate, toNewDate]
                   );
                 }
-                if (tenantName) {
+                if (tenantName && parcelId) {
                   qb.where(
                     "parcel_management.id",
                     parcelId.parcelId
@@ -892,14 +892,14 @@ const parcelManagementController = {
                     [fromNewDate, toNewDate]
                   );
                 }
-                if (tenantName) {
-                  if (tenantName) {
+                // if (tenantName) {
+                  if (tenantName && parcelId) {
                     qb.where(
                       "parcel_management.id",
                       parcelId.parcelId
                     );
                   }
-                }
+                // }
               })
               .where((qb) => {
                 qb.where("parcel_user_non_tis.type", 2);
@@ -1243,7 +1243,9 @@ const parcelManagementController = {
         trackingNumber ||
         id ||
         parcelId ||
-        tenantName
+        tenantName ||
+        createdDateFrom ||
+        createdDateTo
       ) {
         try {
           let parcelType;
@@ -1338,7 +1340,7 @@ const parcelManagementController = {
                     buildingPhaseId
                   );
                 }
-                if (tenantName) {
+                if (tenantName && parcel) { 
                   qb.where(
                     "parcel_management.id",
                     parcel.parcelId
@@ -1472,7 +1474,7 @@ const parcelManagementController = {
                     buildingPhaseId
                   );
                 }
-                if (tenantName) {
+                if (tenantName && parcel) {
                   qb.where(
                     "parcel_management.id",
                     parcel.parcelId
