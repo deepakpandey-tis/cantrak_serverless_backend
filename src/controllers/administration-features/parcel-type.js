@@ -87,7 +87,7 @@ const parcelTypeController = {
     try {
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
-        sortPayload.sortBy = "parcelType";
+        sortPayload.sortBy = "id";
         sortPayload.orderBy = "asc";
       }
 
@@ -110,11 +110,23 @@ const parcelTypeController = {
             "users.id",
             "parcel_type.createdBy"
           )
-          .where({ "parcel_type.orgId": req.orgId })
+          // .where({ "parcel_type.orgId": req.orgId })
+          .where((qb) => {
+            qb.where("parcel_type.orgId", req.orgId);
+            qb.orWhere("parcel_type.orgId", null);
+          })
           .where((qb) => {
             if (searchValue) {
-              qb.where("parcel_type.parcelType", "iLIKE", `%${searchValue}%`);
-              qb.orWhere("parcel_type.description", "iLIKE", `%${searchValue}%`);
+              qb.where(
+                "parcel_type.parcelType",
+                "iLIKE",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "parcel_type.description",
+                "iLIKE",
+                `%${searchValue}%`
+              );
             }
           })
           .first(),
@@ -125,7 +137,7 @@ const parcelTypeController = {
             "users.id",
             "parcel_type.createdBy"
           )
-          .where({ "parcel_type.orgId": req.orgId })
+          // .where({ "parcel_type.orgId": req.orgId })
           .select([
             "parcel_type.id",
             "parcel_type.parcelType",
@@ -133,11 +145,24 @@ const parcelTypeController = {
             "users.name as createdBy",
             "parcel_type.createdAt",
             "parcel_type.isActive as status",
+            "parcel_type.orgId"
           ])
           .where((qb) => {
+            qb.where("parcel_type.orgId", req.orgId);
+            qb.orWhere("parcel_type.orgId", null);
+          })
+          .where((qb) => {
             if (searchValue) {
-              qb.where("parcel_type.parcelType", "iLIKE", `%${searchValue}%`);
-              qb.orWhere("parcel_type.description", "iLIKE", `%${searchValue}%`);
+              qb.where(
+                "parcel_type.parcelType",
+                "iLIKE",
+                `%${searchValue}%`
+              );
+              qb.orWhere(
+                "parcel_type.description",
+                "iLIKE",
+                `%${searchValue}%`
+              );
             }
           })
           .orderBy(sortPayload.sortBy, sortPayload.orderBy)
@@ -390,7 +415,12 @@ const parcelTypeController = {
         err
       );
       res.status(500).json({
-        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
       });
     }
   },

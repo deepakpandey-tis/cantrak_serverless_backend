@@ -118,4 +118,12 @@ router.post(
   parcelManagementController.getBuildingPhaseListForParcel
 )
 
+router.get(
+  "/get-parcel-type",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isParcelManagementAccessible,
+  parcelManagementController.getParcelType
+)
+
 module.exports = router;

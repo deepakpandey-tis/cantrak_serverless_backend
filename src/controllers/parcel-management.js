@@ -893,12 +893,12 @@ const parcelManagementController = {
                   );
                 }
                 // if (tenantName) {
-                  if (tenantName && parcelId) {
-                    qb.where(
-                      "parcel_management.id",
-                      parcelId.parcelId
-                    );
-                  }
+                if (tenantName && parcelId) {
+                  qb.where(
+                    "parcel_management.id",
+                    parcelId.parcelId
+                  );
+                }
                 // }
               })
               .where((qb) => {
@@ -1340,7 +1340,7 @@ const parcelManagementController = {
                     buildingPhaseId
                   );
                 }
-                if (tenantName && parcel) { 
+                if (tenantName && parcel) {
                   qb.where(
                     "parcel_management.id",
                     parcel.parcelId
@@ -2011,6 +2011,11 @@ const parcelManagementController = {
             "parcel_management.carrierId",
             "courier.id"
           )
+          .leftJoin(
+            "parcel_type",
+            "parcel_management.parcelType",
+            "parcel_type.id"
+          )
           .select([
             "parcel_management.*",
             "parcel_user_tis.*",
@@ -2032,6 +2037,7 @@ const parcelManagementController = {
             "property_units.unitNumber",
             "courier.courierName",
             "parcel_management.barcode",
+            "parcel_type.parcelType as pType"
           ])
           // .where("parcel_user_non_tis.type",2)
           // .orWhere("parcel_user_non_tis.type",null)
@@ -2865,6 +2871,46 @@ const parcelManagementController = {
         err
       );
       //trx.rollback
+      res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
+  getParcelType: async (req, res) => {
+    try {
+      let parcelTypeList;
+
+      parcelTypeList = await knex
+        .from("parcel_type")
+        .select([
+          "parcel_type.id",
+          "parcel_type.parcelType",
+          "parcel_type.description",
+        ])
+        .where({
+          // orgId: req.orgId,
+          isActive: true,
+        })
+        .where((qb)=>{
+          qb.where("orgId",req.orgId)
+          qb.orWhere("orgId",null)
+        });
+
+      return res.status(200).json({
+        data: parcelTypeList,
+        message: "Parcel Type list",
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][Parcel][Parcel Type] :  Error",
+        err
+      );
       res.status(500).json({
         errors: [
           {
