@@ -799,11 +799,6 @@ const parcelManagementController = {
                 null
               )
               .where((qb) => {
-                // qb.where("parcel_user_non_tis.type", 2);
-                // qb.orWhere(
-                //   "parcel_user_non_tis.type",
-                //   null
-                // );
                 if (unitId) {
                   qb.where("property_units.id", unitId);
                 }
@@ -820,9 +815,6 @@ const parcelManagementController = {
                 if (tenantId) {
                   qb.where("users.id", tenantId);
                 }
-                // if (status) {
-                //   qb.where("parcel_management.parcelStatus", status);
-                // }
                 if (status) {
                   console.log("value of status", status);
                   if (status == 1) {
@@ -927,15 +919,6 @@ const parcelManagementController = {
                 parcelId: pd.id,
                 type: 1,
               });
-            // .where((qb)=>{
-            //   if(tenantName){
-            //     qb.where(
-            //       "parcel_user_non_tis.name",
-            //       "iLIKE",
-            //       `%${tenantName}%`
-            //     )
-            //   }
-            // });
 
             return { ...pd, tenantData };
           });
@@ -1088,8 +1071,6 @@ const parcelManagementController = {
               "parcel_management.displayId",
             ])
             .where("parcel_management.orgId", req.orgId)
-            // .where("parcel_user_non_tis.type", 2)
-            // .orWhere("parcel_user_non_tis.type", null)
             .whereIn("projects.id", projectIds)
             .whereNot(
               "parcel_management.pickedUpType",
@@ -2037,7 +2018,7 @@ const parcelManagementController = {
             "property_units.unitNumber",
             "courier.courierName",
             "parcel_management.barcode",
-            "parcel_type.parcelType as pType"
+            "parcel_type.parcelType as pType",
           ])
           // .where("parcel_user_non_tis.type",2)
           // .orWhere("parcel_user_non_tis.type",null)
@@ -2737,18 +2718,18 @@ const parcelManagementController = {
       projectsForPracel = projectsForPracel.find(
         (pfp) => pfp.id == 10
       );
-      console.log("Project For Parcel:", projectsForPracel);
+      // console.log("Project For Parcel:", projectsForPracel);
       let accessibleProjects = projectsForPracel.projects;
-      console.log(
-        "Project For Parcel:",
-        accessibleProjects
-      );
+      // console.log(
+      //   "Project For Parcel:",
+      //   accessibleProjects
+      // );
       projectIds = _.uniqBy(accessibleProjects);
-      console.log("ProjectIds:", projectIds);
+      // console.log("ProjectIds:", projectIds);
 
       let payload = req.body;
 
-      console.log("data in payload", payload);
+      // console.log("data in payload", payload);
 
       let units = await knex
         .from("property_units")
@@ -2897,9 +2878,9 @@ const parcelManagementController = {
           // orgId: req.orgId,
           isActive: true,
         })
-        .where((qb)=>{
-          qb.where("orgId",req.orgId)
-          qb.orWhere("orgId",null)
+        .where((qb) => {
+          qb.where("orgId", req.orgId);
+          qb.orWhere("orgId", null);
         });
 
       return res.status(200).json({
@@ -2912,6 +2893,653 @@ const parcelManagementController = {
         err
       );
       res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+  getPickedupParcelList: async (req, res) => {
+    try {
+      // let payload = req.body;
+
+      let projectIds = [];
+      projectIds = req.accessibleProjects;
+
+      let reqData = req.query;
+      let total, rows;
+
+      let pagination = {};
+      let per_page = reqData.per_page || 10;
+      let page = reqData.current_page || 1;
+      if (page < 1) page = 1;
+      let offset = (page - 1) * per_page;
+
+      let {
+        unitId,
+        trackingNo,
+        tenantId,
+        status,
+        companyId,
+        projectId,
+        buildingPhaseId,
+        createdDateFrom,
+        createdDateTo,
+        tenantName,
+      } = req.body;
+
+      let createDateFrom = moment(createdDateFrom)
+        .startOf("date")
+        .format();
+      let createDateTo = moment(createdDateTo)
+        .endOf("date", "days")
+        .format();
+
+      let fromNewDate = new Date(createDateFrom).getTime();
+      let toNewDate = new Date(createDateTo).getTime();
+
+      let parcelId;
+
+      if (tenantName) {
+        parcelId = await knex("parcel_user_non_tis")
+          .select("parcel_user_non_tis.parcelId")
+          .where(
+            "parcel_user_non_tis.name",
+            "iLIKE",
+            `%${tenantName}%`
+          )
+          .where("parcel_user_non_tis.type", 1)
+          .first();
+      }
+
+      if (
+        unitId ||
+        trackingNo ||
+        tenantId ||
+        status ||
+        companyId ||
+        projectId ||
+        buildingPhaseId ||
+        createdDateFrom ||
+        createdDateTo ||
+        tenantName
+      ) {
+        try {
+          [total, rows] = await Promise.all([
+            knex
+              .count("* as count")
+              .from("parcel_management")
+              .leftJoin(
+                "parcel_user_tis",
+                "parcel_management.id",
+                "parcel_user_tis.parcelId"
+              )
+              .leftJoin(
+                "parcel_user_non_tis",
+                "parcel_management.id",
+                "parcel_user_non_tis.parcelId"
+              )
+              .leftJoin(
+                "property_units",
+                "parcel_user_tis.unitId",
+                "property_units.id"
+              )
+              .leftJoin(
+                "users",
+                "parcel_user_tis.tenantId",
+                "users.id"
+              )
+              .leftJoin(
+                "companies",
+                "parcel_user_tis.companyId",
+                "companies.id"
+              )
+              .leftJoin(
+                "projects",
+                "parcel_user_tis.projectId",
+                "projects.id"
+              )
+              .leftJoin(
+                "buildings_and_phases",
+                "parcel_user_tis.buildingPhaseId",
+                "buildings_and_phases.id"
+              )
+              .where("parcel_management.orgId", req.orgId)
+              .whereIn("projects.id", projectIds)
+              .whereNot(
+                "parcel_management.pickedUpType",
+                null
+              )
+              .whereNot("parcel_management.parcelStatus",1)
+              .where((qb) => {
+                qb.where("parcel_user_non_tis.type", 2);
+                qb.orWhere(
+                  "parcel_user_non_tis.type",
+                  null
+                );
+                if (unitId) {
+                  qb.where("property_units.id", unitId);
+                }
+                if (trackingNo) {
+                  console.log(
+                    "Tracking Number1",
+                    trackingNo
+                  );
+                  qb.where(
+                    "parcel_management.trackingNumber",
+                    trackingNo
+                  );
+                }
+                if (tenantId) {
+                  qb.where("users.id", tenantId);
+                }
+                if (status) {
+                  if (status == 1) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 1,
+                      "parcel_management.pickedUpType": 1,
+                    });
+                  }
+                  if (status == 2) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 2,
+                      "parcel_management.pickedUpType": 1,
+                    });
+                  }
+                  if (status == 6) {
+                    console.log("value 6", status);
+                    qb.where({
+                      "parcel_management.parcelStatus": 1,
+                      "parcel_management.pickedUpType": 2,
+                    });
+                  }
+                  if (status == 7) {
+                    console.log("value 7", status);
+                    qb.where({
+                      "parcel_management.parcelStatus": 2,
+                      "parcel_management.pickedUpType": 2,
+                    });
+                  }
+                  if (status == 3) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 3,
+                    });
+                  }
+                  if (status == 4) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 4,
+                    });
+                  }
+                  if (status == 5) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 5,
+                    });
+                  }
+                }
+                if (companyId) {
+                  console.log("company id", companyId);
+                  qb.where(
+                    "parcel_user_tis.companyId",
+                    companyId
+                  );
+                }
+                if (projectId) {
+                  qb.where(
+                    "parcel_user_tis.projectId",
+                    projectId
+                  );
+                }
+                if (buildingPhaseId) {
+                  qb.where(
+                    "parcel_user_tis.buildingPhaseId",
+                    buildingPhaseId
+                  );
+                }
+                if (createdDateFrom && createdDateTo) {
+                  qb.whereBetween(
+                    "parcel_management.createdAt",
+                    [fromNewDate, toNewDate]
+                  );
+                }
+                if (tenantName && parcelId) {
+                  qb.where(
+                    "parcel_management.id",
+                    parcelId.parcelId
+                  );
+                }
+              })
+              .where((qb) => {
+                qb.where("parcel_user_non_tis.type", 2);
+                qb.orWhere(
+                  "parcel_user_non_tis.type",
+                  null
+                );
+              })
+              .groupBy([
+                "parcel_management.id",
+                "property_units.id",
+                "users.id",
+                "parcel_user_tis.unitId",
+              ]),
+            // .first(),
+            knex
+              .from("parcel_management")
+              .leftJoin(
+                "parcel_user_tis",
+                "parcel_management.id",
+                "parcel_user_tis.parcelId"
+              )
+              .leftJoin(
+                "parcel_user_non_tis",
+                "parcel_management.id",
+                "parcel_user_non_tis.parcelId"
+              )
+              .leftJoin(
+                "property_units",
+                "parcel_user_tis.unitId",
+                "property_units.id"
+              )
+              .leftJoin(
+                "users",
+                "parcel_user_tis.tenantId",
+                "users.id"
+              )
+              .leftJoin(
+                "companies",
+                "parcel_user_tis.companyId",
+                "companies.id"
+              )
+              .leftJoin(
+                "projects",
+                "parcel_user_tis.projectId",
+                "projects.id"
+              )
+              .leftJoin(
+                "buildings_and_phases",
+                "parcel_user_tis.buildingPhaseId",
+                "buildings_and_phases.id"
+              )
+              .select([
+                "parcel_management.id",
+                "parcel_user_tis.unitId",
+                "property_units.unitNumber",
+                "parcel_user_tis.parcelId",
+                "parcel_management.trackingNumber",
+                "parcel_management.parcelStatus",
+                "users.name as tenant",
+                "parcel_management.createdAt",
+                "parcel_management.pickedUpType",
+                "parcel_management.pickedUpAt",
+                "parcel_management.receivedDate",
+                "buildings_and_phases.buildingPhaseCode",
+                "buildings_and_phases.description",
+                "parcel_user_non_tis.name",
+                "parcel_management.updatedAt",
+                "parcel_management.description as remarks",
+                "parcel_management.displayId",
+              ])
+              .where("parcel_management.orgId", req.orgId)
+              .whereIn("projects.id", projectIds)
+              .whereNot(
+                "parcel_management.pickedUpType",
+                null
+              )
+              .whereNot("parcel_management.parcelStatus",1)
+              .where((qb) => {
+                if (unitId) {
+                  qb.where("property_units.id", unitId);
+                }
+                if (trackingNo) {
+                  console.log(
+                    "tracking number",
+                    trackingNo
+                  );
+                  qb.where(
+                    "parcel_management.trackingNumber",
+                    trackingNo
+                  );
+                }
+                if (tenantId) {
+                  qb.where("users.id", tenantId);
+                }
+                if (status) {
+                  console.log("value of status", status);
+                  if (status == 1) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 1,
+                      "parcel_management.pickedUpType": 1,
+                    });
+                  }
+                  if (status == 2) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 2,
+                      "parcel_management.pickedUpType": 1,
+                    });
+                  }
+                  if (status == 6) {
+                    console.log("value 6", status);
+                    qb.where({
+                      "parcel_management.parcelStatus": 1,
+                      "parcel_management.pickedUpType": 2,
+                    });
+                  }
+                  if (status == 7) {
+                    console.log("value 7", status);
+                    qb.where({
+                      "parcel_management.parcelStatus": 2,
+                      "parcel_management.pickedUpType": 2,
+                    });
+                  }
+                  if (status == 3) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 3,
+                    });
+                  }
+                  if (status == 4) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 4,
+                    });
+                  }
+                  if (status == 5) {
+                    qb.where({
+                      "parcel_management.parcelStatus": 5,
+                    });
+                  }
+                }
+                if (companyId) {
+                  console.log("company id", companyId);
+                  qb.where(
+                    "parcel_user_tis.companyId",
+                    companyId
+                  );
+                }
+                if (projectId) {
+                  qb.where(
+                    "parcel_user_tis.projectId",
+                    projectId
+                  );
+                }
+                if (buildingPhaseId) {
+                  qb.where(
+                    "parcel_user_tis.buildingPhaseId",
+                    buildingPhaseId
+                  );
+                }
+                if (createdDateFrom && createdDateTo) {
+                  qb.whereBetween(
+                    "parcel_management.createdAt",
+                    [fromNewDate, toNewDate]
+                  );
+                }
+                if (tenantName && parcelId) {
+                  qb.where(
+                    "parcel_management.id",
+                    parcelId.parcelId
+                  );
+                }
+              })
+              .where((qb) => {
+                qb.where("parcel_user_non_tis.type", 2);
+                qb.orWhere(
+                  "parcel_user_non_tis.type",
+                  null
+                );
+              })
+              .orderBy(
+                "parcel_management.createdAt",
+                "desc"
+              )
+              .offset(offset)
+              .limit(per_page),
+          ]);
+          // console.log("rows", rows);
+
+          const Parallel = require("async-parallel");
+
+          rows = await Parallel.map(rows, async (pd) => {
+            let tenantData = await knex
+              .from("parcel_user_non_tis")
+              .select("*")
+              .where({
+                parcelId: pd.id,
+                type: 1,
+              });
+            return { ...pd, tenantData };
+          });
+          rows = await Parallel.map(rows, async (pd) => {
+            let imageResult = await knex
+              .from("images")
+              .select("s3Url", "title", "name")
+              .where({
+                entityId: pd.id,
+                entityType: "parcel_management",
+                // orgId: req.orgId,
+              })
+              .first();
+            return {
+              ...pd,
+              uploadedImages: imageResult,
+            };
+          });
+
+          let count = total.length;
+
+          pagination.total = count;
+          pagination.per_page = per_page;
+          pagination.offset = offset;
+          pagination.to = offset + rows.length;
+          pagination.last_page = Math.ceil(
+            count / per_page
+          );
+          pagination.current_page = page;
+          pagination.from = offset;
+          pagination.data = rows;
+        } catch (err) {
+          console.log(
+            "[controllers][parcel_management][list] :  Error",
+            err
+          );
+        }
+      } else {
+        [total, rows] = await Promise.all([
+          knex
+            .count("* as count")
+            .from("parcel_management")
+            .leftJoin(
+              "parcel_user_tis",
+              "parcel_management.id",
+              "parcel_user_tis.parcelId"
+            )
+            .leftJoin(
+              "parcel_user_non_tis",
+              "parcel_management.id",
+              "parcel_user_non_tis.parcelId"
+            )
+            .leftJoin(
+              "property_units",
+              "parcel_user_tis.unitId",
+              "property_units.id"
+            )
+            .leftJoin(
+              "users",
+              "parcel_user_tis.tenantId",
+              "users.id"
+            )
+            .leftJoin(
+              "companies",
+              "parcel_user_tis.companyId",
+              "companies.id"
+            )
+            .leftJoin(
+              "projects",
+              "parcel_user_tis.projectId",
+              "projects.id"
+            )
+            .leftJoin(
+              "buildings_and_phases",
+              "parcel_user_tis.buildingPhaseId",
+              "buildings_and_phases.id"
+            )
+            // .leftJoin("images", "parcel_management.id", "images.entityId")
+            .where("parcel_management.orgId", req.orgId)
+            .whereNot(
+              "parcel_management.pickedUpType",
+              null
+            )
+            .whereNot("parcel_management.parcelStatus",1)
+            .whereIn("projects.id", projectIds)
+            .where((qb) => {
+              qb.where("parcel_user_non_tis.type", 2);
+              qb.orWhere("parcel_user_non_tis.type", null);
+            })
+            .groupBy([
+              "parcel_management.id",
+              "property_units.id",
+              "users.id",
+            ]),
+          knex
+            .from("parcel_management")
+            .leftJoin(
+              "parcel_user_tis",
+              "parcel_management.id",
+              "parcel_user_tis.parcelId"
+            )
+            .leftJoin(
+              "parcel_user_non_tis",
+              "parcel_management.id",
+              "parcel_user_non_tis.parcelId"
+            )
+            .leftJoin(
+              "property_units",
+              "parcel_user_tis.unitId",
+              "property_units.id"
+            )
+            .leftJoin(
+              "users",
+              "parcel_user_tis.tenantId",
+              "users.id"
+            )
+            .leftJoin(
+              "companies",
+              "parcel_user_tis.companyId",
+              "companies.id"
+            )
+            .leftJoin(
+              "projects",
+              "parcel_user_tis.projectId",
+              "projects.id"
+            )
+            .leftJoin(
+              "buildings_and_phases",
+              "parcel_user_tis.buildingPhaseId",
+              "buildings_and_phases.id"
+            )
+            .leftJoin(
+              "images",
+              "parcel_management.id",
+              "images.entityId"
+            )
+            .select([
+              "parcel_management.id",
+              "parcel_user_tis.unitId",
+              "property_units.unitNumber",
+              "parcel_user_tis.parcelId",
+              "parcel_management.trackingNumber",
+              "parcel_management.parcelStatus",
+              "users.name as tenant",
+              "parcel_management.createdAt",
+              "parcel_management.pickedUpType",
+              "parcel_management.pickedUpAt",
+              "parcel_management.receivedDate",
+              "buildings_and_phases.buildingPhaseCode",
+              "buildings_and_phases.description",
+              "parcel_user_non_tis.name",
+              "parcel_management.updatedAt",
+              "parcel_management.description as remarks",
+              "parcel_management.displayId",
+            ])
+            .where("parcel_management.orgId", req.orgId)
+            .whereIn("projects.id", projectIds)
+            .whereNot(
+              "parcel_management.pickedUpType",
+              null
+            )
+            .whereNot("parcel_management.parcelStatus",1)
+            .where((qb) => {
+              qb.where("parcel_user_non_tis.type", 2);
+              qb.orWhere("parcel_user_non_tis.type", null);
+            })
+            .groupBy([
+              "parcel_management.id",
+              "property_units.id",
+              "users.id",
+              "parcel_user_tis.unitId",
+              "parcel_user_tis.parcelId",
+              "buildings_and_phases.buildingPhaseCode",
+              "buildings_and_phases.description",
+              "parcel_user_non_tis.name",
+              // "images.s3Url"
+            ])
+            .orderBy("parcel_management.createdAt", "desc")
+            .offset(offset)
+            .limit(per_page),
+        ]);
+        // console.log("rows", rows);
+        const Parallel = require("async-parallel");
+        rows = await Parallel.map(rows, async (pd) => {
+          let tenantData = await knex
+            .from("parcel_user_non_tis")
+            .select("*")
+            .where({
+              parcelId: pd.id,
+              type: 1,
+            });
+
+          return { ...pd, tenantData };
+        });
+        rows = await Parallel.map(rows, async (pd) => {
+          let imageResult = await knex
+            .from("images")
+            .select("s3Url", "title", "name")
+            .where({
+              entityId: pd.id,
+              entityType: "parcel_management",
+              // orgId: req.orgId,
+            })
+            .first();
+          return {
+            ...pd,
+            uploadedImages: imageResult,
+          };
+        });
+
+        let count = total.length;
+
+        pagination.total = count;
+        pagination.per_page = per_page;
+        pagination.offset = offset;
+        pagination.to = offset + rows.length;
+        pagination.last_page = Math.ceil(count / per_page);
+        pagination.current_page = page;
+        pagination.from = offset;
+        pagination.data = rows;
+      }
+
+      return res.status(200).json({
+        data: {
+          parcel: pagination,
+        },
+        message: "parcel List!",
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][parcel_management][list] :  Error",
+        err
+      );
+      return res.status(500).json({
         errors: [
           {
             code: "UNKNOWN_SERVER_ERROR",
