@@ -1225,8 +1225,8 @@ const parcelManagementController = {
         id ||
         parcelId ||
         tenantName ||
-        createdDateFrom ||
-        createdDateTo
+       ( createdDateFrom &&
+        createdDateTo)
       ) {
         try {
           let parcelType;
