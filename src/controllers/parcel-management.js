@@ -1834,8 +1834,8 @@ const parcelManagementController = {
         id ||
         parcelId ||
         tenantName ||
-        createdDateFrom ||
-        createdDateTo
+       ( createdDateFrom &&
+        createdDateTo)
       ) {
         try {
           let parcelType;
@@ -1942,10 +1942,7 @@ const parcelManagementController = {
                     "property_units.unitNumber": id,
                     "parcel_management.pickedUpType":
                       parcelType[0].pickedUpType,
-                    // "parcel_user_tis.tenantId":
-                    //   parcelUserData[0].tenantId,
-                    // "parcel_user_tis.unitId":
-                    //   parcelUserData[0].unitId,
+                    
                   });
                   qb.where(
                     "users.id",
@@ -2029,6 +2026,7 @@ const parcelManagementController = {
                 "property_units.unitNumber",
                 "parcel_management.description as remarks",
                 "parcel_management.displayId",
+                "parcel_management.qrCode"
               ])
               .where("parcel_management.orgId", req.orgId)
               .where("parcel_management.parcelStatus", 1)
@@ -2038,11 +2036,7 @@ const parcelManagementController = {
                 null
               )
               .where((qb) => {
-                // qb.where("parcel_user_non_tis.type", 2);
-                // qb.orWhere(
-                //   "parcel_user_non_tis.type",
-                //   null
-                // );
+                
                 if (unitId) {
                   qb.where(
                     "property_units.unitNumber",
@@ -2076,13 +2070,8 @@ const parcelManagementController = {
                     parcelUserData
                   );
                   qb.where({
-                    // "property_units.unitNumber": id,
                     "parcel_management.pickedUpType":
-                      parcelType[0].pickedUpType,
-                    // "parcel_user_tis.tenantId":
-                    //   parcelUserData[0].tenantId,
-                    // "parcel_user_tis.unitId":
-                    //   parcelUserData[0].unitId,
+                      parcelType[0].pickedUpType,    
                   });
                   qb.where(
                     "users.id",
@@ -2356,6 +2345,7 @@ const parcelManagementController = {
               "property_units.unitNumber",
               "parcel_management.description as remarks",
               "parcel_management.displayId",
+              "parcel_management.qrCode"
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
