@@ -10,6 +10,9 @@ const QRCODE = require("qrcode");
 
 const knex = require("../db/knex");
 
+
+const redisHelper = require("../helpers/redis");
+
 const fs = require("fs");
 const https = require("https");
 const { whereIn, select } = require("../db/knex");
@@ -2475,6 +2478,10 @@ const parcelManagementController = {
         };
       });
 
+      let votingDocDownloadUrl = await redisHelper.getValue(
+        `parcel-1-docs-link`
+      );
+
       // console.log("total count",total)
       return res.status(200).json({
         data: {
@@ -2485,6 +2492,7 @@ const parcelManagementController = {
           nextPage:
             total.length > page * perPage ? page + 1 : null,
         },
+        votingDocDownloadUrl,
         message: "parcel List!",
       });
     } catch (err) {
