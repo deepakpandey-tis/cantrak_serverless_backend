@@ -29,6 +29,14 @@ router.get(
 );
 
 router.post(
+  "/generate-pdf-of-parcel-list",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isParcelManagementAccessible,
+  parcelManageController.generatePdfOfParcelDocument
+);
+
+router.post(
   "/get-parcel-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -116,7 +124,7 @@ router.post(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isParcelManagementAccessible,
   parcelManagementController.getBuildingPhaseListForParcel
-)
+);
 
 router.get(
   "/get-parcel-type",
@@ -124,6 +132,14 @@ router.get(
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isParcelManagementAccessible,
   parcelManagementController.getParcelType
-)
+);
+
+router.post(
+  "/get-pickeup-parcel",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isParcelManagementAccessible,
+  parcelManagementController.getPickedupParcelList
+);
 
 module.exports = router;
