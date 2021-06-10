@@ -592,8 +592,8 @@ const parcelManagementController = {
         id ||
         parcelId ||
         tenantName ||
-        createdDateFrom ||
-        createdDateTo
+        ( createdDateFrom &&
+          createdDateTo)
       ) {
         try {
           let parcelType;
@@ -774,6 +774,7 @@ const parcelManagementController = {
 
               .select([
                 "parcel_management.id",
+                "parcel_management.orgId",
                 "parcel_user_tis.unitId",
                 "parcel_management.trackingNumber",
                 "parcel_management.parcelStatus",
@@ -787,6 +788,7 @@ const parcelManagementController = {
                 "property_units.unitNumber",
                 "parcel_management.description as remarks",
                 "parcel_management.displayId",
+                "parcel_management.qrCode"
               ])
               .where("parcel_management.orgId", req.orgId)
               .where("parcel_management.parcelStatus", 1)
@@ -989,6 +991,7 @@ const parcelManagementController = {
             .select([
               "parcel_management.id",
               "parcel_user_tis.unitId",
+              "parcel_management.orgId",
               "parcel_management.trackingNumber",
               "parcel_management.parcelStatus",
               "users.name as tenant",
@@ -1001,6 +1004,7 @@ const parcelManagementController = {
               "property_units.unitNumber",
               "parcel_management.description as remarks",
               "parcel_management.displayId",
+              "parcel_management.qrCode"
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
@@ -1090,19 +1094,17 @@ const parcelManagementController = {
         parcelListData
       );
 
-      // const queueHelper = require("../helpers/queue");
-      // await queueHelper.addToQueue(
-      //   {
-      //     agmId: agmId,
-      //     data: {
-      //       agmDetails,
-      //     },
-      //     orgId: req.orgId,
-      //     requestedBy: req.me,
-      //   },
-      //   "long-jobs",
-      //   "AGM_PREPARE_VOTING_DOCUMENT"
-      // );
+      const queueHelper = require("../helpers/queue");
+      await queueHelper.addToQueue(
+        {
+          data: {
+            parcelList: rows,
+          },
+          requestedBy: req.me,
+        },
+        "long-jobs",
+        "PARCEL_PREPARE_PENDING_LIST_DOCUMENT"
+      );
 
       return res.status(200).json({
         data: parcelListData,
