@@ -1109,7 +1109,7 @@ const parcelManagementController = {
       return res.status(200).json({
         data: parcelListData,
         message:
-          "We are preparing Voting Document for this AGM. Please wait for few minutes. Once generated we will notify you via App Notification & Email",
+          "We are preparing Pending Parcel List Document. Please wait for few minutes. Once generated we will notify you via App Notification & Email",
       });
     } catch (err) {
       res.status(500).json({ failed: true, error: err });
