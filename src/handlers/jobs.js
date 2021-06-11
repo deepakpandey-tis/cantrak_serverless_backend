@@ -194,7 +194,7 @@ module.exports.longJobsProcessor = async (event, context) => {
 
     const { data, requestedBy } = recordData;
 
-    if (data.length > 0) {
+    if (data.parcelList.length > 0) {
       // await agmHelper.generateVotingDocument({ agmId, data, orgId, requestedBy });
       await parcelHelper.generateVotingDocumentOnEFSv2({ data, requestedBy });
     } else {
