@@ -118,7 +118,8 @@ const parcelManagementController = {
           parcelPriority: Joi.number()
             .allow(null)
             .optional(),
-          barcode: Joi.string().allow("").optional(),
+          // barcode: Joi.string().allow("").optional(),
+          storage: Joi.string().allow("").optional(),
         });
 
         const result = Joi.validate(payLoad, schema);
@@ -146,9 +147,11 @@ const parcelManagementController = {
           req.body.newParcelId;
 
         const currentTime = new Date().getTime();
+        payLoad = _.omit(payLoad, ["storage"]);
 
         const insertData = {
           ...payLoad,
+          storageLocation: req.body.storage,
           companyId: req.body.org_user_data.companyId,
           qrCode: qrCode,
           orgId: orgId,
@@ -511,7 +514,7 @@ const parcelManagementController = {
     try {
       let projectIds = [];
       projectIds = req.accessibleProjects;
-      // console.log("ProjectIds:", projectIds);
+      // console.log("ProjectIds:", projectIds);T
 
       let reqData = req.query;
       // console.log("requested data parcel", reqData);
@@ -614,6 +617,11 @@ const parcelManagementController = {
                 "buildings_and_phases",
                 "parcel_user_tis.buildingPhaseId",
                 "buildings_and_phases.id"
+              )
+              .leftJoin(
+                "storage",
+                "parcel_management.storageLocation",
+                "storage.id"
               )
               // .leftJoin("images", "parcel_management.id", "images.entityId")
               .where("parcel_management.orgId", req.orgId)
@@ -771,6 +779,11 @@ const parcelManagementController = {
                 "parcel_user_tis.buildingPhaseId",
                 "buildings_and_phases.id"
               )
+              .leftJoin(
+                "storage",
+                "parcel_management.storageLocation",
+                "storage.id"
+              )
               // .leftJoin("images", "parcel_management.id", "images.entityId")
               .select([
                 "parcel_management.id",
@@ -790,6 +803,10 @@ const parcelManagementController = {
                 "parcel_management.updatedAt",
                 "parcel_management.description as remarks",
                 "parcel_management.displayId",
+                "parcel_management.storageLocation",
+                "storage.storageName",
+                "storage.storageCode",
+                "storage.description",
                 // "images.s3Url",
               ])
               .where("parcel_management.orgId", req.orgId)
@@ -993,6 +1010,11 @@ const parcelManagementController = {
               "parcel_user_tis.buildingPhaseId",
               "buildings_and_phases.id"
             )
+            .leftJoin(
+              "storage",
+              "parcel_management.storageLocation",
+              "storage.id"
+            )
             // .leftJoin("images", "parcel_management.id", "images.entityId")
             .where("parcel_management.orgId", req.orgId)
             .whereNot(
@@ -1051,6 +1073,11 @@ const parcelManagementController = {
               "parcel_management.id",
               "images.entityId"
             )
+            .leftJoin(
+              "storage",
+              "parcel_management.storageLocation",
+              "storage.id"
+            )
             .select([
               "parcel_management.id",
               "parcel_user_tis.unitId",
@@ -1069,6 +1096,11 @@ const parcelManagementController = {
               "parcel_management.updatedAt",
               "parcel_management.description as remarks",
               "parcel_management.displayId",
+              // "parcel_management.storageLocation",
+              "storage.id as storageId",
+              "storage.storageName",
+              "storage.storageCode",
+              "storage.description",
             ])
             .where("parcel_management.orgId", req.orgId)
             .whereIn("projects.id", projectIds)
@@ -1089,7 +1121,7 @@ const parcelManagementController = {
               "buildings_and_phases.buildingPhaseCode",
               "buildings_and_phases.description",
               "parcel_user_non_tis.name",
-              // "images.s3Url"
+              "storage.id",
             ])
             .orderBy("parcel_management.createdAt", "desc")
             .offset(offset)
@@ -1225,8 +1257,7 @@ const parcelManagementController = {
         id ||
         parcelId ||
         tenantName ||
-       ( createdDateFrom &&
-        createdDateTo)
+        (createdDateFrom && createdDateTo)
       ) {
         try {
           let parcelType;
@@ -1287,6 +1318,11 @@ const parcelManagementController = {
                 "parcel_user_tis.buildingPhaseId",
                 "buildings_and_phases.id"
               )
+              .leftJoin(
+                "storage",
+                "parcel_management.storageLocation",
+                "storage.id"
+              )
               .where("parcel_management.orgId", req.orgId)
               .where("parcel_management.parcelStatus", 1)
               .whereIn("projects.id", projectIds)
@@ -1333,7 +1369,6 @@ const parcelManagementController = {
                     "property_units.unitNumber": id,
                     "parcel_management.pickedUpType":
                       parcelType[0].pickedUpType,
-                    
                   });
                   qb.where(
                     "users.id",
@@ -1401,6 +1436,11 @@ const parcelManagementController = {
                 "parcel_user_tis.buildingPhaseId",
                 "buildings_and_phases.id"
               )
+              .leftJoin(
+                "storage",
+                "parcel_management.storageLocation",
+                "storage.id"
+              )
 
               .select([
                 "parcel_management.id",
@@ -1417,7 +1457,11 @@ const parcelManagementController = {
                 "property_units.unitNumber",
                 "parcel_management.description as remarks",
                 "parcel_management.displayId",
-                "parcel_management.qrCode"
+                "parcel_management.qrCode",
+                "storage.id as storageId",
+                "storage.storageName",
+                "storage.storageCode",
+                "storage.description",
               ])
               .where("parcel_management.orgId", req.orgId)
               .where("parcel_management.parcelStatus", 1)
@@ -1427,7 +1471,6 @@ const parcelManagementController = {
                 null
               )
               .where((qb) => {
-                
                 if (unitId) {
                   qb.where(
                     "property_units.unitNumber",
@@ -1462,7 +1505,7 @@ const parcelManagementController = {
                   );
                   qb.where({
                     "parcel_management.pickedUpType":
-                      parcelType[0].pickedUpType,    
+                      parcelType[0].pickedUpType,
                   });
                   qb.where(
                     "users.id",
@@ -1667,6 +1710,11 @@ const parcelManagementController = {
               "parcel_user_tis.buildingPhaseId",
               "buildings_and_phases.id"
             )
+            .leftJoin(
+              "storage",
+              "parcel_management.storageLocation",
+              "storage.id"
+            )
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
             .whereIn("projects.id", projectIds)
@@ -1721,6 +1769,11 @@ const parcelManagementController = {
               "parcel_user_tis.buildingPhaseId",
               "buildings_and_phases.id"
             )
+            .leftJoin(
+              "storage",
+              "parcel_management.storageLocation",
+              "storage.id"
+            )
             .select([
               "parcel_management.id",
               "parcel_user_tis.unitId",
@@ -1736,7 +1789,11 @@ const parcelManagementController = {
               "property_units.unitNumber",
               "parcel_management.description as remarks",
               "parcel_management.displayId",
-              "parcel_management.qrCode"
+              "parcel_management.qrCode",
+              "storage.id as storageId",
+              "storage.storageName",
+              "storage.storageCode",
+              "storage.description",
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
@@ -1759,6 +1816,7 @@ const parcelManagementController = {
               "buildings_and_phases.buildingPhaseCode",
               "buildings_and_phases.description",
               "parcel_user_non_tis.name",
+              "storage.id"
             ])
             .orderBy("parcel_management.createdAt", "desc")
             .offset(offset)
@@ -1987,6 +2045,11 @@ const parcelManagementController = {
             "parcel_management.parcelType",
             "parcel_type.id"
           )
+          .leftJoin(
+            "storage",
+            "parcel_management.storageLocation",
+            "storage.id"
+          )
           .select([
             "parcel_management.*",
             "parcel_user_tis.*",
@@ -2009,6 +2072,9 @@ const parcelManagementController = {
             "courier.courierName",
             "parcel_management.barcode",
             "parcel_type.parcelType as pType",
+            "storage.storageName",
+            "storage.storageCode",
+            "storage.description",
           ])
           // .where("parcel_user_non_tis.type",2)
           // .orWhere("parcel_user_non_tis.type",null)
@@ -3003,7 +3069,7 @@ const parcelManagementController = {
                 "parcel_management.pickedUpType",
                 null
               )
-              .whereNot("parcel_management.parcelStatus",1)
+              .whereNot("parcel_management.parcelStatus", 1)
               .where((qb) => {
                 qb.where("parcel_user_non_tis.type", 2);
                 qb.orWhere(
@@ -3177,7 +3243,7 @@ const parcelManagementController = {
                 "parcel_management.pickedUpType",
                 null
               )
-              .whereNot("parcel_management.parcelStatus",1)
+              .whereNot("parcel_management.parcelStatus", 1)
               .where((qb) => {
                 if (unitId) {
                   qb.where("property_units.id", unitId);
@@ -3379,7 +3445,7 @@ const parcelManagementController = {
               "parcel_management.pickedUpType",
               null
             )
-            .whereNot("parcel_management.parcelStatus",1)
+            .whereNot("parcel_management.parcelStatus", 1)
             .whereIn("projects.id", projectIds)
             .where((qb) => {
               qb.where("parcel_user_non_tis.type", 2);
@@ -3457,7 +3523,7 @@ const parcelManagementController = {
               "parcel_management.pickedUpType",
               null
             )
-            .whereNot("parcel_management.parcelStatus",1)
+            .whereNot("parcel_management.parcelStatus", 1)
             .where((qb) => {
               qb.where("parcel_user_non_tis.type", 2);
               qb.orWhere("parcel_user_non_tis.type", null);
@@ -3527,6 +3593,42 @@ const parcelManagementController = {
     } catch (err) {
       console.log(
         "[controllers][parcel_management][list] :  Error",
+        err
+      );
+      return res.status(500).json({
+        errors: [
+          {
+            code: "UNKNOWN_SERVER_ERROR",
+            message: err.message,
+          },
+        ],
+      });
+    }
+  },
+
+  getStorage: async (req, res) => {
+    try {
+      let storage;
+
+      storage = await knex
+        .from("storage")
+        .select([
+          "storage.storageName",
+          "storage.storageCode",
+          "storage.description",
+          "storage.id",
+        ])
+        .where({
+          orgId: req.orgId,
+          isActive: true,
+        });
+      return res.status(200).json({
+        data: storage,
+        message: "Storage list",
+      });
+    } catch (err) {
+      console.log(
+        "[controllers][parcel_management][storage-list] :  Error",
         err
       );
       return res.status(500).json({
