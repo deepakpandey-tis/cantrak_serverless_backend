@@ -68,6 +68,60 @@ const createPdfOnEFS = (document, agmId, browser, retries = 1) => {
 
 }
 
+const makeZippedFileOnEFS = (folder, zipFileKey) => {
+
+  const fs = require('fs-extra');
+  const archiver = require('archiver');
+  let bucketName = process.env.S3_BUCKET_NAME;
+
+  console.log('[helpers][agm][makeZippedFileOnEFS]: folder: ', folder);
+  console.log('[helpers][agm][makeZippedFileOnEFS]: zipFileKey: ', zipFileKey);
+
+  console.log('[helpers][agm][makeZippedFileOnEFS]: Lisiting ALL FILES: ');
+
+  fs.readdirSync(folder).forEach(file => {
+    console.log('[helpers][agm][makeZippedFileOnEFS]: Found:', file);
+  });
+
+  return new Promise(async (res, rej) => {
+
+    const output = fs.createWriteStream(zipFileKey);
+    const archive = archiver('zip');
+
+    output.on('close', async () => {
+      console.log(archive.pointer() + ' total bytes');
+      console.log('[helpers][agm][makeZippedFileOnEFS]: archiver has been finalized and the output file descriptor has closed.');
+
+      const fileContent = fs.readFileSync(zipFileKey);
+      console.log('[helpers][agm][makeZippedFileOnEFS]: Zipped File Content Read Successfully for uploading to s3.');
+
+      const s3 = new AWS.S3();
+      const params = {
+        Bucket: bucketName,
+        Key: zipFileKey,
+        Body: fileContent,
+        ACL: "public-read"
+      };
+      let s3Res = await s3.putObject(params).promise();
+      console.log("[helpers][agm][makeZippedFileOnEFS]: Zip File uploaded Successfully on s3...", s3Res);
+
+      res(true);
+
+    });
+
+    archive.on('error', (err) => {
+      rej(err);
+    });
+
+    archive.pipe(output);
+
+    // append files from a sub-directory, putting its contents at the root of archive
+    archive.directory(folder, false);
+    archive.finalize();
+
+  });
+}
+
 const parcelHelper = {
   parcelSNSNotification: async ({
     orgId,
@@ -343,7 +397,7 @@ const parcelHelper = {
         payload: {
           title: 'PARCEL - Pending List Document Generated',
           description: `PARCEL - Pending List Document Generated`,
-          url: `/admin/parcel-management/generated-pdf-details`
+          url: `/admin/parcel-management/manage-parcel?tab=picked_up`
         }
       };
 
