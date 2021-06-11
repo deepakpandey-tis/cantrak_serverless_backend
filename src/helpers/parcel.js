@@ -1,6 +1,9 @@
 const AWS = require("aws-sdk");
 const knex = require("../db/knex");
 
+
+const redisHelper = require('../helpers/redis');
+
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY_ID,
   secretAccessKey: process.env.SECRET_ACCESS_KEY,
