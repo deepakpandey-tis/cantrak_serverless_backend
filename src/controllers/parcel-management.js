@@ -1808,7 +1808,7 @@ const parcelManagementController = {
     try {
       let total, rows;
       let reqData = req.query;
-      let pagination = {};
+      // let pagination = {};
       let perPage = reqData.limit || 10;
       let page = reqData.page || 1;
       if (page < 1) page = 1;
@@ -1819,8 +1819,8 @@ const parcelManagementController = {
       projectIds = req.accessibleProjects;
       // console.log("ProjectIds:", projectIds);
 
-      let payload = req.body;
-      let parcelList;
+      // let payload = req.body;
+      // let parcelList;
       let {
         unitId,
         tenantId,
