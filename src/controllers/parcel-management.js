@@ -122,7 +122,7 @@ const parcelManagementController = {
             .allow(null)
             .optional(),
           // barcode: Joi.string().allow("").optional(),
-          storage: Joi.string().allow("").optional(),
+          storage: Joi.string().allow('').allow(null).optional(),
         });
 
         const result = Joi.validate(payLoad, schema);
