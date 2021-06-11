@@ -203,6 +203,8 @@ const parcelHelper = {
         return data;
       });
 
+      console.log("parcel Data", parcelData);
+
       let htmlContents = await ejs.renderFile(templatePath,  parcelData );
       // console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
 
