@@ -12,6 +12,62 @@ AWS.config.update({
   region: process.env.REGION || "us-east-1",
 });
 
+
+const createPdfOnEFS = (document, agmId, browser, retries = 1) => {
+
+  return new Promise(async (res, rej) => {
+
+    try {
+
+      console.log('Retries/ HTML To PRINT:', retries, document.html);
+
+      const page = await browser.newPage();
+      await page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
+
+      const pdf = await page.pdf({
+        path: document.s3BasePath + document.filename,
+        format: 'A4',
+        printBackground: true,
+        displayHeaderFooter: false,
+        margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
+      });
+
+      if (!pdf) {
+        console.log('Unable to generate PDF...');
+        rej(new Error('Unable to generate PDF...'));
+      } else {
+        console.log('PDF generated, with filename:', document.s3BasePath + document.filename);
+        await page.close();
+        res(true);
+      }
+
+    } catch (err) {
+      // rej(err);  // don't reject ... add a retry...
+
+      if (!browser || wasBrowserKilled(browser)) {
+        await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+        browser = await chromium.puppeteer.launch({
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath,
+          headless: chromium.headless,
+        });
+      }
+
+      retries++;
+      if (retries > 5) {
+        console.log('Retrying after error:', err);
+        await createPdf(document, agmId, browser, retries);
+      } else {
+        rej(err);
+      }
+
+    }
+
+  });
+
+}
+
 const parcelHelper = {
   parcelSNSNotification: async ({
     orgId,
