@@ -209,8 +209,8 @@ const parcelHelper = {
       console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
 
       // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
-      let sanitizedUnitNumber = pd.unitNumber;
-      sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-'); // check alternative like replaceAll
+      // let sanitizedUnitNumber = pd.unitNumber;
+      // sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-'); // check alternative like replaceAll
       //let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${unitNumber}.pdf`;
       let filename = `pending-parcel-list.pdf`;
 
