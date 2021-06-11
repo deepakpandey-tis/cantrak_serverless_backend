@@ -203,8 +203,10 @@ const parcelHelper = {
         return data;
       });
 
+      console.log("parcelData", parcelData);
+
       let htmlContents = await ejs.renderFile(templatePath, { data: parcelData });
-      // console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
+      console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
 
       // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
       let sanitizedUnitNumber = pd.unitNumber;
