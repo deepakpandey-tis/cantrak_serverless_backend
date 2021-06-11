@@ -1,5 +1,6 @@
 const AWS = require("aws-sdk");
 const knex = require("../db/knex");
+const moment = require("moment-timezone");
 
 
 const redisHelper = require('../helpers/redis');
@@ -61,18 +62,18 @@ const parcelHelper = {
 
     try {
 
-      console.log('[helpers][parcel][generateVotingDocument]: Data:', data);
+      console.log('[helpers][parcel][generatePendingParcel]: Data:', data);
 
       //let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true });
       
       //Change above query to groupby "ownerGroupNumber" and get other grouped row data as json using func 'json_agg'
 
-      // console.log('[helpers][parcel][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners);
-      // console.log('[helpers][parcel][generateVotingDocument]: AGM PU Owners Length:', agmPropertyUnitOwners.length);
+      // console.log('[helpers][parcel][generatePendingParcel]: AGM PU Owners:', agmPropertyUnitOwners);
+      // console.log('[helpers][parcel][generatePendingParcel]: AGM PU Owners Length:', agmPropertyUnitOwners.length);
 
 
       // let agendas = await knex('agenda_master').where({ agmId: agmId, eligibleForVoting: true });
-      // console.log('[helpers][parcel][generateVotingDocument]: agendas:', agendas);
+      // console.log('[helpers][parcel][generatePendingParcel]: agendas:', agendas);
 
       const Parallel = require("async-parallel");
 
@@ -82,25 +83,25 @@ const parcelHelper = {
       //   return ag;
       // });
 
-      // console.log('[helpers][parcel][generateVotingDocument]: Agenda with choices:', agendas);
-      // console.log('[helpers][parcel][generateVotingDocument]: Agenda (Length):', agendas.length);
+      // console.log('[helpers][parcel][generatePendingParcel]: Agenda with choices:', agendas);
+      // console.log('[helpers][parcel][generatePendingParcel]: Agenda (Length):', agendas.length);
 
       let parcelData = data.parcelList;
       // agmDetails.formattedDate = moment(+agmDetails.agmDate).format('LL');
-      // console.log('[helpers][parcel][generateVotingDocument]: Formatted Date:', agmDetails.formattedDate);
+      // console.log('[helpers][parcel][generatePendingParcel]: Formatted Date:', agmDetails.formattedDate);
 
 
       const basePath = mountPathRoot + "/PARCEL/" + requestId + "/PendingListDocuments/" + new Date().getTime() + "/";
-      console.log("[helpers][parcel][generateVotingDocument]: Base Directory (For Docs)....", basePath);
+      console.log("[helpers][parcel][generatePendingParcel]: Base Directory (For Docs)....", basePath);
 
       // First Clean all files from the base directory....
-      console.log("[helpers][parcel][generateVotingDocument]: Cleaning basepath directory for AGM....", requestId);
+      console.log("[helpers][parcel][generatePendingParcel]: Cleaning basepath directory for AGM....", requestId);
       await fs.remove(basePath);
-      console.log("[helpers][parcel][generateVotingDocument]: basepath Directory cleaned....", basePath);
+      console.log("[helpers][parcel][generatePendingParcel]: basepath Directory cleaned....", basePath);
 
       //Ensure that directory is created...
       await fs.ensureDir(basePath);
-      console.log("[helpers][parcel][generateVotingDocument]: basepath Directory Created/Ensured....", basePath);
+      console.log("[helpers][parcel][generatePendingParcel]: basepath Directory Created/Ensured....", basePath);
 
 
       // Write Logic to prepare all objects for generating parallely.........
@@ -109,15 +110,15 @@ const parcelHelper = {
 
       // Read HTML Template
       const templatePath = path.join(__dirname, '..', 'pdf-templates', 'parcel-template.ejs');
-      console.log('[helpers][parcel][generateVotingDocument]: PDF Template Path:', templatePath);
+      console.log('[helpers][parcel][generatePendingParcel]: PDF Template Path:', templatePath);
 
       // await Parallel.each(parcelList, async (pd) => {
-      //   console.log("[helpers][parcel][generateVotingDocument]: Preparing for each row of parcel pending list: ", pd);
+      //   console.log("[helpers][parcel][generatePendingParcel]: Preparing for each row of parcel pending list: ", pd);
 
       //   try {
 
       //     await Parallel.each(parcelList, async (parcelData) => {
-      //       console.log("[helpers][parcel][generateVotingDocument]: Preparing For Parcel Data: ", parcelData);
+      //       console.log("[helpers][parcel][generatePendingParcel]: Preparing For Parcel Data: ", parcelData);
 
       //       parcelData = await Parallel.map(parcelData, async (choice) => {
       //         let qrCodeObj = {
@@ -132,15 +133,15 @@ const parcelHelper = {
       //           choice: choice.id
       //         };
       //         let qrString = JSON.stringify(qrCodeObj);
-      //         // console.log("[helpers][parcel][generateVotingDocument]: Qr String: ", qrString);
+      //         // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
       //         let qrCodeDataURI = await QRCODE.toDataURL(qrString);
       //         choice.qrCode = qrCodeDataURI;
-      //         // console.log("[helpers][parcel][generateVotingDocument]: Qr Generated....");
+      //         // console.log("[helpers][parcel][generatePendingParcel]: Qr Generated....");
       //         return choice;
       //       });
 
       //       let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
-      //       // console.log('[helpers][parcel][generateVotingDocument]: htmlContents:', htmlContents);
+      //       // console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
 
       //       // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
       //       let sanitizedUnitNumber = pd.unitNumber;
@@ -158,22 +159,22 @@ const parcelHelper = {
       //         filename: filename,
       //       };
 
-      //       console.log("[helpers][parcel][generateVotingDocument]: Prepared Doc for Agenda: ", document);
+      //       console.log("[helpers][parcel][generatePendingParcel]: Prepared Doc for Agenda: ", document);
       //       sheetsToPrepare.push(document);
 
       //     });
 
       //   } catch (err) {
-      //     console.error("[helpers][announcement][sendAnnouncement]: Inner Loop: Error", err);
+      //     console.error("[helpers][announcement][generatePendingParcel]: Inner Loop: Error", err);
       //     if (err.list && Array.isArray(err.list)) {
       //       err.list.forEach(item => {
-      //         console.error(`[helpers][announcement][sendAnnouncement]: Inner Loop Each Error:`, item.message);
+      //         console.error(`[helpers][announcement][generatePendingParcel]: Inner Loop Each Error:`, item.message);
       //       });
       //     }
       //     throw new Error(err);
       //   }
 
-      //   console.log("[helpers][parcel][generateVotingDocument]: All docs gen for Property Owner: ", pd);
+      //   console.log("[helpers][parcel][generatePendingParcel]: All docs gen for Property Owner: ", pd);
       // });
 
 
@@ -192,18 +193,18 @@ const parcelHelper = {
         // };
         
         let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
-        // console.log("[helpers][parcel][generateVotingDocument]: Qr String: ", qrString);
+        // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
         let qrCodeDataURI = await QRCODE.toDataURL(qrString);
         data.qrCode = qrCodeDataURI;
         data.createdAt = moment(
           +data.createdAt
         ).format("MMMM DD, yyyy, hh:mm:ss A");
-        // console.log("[helpers][parcel][generateVotingDocument]: Qr Generated....");
+        // console.log("[helpers][parcel][generatePendingParcel]: Qr Generated....");
         return data;
       });
 
       let htmlContents = await ejs.renderFile(templatePath, { data, parcelData });
-      // console.log('[helpers][parcel][generateVotingDocument]: htmlContents:', htmlContents);
+      // console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
 
       // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
       let sanitizedUnitNumber = pd.unitNumber;
@@ -220,11 +221,11 @@ const parcelHelper = {
         filename: filename,
       };
 
-      console.log("[helpers][parcel][generateVotingDocument]: Prepared Doc for Parcel: ", document);
+      console.log("[helpers][parcel][generatePendingParcel]: Prepared Doc for Parcel: ", document);
       sheetsToPrepare.push(document);
 
 
-      console.log("[helpers][parcel][generateVotingDocument]: Generation Finished. Going to PRiNT");
+      console.log("[helpers][parcel][generatePendingParcel]: Generation Finished. Going to PRiNT");
       console.log("============================== PRiNT ======================================");
 
 
@@ -238,13 +239,13 @@ const parcelHelper = {
 
       Parallel.setConcurrency(5);
       await Parallel.each(sheetsToPrepare, async (document) => {
-        console.log("[helpers][parcel][generateVotingDocument]: Generating Doc for: ", document);
+        console.log("[helpers][parcel][generatePendingParcel]: Generating Doc for: ", document);
         await createPdfOnEFS(document, requestId, browser);
       });
 
       console.log("============================== PRiNT DONE ======================================");
 
-      console.log("[helpers][parcel][generateVotingDocument]: All PDF documents created successfully. Going to create zip file.. ");
+      console.log("[helpers][parcel][generatePendingParcel]: All PDF documents created successfully. Going to create zip file.. ");
 
       if (browser !== null) {
         await browser.close();
@@ -253,13 +254,13 @@ const parcelHelper = {
 
       // Write Code to create Zip File...
       await fs.ensureDir(mountPathRoot +  "/PARCEL/" + requestId + "/zipped-files");
-      console.log("[helpers][parcel][generateVotingDocument]: ZipFile Directory Created/Ensured....");
+      console.log("[helpers][parcel][generatePendingParcel]: ZipFile Directory Created/Ensured....");
 
       const zipFileName = mountPathRoot +  "/PARCEL/" + requestId + "/zipped-files/" + `${new Date().getTime()}.zip`;
-      console.log("[helpers][parcel][generateVotingDocument]: Going To Create Zip file with name:", zipFileName);
+      console.log("[helpers][parcel][generatePendingParcel]: Going To Create Zip file with name:", zipFileName);
       const uploadedZippedFileDetails = await makeZippedFileOnEFS(basePath, zipFileName);
 
-      console.log("[helpers][parcel][generateVotingDocument]: Zip File created successfully, Name:", zipFileName, uploadedZippedFileDetails);
+      console.log("[helpers][parcel][generatePendingParcel]: Zip File created successfully, Name:", zipFileName, uploadedZippedFileDetails);
 
       const s3 = new AWS.S3();
 
@@ -270,7 +271,7 @@ const parcelHelper = {
         });
       });
 
-      console.log("[helpers][parcel][generateVotingDocument]: s3FileDownloadUrl:", s3FileDownloadUrl);
+      console.log("[helpers][parcel][generatePendingParcel]: s3FileDownloadUrl:", s3FileDownloadUrl);
       await redisHelper.setValueWithExpiry(`parcel-${requestId}-docs-link`, { s3Url: s3FileDownloadUrl }, 24 * 60 * 60);
 
 
@@ -293,14 +294,14 @@ const parcelHelper = {
         receiver,
         notificationPayload
       );
-      console.log("[helpers][parcel][generateVotingDocument]: Successfull Parcel List Doc Generated - Annoncement Send to:", receiver.email);
+      console.log("[helpers][parcel][generatePendingParcel]: Successfull Parcel List Doc Generated - Annoncement Send to:", receiver.email);
 
     } catch (err) {
 
-      console.error("[helpers][announcement][sendAnnouncement]:  Error", err);
+      console.error("[helpers][parcel][generatePendingParcel]:  Error", err);
       if (err.list && Array.isArray(err.list)) {
         err.list.forEach(item => {
-          console.error(`[helpers][announcement][sendAnnouncement]: Each Error:`, item.message);
+          console.error(`[helpers][parcel][generatePendingParcel]: Each Error:`, item.message);
         });
       }
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };
