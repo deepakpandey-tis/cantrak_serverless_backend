@@ -316,7 +316,7 @@ const parcelHelper = {
 
       console.log("parcelData", parcelData);
 
-      let htmlContents = await ejs.renderFile(templatePath, { data: JSON.stringify(parcelData) });
+      let htmlContents = await ejs.renderFile(templatePath, { data: parcelData });
       console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
 
       // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
