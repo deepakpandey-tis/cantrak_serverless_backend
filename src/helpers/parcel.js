@@ -203,7 +203,7 @@ const parcelHelper = {
         return data;
       });
 
-      let htmlContents = await ejs.renderFile(templatePath, { data, parcelData });
+      let htmlContents = await ejs.renderFile(templatePath, { data: parcelData });
       // console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
 
       // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
