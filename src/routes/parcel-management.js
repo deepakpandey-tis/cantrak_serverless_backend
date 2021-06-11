@@ -29,6 +29,14 @@ router.get(
 );
 
 router.post(
+  "/generate-pdf-of-parcel-list",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isParcelManagementAccessible,
+  parcelManageController.generatePdfOfParcelDocument
+);
+
+router.post(
   "/get-parcel-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

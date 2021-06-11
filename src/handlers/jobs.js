@@ -186,6 +186,26 @@ module.exports.longJobsProcessor = async (event, context) => {
 
   }
 
+  if (messageType == 'PARCEL_PREPARE_PENDING_LIST_DOCUMENT') {
+
+    console.log('[handlers][longJobsProcessor]: Data For Pending Parcel Doc Prepare:', recordData);
+
+    const parcelHelper = require('../helpers/parcel');
+
+    const { data, requestedBy } = recordData;
+
+    if (data.parcelList.length > 0) {
+      // await agmHelper.generateVotingDocument({ agmId, data, orgId, requestedBy });
+      await parcelHelper.generateVotingDocumentOnEFSv2({ data, requestedBy });
+    } else {
+      console.log('[handlers][longJobsProcessor]', 'Pending Parcel List not found. Hence Pending Parcel Documents can not be generated.');
+      throw Error('Pending Parcel List not found. Hence Pending Parcel Documents can not be generated.');
+    }
+
+    console.log('[handlers][longJobsProcessor]: Task Completed.....');
+
+  }
+
 
 
   if (messageType == 'AGM_FINAL_SUBMIT') {
