@@ -142,4 +142,12 @@ router.post(
   parcelManagementController.getPickedupParcelList
 );
 
+router.get(
+  "/get-storage",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isParcelManagementAccessible,
+  parcelManagementController.getStorage
+)
+
 module.exports = router;
