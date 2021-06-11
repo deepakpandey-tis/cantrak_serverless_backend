@@ -11,9 +11,6 @@
                         <td>
                             <table style="width: 100%;">
                             <tr>
-                                <!-- <td>
-                                <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
-                                </td> -->
                                 <td style="padding-bottom: 18px; padding-top: 18px;">
                                     <% if(data[i].pickedUpType == 1){ %>
                                         <p style="color: red; font-weight: bold; margin-block-start: 0em !important; margin-block-end: 0em !important;">
@@ -58,10 +55,8 @@
                                     <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important; text-overflow: ellipsis; white-space: nowrap; width: 300px; overflow: hidden;">Remark : <span><%= data[i]?.remarks %></span> </p>
                                 </td>
                                 <td style="text-align: right; padding-top: 10px; padding-bottom: 10px;">
-                                <img src="<%= data[i]?.qrCode %>" alt="qr-code" width="100px">
+                                    <img src="<%= data[i]?.qrCode %>" alt="qr-code" width="100px">
                                 </td>
-                                
-                                
                             </tr>
                             </table>
                         </td>
