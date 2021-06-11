@@ -1,6 +1,7 @@
 const AWS = require("aws-sdk");
 const knex = require("../db/knex");
 const moment = require("moment-timezone");
+const chromium = require('chrome-aws-lambda');
 
 
 const redisHelper = require('../helpers/redis');
