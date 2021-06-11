@@ -190,15 +190,19 @@ const parcelHelper = {
         //   buildingName: data.buildingName,
         //   unitNumber: data.unitNumber
         // };
+        
         let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
         // console.log("[helpers][parcel][generateVotingDocument]: Qr String: ", qrString);
         let qrCodeDataURI = await QRCODE.toDataURL(qrString);
         data.qrCode = qrCodeDataURI;
+        data.createdAt = moment(
+          +data.createdAt
+        ).format("MMMM DD, yyyy, hh:mm:ss A");
         // console.log("[helpers][parcel][generateVotingDocument]: Qr Generated....");
-        return choice;
+        return data;
       });
 
-      let htmlContents = await ejs.renderFile(templatePath, { parcelData, parcelData });
+      let htmlContents = await ejs.renderFile(templatePath, { data, parcelData });
       // console.log('[helpers][parcel][generateVotingDocument]: htmlContents:', htmlContents);
 
       // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
