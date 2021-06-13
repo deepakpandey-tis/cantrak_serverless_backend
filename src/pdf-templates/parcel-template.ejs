@@ -1,12 +1,78 @@
 <div style="width: 100% !important;">
-    <table style="width: 100%; margin-top: 20px;">
-      <tr>
-        <td style="text-align: center; padding-bottom: 15px;">
-          <h6 style="margin: 0px; padding: 0px;">
-            <span style="color: #F44439;">วาระ / Agenda : </span
-            ><span> hshdfgdsh</span>
-          </h6>
-        </td>
-      </tr>
-    </table>
+        <table style="width: 100%; margin-top: 10px;">
+          <tr>
+            <td style="padding: 0px 10px;">
+              <table style="width: 100%;">
+                <% for (var i = 0; i < data.length;  i++ ) { %>
+           
+                    <% if(i == 0 || i % 2 == 0){ var c = 1; %>
+                    <tr style="margin-top: 20px; margin-bottom: 20px;">
+                    <% } %>
+                        <td>
+                            <table style="width: 100%;">
+                            <tr>
+                                <td style="padding-bottom: 18px; padding-top: 18px;">
+                                    <% if(data[i].pickedUpType == 1){ %>
+                                        <p style="color: red; font-weight: bold; margin-block-start: 0em !important; margin-block-end: 0em !important;">
+                                            Incoming Parcel
+                                        </p>
+                                    <% } %>
+                                    <% if(data[i].pickedUpType == 2){ %>
+                                        <p style="color: red; font-weight: bold; margin-block-start: 0em !important; margin-block-end: 0em !important;">
+                                            Outgoing Parcel
+                                        </p>
+                                    <% } %>
+                                        <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Parcel ID : <span><%= data[i].displayId %></span> </p>
+                                    <% if(data[i].pickedUpType == 1){ %>
+                                        <% if(data[i].tenant){ %>        
+                                            <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important; text-overflow: ellipsis; white-space: nowrap; width: 300px; overflow: hidden;">Recipient : <span><%= data[i].tenant %></span> </p>
+                                        <% } %>
+                                        <% if(!data[i].tenant && data[i].tenantData[0]){ %>
+                                            <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important; text-overflow: ellipsis; white-space: nowrap; width: 300px; overflow: hidden;">Recipient : <span><%= data[i].tenantData[0].name %></span> </p>
+                                        <% } %>
+                                        <% if(!data[i].tenant && !data[i].tenantData[0]){ %>
+                                            <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important; text-overflow: ellipsis; white-space: nowrap; width: 300px; overflow: hidden;">Recipient : <span></span> </p>
+                                        <% } %>
+                                    <% } %>
+                                    <% if(data[i].pickedUpType == 2){ %>
+                                        <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important; text-overflow: ellipsis; white-space: nowrap; width: 300px; overflow: hidden;">Recipient : <span><%= data[i].tenant %></span> </p>
+                                    <% } %>
+                                        
+                                    <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Unit No. : <span><%= data[i].unitNumber %></span> </p>
+                                    <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Building Name : <span><%= data[i].buildingName %> - <%= data[i].buildingPhaseCode %></span> </p>
+                                    <% if(data[i].pickedUpType == 1){ %>
+                                        <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Tracking No. : <span><%= data[i].trackingNumber %></span> </p>
+                                    <% } %>
+                                    <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Date : <span><%= data[i].createdAt %></span> </p>
+                                    <% if(data[i].pickedUpType == 1){ %>
+                                        <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Sender : <span><%= data[i].name %></span> </p>
+                                    <% } %>
+                                    <% if(data[i].pickedUpType == 2){ %>
+                                        <% if(data[i].tenant){ %>  
+                                            <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Sender : <span><%= data[i].tenant %></span> </p>
+                                        <% } %>
+                                        <% if(!data[i].tenant && data[i].tenantData[0]){ %> 
+                                            <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Sender : <span><%= data[i].tenantData[0].name %></span> </p> 
+                                        <% } %>
+                                        <% if(!data[i].tenant && !data[i].tenantData[0]){ %> 
+                                            <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Sender : <span></span> </p> 
+                                        <% } %>
+                                    <% } %>
+                                    <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important; text-overflow: ellipsis; white-space: nowrap; width: 300px; overflow: hidden;">Remark : <span><%= data[i].remarks %></span> </p>
+                                </td>
+                                <td style="text-align: right; padding-top: 10px; padding-bottom: 10px;">
+                                    <img src="<%= data[i].qrCode %>" alt="qr-code" width="100px">
+                                </td>
+                            </tr>
+                            </table>
+                        </td>
+                  <% if(c == 3){ %>
+                  </tr>
+                  <% }else{ c++;} %>
+      
+                  <% } %>
+              </table>
+            </td>
+          </tr>
+        </table>
 </div>

@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");
 const knex = require("../db/knex");
 const moment = require("moment-timezone");
 const chromium = require('chrome-aws-lambda');
+const uuid = require("uuid/v4");
 
 
 const redisHelper = require('../helpers/redis');
@@ -11,6 +12,116 @@ AWS.config.update({
   secretAccessKey: process.env.SECRET_ACCESS_KEY,
   region: process.env.REGION || "us-east-1",
 });
+
+
+const createPdfOnEFS = (document, agmId, browser, retries = 1) => {
+
+  return new Promise(async (res, rej) => {
+
+    try {
+
+      console.log('Retries/ HTML To PRINT:', retries, document.html);
+
+      const page = await browser.newPage();
+      await page.setContent(document.html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
+
+      const pdf = await page.pdf({
+        path: document.s3BasePath + document.filename,
+        format: 'A4',
+        printBackground: true,
+        displayHeaderFooter: false,
+        margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' }
+      });
+
+      if (!pdf) {
+        console.log('Unable to generate PDF...');
+        rej(new Error('Unable to generate PDF...'));
+      } else {
+        console.log('PDF generated, with filename:', document.s3BasePath + document.filename);
+        await page.close();
+        res(true);
+      }
+
+    } catch (err) {
+      // rej(err);  // don't reject ... add a retry...
+
+      if (!browser || wasBrowserKilled(browser)) {
+        await chromium.font('https://servicemind-resources-dev.s3.amazonaws.com/fonts/Pattaya-Regular.otf');
+        browser = await chromium.puppeteer.launch({
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath,
+          headless: chromium.headless,
+        });
+      }
+
+      retries++;
+      if (retries > 5) {
+        console.log('Retrying after error:', err);
+        await createPdf(document, agmId, browser, retries);
+      } else {
+        rej(err);
+      }
+
+    }
+
+  });
+
+}
+
+const makeZippedFileOnEFS = (folder, zipFileKey) => {
+
+  const fs = require('fs-extra');
+  const archiver = require('archiver');
+  let bucketName = process.env.S3_BUCKET_NAME;
+
+  console.log('[helpers][agm][makeZippedFileOnEFS]: folder: ', folder);
+  console.log('[helpers][agm][makeZippedFileOnEFS]: zipFileKey: ', zipFileKey);
+
+  console.log('[helpers][agm][makeZippedFileOnEFS]: Lisiting ALL FILES: ');
+
+  fs.readdirSync(folder).forEach(file => {
+    console.log('[helpers][agm][makeZippedFileOnEFS]: Found:', file);
+  });
+
+  return new Promise(async (res, rej) => {
+
+    const output = fs.createWriteStream(zipFileKey);
+    const archive = archiver('zip');
+
+    output.on('close', async () => {
+      console.log(archive.pointer() + ' total bytes');
+      console.log('[helpers][agm][makeZippedFileOnEFS]: archiver has been finalized and the output file descriptor has closed.');
+
+      const fileContent = fs.readFileSync(zipFileKey);
+      console.log('[helpers][agm][makeZippedFileOnEFS]: Zipped File Content Read Successfully for uploading to s3.');
+
+      const s3 = new AWS.S3();
+      const params = {
+        Bucket: bucketName,
+        Key: zipFileKey,
+        Body: fileContent,
+        ACL: "public-read"
+      };
+      let s3Res = await s3.putObject(params).promise();
+      console.log("[helpers][agm][makeZippedFileOnEFS]: Zip File uploaded Successfully on s3...", s3Res);
+
+      res(true);
+
+    });
+
+    archive.on('error', (err) => {
+      rej(err);
+    });
+
+    archive.pipe(output);
+
+    // append files from a sub-directory, putting its contents at the root of archive
+    archive.directory(folder, false);
+    archive.finalize();
+
+  });
+}
 
 const parcelHelper = {
   parcelSNSNotification: async ({
@@ -49,7 +160,7 @@ const parcelHelper = {
     }
   },
 
-  generateVotingDocumentOnEFSv2: async ({ data, requestedBy }) => {
+  generateParcelSlipDocumentOnEFSv2: async ({ requestId, data, orgId, requestedBy }) => {
 
     let browser = null;
     let bucketName = process.env.S3_BUCKET_NAME;
@@ -59,39 +170,17 @@ const parcelHelper = {
     const ejs = require('ejs');
     const path = require('path');
 
-    const requestId = 1;
+    //const requestId = uuid();
 
     try {
 
       console.log('[helpers][parcel][generatePendingParcel]: Data:', data);
 
-      //let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true });
-      
-      //Change above query to groupby "ownerGroupNumber" and get other grouped row data as json using func 'json_agg'
-
-      // console.log('[helpers][parcel][generatePendingParcel]: AGM PU Owners:', agmPropertyUnitOwners);
-      // console.log('[helpers][parcel][generatePendingParcel]: AGM PU Owners Length:', agmPropertyUnitOwners.length);
-
-
-      // let agendas = await knex('agenda_master').where({ agmId: agmId, eligibleForVoting: true });
-      // console.log('[helpers][parcel][generatePendingParcel]: agendas:', agendas);
-
       const Parallel = require("async-parallel");
 
-      // agendas = await Parallel.map(agendas, async (ag) => {
-      //   let choices = await knex('agenda_choice').where({ agendaId: ag.id });
-      //   ag.choices = choices;
-      //   return ag;
-      // });
-
-      // console.log('[helpers][parcel][generatePendingParcel]: Agenda with choices:', agendas);
-      // console.log('[helpers][parcel][generatePendingParcel]: Agenda (Length):', agendas.length);
-
       let parcelData = data.parcelList;
-      // agmDetails.formattedDate = moment(+agmDetails.agmDate).format('LL');
-      // console.log('[helpers][parcel][generatePendingParcel]: Formatted Date:', agmDetails.formattedDate);
-
-
+      //let orgId = data.orgId;
+      
       const basePath = mountPathRoot + "/PARCEL/" + requestId + "/PendingListDocuments/" + new Date().getTime() + "/";
       console.log("[helpers][parcel][generatePendingParcel]: Base Directory (For Docs)....", basePath);
 
@@ -113,72 +202,7 @@ const parcelHelper = {
       const templatePath = path.join(__dirname, '..', 'pdf-templates', 'parcel-template.ejs');
       console.log('[helpers][parcel][generatePendingParcel]: PDF Template Path:', templatePath);
 
-      // await Parallel.each(parcelList, async (pd) => {
-      //   console.log("[helpers][parcel][generatePendingParcel]: Preparing for each row of parcel pending list: ", pd);
-
-      //   try {
-
-      //     await Parallel.each(parcelList, async (parcelData) => {
-      //       console.log("[helpers][parcel][generatePendingParcel]: Preparing For Parcel Data: ", parcelData);
-
-      //       parcelData = await Parallel.map(parcelData, async (choice) => {
-      //         let qrCodeObj = {
-      //           qrName: 'SM:AGM:VOTING',
-      //           orgId: orgId,
-      //           agmId: agmId,
-      //           unitId: pd.unitId,
-      //           unitNumber: pd.unitNumber,   // Will be changed to unitNumber arrays
-      //           ownerMasterId: pd.id,
-      //           ownershipRatio: pd.ownershipRatio,  // Calculate all the grouped units for this owner and put sum of those here
-      //           agendaId: agenda.id,
-      //           choice: choice.id
-      //         };
-      //         let qrString = JSON.stringify(qrCodeObj);
-      //         // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
-      //         let qrCodeDataURI = await QRCODE.toDataURL(qrString);
-      //         choice.qrCode = qrCodeDataURI;
-      //         // console.log("[helpers][parcel][generatePendingParcel]: Qr Generated....");
-      //         return choice;
-      //       });
-
-      //       let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
-      //       // console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
-
-      //       // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
-      //       let sanitizedUnitNumber = pd.unitNumber;
-      //       sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-'); // check alternative like replaceAll
-      //       let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${unitNumber}.pdf`;
-
-      //       const document = {
-      //         html: htmlContents,
-      //         data: {
-      //           agmDetails: data.agmDetails,
-      //           agenda: agenda,
-      //           propertyOwner: pd
-      //         },
-      //         s3BasePath: basePath,
-      //         filename: filename,
-      //       };
-
-      //       console.log("[helpers][parcel][generatePendingParcel]: Prepared Doc for Agenda: ", document);
-      //       sheetsToPrepare.push(document);
-
-      //     });
-
-      //   } catch (err) {
-      //     console.error("[helpers][announcement][generatePendingParcel]: Inner Loop: Error", err);
-      //     if (err.list && Array.isArray(err.list)) {
-      //       err.list.forEach(item => {
-      //         console.error(`[helpers][announcement][generatePendingParcel]: Inner Loop Each Error:`, item.message);
-      //       });
-      //     }
-      //     throw new Error(err);
-      //   }
-
-      //   console.log("[helpers][parcel][generatePendingParcel]: All docs gen for Property Owner: ", pd);
-      // });
-
-
+      
       parcelData = await Parallel.map(parcelData, async (data) => {
         // let qrCodeObj = {
         //   qrName: 'SM:PARCEL:PENDINGLIST',
@@ -209,11 +233,7 @@ const parcelHelper = {
       let htmlContents = await ejs.renderFile(templatePath, { data: parcelData });
       console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
 
-      // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
-      // let sanitizedUnitNumber = pd.unitNumber;
-      // sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-'); // check alternative like replaceAll
-      //let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${unitNumber}.pdf`;
-      let filename = `pending-parcel-list.pdf`;
+      let filename = `pending-parcel-list-${requestId}.pdf`;
 
       const document = {
         html: htmlContents,
@@ -275,27 +295,46 @@ const parcelHelper = {
       });
 
       console.log("[helpers][parcel][generatePendingParcel]: s3FileDownloadUrl:", s3FileDownloadUrl);
-      await redisHelper.setValueWithExpiry(`parcel-${requestId}-docs-link`, { s3Url: s3FileDownloadUrl }, 24 * 60 * 60);
+      let parcelSlipDocGeneratedList = await redisHelper.getValue(
+        `parcel-docs-link`
+      );
+      if(parcelSlipDocGeneratedList){
+        parcelSlipDocGeneratedList.map(e =>{
+          let s3Url = e.s3Url;
+          if(e.requestId){
+            s3Url = s3FileDownloadUrl;
+          }
+
+          e.s3Url = s3Url;
+        });
+        //parcelSlipDocGeneratedList.push({ requestId: requestId, generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") });
+        await redisHelper.setValueWithExpiry(`parcel-docs-link`, parcelSlipDocGeneratedList , 24 * 60 * 60);
+      }
+      else{
+        await redisHelper.setValueWithExpiry(`parcel-docs-link`, [{ requestId: requestId, generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") }], 24 * 60 * 60);
+      }
 
 
       let sender = requestedBy;
       let receiver = requestedBy;
 
-      //let orgData = await knex('organisations').where({ id: orgId }).first();
+      let orgData = await knex('organisations').where({ id: orgId }).first();
 
       let notificationPayload = {
         payload: {
-          title: 'PARCEL - Pending List Document Generated',
-          description: `PARCEL - Pending List Document Generated`,
-          url: `/admin/parcel-management/generated-pdf-details`
+          title: 'PARCEL - Pending Slip Document Generated',
+          description: `PARCEL - Pending Slip Document Generated`,
+          url: `/admin/parcel-management/manage-parcel?tab=parcel_slip`,
+          orgData: orgData
         }
       };
 
-      const votingDocGeneratedNotification = require('../notifications/agm/voting-doc-generated');
-      await votingDocGeneratedNotification.send(
+      const parcelSlipDocGeneratedNotification = require('../notifications/parcel/parcel-slip-doc-generated');
+      await parcelSlipDocGeneratedNotification.send(
         sender,
         receiver,
-        notificationPayload
+        notificationPayload,
+        ['IN_APP']
       );
       console.log("[helpers][parcel][generatePendingParcel]: Successfull Parcel List Doc Generated - Annoncement Send to:", receiver.email);
 

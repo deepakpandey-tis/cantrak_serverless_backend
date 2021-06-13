@@ -544,7 +544,7 @@ const parcelManagementController = {
       let projectIds = [];
 
       projectIds = req.accessibleProjects;
-      // console.log("ProjectIds:", projectIds);
+      //console.log("OrgData [][][][][JSON][][][][]:", req);
 
       let payload = req.body;
       let parcelList;
@@ -1100,17 +1100,38 @@ const parcelManagementController = {
         parcelListData
       );
 
+      let requestId = uuid();
+
       const queueHelper = require("../helpers/queue");
       await queueHelper.addToQueue(
         {
+          uuid: requestId,
           data: {
             parcelList: rows,
+            orgId: req.orgId,
           },
+          orgId: req.orgId,
           requestedBy: req.me,
         },
         "long-jobs",
         "PARCEL_PREPARE_PENDING_LIST_DOCUMENT"
       );
+
+      let orgData = await knex('organisations').where({ id: req.orgId }).first();
+
+      let parcelSlipDocGeneratedList = await redisHelper.getValue(
+        `parcel-docs-link`
+      );
+
+      console.log(parcelSlipDocGeneratedList);
+
+      if(parcelSlipDocGeneratedList){
+        parcelSlipDocGeneratedList.push({ requestId: requestId, generatedBy: req.me, orgData: orgData, s3Url: null, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") });
+        await redisHelper.setValueWithExpiry(`parcel-docs-link`, parcelSlipDocGeneratedList , 24 * 60 * 60);
+      }
+      else{
+        await redisHelper.setValueWithExpiry(`parcel-docs-link`, [{ requestId: requestId, generatedBy: req.me, orgData: orgData, s3Url: null, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") }], 24 * 60 * 60);
+      }
 
       return res.status(200).json({
         data: parcelListData,
@@ -1118,6 +1139,24 @@ const parcelManagementController = {
           "We are preparing Pending Parcel List Document. Please wait for few minutes. Once generated we will notify you via App Notification & Email",
       });
     } catch (err) {
+      res.status(500).json({ failed: true, error: err });
+    }
+  },
+
+
+  /*parcel slip list */
+  getParcelSlip: async (req, res) =>{
+    try {
+      let parcelSlipDocGeneratedList = await redisHelper.getValue(
+        `parcel-docs-link`
+      );
+
+      return res.status(200).json({
+        data: parcelSlipDocGeneratedList,
+        message:"",
+      });
+
+    }  catch (err) {
       res.status(500).json({ failed: true, error: err });
     }
   },
@@ -2536,8 +2575,8 @@ const parcelManagementController = {
         };
       });
 
-      let votingDocDownloadUrl = await redisHelper.getValue(
-        `parcel-1-docs-link`
+      let parcelSlipDocGeneratedList = await redisHelper.getValue(
+        `parcel-docs-link`
       );
 
       // console.log("total count",total)
@@ -2550,7 +2589,7 @@ const parcelManagementController = {
           nextPage:
             total.length > page * perPage ? page + 1 : null,
         },
-        votingDocDownloadUrl,
+        parcelSlipDocGeneratedList: parcelSlipDocGeneratedList,
         message: "parcel List!",
       });
     } catch (err) {
