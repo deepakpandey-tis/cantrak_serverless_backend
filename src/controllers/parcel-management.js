@@ -10,7 +10,6 @@ const QRCODE = require("qrcode");
 
 const knex = require("../db/knex");
 
-
 const redisHelper = require("../helpers/redis");
 
 const fs = require("fs");
@@ -122,7 +121,10 @@ const parcelManagementController = {
             .allow(null)
             .optional(),
           // barcode: Joi.string().allow("").optional(),
-          storage: Joi.string().allow('').allow(null).optional(),
+          storage: Joi.string()
+            .allow("")
+            .allow(null)
+            .optional(),
         });
 
         const result = Joi.validate(payLoad, schema);
@@ -598,8 +600,7 @@ const parcelManagementController = {
         id ||
         parcelId ||
         tenantName ||
-        ( createdDateFrom &&
-          createdDateTo)
+        (createdDateFrom && createdDateTo)
       ) {
         try {
           let parcelType;
@@ -794,7 +795,7 @@ const parcelManagementController = {
                 "property_units.unitNumber",
                 "parcel_management.description as remarks",
                 "parcel_management.displayId",
-                "parcel_management.qrCode"
+                "parcel_management.qrCode",
               ])
               .where("parcel_management.orgId", req.orgId)
               .where("parcel_management.parcelStatus", 1)
@@ -885,11 +886,10 @@ const parcelManagementController = {
               .orderBy(
                 "parcel_management.createdAt",
                 "desc"
-              )
-              // .offset(offset)
-              // .limit(perPage),
+              ),
+            // .offset(offset)
+            // .limit(perPage),
           ]);
-          
         } catch (err) {
           console.log(
             "[controllers][parcel_management][list] :  Error",
@@ -1010,7 +1010,7 @@ const parcelManagementController = {
               "property_units.unitNumber",
               "parcel_management.description as remarks",
               "parcel_management.displayId",
-              "parcel_management.qrCode"
+              "parcel_management.qrCode",
             ])
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
@@ -1034,9 +1034,9 @@ const parcelManagementController = {
               "buildings_and_phases.description",
               "parcel_user_non_tis.name",
             ])
-            .orderBy("parcel_management.createdAt", "desc")
-            // .offset(offset)
-            // .limit(perPage),
+            .orderBy("parcel_management.createdAt", "desc"),
+          // .offset(offset)
+          // .limit(perPage),
         ]);
       }
 
@@ -1070,7 +1070,6 @@ const parcelManagementController = {
 
       // console.log("total count",total)
 
-
       // return res.status(200).json({
       //   data: {
       //     parcel: rows,
@@ -1093,7 +1092,7 @@ const parcelManagementController = {
             total.length > page * perPage ? page + 1 : null,
         },
         message: "parcel List!",
-      }
+      };
 
       console.log(
         "[controllers][agm][generatePdfOfParcelDocument]: Parecel Details:",
@@ -1117,20 +1116,46 @@ const parcelManagementController = {
         "PARCEL_PREPARE_PENDING_LIST_DOCUMENT"
       );
 
-      let orgData = await knex('organisations').where({ id: req.orgId }).first();
+      let orgData = await knex("organisations")
+        .where({ id: req.orgId })
+        .first();
 
-      let parcelSlipDocGeneratedList = await redisHelper.getValue(
-        `parcel-docs-link`
-      );
+      let parcelSlipDocGeneratedList =
+        await redisHelper.getValue(`parcel-docs-link`);
 
       console.log(parcelSlipDocGeneratedList);
 
-      if(parcelSlipDocGeneratedList){
-        parcelSlipDocGeneratedList.push({ requestId: requestId, generatedBy: req.me, orgData: orgData, s3Url: null, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") });
-        await redisHelper.setValueWithExpiry(`parcel-docs-link`, parcelSlipDocGeneratedList , 24 * 60 * 60);
-      }
-      else{
-        await redisHelper.setValueWithExpiry(`parcel-docs-link`, [{ requestId: requestId, generatedBy: req.me, orgData: orgData, s3Url: null, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") }], 24 * 60 * 60);
+      if (parcelSlipDocGeneratedList) {
+        parcelSlipDocGeneratedList.push({
+          requestId: requestId,
+          generatedBy: req.me,
+          orgData: orgData,
+          s3Url: null,
+          generatedAt: moment().format(
+            "MMMM DD, yyyy, hh:mm:ss A"
+          ),
+        });
+        await redisHelper.setValueWithExpiry(
+          `parcel-docs-link`,
+          parcelSlipDocGeneratedList,
+          24 * 60 * 60
+        );
+      } else {
+        await redisHelper.setValueWithExpiry(
+          `parcel-docs-link`,
+          [
+            {
+              requestId: requestId,
+              generatedBy: req.me,
+              orgData: orgData,
+              s3Url: null,
+              generatedAt: moment().format(
+                "MMMM DD, yyyy, hh:mm:ss A"
+              ),
+            },
+          ],
+          24 * 60 * 60
+        );
       }
 
       return res.status(200).json({
@@ -1143,24 +1168,21 @@ const parcelManagementController = {
     }
   },
 
-
   /*parcel slip list */
-  getParcelSlip: async (req, res) =>{
+  getParcelSlip: async (req, res) => {
     try {
-      let parcelSlipDocGeneratedList = await redisHelper.getValue(
-        `parcel-docs-link`
-      );
+      let parcelSlipDocGeneratedList =
+        await redisHelper.getValue(`parcel-docs-link`);
 
       return res.status(200).json({
         data: parcelSlipDocGeneratedList,
-        message:"",
+        message: "",
       });
-
-    }  catch (err) {
+    } catch (err) {
       res.status(500).json({ failed: true, error: err });
     }
   },
-  
+
   /*parcel list */
 
   getParcelList: async (req, res) => {
@@ -1191,6 +1213,7 @@ const parcelManagementController = {
         createdDateFrom,
         createdDateTo,
         tenantName,
+        displayId,
       } = req.body;
 
       let createDateFrom = moment(createdDateFrom)
@@ -1229,12 +1252,14 @@ const parcelManagementController = {
         buildingPhaseId ||
         createdDateFrom ||
         createdDateTo ||
-        tenantName
+        tenantName ||
+        displayId
       ) {
         try {
           [total, rows] = await Promise.all([
             knex
               .count("* as count")
+              .from("parcel_management")
               .from("parcel_management")
               .leftJoin(
                 "parcel_user_tis",
@@ -1284,17 +1309,12 @@ const parcelManagementController = {
                 null
               )
               .where((qb) => {
-                qb.where("parcel_user_non_tis.type", 2);
-                qb.orWhere(
-                  "parcel_user_non_tis.type",
-                  null
-                );
                 if (unitId) {
                   qb.where("property_units.id", unitId);
                 }
                 if (trackingNo) {
                   console.log(
-                    "Tracking Number1",
+                    "tracking number",
                     trackingNo
                   );
                   qb.where(
@@ -1306,7 +1326,7 @@ const parcelManagementController = {
                   qb.where("users.id", tenantId);
                 }
                 if (status) {
-                  // console.log("value of status", status);
+                  console.log("value of status", status);
                   if (status == 1) {
                     qb.where({
                       "parcel_management.parcelStatus": 1,
@@ -1374,12 +1394,20 @@ const parcelManagementController = {
                     [fromNewDate, toNewDate]
                   );
                 }
+                // if (tenantName) {
                 if (tenantName && parcelId) {
                   qb.where(
                     "parcel_management.id",
                     parcelId.parcelId
                   );
                 }
+                if (displayId) {
+                  qb.where(
+                    "parcel_management.displayId",
+                    displayId
+                  );
+                }
+                // }
               })
               .where((qb) => {
                 qb.where("parcel_user_non_tis.type", 2);
@@ -1388,13 +1416,7 @@ const parcelManagementController = {
                   null
                 );
               })
-              .groupBy([
-                "parcel_management.id",
-                "property_units.id",
-                "users.id",
-                "parcel_user_tis.unitId",
-              ]),
-            // .first(),
+              .first(),
             knex
               .from("parcel_management")
               .leftJoin(
@@ -1561,6 +1583,12 @@ const parcelManagementController = {
                     parcelId.parcelId
                   );
                 }
+                if (displayId) {
+                  qb.where(
+                    "parcel_management.displayId",
+                    displayId
+                  );
+                }
                 // }
               })
               .where((qb) => {
@@ -1577,7 +1605,6 @@ const parcelManagementController = {
               .offset(offset)
               .limit(per_page),
           ]);
-          console.log("rows", rows);
 
           const Parallel = require("async-parallel");
 
@@ -1608,7 +1635,7 @@ const parcelManagementController = {
             };
           });
 
-          let count = total.length;
+          let count = total.count;
 
           pagination.total = count;
           pagination.per_page = per_page;
@@ -2469,7 +2496,7 @@ const parcelManagementController = {
               "buildings_and_phases.buildingPhaseCode",
               "buildings_and_phases.description",
               "parcel_user_non_tis.name",
-              "storage.id"
+              "storage.id",
             ])
             .orderBy("parcel_management.createdAt", "desc")
             .offset(offset)
@@ -2575,9 +2602,8 @@ const parcelManagementController = {
         };
       });
 
-      let parcelSlipDocGeneratedList = await redisHelper.getValue(
-        `parcel-docs-link`
-      );
+      let parcelSlipDocGeneratedList =
+        await redisHelper.getValue(`parcel-docs-link`);
 
       // console.log("total count",total)
       return res.status(200).json({
@@ -2589,7 +2615,8 @@ const parcelManagementController = {
           nextPage:
             total.length > page * perPage ? page + 1 : null,
         },
-        parcelSlipDocGeneratedList: parcelSlipDocGeneratedList,
+        parcelSlipDocGeneratedList:
+          parcelSlipDocGeneratedList,
         message: "parcel List!",
       });
     } catch (err) {
