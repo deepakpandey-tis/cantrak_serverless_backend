@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");
 const knex = require("../db/knex");
 const moment = require("moment-timezone");
 const chromium = require('chrome-aws-lambda');
+const uuid = require("uuid/v4");
 
 
 const redisHelper = require('../helpers/redis');
@@ -159,7 +160,7 @@ const parcelHelper = {
     }
   },
 
-  generateVotingDocumentOnEFSv2: async ({ data, requestedBy }) => {
+  generateParcelSlipDocumentOnEFSv2: async ({ requestId, data, orgId, requestedBy }) => {
 
     let browser = null;
     let bucketName = process.env.S3_BUCKET_NAME;
@@ -169,39 +170,17 @@ const parcelHelper = {
     const ejs = require('ejs');
     const path = require('path');
 
-    const requestId = 1;
+    //const requestId = uuid();
 
     try {
 
       console.log('[helpers][parcel][generatePendingParcel]: Data:', data);
 
-      //let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true });
-      
-      //Change above query to groupby "ownerGroupNumber" and get other grouped row data as json using func 'json_agg'
-
-      // console.log('[helpers][parcel][generatePendingParcel]: AGM PU Owners:', agmPropertyUnitOwners);
-      // console.log('[helpers][parcel][generatePendingParcel]: AGM PU Owners Length:', agmPropertyUnitOwners.length);
-
-
-      // let agendas = await knex('agenda_master').where({ agmId: agmId, eligibleForVoting: true });
-      // console.log('[helpers][parcel][generatePendingParcel]: agendas:', agendas);
-
       const Parallel = require("async-parallel");
 
-      // agendas = await Parallel.map(agendas, async (ag) => {
-      //   let choices = await knex('agenda_choice').where({ agendaId: ag.id });
-      //   ag.choices = choices;
-      //   return ag;
-      // });
-
-      // console.log('[helpers][parcel][generatePendingParcel]: Agenda with choices:', agendas);
-      // console.log('[helpers][parcel][generatePendingParcel]: Agenda (Length):', agendas.length);
-
       let parcelData = data.parcelList;
-      // agmDetails.formattedDate = moment(+agmDetails.agmDate).format('LL');
-      // console.log('[helpers][parcel][generatePendingParcel]: Formatted Date:', agmDetails.formattedDate);
-
-
+      //let orgId = data.orgId;
+      
       const basePath = mountPathRoot + "/PARCEL/" + requestId + "/PendingListDocuments/" + new Date().getTime() + "/";
       console.log("[helpers][parcel][generatePendingParcel]: Base Directory (For Docs)....", basePath);
 
@@ -223,72 +202,7 @@ const parcelHelper = {
       const templatePath = path.join(__dirname, '..', 'pdf-templates', 'parcel-template.ejs');
       console.log('[helpers][parcel][generatePendingParcel]: PDF Template Path:', templatePath);
 
-      // await Parallel.each(parcelList, async (pd) => {
-      //   console.log("[helpers][parcel][generatePendingParcel]: Preparing for each row of parcel pending list: ", pd);
-
-      //   try {
-
-      //     await Parallel.each(parcelList, async (parcelData) => {
-      //       console.log("[helpers][parcel][generatePendingParcel]: Preparing For Parcel Data: ", parcelData);
-
-      //       parcelData = await Parallel.map(parcelData, async (choice) => {
-      //         let qrCodeObj = {
-      //           qrName: 'SM:AGM:VOTING',
-      //           orgId: orgId,
-      //           agmId: agmId,
-      //           unitId: pd.unitId,
-      //           unitNumber: pd.unitNumber,   // Will be changed to unitNumber arrays
-      //           ownerMasterId: pd.id,
-      //           ownershipRatio: pd.ownershipRatio,  // Calculate all the grouped units for this owner and put sum of those here
-      //           agendaId: agenda.id,
-      //           choice: choice.id
-      //         };
-      //         let qrString = JSON.stringify(qrCodeObj);
-      //         // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
-      //         let qrCodeDataURI = await QRCODE.toDataURL(qrString);
-      //         choice.qrCode = qrCodeDataURI;
-      //         // console.log("[helpers][parcel][generatePendingParcel]: Qr Generated....");
-      //         return choice;
-      //       });
-
-      //       let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
-      //       // console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
-
-      //       // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
-      //       let sanitizedUnitNumber = pd.unitNumber;
-      //       sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-'); // check alternative like replaceAll
-      //       let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${unitNumber}.pdf`;
-
-      //       const document = {
-      //         html: htmlContents,
-      //         data: {
-      //           agmDetails: data.agmDetails,
-      //           agenda: agenda,
-      //           propertyOwner: pd
-      //         },
-      //         s3BasePath: basePath,
-      //         filename: filename,
-      //       };
-
-      //       console.log("[helpers][parcel][generatePendingParcel]: Prepared Doc for Agenda: ", document);
-      //       sheetsToPrepare.push(document);
-
-      //     });
-
-      //   } catch (err) {
-      //     console.error("[helpers][announcement][generatePendingParcel]: Inner Loop: Error", err);
-      //     if (err.list && Array.isArray(err.list)) {
-      //       err.list.forEach(item => {
-      //         console.error(`[helpers][announcement][generatePendingParcel]: Inner Loop Each Error:`, item.message);
-      //       });
-      //     }
-      //     throw new Error(err);
-      //   }
-
-      //   console.log("[helpers][parcel][generatePendingParcel]: All docs gen for Property Owner: ", pd);
-      // });
-
-
+      
       parcelData = await Parallel.map(parcelData, async (data) => {
         // let qrCodeObj = {
         //   qrName: 'SM:PARCEL:PENDINGLIST',
@@ -319,11 +233,7 @@ const parcelHelper = {
       let htmlContents = await ejs.renderFile(templatePath, { data: parcelData });
       console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
 
-      // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
-      // let sanitizedUnitNumber = pd.unitNumber;
-      // sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-'); // check alternative like replaceAll
-      //let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${unitNumber}.pdf`;
-      let filename = `pending-parcel-list.pdf`;
+      let filename = `pending-parcel-list-${requestId}.pdf`;
 
       const document = {
         html: htmlContents,
@@ -385,27 +295,29 @@ const parcelHelper = {
       });
 
       console.log("[helpers][parcel][generatePendingParcel]: s3FileDownloadUrl:", s3FileDownloadUrl);
-      await redisHelper.setValueWithExpiry(`parcel-${requestId}-docs-link`, { s3Url: s3FileDownloadUrl }, 24 * 60 * 60);
+      await redisHelper.setValueWithExpiry(`parcel-1-docs-link`, { generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") }, 24 * 60 * 60);
 
 
       let sender = requestedBy;
       let receiver = requestedBy;
 
-      //let orgData = await knex('organisations').where({ id: orgId }).first();
+      let orgData = await knex('organisations').where({ id: orgId }).first();
 
       let notificationPayload = {
         payload: {
-          title: 'PARCEL - Pending List Document Generated',
-          description: `PARCEL - Pending List Document Generated`,
-          url: `/admin/parcel-management/manage-parcel?tab=picked_up`
+          title: 'PARCEL - Pending Slip Document Generated',
+          description: `PARCEL - Pending Slip Document Generated`,
+          url: `/admin/parcel-management/manage-parcel?tab=parcel_slip`,
+          orgData: orgData
         }
       };
 
-      const votingDocGeneratedNotification = require('../notifications/agm/voting-doc-generated');
-      await votingDocGeneratedNotification.send(
+      const parcelSlipDocGeneratedNotification = require('../notifications/parcel/parcel-slip-doc-generated');
+      await parcelSlipDocGeneratedNotification.send(
         sender,
         receiver,
-        notificationPayload
+        notificationPayload,
+        ['IN_APP']
       );
       console.log("[helpers][parcel][generatePendingParcel]: Successfull Parcel List Doc Generated - Annoncement Send to:", receiver.email);
 
