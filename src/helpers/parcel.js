@@ -295,7 +295,24 @@ const parcelHelper = {
       });
 
       console.log("[helpers][parcel][generatePendingParcel]: s3FileDownloadUrl:", s3FileDownloadUrl);
-      await redisHelper.setValueWithExpiry(`parcel-1-docs-link`, { generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") }, 24 * 60 * 60);
+      let parcelSlipDocGeneratedList = await redisHelper.getValue(
+        `parcel-docs-link`
+      );
+      if(parcelSlipDocGeneratedList){
+        parcelSlipDocGeneratedList.map(e =>{
+          let s3Url = null;
+          if(e.requestId){
+            s3Url = s3FileDownloadUrl;
+          }
+
+          e.s3Url = s3Url;
+        });
+        //parcelSlipDocGeneratedList.push({ requestId: requestId, generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") });
+        await redisHelper.setValueWithExpiry(`parcel-docs-link`, parcelSlipDocGeneratedList , 24 * 60 * 60);
+      }
+      else{
+        await redisHelper.setValueWithExpiry(`parcel-docs-link`, [{ requestId: requestId, generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") }], 24 * 60 * 60);
+      }
 
 
       let sender = requestedBy;
