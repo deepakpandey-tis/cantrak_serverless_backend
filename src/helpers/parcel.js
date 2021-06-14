@@ -202,8 +202,76 @@ const parcelHelper = {
       const templatePath = path.join(__dirname, '..', 'pdf-templates', 'parcel-template.ejs');
       console.log('[helpers][parcel][generatePendingParcel]: PDF Template Path:', templatePath);
 
-      
+      let pData = [];
+      let pId = [];
+      let index = 1;
       parcelData = await Parallel.map(parcelData, async (data) => {
+
+        try {
+
+          if(pData.length < 10){
+            let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
+            // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
+            let qrCodeDataURI = await QRCODE.toDataURL(qrString);
+            data.qrCode = qrCodeDataURI;
+            data.createdAt = moment(
+              +data.createdAt
+            ).format("MMMM DD, yyyy, hh:mm:ss A");
+
+            pData.push(data);
+            pId.push(data.id);
+          }
+          else{
+            pData = [];
+            pId = [];
+
+            let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
+            // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
+            let qrCodeDataURI = await QRCODE.toDataURL(qrString);
+            data.qrCode = qrCodeDataURI;
+            data.createdAt = moment(
+              +data.createdAt
+            ).format("MMMM DD, yyyy, hh:mm:ss A");
+
+            pData.push(data);
+
+          }
+
+          if(pData.length == 10 || pData.length == index){
+
+            console.log("parcelData", pData);
+
+            let htmlContents = await ejs.renderFile(templatePath, { data: pData });
+            console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
+
+            let filename = `pending-parcel-list-${pId.join(',')}.pdf`;
+
+            const document = {
+              html: htmlContents,
+              data: {
+                parcelData: pData
+              },
+              s3BasePath: basePath,
+              filename: filename,
+            };
+
+            console.log("[helpers][parcel][generatePendingParcel]: Prepared Doc for Parcel: ", document);
+            sheetsToPrepare.push(document);
+
+          }
+
+          index++;
+          
+        } catch (err) {
+          console.error("[helpers][parcel][generatePdf]: Inner Loop: Error", err);
+          if (err.list && Array.isArray(err.list)) {
+            err.list.forEach(item => {
+              console.error(`[helpers][parcel][generatePdf]: Inner Loop Each Error:`, item.message);
+            });
+          }
+          throw new Error(err);
+        }
+
         // let qrCodeObj = {
         //   qrName: 'SM:PARCEL:PENDINGLIST',
         //   id: data.id,
@@ -217,37 +285,19 @@ const parcelHelper = {
         //   unitNumber: data.unitNumber
         // };
         
-        let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
-        // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
-        let qrCodeDataURI = await QRCODE.toDataURL(qrString);
-        data.qrCode = qrCodeDataURI;
-        data.createdAt = moment(
-          +data.createdAt
-        ).format("MMMM DD, yyyy, hh:mm:ss A");
+        // let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
+        // // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
+        // let qrCodeDataURI = await QRCODE.toDataURL(qrString);
+        // data.qrCode = qrCodeDataURI;
+        // data.createdAt = moment(
+        //   +data.createdAt
+        // ).format("MMMM DD, yyyy, hh:mm:ss A");
         // console.log("[helpers][parcel][generatePendingParcel]: Qr Generated....");
+        
         return data;
       });
 
-      console.log("parcelData", parcelData);
-
-      let htmlContents = await ejs.renderFile(templatePath, { data: parcelData });
-      console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
-
-      let filename = `pending-parcel-list-${requestId}.pdf`;
-
-      const document = {
-        html: htmlContents,
-        data: {
-          parcelData: parcelData
-        },
-        s3BasePath: basePath,
-        filename: filename,
-      };
-
-      console.log("[helpers][parcel][generatePendingParcel]: Prepared Doc for Parcel: ", document);
-      sheetsToPrepare.push(document);
-
-
+      
       console.log("[helpers][parcel][generatePendingParcel]: Generation Finished. Going to PRiNT");
       console.log("============================== PRiNT ======================================");
 
