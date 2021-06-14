@@ -544,7 +544,7 @@ const parcelManagementController = {
       let projectIds = [];
 
       projectIds = req.accessibleProjects;
-      // console.log("ProjectIds:", projectIds);
+      //console.log("OrgData [][][][][JSON][][][][]:", req);
 
       let payload = req.body;
       let parcelList;
@@ -1103,9 +1103,12 @@ const parcelManagementController = {
       const queueHelper = require("../helpers/queue");
       await queueHelper.addToQueue(
         {
+          uuid: uuid(),
           data: {
             parcelList: rows,
+            orgId: req.orgId,
           },
+          orgId: req.orgId,
           requestedBy: req.me,
         },
         "long-jobs",
