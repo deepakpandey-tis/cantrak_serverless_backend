@@ -36,6 +36,14 @@ router.post(
   parcelManageController.generatePdfOfParcelDocument
 );
 
+router.get(
+  "/get-parcel-slip-list",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isParcelManagementAccessible,
+  parcelManageController.getParcelSlip
+);
+
 router.post(
   "/get-parcel-list",
   authMiddleware.isAuthenticated,
