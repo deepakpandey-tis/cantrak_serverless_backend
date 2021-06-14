@@ -300,7 +300,7 @@ const parcelHelper = {
       );
       if(parcelSlipDocGeneratedList){
         parcelSlipDocGeneratedList.map(e =>{
-          let s3Url = null;
+          let s3Url = e.s3Url;
           if(e.requestId){
             s3Url = s3FileDownloadUrl;
           }
