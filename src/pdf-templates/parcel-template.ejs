@@ -27,10 +27,10 @@
                                         <% if(data[i].tenant){ %>        
                                             <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important; text-overflow: ellipsis; white-space: nowrap; width: 300px; overflow: hidden;">Recipient : <span><%= data[i].tenant %></span> </p>
                                         <% } %>
-                                        <% if(!data[i].tenant && data[i].tenantData[0].name){ %>
+                                        <% if(!data[i].tenant && data[i].tenantData[0]){ %>
                                             <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important; text-overflow: ellipsis; white-space: nowrap; width: 300px; overflow: hidden;">Recipient : <span><%= data[i].tenantData[0].name %></span> </p>
                                         <% } %>
-                                        <% if(!data[i].tenant && !data[i].tenantData[0].name){ %>
+                                        <% if(!data[i].tenant && !data[i].tenantData[0]){ %>
                                             <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important; text-overflow: ellipsis; white-space: nowrap; width: 300px; overflow: hidden;">Recipient : <span></span> </p>
                                         <% } %>
                                     <% } %>
@@ -51,10 +51,10 @@
                                         <% if(data[i].tenant){ %>  
                                             <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Sender : <span><%= data[i].tenant %></span> </p>
                                         <% } %>
-                                        <% if(!data[i].tenant && data[i].tenantData[0].name){ %> 
+                                        <% if(!data[i].tenant && data[i].tenantData[0]){ %> 
                                             <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Sender : <span><%= data[i].tenantData[0].name %></span> </p> 
                                         <% } %>
-                                        <% if(!data[i].tenant && !data[i].tenantData[0].name){ %> 
+                                        <% if(!data[i].tenant && !data[i].tenantData[0]){ %> 
                                             <p class="p-0 m-0" style="margin-block-start: 0em !important; margin-block-end: 0em !important;">Sender : <span></span> </p> 
                                         <% } %>
                                     <% } %>
