@@ -560,6 +560,7 @@ const parcelManagementController = {
         tenantName,
         createdDateFrom,
         createdDateTo,
+        displayId,
       } = req.body;
 
       let parcel;
@@ -600,7 +601,9 @@ const parcelManagementController = {
         id ||
         parcelId ||
         tenantName ||
-        (createdDateFrom && createdDateTo)
+        createdDateFrom ||
+        createdDateTo ||
+        displayId
       ) {
         try {
           let parcelType;
@@ -726,6 +729,9 @@ const parcelManagementController = {
                     "parcel_management.createdAt",
                     [fromNewDate, toNewDate]
                   );
+                }
+                if(displayId){
+                  qb.where("parcel_management.displayId",displayId)
                 }
               })
               .where((qb) => {
@@ -865,6 +871,9 @@ const parcelManagementController = {
                     "parcel_management.createdAt",
                     [fromNewDate, toNewDate]
                   );
+                }
+                if(displayId){
+                  qb.where("parcel_management.displayId",displayId)
                 }
               })
               .where((qb) => {
