@@ -1077,20 +1077,6 @@ const parcelManagementController = {
         };
       });
 
-      // console.log("total count",total)
-
-      // return res.status(200).json({
-      //   data: {
-      //     parcel: rows,
-      //     total: total.length,
-      //     from: (page - 1) * perPage + 1,
-      //     to: page * perPage,
-      //     nextPage:
-      //       total.length > page * perPage ? page + 1 : null,
-      //   },
-      //   message: "parcel List!",
-      // });
-
       let parcelListData = {
         data: {
           parcel: rows,

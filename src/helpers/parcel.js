@@ -3,6 +3,7 @@ const knex = require("../db/knex");
 const moment = require("moment-timezone");
 const chromium = require('chrome-aws-lambda');
 const uuid = require("uuid/v4");
+const PDFMerge = require('pdf-merge');
 
 
 const redisHelper = require('../helpers/redis');
@@ -80,6 +81,8 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
 
   console.log('[helpers][agm][makeZippedFileOnEFS]: Lisiting ALL FILES: ');
 
+
+
   fs.readdirSync(folder).forEach(file => {
     console.log('[helpers][agm][makeZippedFileOnEFS]: Found:', file);
   });
@@ -94,7 +97,7 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
       console.log('[helpers][agm][makeZippedFileOnEFS]: archiver has been finalized and the output file descriptor has closed.');
 
       const fileContent = fs.readFileSync(zipFileKey);
-      console.log('[helpers][agm][makeZippedFileOnEFS]: Zipped File Content Read Successfully for uploading to s3.');
+      console.log('[helpers][agm][makeZippedFileOnEFS]: Zipped File Content Read Successfully for uploading to s3.',fileContent);
 
       const s3 = new AWS.S3();
       const params = {
@@ -271,29 +274,6 @@ const parcelHelper = {
           }
           throw new Error(err);
         }
-
-        // let qrCodeObj = {
-        //   qrName: 'SM:PARCEL:PENDINGLIST',
-        //   id: data.id,
-        //   orgId: data.orgId,
-        //   unitId: data.unitId,
-        //   trackingNumber: data.trackingNumber,
-        //   tenant: data.tenant,   // Will be changed to unitNumber arrays
-        //   tenantId: data.tenantId,
-        //   buildingPhaseCode: data.buildingPhaseCode,  // Calculate all the grouped units for this owner and put sum of those here
-        //   buildingName: data.buildingName,
-        //   unitNumber: data.unitNumber
-        // };
-        
-        // let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
-        // // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
-        // let qrCodeDataURI = await QRCODE.toDataURL(qrString);
-        // data.qrCode = qrCodeDataURI;
-        // data.createdAt = moment(
-        //   +data.createdAt
-        // ).format("MMMM DD, yyyy, hh:mm:ss A");
-        // console.log("[helpers][parcel][generatePendingParcel]: Qr Generated....");
-        
         return data;
       });
 
