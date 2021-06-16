@@ -109,7 +109,7 @@ const mergedPdf = (folder, pdfFileName) => {
     );
     let filePath = path.join(__dirname);
 
-    merger.add(`${filePath}`+ file);
+    merger.add(`${filePath}/`+ file);
   });
 
   merger.save("merged.pdf");
