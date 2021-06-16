@@ -155,11 +155,11 @@ const singupController = {
       let units;
       if (orgId) {
         units = await knex("property_units")
-          .where({ floorZoneId: Number(floorZoneId), orgId: Number(orgId) })
+          .where({ floorZoneId: Number(floorZoneId), orgId: Number(orgId) , type : 1 })
           .returning(["*"]);
       } else {
         units = await knex("property_units")
-          .where({ floorZoneId: Number(floorZoneId) })
+          .where({ floorZoneId: Number(floorZoneId), type : 1 })
           .returning(["*"]);
       }
       return res.status(200).json({

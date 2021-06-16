@@ -104,26 +104,26 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
     "[helpers][agm][makeZippedFileOnEFS]: Lisiting ALL FILES: "
   );
 
-  let files = [];
+  // let files = [];
 
   fs.readdirSync(folder).forEach((file) => {
     console.log(
       "[helpers][agm][makeZippedFileOnEFS]: Found:",
       file
     );
-    files.push(file);
+    // files.push(file);
   });
 
-  let filename = `pending-parcel-list.pdf`;
+  // let filename = `pending-parcel-list.pdf`;
 
-  PDFMerge(files, { output: `${filename}/3.pdf` }).then(
-    (buffer) => {
-      console.log(
-        "[helpers][agm][makeZippedFileOnEFS]: Files:",
-        buffer
-      );
-    }
-  );
+  // PDFMerge(files, { output: `${filename}/3.pdf` }).then(
+  //   (buffer) => {
+  //     console.log(
+  //       "[helpers][agm][makeZippedFileOnEFS]: Files:",
+  //       buffer
+  //     );
+  //   }
+  // );
   // console.log(
   //   "[helpers][agm][makeZippedFileOnEFS]: Files:",
   //   files
