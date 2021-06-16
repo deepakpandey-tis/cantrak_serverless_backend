@@ -3,7 +3,8 @@ const knex = require("../db/knex");
 const moment = require("moment-timezone");
 const chromium = require("chrome-aws-lambda");
 const uuid = require("uuid/v4");
-const PDFMerge = require("pdf-merge");
+const merger = new PDFMerger();
+const path = require("path");
 
 const redisHelper = require("../helpers/redis");
 
@@ -86,6 +87,60 @@ const createPdfOnEFS = (
   });
 };
 
+const mergedPdf = (folder, pdfFileName) => {
+  const fs = require("fs-extra");
+  let bucketName = process.env.S3_BUCKET_NAME;
+
+  console.log(
+    "[helpers][agm][mergePdfFiles]: folder: ",
+    folder
+  );
+  console.log(
+    "[helpers][agm][mergePdfFiles]: pdfFileName: ",
+    pdfFileName
+  );
+
+  fs.readdirSync(folder).forEach((file) => {
+    console.log(
+      "[helpers][agm][mergePdfFiles]: Found:",
+      file
+    );
+    merger.add(`file`);
+  });
+
+  merger.save("merged.pdf");
+
+  return new Promise(async (res, rej) => {
+    const path = require("path");
+
+    let fileName = pdfFileName;
+    let filePath = path.join(__dirname, "merged.pdf");
+
+    console.log(
+      "[helpers][Parcel][mergePdfFiles]: File Path",
+      filePath
+    );
+    const AWS = require("aws-sdk");
+
+    fs.readFile(filePath, function (err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: fileName,
+        Body: file_buffer,
+        ACL: "public-read",
+      };
+
+      let s3Res = await s3.putObject(params).promise();
+      console.log(
+        "[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...",
+        s3Res
+      );
+      res(true);
+    });
+  });
+};
+
 const makeZippedFileOnEFS = (folder, zipFileKey) => {
   const fs = require("fs-extra");
   const archiver = require("archiver");
@@ -104,30 +159,12 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
     "[helpers][agm][makeZippedFileOnEFS]: Lisiting ALL FILES: "
   );
 
-  // let files = [];
-
   fs.readdirSync(folder).forEach((file) => {
     console.log(
       "[helpers][agm][makeZippedFileOnEFS]: Found:",
       file
     );
-    // files.push(file);
   });
-
-  // let filename = `pending-parcel-list.pdf`;
-
-  // PDFMerge(files, { output: `${filename}/3.pdf` }).then(
-  //   (buffer) => {
-  //     console.log(
-  //       "[helpers][agm][makeZippedFileOnEFS]: Files:",
-  //       buffer
-  //     );
-  //   }
-  // );
-  // console.log(
-  //   "[helpers][agm][makeZippedFileOnEFS]: Files:",
-  //   files
-  // );
 
   return new Promise(async (res, rej) => {
     const output = fs.createWriteStream(zipFileKey);
@@ -447,13 +484,24 @@ const parcelHelper = {
         zipFileName
       );
 
-      const uploadedZippedFileDetails =
-        await makeZippedFileOnEFS(basePath, zipFileName);
+      const MergedPdfName =
+        mountPathRoot +
+        "/PARCEL/" +
+        requestId +
+        "/zipped-files/" +
+        `${new Date().getTime()}.pdf`;
+      // const uploadedZippedFileDetails =
+      //   await makeZippedFileOnEFS(basePath, zipFileName);
+
+      const uploadedMergedFileDetails = await mergedPdf(
+        basePath,
+        MergedPdfName
+      );
 
       console.log(
         "[helpers][parcel][generatePendingParcel]: Zip File created successfully, Name:",
-        zipFileName,
-        uploadedZippedFileDetails
+        MergedPdfName,
+        uploadedMergedFileDetails
       );
 
       const s3 = new AWS.S3();
@@ -464,7 +512,7 @@ const parcelHelper = {
             "getObject",
             {
               Bucket: bucketName,
-              Key: zipFileName,
+              Key: MergedPdfName,
               Expires: 24 * 60 * 60,
             },
             (err, url) => {
