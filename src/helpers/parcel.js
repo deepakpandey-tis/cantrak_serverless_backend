@@ -106,7 +106,7 @@ const mergedPdf = (folder, pdfFileName) => {
       "[helpers][agm][mergePdfFiles]: Found:",
       file
     );
-    merger.add(file);
+    merger.add(`${file}`);
   });
 
   merger.save("merged.pdf");
@@ -135,7 +135,7 @@ const mergedPdf = (folder, pdfFileName) => {
       s3.putObject(params, function (err, data) {
         if (err) {
           console.log(
-            "Error at uploadCSVFileOnS3Bucket function",
+            "Error at uploadPDFFileOnS3Bucket function",
             err
           );
           //next(err);
