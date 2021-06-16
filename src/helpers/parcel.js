@@ -111,32 +111,35 @@ const mergedPdf = (folder, pdfFileName) => {
   merger.save("merged.pdf");
 
   return new Promise(async (res, rej) => {
+    const output = fs.createWriteStream(zipFileKey);
     const path = require("path");
 
-    let fileName = pdfFileName;
-    let filePath = path.join(__dirname, "merged.pdf");
+    output.on("close", async () => {
+      let fileName = pdfFileName;
+      let filePath = path.join(__dirname, "merged.pdf");
 
-    console.log(
-      "[helpers][Parcel][mergePdfFiles]: File Path",
-      filePath
-    );
-    const AWS = require("aws-sdk");
-
-    fs.readFile(filePath, function (err, file_buffer) {
-      var s3 = new AWS.S3();
-      var params = {
-        Bucket: bucketName,
-        Key: fileName,
-        Body: file_buffer,
-        ACL: "public-read",
-      };
-
-      let s3Res = await s3.putObject(params).promise();
       console.log(
-        "[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...",
-        s3Res
+        "[helpers][Parcel][mergePdfFiles]: File Path",
+        filePath
       );
-      res(true);
+      const AWS = require("aws-sdk");
+
+      fs.readFile(filePath, function (err, file_buffer) {
+        var s3 = new AWS.S3();
+        var params = {
+          Bucket: bucketName,
+          Key: fileName,
+          Body: file_buffer,
+          ACL: "public-read",
+        };
+
+        let s3Res = await s3.putObject(params).promise();
+        console.log(
+          "[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...",
+          s3Res
+        );
+        res(true);
+      });
     });
   });
 };
