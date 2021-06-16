@@ -178,7 +178,7 @@ functions:
           
   workOrderOverdueProcessor:
     handler: src/handlers/daily-tasks.workOrderOverdueProcessor
-    memorySize: 1024
+    memorySize: 512
     timeout: 300
     events:
       - schedule:
