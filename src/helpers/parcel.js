@@ -111,35 +111,51 @@ const mergedPdf = (folder, pdfFileName) => {
   merger.save("merged.pdf");
 
   return new Promise(async (res, rej) => {
-    const output = fs.createWriteStream(zipFileKey);
     const path = require("path");
 
-    output.on("close", async () => {
-      let fileName = pdfFileName;
-      let filePath = path.join(__dirname, "merged.pdf");
+    let fileName = pdfFileName;
+    let filePath = path.join(__dirname, "merged.pdf");
 
-      console.log(
-        "[helpers][Parcel][mergePdfFiles]: File Path",
-        filePath
-      );
-      const AWS = require("aws-sdk");
+    console.log(
+      "[helpers][Parcel][mergePdfFiles]: File Path",
+      filePath
+    );
+    const AWS = require("aws-sdk");
 
-      fs.readFile(filePath, function (err, file_buffer) {
-        var s3 = new AWS.S3();
-        var params = {
-          Bucket: bucketName,
-          Key: fileName,
-          Body: file_buffer,
-          ACL: "public-read",
-        };
+    fs.readFile(filePath, function (err, file_buffer) {
+      var s3 = new AWS.S3();
+      var params = {
+        Bucket: bucketName,
+        Key: fileName,
+        Body: file_buffer,
+        ACL: "public-read",
+      };
 
-        let s3Res = await s3.putObject(params).promise();
-        console.log(
-          "[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...",
-          s3Res
-        );
-        res(true);
+      s3.putObject(params, function (err, data) {
+        if (err) {
+          console.log(
+            "Error at uploadCSVFileOnS3Bucket function",
+            err
+          );
+          //next(err);
+          return res.status(500).json({
+            errors: [
+              {
+                code: "UNKNOWN_SERVER_ERROR",
+                message: err.message,
+              },
+            ],
+          });
+        } else {
+          let url = process.env.S3_BUCKET_URL + filename;
+          console.log(
+            "[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...",
+            url
+          );
+        }
       });
+
+      res(true);
     });
   });
 };
