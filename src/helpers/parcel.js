@@ -100,23 +100,25 @@ const mergedPdf = (folder, pdfFileName) => {
     "[helpers][agm][mergePdfFiles]: pdfFileName: ",
     pdfFileName
   );
+  const path = require("path");
 
   fs.readdirSync(folder).forEach((file) => {
     console.log(
       "[helpers][agm][mergePdfFiles]: Found:",
       file
     );
-    merger.add(file);
+    let filePath = path.join(__dirname);
+
+    merger.add(`${filePath}`+ file);
   });
 
   merger.save("merged.pdf");
 
-
-  console.log("[helpers][Parcel][mergePdfFiles]: Going to store in S3 Bucket")
+  console.log(
+    "[helpers][Parcel][mergePdfFiles]: Going to store in S3 Bucket"
+  );
 
   return new Promise(async (res, rej) => {
-    const path = require("path");
-
     let fileName = pdfFileName;
     let filePath = path.join(__dirname, "merged.pdf");
 
@@ -511,7 +513,7 @@ const parcelHelper = {
         mountPathRoot +
         "/PARCEL/" +
         requestId +
-        "/zipped-files/" +
+        "/pdf-files/" +
         `${new Date().getTime()}.pdf`;
       // const uploadedZippedFileDetails =
       //   await makeZippedFileOnEFS(basePath, zipFileName);
@@ -522,7 +524,7 @@ const parcelHelper = {
       );
 
       console.log(
-        "[helpers][parcel][generatePendingParcel]: Zip File created successfully, Name:",
+        "[helpers][parcel][generatePendingParcel]: merged File created successfully, Name:",
         MergedPdfName,
         uploadedMergedFileDetails
       );
