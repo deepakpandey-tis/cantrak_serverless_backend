@@ -3,6 +3,7 @@ const knex = require("../db/knex");
 const moment = require("moment-timezone");
 const chromium = require("chrome-aws-lambda");
 const uuid = require("uuid/v4");
+const PDFMerger = require("pdf-merger-js");
 const merger = new PDFMerger();
 const path = require("path");
 
