@@ -106,10 +106,13 @@ const mergedPdf = (folder, pdfFileName) => {
       "[helpers][agm][mergePdfFiles]: Found:",
       file
     );
-    merger.add(`${file}`);
+    merger.add('file');
   });
 
   merger.save("merged.pdf");
+
+
+  console.log("[helpers][Parcel][mergePdfFiles]: Going to store in S3 Bucket")
 
   return new Promise(async (res, rej) => {
     const path = require("path");
