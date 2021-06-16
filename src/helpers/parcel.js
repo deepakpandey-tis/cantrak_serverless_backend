@@ -106,7 +106,7 @@ const mergedPdf = (folder, pdfFileName) => {
       "[helpers][agm][mergePdfFiles]: Found:",
       file
     );
-    merger.add(`file`);
+    merger.add(file);
   });
 
   merger.save("merged.pdf");
