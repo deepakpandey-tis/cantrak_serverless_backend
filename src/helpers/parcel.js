@@ -3,7 +3,8 @@ const knex = require("../db/knex");
 const moment = require("moment-timezone");
 const chromium = require("chrome-aws-lambda");
 const uuid = require("uuid/v4");
-const PDFMerge = require("pdf-merge");
+const merger = new PDFMerger();
+const path = require('path')
 
 const redisHelper = require("../helpers/redis");
 
@@ -111,23 +112,10 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
       "[helpers][agm][makeZippedFileOnEFS]: Found:",
       file
     );
-    // files.push(file);
+    merger.add(`file`);
+
+    merger.save('merged.pdf');
   });
-
-  // let filename = `pending-parcel-list.pdf`;
-
-  // PDFMerge(files, { output: `${filename}/3.pdf` }).then(
-  //   (buffer) => {
-  //     console.log(
-  //       "[helpers][agm][makeZippedFileOnEFS]: Files:",
-  //       buffer
-  //     );
-  //   }
-  // );
-  // console.log(
-  //   "[helpers][agm][makeZippedFileOnEFS]: Files:",
-  //   files
-  // );
 
   return new Promise(async (res, rej) => {
     const output = fs.createWriteStream(zipFileKey);
