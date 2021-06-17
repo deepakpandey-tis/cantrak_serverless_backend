@@ -107,6 +107,7 @@ const mergedPdf = (folder, pdfFileName) => {
   return new Promise(async (res, rej) => {
     let filename = path.parse(pdfFileName);
     filename = filename.base;
+    console.log("[helpers][Parcel][mergePdfFiles]: Parsed File name", filename);
     const AWS = require("aws-sdk");
 
     fs.readFile(pdfFileName, function (err, file_buffer) {
@@ -125,7 +126,7 @@ const mergedPdf = (folder, pdfFileName) => {
         } else {
           let url = process.env.S3_BUCKET_URL + fileName;
           console.log("[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...", url);
-          res(url);
+          res({ url: url, fileName: fileName });
         }
       });
 
@@ -461,8 +462,8 @@ const parcelHelper = {
       console.log("[helpers][parcel][generatePendingParcel]: ZipFile Directory Created/Ensured....");
 
       const mergedPdfName = path.join(mergePdfDir, `${new Date().getTime()}.pdf`);
-      const uploadedMergedFileDetails = await mergedPdf(basePath, mergedPdfName);
-      console.log("[helpers][parcel][generatePendingParcel]: merged File created successfully, Name:", mergedPdfName, uploadedMergedFileDetails);
+      const { url, filename } = await mergedPdf(basePath, mergedPdfName);
+      console.log("[helpers][parcel][generatePendingParcel]: merged File created successfully, Url/Name:", url, filename);
 
       const s3 = new AWS.S3();
 
@@ -472,7 +473,7 @@ const parcelHelper = {
             "getObject",
             {
               Bucket: bucketName,
-              Key: mergedPdfName,
+              Key: filename,
               Expires: 24 * 60 * 60,
             },
             (err, url) => {
@@ -483,7 +484,7 @@ const parcelHelper = {
         }
       );
 
-      console.log("[helpers][parcel][generatePendingParcel]: s3FileDownloadUrl:",s3FileDownloadUrl);
+      console.log("[helpers][parcel][generatePendingParcel]: s3FileDownloadUrl:", s3FileDownloadUrl);
 
       let parcelSlipDocGeneratedList = await redisHelper.getValue(`parcel-docs-link`);
       if (parcelSlipDocGeneratedList) {
@@ -495,7 +496,7 @@ const parcelHelper = {
           e.s3Url = s3Url;
         });
         //parcelSlipDocGeneratedList.push({ requestId: requestId, generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") });
-        await redisHelper.setValueWithExpiry(`parcel-docs-link`,parcelSlipDocGeneratedList,24 * 60 * 60);
+        await redisHelper.setValueWithExpiry(`parcel-docs-link`, parcelSlipDocGeneratedList, 24 * 60 * 60);
       } else {
         await redisHelper.setValueWithExpiry(`parcel-docs-link`,
           [
