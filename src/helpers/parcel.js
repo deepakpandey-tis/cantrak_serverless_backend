@@ -92,52 +92,24 @@ const mergedPdf = (folder, pdfFileName) => {
   const fs = require("fs-extra");
   let bucketName = process.env.S3_BUCKET_NAME;
 
-  console.log(
-    "[helpers][agm][mergePdfFiles]: folder: ",
-    folder
-  );
-  console.log(
-    "[helpers][agm][mergePdfFiles]: pdfFileName: ",
-    pdfFileName
-  );
+  console.log("[helpers][agm][mergePdfFiles]: folder: ", folder);
+  console.log("[helpers][agm][mergePdfFiles]: pdfFileName: ", pdfFileName);
   const path = require("path");
 
   fs.readdirSync(folder).forEach((file) => {
-    console.log(
-      "[helpers][agm][mergePdfFiles]: Found:",
-      file
-    );
-    // let filePath = path.join(__dirname);
-
-    merger.add(`${folder}` + file);
+    console.log("[helpers][agm][mergePdfFiles]: Found:", file);
+    merger.add(path.join(folder, file));
   });
-  let tempraryDirectory = "/tmp/";
+  merger.save(`${pdfFileName}`);
 
-  console.log(
-    "[helpers][Parcel][mergePdfFiles]:temp directory",
-    `${tempraryDirectory}merged.pdf`
-  );
-  merger.save(`${tempraryDirectory}merged.pdf`);
-
-  console.log(
-    "[helpers][Parcel][mergePdfFiles]: Going to store in S3 Bucket"
-  );
+  console.log("[helpers][Parcel][mergePdfFiles]: Going to store in S3 Bucket");
 
   return new Promise(async (res, rej) => {
-    let fileName = pdfFileName;
-    let filePath = path.join(
-      __dirname,
-      "/tmp/",
-      "merged.pdf"
-    );
-
-    console.log(
-      "[helpers][Parcel][mergePdfFiles]: File Path",
-      filePath
-    );
+    let filename = path.parse(pdfFileName);
+    filename = filename.base;
     const AWS = require("aws-sdk");
 
-    fs.readFile(filePath, function (err, file_buffer) {
+    fs.readFile(pdfFileName, function (err, file_buffer) {
       var s3 = new AWS.S3();
       var params = {
         Bucket: bucketName,
@@ -148,30 +120,17 @@ const mergedPdf = (folder, pdfFileName) => {
 
       s3.putObject(params, function (err, data) {
         if (err) {
-          console.log(
-            "Error at uploadPDFFileOnS3Bucket function",
-            err
-          );
-          //next(err);
-          return res.status(500).json({
-            errors: [
-              {
-                code: "UNKNOWN_SERVER_ERROR",
-                message: err.message,
-              },
-            ],
-          });
+          console.log("Error at uploadPDFFileOnS3Bucket function", err);
+          rej(err);
         } else {
           let url = process.env.S3_BUCKET_URL + fileName;
-          console.log(
-            "[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...",
-            url
-          );
+          console.log("[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...", url);
+          res(url);
         }
       });
 
-      res(true);
     });
+
   });
 };
 
@@ -497,46 +456,13 @@ const parcelHelper = {
       }
 
       // Write Code to create Zip File...
-      await fs.ensureDir(
-        mountPathRoot +
-          "/PARCEL/" +
-          requestId +
-          "/zipped-files"
-      );
-      console.log(
-        "[helpers][parcel][generatePendingParcel]: ZipFile Directory Created/Ensured...."
-      );
+      const mergePdfDir = path.join(mountPathRoot, 'PARCEL', `${requestId}`, 'merged-files');
+      await fs.ensureDir(mergePdfDir);
+      console.log("[helpers][parcel][generatePendingParcel]: ZipFile Directory Created/Ensured....");
 
-      const zipFileName =
-        mountPathRoot +
-        "/PARCEL/" +
-        requestId +
-        "/zipped-files/" +
-        `${new Date().getTime()}.zip`;
-      console.log(
-        "[helpers][parcel][generatePendingParcel]: Going To Create Zip file with name:",
-        zipFileName
-      );
-
-      const MergedPdfName =
-        mountPathRoot +
-        "/PARCEL/" +
-        requestId +
-        "/pdf-files/" +
-        `${new Date().getTime()}.pdf`;
-      // const uploadedZippedFileDetails =
-      //   await makeZippedFileOnEFS(basePath, zipFileName);
-
-      const uploadedMergedFileDetails = await mergedPdf(
-        basePath,
-        MergedPdfName
-      );
-
-      console.log(
-        "[helpers][parcel][generatePendingParcel]: merged File created successfully, Name:",
-        MergedPdfName,
-        uploadedMergedFileDetails
-      );
+      const mergedPdfName = path.join(mergePdfDir, `${new Date().getTime()}.pdf`);
+      const uploadedMergedFileDetails = await mergedPdf(basePath, mergedPdfName);
+      console.log("[helpers][parcel][generatePendingParcel]: merged File created successfully, Name:", mergedPdfName, uploadedMergedFileDetails);
 
       const s3 = new AWS.S3();
 
@@ -546,7 +472,7 @@ const parcelHelper = {
             "getObject",
             {
               Bucket: bucketName,
-              Key: MergedPdfName,
+              Key: mergedPdfName,
               Expires: 24 * 60 * 60,
             },
             (err, url) => {
@@ -557,39 +483,28 @@ const parcelHelper = {
         }
       );
 
-      console.log(
-        "[helpers][parcel][generatePendingParcel]: s3FileDownloadUrl:",
-        s3FileDownloadUrl
-      );
-      let parcelSlipDocGeneratedList =
-        await redisHelper.getValue(`parcel-docs-link`);
+      console.log("[helpers][parcel][generatePendingParcel]: s3FileDownloadUrl:",s3FileDownloadUrl);
+
+      let parcelSlipDocGeneratedList = await redisHelper.getValue(`parcel-docs-link`);
       if (parcelSlipDocGeneratedList) {
         parcelSlipDocGeneratedList.map((e) => {
           let s3Url = e.s3Url;
           if (e.requestId) {
             s3Url = s3FileDownloadUrl;
           }
-
           e.s3Url = s3Url;
         });
         //parcelSlipDocGeneratedList.push({ requestId: requestId, generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") });
-        await redisHelper.setValueWithExpiry(
-          `parcel-docs-link`,
-          parcelSlipDocGeneratedList,
-          24 * 60 * 60
-        );
+        await redisHelper.setValueWithExpiry(`parcel-docs-link`,parcelSlipDocGeneratedList,24 * 60 * 60);
       } else {
-        await redisHelper.setValueWithExpiry(
-          `parcel-docs-link`,
+        await redisHelper.setValueWithExpiry(`parcel-docs-link`,
           [
             {
               requestId: requestId,
               generatedBy: requestedBy,
               orgId: orgId,
               s3Url: s3FileDownloadUrl,
-              generatedAt: moment().format(
-                "MMMM DD, yyyy, hh:mm:ss A"
-              ),
+              generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A"),
             },
           ],
           24 * 60 * 60
