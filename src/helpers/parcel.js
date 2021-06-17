@@ -145,9 +145,9 @@ const parcelHelper = {
         orgId: orgId,
         module: module,
         data: {
-          parcelDetail : data.parcelDetail,
-          receiverData : data. receiverData,
-          senderData : data.senderData
+          parcelDetail: data.parcelDetail,
+          receiverData: data.receiverData,
+          senderData: data.senderData
         }
       };
 
@@ -180,7 +180,7 @@ const parcelHelper = {
 
       let parcelData = data.parcelList;
       //let orgId = data.orgId;
-      
+
       const basePath = mountPathRoot + "/PARCEL/" + requestId + "/PendingListDocuments/" + new Date().getTime() + "/";
       console.log("[helpers][parcel][generatePendingParcel]: Base Directory (For Docs)....", basePath);
 
@@ -209,7 +209,7 @@ const parcelHelper = {
 
         try {
 
-          if(pData.length <= 10){
+          if (pData.length <= 10) {
             let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
             // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
             let qrCodeDataURI = await QRCODE.toDataURL(qrString);
@@ -221,7 +221,7 @@ const parcelHelper = {
             pData.push(data);
             pId.push(data.id);
           }
-          
+
           // else
           // {
           //   pData = [];
@@ -240,7 +240,7 @@ const parcelHelper = {
           // }
 
           // if(pData.length == 10 || pData.length == index){
-            if(pData.length == 10 ){
+          if (pData.length == 10) {
 
             console.log("parcelData", pData);
 
@@ -264,7 +264,7 @@ const parcelHelper = {
             pData = [];
             pId = [];
 
-          }else if(!parcelData[index+1]){
+          } else if (!parcelData[index + 1]) {
             let htmlContents = await ejs.renderFile(templatePath, { data: pData });
             console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
 
@@ -284,7 +284,7 @@ const parcelHelper = {
           }
 
           index++;
-          
+
         } catch (err) {
           console.error("[helpers][parcel][generatePdf]: Inner Loop: Error", err);
           if (err.list && Array.isArray(err.list)) {
@@ -294,11 +294,11 @@ const parcelHelper = {
           }
           throw new Error(err);
         }
-        
+
         return data;
       });
 
-      
+
       console.log("[helpers][parcel][generatePendingParcel]: Generation Finished. Going to PRiNT");
       console.log("============================== PRiNT ======================================");
 
@@ -327,10 +327,10 @@ const parcelHelper = {
       }
 
       // Write Code to create Zip File...
-      await fs.ensureDir(mountPathRoot +  "/PARCEL/" + requestId + "/zipped-files");
+      await fs.ensureDir(mountPathRoot + "/PARCEL/" + requestId + "/zipped-files");
       console.log("[helpers][parcel][generatePendingParcel]: ZipFile Directory Created/Ensured....");
 
-      const zipFileName = mountPathRoot +  "/PARCEL/" + requestId + "/zipped-files/" + `${new Date().getTime()}.zip`;
+      const zipFileName = mountPathRoot + "/PARCEL/" + requestId + "/zipped-files/" + `${new Date().getTime()}.zip`;
       console.log("[helpers][parcel][generatePendingParcel]: Going To Create Zip file with name:", zipFileName);
       const uploadedZippedFileDetails = await makeZippedFileOnEFS(basePath, zipFileName);
 
@@ -349,19 +349,19 @@ const parcelHelper = {
       let parcelSlipDocGeneratedList = await redisHelper.getValue(
         `parcel-docs-link`
       );
-      if(parcelSlipDocGeneratedList){
-        parcelSlipDocGeneratedList.map(e =>{
+      if (parcelSlipDocGeneratedList) {
+        parcelSlipDocGeneratedList.map(e => {
           let s3Url = e.s3Url;
-          if(e.requestId){
+          if (e.requestId) {
             s3Url = s3FileDownloadUrl;
           }
 
           e.s3Url = s3Url;
         });
         //parcelSlipDocGeneratedList.push({ requestId: requestId, generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") });
-        await redisHelper.setValueWithExpiry(`parcel-docs-link`, parcelSlipDocGeneratedList , 24 * 60 * 60);
+        await redisHelper.setValueWithExpiry(`parcel-docs-link`, parcelSlipDocGeneratedList, 24 * 60 * 60);
       }
-      else{
+      else {
         await redisHelper.setValueWithExpiry(`parcel-docs-link`, [{ requestId: requestId, generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") }], 24 * 60 * 60);
       }
 
