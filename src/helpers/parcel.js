@@ -125,11 +125,7 @@ const mergedPdf = (folder, pdfFileName) => {
 
   return new Promise(async (res, rej) => {
     let fileName = pdfFileName;
-    let filePath = path.join(
-      __dirname,
-      "tempraryDirectory",
-      "merged.pdf"
-    );
+    let filePath = path.join("/tmp/", "merged.pdf");
 
     console.log(
       "[helpers][Parcel][mergePdfFiles]: File Path",
