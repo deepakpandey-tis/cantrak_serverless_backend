@@ -113,7 +113,7 @@ const mergedPdf = (folder, pdfFileName) => {
       var s3 = new AWS.S3();
       var params = {
         Bucket: bucketName,
-        Key: fileName,
+        Key: filename,
         Body: file_buffer,
         ACL: "public-read",
       };
