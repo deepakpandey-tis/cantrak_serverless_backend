@@ -111,8 +111,8 @@ const mergedPdf = (folder, pdfFileName) => {
 
     merger.add(`${folder}`+ file);
   });
-
-  merger.save("merged.pdf");
+  let tempraryDirectory = "/tmp/";
+  merger.save(`${tempraryDirectory}merged.pdf`);
 
   console.log(
     "[helpers][Parcel][mergePdfFiles]: Going to store in S3 Bucket"
@@ -120,7 +120,8 @@ const mergedPdf = (folder, pdfFileName) => {
 
   return new Promise(async (res, rej) => {
     let fileName = pdfFileName;
-    let filePath = path.join(__dirname, "merged.pdf");
+    let filePath = path.join(__dirname,"tempraryDirectory", "merged.pdf");
+    
 
     console.log(
       "[helpers][Parcel][mergePdfFiles]: File Path",
