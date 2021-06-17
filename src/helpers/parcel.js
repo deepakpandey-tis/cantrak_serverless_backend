@@ -108,7 +108,7 @@ const mergedPdf = (folder, pdfFileName) => {
     let filename = path.parse(pdfFileName);
     filename = filename.base;
     console.log("[helpers][Parcel][mergePdfFiles]: Parsed File name", filename);
-    const AWS = require("aws-sdk");
+    // const AWS = require("aws-sdk");
 
     fs.readFile(pdfFileName, function (err, file_buffer) {
       var s3 = new AWS.S3();
