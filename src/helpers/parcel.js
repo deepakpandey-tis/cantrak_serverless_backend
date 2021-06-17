@@ -209,7 +209,7 @@ const parcelHelper = {
 
         try {
 
-          if(pData.length < 10){
+          if(pData.length <= 10){
             let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
             // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
             let qrCodeDataURI = await QRCODE.toDataURL(qrString);
@@ -221,7 +221,7 @@ const parcelHelper = {
             pData.push(data);
             pId.push(data.id);
           }
-          else
+          // else
           // {
           //   pData = [];
           //   pId = [];
@@ -260,8 +260,8 @@ const parcelHelper = {
             console.log("[helpers][parcel][generatePendingParcel]: Prepared Doc for Parcel: ", document);
             sheetsToPrepare.push(document);
 
-            pdfData = []
-            pdfId = []
+            pData = [];
+            pId = [];
 
           }
 
