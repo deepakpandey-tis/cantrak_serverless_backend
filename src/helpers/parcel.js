@@ -124,9 +124,9 @@ const mergedPdf = (folder, pdfFileName) => {
           console.log("Error at uploadPDFFileOnS3Bucket function", err);
           rej(err);
         } else {
-          let url = process.env.S3_BUCKET_URL + filename;
-          console.log("[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...", url);
-          res({ url: url, fileName: fileName });
+          let fileUrl = process.env.S3_BUCKET_URL + filename;
+          console.log("[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...", fileUrl);
+          res({ fileUrl, fileName });
         }
       });
 
@@ -462,8 +462,8 @@ const parcelHelper = {
       console.log("[helpers][parcel][generatePendingParcel]: ZipFile Directory Created/Ensured....");
 
       const mergedPdfName = path.join(mergePdfDir, `${new Date().getTime()}.pdf`);
-      const { url, filename } = await mergedPdf(basePath, mergedPdfName);
-      console.log("[helpers][parcel][generatePendingParcel]: merged File created successfully, Url/Name:", url, filename);
+      const { fileUrl, fileName } = await mergedPdf(basePath, mergedPdfName);
+      console.log("[helpers][parcel][generatePendingParcel]: merged File created successfully, Url/Name:", fileUrl, fileName);
 
       const s3 = new AWS.S3();
 
@@ -473,7 +473,7 @@ const parcelHelper = {
             "getObject",
             {
               Bucket: bucketName,
-              Key: filename,
+              Key: fileName,
               Expires: 24 * 60 * 60,
             },
             (err, url) => {
