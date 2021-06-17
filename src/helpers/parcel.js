@@ -204,8 +204,8 @@ const parcelHelper = {
 
       let pData = [];
       let pId = [];
-      let index = 1;
-      parcelData = await Parallel.map(parcelData,i ,parcel, async (data) => {
+      let index = 0;
+      parcelData = await Parallel.map(parcelData, async (data) => {
 
         try {
 
@@ -264,7 +264,7 @@ const parcelHelper = {
             pData = [];
             pId = [];
 
-          }else if(!parcel[i+1]){
+          }else if(!parcelData[index+1]){
             let htmlContents = await ejs.renderFile(templatePath, { data: pData });
             console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
 
