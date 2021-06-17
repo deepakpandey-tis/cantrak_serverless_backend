@@ -109,9 +109,14 @@ const mergedPdf = (folder, pdfFileName) => {
     );
     // let filePath = path.join(__dirname);
 
-    merger.add(`${folder}`+ file);
+    merger.add(`${folder}` + file);
   });
   let tempraryDirectory = "/tmp/";
+
+  console.log(
+    "[helpers][Parcel][mergePdfFiles]:temp directory",
+    `${tempraryDirectory}merged.pdf`
+  );
   merger.save(`${tempraryDirectory}merged.pdf`);
 
   console.log(
@@ -120,8 +125,11 @@ const mergedPdf = (folder, pdfFileName) => {
 
   return new Promise(async (res, rej) => {
     let fileName = pdfFileName;
-    let filePath = path.join(__dirname,"tempraryDirectory", "merged.pdf");
-    
+    let filePath = path.join(
+      __dirname,
+      "tempraryDirectory",
+      "merged.pdf"
+    );
 
     console.log(
       "[helpers][Parcel][mergePdfFiles]: File Path",
