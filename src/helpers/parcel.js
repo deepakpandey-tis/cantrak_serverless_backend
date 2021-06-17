@@ -154,7 +154,7 @@ const mergedPdf = (folder, pdfFileName) => {
             ],
           });
         } else {
-          let url = process.env.S3_BUCKET_URL + filename;
+          let url = process.env.S3_BUCKET_URL + fileName;
           console.log(
             "[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...",
             url
