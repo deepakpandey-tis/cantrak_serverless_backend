@@ -123,7 +123,7 @@ const mergedPdf = (folder, pdfFileName) => {
           console.log("Error at uploadPDFFileOnS3Bucket function", err);
           rej(err);
         } else {
-          let url = process.env.S3_BUCKET_URL + fileName;
+          let url = process.env.S3_BUCKET_URL + filename;
           console.log("[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...", url);
           res(url);
         }
