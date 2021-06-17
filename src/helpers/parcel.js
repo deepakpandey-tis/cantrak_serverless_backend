@@ -114,7 +114,7 @@ const mergedPdf = (folder, pdfFileName) => {
       var s3 = new AWS.S3();
       var params = {
         Bucket: bucketName,
-        Key: fileName,
+        Key: filename,
         Body: file_buffer,
         ACL: "public-read",
       };
@@ -124,7 +124,7 @@ const mergedPdf = (folder, pdfFileName) => {
           console.log("Error at uploadPDFFileOnS3Bucket function", err);
           rej(err);
         } else {
-          let url = process.env.S3_BUCKET_URL + fileName;
+          let url = process.env.S3_BUCKET_URL + filename;
           console.log("[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...", url);
           res({ url: url, fileName: fileName });
         }
