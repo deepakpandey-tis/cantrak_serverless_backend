@@ -209,7 +209,7 @@ const parcelHelper = {
 
         try {
 
-          if(pData.length < 10){
+          if(pData.length <= 10){
             let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
             // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
             let qrCodeDataURI = await QRCODE.toDataURL(qrString);
@@ -221,23 +221,25 @@ const parcelHelper = {
             pData.push(data);
             pId.push(data.id);
           }
-          else{
-            pData = [];
-            pId = [];
+          // else
+          // {
+          //   pData = [];
+          //   pId = [];
 
-            let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
-            // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
-            let qrCodeDataURI = await QRCODE.toDataURL(qrString);
-            data.qrCode = qrCodeDataURI;
-            data.createdAt = moment(
-              +data.createdAt
-            ).format("MMMM DD, yyyy, hh:mm:ss A");
+          //   let qrString = JSON.stringify(`org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`);
+          //   // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
+          //   let qrCodeDataURI = await QRCODE.toDataURL(qrString);
+          //   data.qrCode = qrCodeDataURI;
+          //   data.createdAt = moment(
+          //     +data.createdAt
+          //   ).format("MMMM DD, yyyy, hh:mm:ss A");
 
-            pData.push(data);
+          //   pData.push(data);
 
-          }
+          // }
 
-          if(pData.length == 10 || pData.length == index){
+          // if(pData.length == 10 || pData.length == index){
+            if(pData.length == 10){
 
             console.log("parcelData", pData);
 
@@ -257,6 +259,9 @@ const parcelHelper = {
 
             console.log("[helpers][parcel][generatePendingParcel]: Prepared Doc for Parcel: ", document);
             sheetsToPrepare.push(document);
+
+            pData = [];
+            pId = [];
 
           }
 
