@@ -91,22 +91,26 @@ const createPdfOnEFS = (
 };
 
 const mergedPdf = (folder, pdfFileName) => {
-  
+
 
 
   console.log("[helpers][agm][mergePdfFiles]: folder: ", folder);
   console.log("[helpers][agm][mergePdfFiles]: pdfFileName: ", pdfFileName);
   const path = require("path");
 
-  fs.readdirSync(folder).forEach((file) => {
-    console.log("[helpers][agm][mergePdfFiles]: Found:", file);
-    merger.add(path.join(folder, file));
-  });
-  merger.save(`${pdfFileName}`);
+
 
   console.log("[helpers][Parcel][mergePdfFiles]: Going to store in S3 Bucket");
 
   return new Promise(async (res, rej) => {
+
+    fs.readdirSync(folder).forEach((file) => {
+      console.log("[helpers][agm][mergePdfFiles]: Found:", file);
+      merger.add(path.join(folder, file));
+    });
+
+
+    await merger.save(`${pdfFileName}`);
     let filename = path.parse(pdfFileName);
     filename = filename.base;
     console.log("[helpers][Parcel][mergePdfFiles]: Parsed File name", filename);
@@ -190,7 +194,7 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
         fileContent
       );
 
-      
+
       const params = {
         Bucket: bucketName,
         Key: zipFileKey,
@@ -506,7 +510,6 @@ const parcelHelper = {
       const { fileUrl, fileName } = await mergedPdf(basePath, mergedPdfName);
       console.log("[helpers][parcel][generatePendingParcel]: merged File created successfully, Url/Name:", fileUrl, fileName);
 
-      const s3 = new AWS.S3();
 
       let s3FileDownloadUrl = await new Promise(
         (resolve, reject) => {
