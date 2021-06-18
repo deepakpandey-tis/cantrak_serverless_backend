@@ -15,6 +15,7 @@ AWS.config.update({
   secretAccessKey: process.env.SECRET_ACCESS_KEY,
   region: process.env.REGION || "us-east-1",
 });
+const s3 = new AWS.S3();
 
 const createPdfOnEFS = (
   document,
@@ -189,7 +190,7 @@ const makeZippedFileOnEFS = (folder, zipFileKey) => {
         fileContent
       );
 
-      const s3 = new AWS.S3();
+      
       const params = {
         Bucket: bucketName,
         Key: zipFileKey,
