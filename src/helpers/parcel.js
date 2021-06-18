@@ -90,7 +90,7 @@ const createPdfOnEFS = (
 
 const mergedPdf = (folder, pdfFileName) => {
   const fs = require("fs-extra");
-  let bucketName = process.env.S3_BUCKET_NAME;
+
 
   console.log("[helpers][agm][mergePdfFiles]: folder: ", folder);
   console.log("[helpers][agm][mergePdfFiles]: pdfFileName: ", pdfFileName);
@@ -103,7 +103,7 @@ const mergedPdf = (folder, pdfFileName) => {
   merger.save(`${pdfFileName}`);
 
   console.log("[helpers][Parcel][mergePdfFiles]: Going to store in S3 Bucket");
-  
+
   return new Promise(async (res, rej) => {
     let filename = path.parse(pdfFileName);
     filename = filename.base;
@@ -114,18 +114,19 @@ const mergedPdf = (folder, pdfFileName) => {
     console.log('[helpers][Parcel][mergePdfFiles]:File Uploaded At Url:', fileUrl);
 
 
-    res({fileUrl, fileName:filename});
+    res({ fileUrl, fileName: filename });
 
   });
 };
 
 const uploadFileToS3 = async (filePath, s3Path) => {
 
+  let bucketName = process.env.S3_BUCKET_NAME;
   return new Promise((resolve, reject) => {
 
     fs.readFile(filePath, (err, file_buffer) => {
       let params = {
-        Bucket: S3_BUCKET_NAME,
+        Bucket: bucketName,
         Key: s3Path,
         Body: file_buffer,
         ACL: "public-read",
@@ -136,7 +137,7 @@ const uploadFileToS3 = async (filePath, s3Path) => {
           console.log("Error at uploadPDFFileOnS3Bucket function", err);
           reject(err);
         } else {
-          let fileUrl = S3_BUCKET_URL + s3Path;
+          let fileUrl = process.env.S3_BUCKET_URL + s3Path;
           console.log("[helpers][Parcel][mergePdfFiles]: PDF File uploaded Successfully on s3...", fileUrl);
           resolve(fileUrl);
         }
@@ -398,7 +399,7 @@ const parcelHelper = {
                 document
               );
               sheetsToPrepare.push(document);
-            }else if(!parcelData[index + 1]){
+            } else if (!parcelData[index + 1]) {
               let htmlContents = await ejs.renderFile(
                 templatePath,
                 { data: pData }
