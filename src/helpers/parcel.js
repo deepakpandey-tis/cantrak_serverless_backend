@@ -205,7 +205,7 @@ const parcelHelper = {
       let pData = [];
       let pId = [];
       let index = 1;
-      parcelData = await Parallel.map(parcelData, async (data) => {
+      parcelData = await Parallel.map(parcelData,i ,parcel, async (data) => {
 
         try {
 
@@ -221,6 +221,7 @@ const parcelHelper = {
             pData.push(data);
             pId.push(data.id);
           }
+          
           // else
           // {
           //   pData = [];
@@ -239,7 +240,7 @@ const parcelHelper = {
           // }
 
           // if(pData.length == 10 || pData.length == index){
-            if(pData.length == 10){
+            if(pData.length == 10 ){
 
             console.log("parcelData", pData);
 
@@ -263,6 +264,23 @@ const parcelHelper = {
             pData = [];
             pId = [];
 
+          }else if(!parcel[i+1]){
+            let htmlContents = await ejs.renderFile(templatePath, { data: pData });
+            console.log('[helpers][parcel][generatePendingParcel]: htmlContents:', htmlContents);
+
+            let filename = `pending-parcel-list-${pId.join(',')}.pdf`;
+
+            const document = {
+              html: htmlContents,
+              data: {
+                parcelData: pData
+              },
+              s3BasePath: basePath,
+              filename: filename,
+            };
+
+            console.log("[helpers][parcel][generatePendingParcel]: Prepared Doc for Parcel: ", document);
+            sheetsToPrepare.push(document);
           }
 
           index++;
