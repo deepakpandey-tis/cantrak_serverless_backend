@@ -6,6 +6,7 @@ const uuid = require("uuid/v4");
 const PDFMerger = require("pdf-merger-js");
 const merger = new PDFMerger();
 const path = require("path");
+const fs = require("fs-extra");
 
 const redisHelper = require("../helpers/redis");
 
@@ -89,7 +90,7 @@ const createPdfOnEFS = (
 };
 
 const mergedPdf = (folder, pdfFileName) => {
-  const fs = require("fs-extra");
+  
 
 
   console.log("[helpers][agm][mergePdfFiles]: folder: ", folder);
