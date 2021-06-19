@@ -339,7 +339,7 @@ const parcelHelper = {
         parcelData,
         async (data) => {
           try {
-            if (pData.length <  10) {
+            if (pData.length <  8) {
               let qrString = JSON.stringify(
                 `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
               );
@@ -374,7 +374,7 @@ const parcelHelper = {
             }
 
             if (
-              pData.length == 10
+              pData.length == 8
             ) {
               console.log("parcelData", pData);
 
@@ -405,6 +405,8 @@ const parcelHelper = {
                 document
               );
               sheetsToPrepare.push(document);
+              pData = [];
+              pId = [];
             } else if (!parcelData[index + 1]) {
               let htmlContents = await ejs.renderFile(
                 templatePath,
@@ -433,6 +435,8 @@ const parcelHelper = {
                 document
               );
               sheetsToPrepare.push(document);
+              pData = [];
+              pId = [];
             }
 
             index++;
