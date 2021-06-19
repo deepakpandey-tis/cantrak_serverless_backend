@@ -339,7 +339,7 @@ const parcelHelper = {
         parcelData,
         async (data) => {
           try {
-            if (pData.length < 8) {
+            if (pData.length <  10) {
               let qrString = JSON.stringify(
                 `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
               );
@@ -354,14 +354,14 @@ const parcelHelper = {
 
               pData.push(data);
               pId.push(data.id);
-            }
-            else {
+            } else {
               pData = [];
               pId = [];
 
               let qrString = JSON.stringify(
                 `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
               );
+              // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
               let qrCodeDataURI = await QRCODE.toDataURL(
                 qrString
               );
@@ -374,7 +374,7 @@ const parcelHelper = {
             }
 
             if (
-              pData.length == 8
+              pData.length == 10
             ) {
               console.log("parcelData", pData);
 
@@ -405,9 +405,6 @@ const parcelHelper = {
                 document
               );
               sheetsToPrepare.push(document);
-              let pData = [];
-              let pId = [];
-
             } else if (!parcelData[index + 1]) {
               let htmlContents = await ejs.renderFile(
                 templatePath,
@@ -438,7 +435,6 @@ const parcelHelper = {
               sheetsToPrepare.push(document);
             }
 
-            
             index++;
           } catch (err) {
             console.error(
