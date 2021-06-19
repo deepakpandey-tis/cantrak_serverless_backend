@@ -376,7 +376,7 @@ const parcelHelper = {
             if (
               pData.length == 8
             ) {
-              console.log("parcelData", pData);
+              // console.log("parcelData", pData);
 
               let htmlContents = await ejs.renderFile(
                 templatePath,
