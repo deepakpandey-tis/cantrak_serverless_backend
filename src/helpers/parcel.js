@@ -339,7 +339,7 @@ const parcelHelper = {
         parcelData,
         async (data) => {
           try {
-            if (pData.length < 10) {
+            if (pData.length < 8) {
               let qrString = JSON.stringify(
                 `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
               );
@@ -354,27 +354,27 @@ const parcelHelper = {
 
               pData.push(data);
               pId.push(data.id);
-            } else {
-              pData = [];
-              pId = [];
-
-              let qrString = JSON.stringify(
-                `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
-              );
-              // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
-              let qrCodeDataURI = await QRCODE.toDataURL(
-                qrString
-              );
-              data.qrCode = qrCodeDataURI;
-              data.createdAt = moment(
-                +data.createdAt
-              ).format("MMMM DD, yyyy, hh:mm:ss A");
-
-              pData.push(data);
             }
+            // else {
+            //   pData = [];
+            //   pId = [];
+
+            //   let qrString = JSON.stringify(
+            //     `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
+            //   );
+            //   let qrCodeDataURI = await QRCODE.toDataURL(
+            //     qrString
+            //   );
+            //   data.qrCode = qrCodeDataURI;
+            //   data.createdAt = moment(
+            //     +data.createdAt
+            //   ).format("MMMM DD, yyyy, hh:mm:ss A");
+
+            //   pData.push(data);
+            // }
 
             if (
-              pData.length == 10
+              pData.length == 8
             ) {
               console.log("parcelData", pData);
 
@@ -405,6 +405,9 @@ const parcelHelper = {
                 document
               );
               sheetsToPrepare.push(document);
+              let pData = [];
+              let pId = [];
+
             } else if (!parcelData[index + 1]) {
               let htmlContents = await ejs.renderFile(
                 templatePath,
