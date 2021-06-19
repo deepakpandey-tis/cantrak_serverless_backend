@@ -355,28 +355,28 @@ const parcelHelper = {
               pData.push(data);
               pId.push(data.id);
             }
-            // else {
-            //   pData = [];
-            //   pId = [];
+            else {
+              pData = [];
+              pId = [];
 
-            //   let qrString = JSON.stringify(
-            //     `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
-            //   );
-            //   let qrCodeDataURI = await QRCODE.toDataURL(
-            //     qrString
-            //   );
-            //   data.qrCode = qrCodeDataURI;
-            //   data.createdAt = moment(
-            //     +data.createdAt
-            //   ).format("MMMM DD, yyyy, hh:mm:ss A");
+              let qrString = JSON.stringify(
+                `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
+              );
+              let qrCodeDataURI = await QRCODE.toDataURL(
+                qrString
+              );
+              data.qrCode = qrCodeDataURI;
+              data.createdAt = moment(
+                +data.createdAt
+              ).format("MMMM DD, yyyy, hh:mm:ss A");
 
-            //   pData.push(data);
-            // }
+              pData.push(data);
+            }
 
             if (
               pData.length == 8
             ) {
-              // console.log("parcelData", pData);
+              console.log("parcelData", pData);
 
               let htmlContents = await ejs.renderFile(
                 templatePath,
