@@ -4435,7 +4435,8 @@ const facilityBookingController = {
                             "property_units.propertyUnitType as unitType",
                             "property_units.description",
                             "property_unit_type_master.propertyUnitTypeCode",
-                            "property_unit_type_master.descriptionEng"
+                            "property_unit_type_master.descriptionEng",
+                            "entity_bookings.remarks"
                         )
                         .where("entity_bookings.orgId", req.orgId)
 
@@ -4670,7 +4671,8 @@ const facilityBookingController = {
                         "property_units.propertyUnitType as unitType",
                         "property_units.description",
                         "property_unit_type_master.propertyUnitTypeCode",
-                        "property_unit_type_master.descriptionEng"
+                        "property_unit_type_master.descriptionEng",
+                        "entity_bookings.remarks"
                     )
                     .where("entity_bookings.orgId", req.orgId)
                     .where("entity_bookings.bookingStartDateTime", ">", bookingStartTime)
