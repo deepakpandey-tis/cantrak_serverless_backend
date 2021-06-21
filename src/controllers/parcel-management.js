@@ -730,8 +730,8 @@ const parcelManagementController = {
                     [fromNewDate, toNewDate]
                   );
                 }
-                if(displayId){
-                  qb.where("parcel_management.displayId",displayId)
+                if (displayId) {
+                  qb.where("parcel_management.displayId", displayId)
                 }
               })
               .where((qb) => {
@@ -872,8 +872,8 @@ const parcelManagementController = {
                     [fromNewDate, toNewDate]
                   );
                 }
-                if(displayId){
-                  qb.where("parcel_management.displayId",displayId)
+                if (displayId) {
+                  qb.where("parcel_management.displayId", displayId)
                 }
               })
               .where((qb) => {
@@ -2569,7 +2569,7 @@ const parcelManagementController = {
             "parcel_type.parcelType as pType",
             "storage.storageName",
             "storage.storageCode",
-            "storage.description",
+            "storage.description as storageDescription",
           ])
           // .where("parcel_user_non_tis.type",2)
           // .orWhere("parcel_user_non_tis.type",null)
@@ -2637,13 +2637,13 @@ const parcelManagementController = {
   },
   updateParcelDetails: async (req, res) => {
     try {
-      let parcel = null;
-      let insertedImages = [];
+      // let parcel = null;
+      // let insertedImages = [];
       let id = req.body.id;
 
       let parcelResult = null;
       let noOrgUserData = [];
-      let noOrgUserDataTenant = [];
+      // let noOrgUserDataTenant = [];
       let orgUserData = [];
       parcelRemarks = [];
       // let qrUpdateResult ;
@@ -2674,6 +2674,10 @@ const parcelManagementController = {
             .allow(null)
             .optional(),
           barcode: Joi.string().allow("").optional(),
+          storage: Joi.string()
+            .allow("")
+            .allow(null)
+            .optional(),
         });
 
         const result = Joi.validate(parcelPayload, schema);
@@ -2694,12 +2698,12 @@ const parcelManagementController = {
           });
         }
         let currentTime = new Date().getTime();
+        parcelPayload = _.omit(parcelPayload, ["storage"]);
 
         const insertData = {
           ...parcelPayload,
+          storageLocation: req.body.storage,
           orgId: orgId,
-          // createdBy: req.me.id,
-          // createdAt: currentTime,
           updatedAt: currentTime,
         };
 
@@ -3075,7 +3079,7 @@ const parcelManagementController = {
           parcelRemarks,
         },
       });
-    } catch (err) {}
+    } catch (err) { }
   },
 
   getParcelStatusForCheckOut: async (req, res) => {
