@@ -272,6 +272,7 @@ const invoiceController = {
                     "service_requests.description",
                     "service_requests.location",
                     "service_requests.priority",
+                    "service_requests.description as descriptions",
                     "users.name as createdBy"
                 )
                 .where({
