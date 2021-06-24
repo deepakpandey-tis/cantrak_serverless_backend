@@ -4,6 +4,7 @@ const router = Router()
 const authMiddleware = require('../middlewares/auth')
 const dashboardController = require('../controllers/dashboard')
 const roleMiddleware = require('../middlewares/role')
+const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddleware')
 
 router.get('/top-asset-problem', dashboardController.getTopAssetProblem)
 
@@ -84,6 +85,31 @@ router.post('/get-service-request-by-month-priority-chart-data',
     roleMiddleware.parseUserPermission,
     dashboardController.getServiceRequestByMonthPriorityChartdata
 )
+
+router.post(
+    '/get-cm-dashboard-data',
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    dashboardController.getCmDashboardData
+)
+
+router.post(
+    '/get-cm-chart-data',
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isCMAccessible,
+    dashboardController.getServiceRequestServiceOrderChartData
+)
+
+router.post(
+    "/get-service-request-pie-chart-data",
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isCMAccessible,
+    dashboardController.getServiceRequestPieChartData
+)
+
+
 
 
 module.exports = router;

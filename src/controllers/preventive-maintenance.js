@@ -1446,16 +1446,16 @@ const pmController = {
                 "task_group_schedule_assign_assets.status": 'O',
                 "task_group_schedule.orgId": req.orgId,
               })
-              .whereIn("projects.id",accessibleProjects)
+              .whereIn("projects.id", accessibleProjects)
               .whereRaw(
                 `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<='${currentSTime}'`
               )
               .whereRaw(
                 `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')>='${currentETime}'`
               )
-              .where((qb)=>{
-                if(projectId){
-                  qb.where("projects.id",projectId)
+              .where((qb) => {
+                if (projectId) {
+                  qb.where("projects.id", projectId)
                 }
               })
               // .whereRaw(
@@ -1527,16 +1527,16 @@ const pmController = {
                 "task_group_schedule_assign_assets.isOverdue": true,
                 "task_group_schedule.orgId": req.orgId,
               })
-              .whereIn("projects.id",accessibleProjects)
+              .whereIn("projects.id", accessibleProjects)
               .whereRaw(
                 `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<='${currentSTime}'`
               )
               .whereRaw(
                 `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')>='${currentETime}'`
               )
-              .where((qb)=>{
-                if(projectId){
-                  qb.where("projects.id",projectId)
+              .where((qb) => {
+                if (projectId) {
+                  qb.where("projects.id", projectId)
                 }
               })
               .orderBy("workOrderId", "asc"),
@@ -1649,7 +1649,7 @@ const pmController = {
             "task_group_schedule_assign_assets.status": 'O',
             "task_group_schedule.orgId": req.orgId,
           })
-          .whereIn("projects.id",accessibleProjects)
+          .whereIn("projects.id", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -1661,8 +1661,8 @@ const pmController = {
                 `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<='${currentEndTime}'`
               )
             }
-            if(projectId){
-              qb.where("projects.id",projectId)
+            if (projectId) {
+              qb.where("projects.id", projectId)
             }
 
           })
@@ -1733,7 +1733,7 @@ const pmController = {
             "task_group_schedule_assign_assets.status": 'COM',
             "task_group_schedule.orgId": req.orgId,
           })
-          .whereIn("projects.id",accessibleProjects)
+          .whereIn("projects.id", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -1745,8 +1745,8 @@ const pmController = {
                 `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<='${currentEndTime}'`
               )
             }
-            if(projectId){
-              qb.where("projects.id",projectId)
+            if (projectId) {
+              qb.where("projects.id", projectId)
             }
 
           })
@@ -1818,7 +1818,7 @@ const pmController = {
             "task_group_schedule_assign_assets.isOverdue": false,
             "task_group_schedule.orgId": req.orgId,
           })
-          .whereIn("projects.id",accessibleProjects)
+          .whereIn("projects.id", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -1830,8 +1830,8 @@ const pmController = {
                 `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<='${currentEndTime}'`
               )
             }
-            if(projectId){
-              qb.where("projects.id",projectId)
+            if (projectId) {
+              qb.where("projects.id", projectId)
             }
 
           })
@@ -1902,7 +1902,7 @@ const pmController = {
             "task_group_schedule_assign_assets.isOverdue": true,
             "task_group_schedule.orgId": req.orgId,
           })
-          .whereIn("projects.id",accessibleProjects)
+          .whereIn("projects.id", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -1914,8 +1914,8 @@ const pmController = {
                 `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<='${currentEndTime}'`
               )
             }
-            if(projectId){
-              qb.where("projects.id",projectId)
+            if (projectId) {
+              qb.where("projects.id", projectId)
             }
 
           })
@@ -1964,7 +1964,7 @@ const pmController = {
 
       const accessibleProjects = req.userProjectResources[0].projects;
 
-      const [openWorkOrder, openOverdueWorkOrder] = await Promise.all([
+      const [openWorkOrder, openOverdueWorkOrder, completedOnSchedule, completedOverdue] = await Promise.all([
         knex
           .from("task_group_schedule")
           .innerJoin(
@@ -2029,7 +2029,7 @@ const pmController = {
             "task_group_schedule_assign_assets.status": 'O',
             "task_group_schedule.orgId": req.orgId,
           })
-          .whereIn("projects.id",accessibleProjects)
+          .whereIn("projects.id", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -2041,8 +2041,8 @@ const pmController = {
                 `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<='${currentEndTime}'`
               )
             }
-            if(projectId){
-              qb.where("projects.id",projectId)
+            if (projectId) {
+              qb.where("projects.id", projectId)
             }
 
           })
@@ -2112,7 +2112,7 @@ const pmController = {
             "task_group_schedule_assign_assets.isOverdue": true,
             "task_group_schedule.orgId": req.orgId,
           })
-          .whereIn("projects.id",accessibleProjects)
+          .whereIn("projects.id", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -2124,12 +2124,179 @@ const pmController = {
                 `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<='${currentEndTime}'`
               )
             }
-            if(projectId){
-              qb.where("projects.id",projectId)
+            if (projectId) {
+              qb.where("projects.id", projectId)
             }
 
           })
-          .orderBy("workOrderId", "asc")
+          .orderBy("workOrderId", "asc"),
+        knex
+          .from("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .leftJoin(
+            "asset_location",
+            "asset_master.id",
+            "asset_location.assetId"
+          )
+          .leftJoin("companies", "asset_location.companyId", "companies.id")
+          .leftJoin("projects", "asset_location.projectId", "projects.id")
+          .leftJoin(
+            "buildings_and_phases",
+            "asset_location.buildingId",
+            "buildings_and_phases.id"
+          )
+          .leftJoin(
+            "floor_and_zones",
+            "asset_location.floorId",
+            "floor_and_zones.id"
+          )
+          .leftJoin(
+            "property_units",
+            "asset_location.unitId",
+            "property_units.id"
+          )
+          .select([
+            "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
+            "task_group_schedule_assign_assets.isActive as status",
+            "task_group_schedule_assign_assets.status as Status",
+            "task_group_schedule.id as id",
+            "asset_master.assetName",
+            "asset_master.model",
+            "asset_master.assetSerial",
+            "asset_master.id as assetId",
+            "asset_master.assetCategoryId",
+            "task_group_schedule_assign_assets.pmDate as pmDate",
+            knex.raw(
+              `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
+            ),
+            // knex.raw(`TO_TIMESTAMP("task_group_schedule_assign_assets"."pmDate") as "workOrderDate" `),
+            "task_group_schedule.repeatPeriod as repeatPeriod",
+            "task_group_schedule.repeatOn as repeatOn",
+            "task_group_schedule.repeatFrequency as repeatFrequency",
+            "task_group_schedule_assign_assets.frequencyTagIds",
+            "task_group_schedule_assign_assets.status",
+            "task_group_schedule.taskGroupId",
+            "buildings_and_phases.buildingPhaseCode",
+            "floor_and_zones.floorZoneCode",
+            "property_units.unitNumber",
+          ])
+          .where({
+            "task_group_schedule_assign_assets.status": 'COM',
+            "task_group_schedule.orgId": req.orgId,
+          })
+          .whereIn("projects.id", accessibleProjects)
+          .where((qb) => {
+            qb.whereRaw(`task_group_schedule_assign_assets."completedAt" <= task_group_schedule_assign_assets."workOrderDeadlineTimestamp"`)
+            if (currentStartTime) {
+              qb.whereRaw(
+                `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')>='${currentStartTime}'`
+              )
+            }
+            if (currentEndTime) {
+              qb.whereRaw(
+                `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<='${currentEndTime}'`
+              )
+            }
+            if (projectId) {
+              qb.where("projects.id", projectId)
+            }
+
+          })
+          .orderBy("workOrderId", "asc"),
+        knex
+          .from("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .leftJoin(
+            "asset_location",
+            "asset_master.id",
+            "asset_location.assetId"
+          )
+          .leftJoin("companies", "asset_location.companyId", "companies.id")
+          .leftJoin("projects", "asset_location.projectId", "projects.id")
+          .leftJoin(
+            "buildings_and_phases",
+            "asset_location.buildingId",
+            "buildings_and_phases.id"
+          )
+          .leftJoin(
+            "floor_and_zones",
+            "asset_location.floorId",
+            "floor_and_zones.id"
+          )
+          .leftJoin(
+            "property_units",
+            "asset_location.unitId",
+            "property_units.id"
+          )
+          .select([
+            "task_group_schedule_assign_assets.id as workOrderId",
+            "task_group_schedule_assign_assets.displayId as TGAA",
+            "task_group_schedule_assign_assets.isActive as status",
+            "task_group_schedule_assign_assets.status as Status",
+            "task_group_schedule.id as id",
+            "asset_master.assetName",
+            "asset_master.model",
+            "asset_master.assetSerial",
+            "asset_master.id as assetId",
+            "asset_master.assetCategoryId",
+            "task_group_schedule_assign_assets.pmDate as pmDate",
+            knex.raw(
+              `DATE("task_group_schedule_assign_assets"."pmDate") as "workOrderDate"`
+            ),
+            // knex.raw(`TO_TIMESTAMP("task_group_schedule_assign_assets"."pmDate") as "workOrderDate" `),
+            "task_group_schedule.repeatPeriod as repeatPeriod",
+            "task_group_schedule.repeatOn as repeatOn",
+            "task_group_schedule.repeatFrequency as repeatFrequency",
+            "task_group_schedule_assign_assets.frequencyTagIds",
+            "task_group_schedule_assign_assets.status",
+            "task_group_schedule.taskGroupId",
+            "buildings_and_phases.buildingPhaseCode",
+            "floor_and_zones.floorZoneCode",
+            "property_units.unitNumber",
+          ])
+          .where({
+            "task_group_schedule_assign_assets.status": 'COM',
+            "task_group_schedule.orgId": req.orgId,
+          })
+          .whereIn("projects.id", accessibleProjects)
+          .where((qb) => {
+            qb.whereRaw(`task_group_schedule_assign_assets."completedAt" > task_group_schedule_assign_assets."workOrderDeadlineTimestamp"`)
+            // qb.whereRaw("task_group_schedule_assign_assets.completedAt", '>', "task_group_schedule_assign_assets.workOrderDeadlineTimestamp")
+            if (currentStartTime) {
+              qb.whereRaw(
+                `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')>='${currentStartTime}'`
+              )
+            }
+            if (currentEndTime) {
+              qb.whereRaw(
+                `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<='${currentEndTime}'`
+              )
+            }
+            if (projectId) {
+              qb.where("projects.id", projectId)
+            }
+
+          })
+          .orderBy("workOrderId", "asc"),
       ])
 
       // let open_work_orders = projectIds.length ? openWorkOrder.length : 0;
@@ -2137,12 +2304,16 @@ const pmController = {
 
       let open_work_orders = openWorkOrder.length;
       let open_overdue_work_orders = openOverdueWorkOrder.length;
+      let completed_on_schedule = completedOnSchedule.length;
+      let completed_overdue = completedOverdue.length
 
 
       return res.status(200).json({
         data: {
           open_work_orders,
-          open_overdue_work_orders
+          open_overdue_work_orders,
+          completed_on_schedule,
+          completed_overdue
         }
       })
     } catch (err) {
@@ -2165,7 +2336,7 @@ const pmController = {
           "projects.project as projectId",
         ])
         .where({ orgId: req.orgId, isActive: true })
-        .whereIn("id" , accessibleProjects);
+        .whereIn("id", accessibleProjects);
 
       return res.status(200).json({
         data: {
