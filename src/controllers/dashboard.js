@@ -2328,41 +2328,12 @@ const dashboardController = {
       let orgId = req.orgId;
       const accessibleProjects = req.userProjectResources[0].projects;
       let payload = req.body;
-      let projectResult = [];
-      let projectIds = [];
-      // if (payload.companyIds.length) {
-      //   projectResult = await knex
-      //     .from("projects")
-      //     .select(["id", "companyId", "projectName", "project as projectCode"])
-      //     .where((qb) => {
-      //       if (payload.companyIds.includes("all")) {
-      //       } else {
-      //         qb.whereIn("projects.companyId", payload.companyIds);
-      //       }
-      //     })
-      //     .where({ orgId: req.orgId });
-      // }
-      // projectIds = projectResult.map((v) => v.id);
-      // projectIds = _.uniqBy(projectIds);
 
-      // let prioritySeq = await knex("incident_priority")
-      //   .max("sequenceNo")
-      //   .where({ orgId: orgId });
-      // let priority;
-      // let priorityValue = null;
-      // if (prioritySeq.length) {
-      //   let maxSeq = prioritySeq[0].max;
-      //   priority = await knex("incident_priority")
-      //     .where({ sequenceNo: maxSeq, orgId: orgId })
-      //     .groupBy([
-      //       "incident_priority.incidentPriorityCode",
-      //       "incident_priority.id",
-      //     ])
-      //     .first();
-      //   priorityValue = priority.incidentPriorityCode;
-      // }
+      let startNewDate = moment(payload.startDate).startOf("date").format();
+      let endNewDate = moment(payload.endDate).endOf("date", "day").format();
 
-
+      let currentStartTime = new Date(startNewDate).getTime();
+      let currentEndTime = new Date(endNewDate).getTime();
 
       serviceReqId = await knex
         .from("service_requests")
@@ -2374,34 +2345,15 @@ const dashboardController = {
           orgId: orgId,
           moderationStatus: true,
         })
+        .where((qb)=>{
+          if(payload.projectId){
+            qb.where("service_requests.projectId",payload.projectId)
+          }
+        })
 
       serviceReqId = serviceReqId.map((v) => v.id);
       serviceReqId = _.uniqBy(serviceReqId);
       console.log("serviceORequestId", serviceReqId);
-
-
-
-      // pmMaster = await knex
-      //   .from("pm_master2")
-      //   .select("pm_master2.id")
-      //   .distinct("pm_master2.id")
-      //   .where({ orgId: req.orgId })
-      //   .whereIn("pm_master2.projectId", accessibleProjects)
-      // pmMaster = pmMaster.map((v) => v.id);
-      // pmMaster = _.uniqBy(pmMaster);
-      // console.log("pmMaster+!1111111", pmMaster);
-
-
-
-      // pmScheduleMaster = await knex
-      //   .from("task_group_schedule")
-      //   .select("task_group_schedule.id")
-      //   .distinct("task_group_schedule.id")
-      //   .where({ orgId: req.orgId })
-      //   .whereIn("task_group_schedule.pmId", pmMaster)
-      // pmScheduleMaster = pmScheduleMaster.map((v) => v.id);
-      // pmScheduleMaster = _.uniqBy(pmScheduleMaster);
-      // console.log("pmScheduleMaster+!1111111", pmScheduleMaster);
 
 
       const [openRequests, openOrders, openSurveys] = await Promise.all([
@@ -2411,7 +2363,19 @@ const dashboardController = {
           .distinct("service_requests.id")
           .where({ moderationStatus: true, orgId: req.orgId })
           .whereIn("service_requests.projectId", accessibleProjects)
-          .whereIn("serviceStatusCode", ["O"]),
+          .whereIn("serviceStatusCode", ["O"])
+          .where((qb) => {
+            if (currentStartTime && currentEndTime) {
+              qb.whereBetween("service_requests.createdAt", [
+                currentStartTime,
+                currentEndTime,
+              ])
+            }
+            if (payload.projectId) {
+              qb.where("service_requests.projectId", payload.projectId)
+            }
+          }),
+
         knex
           .from("service_orders")
           .leftJoin(
@@ -2422,7 +2386,19 @@ const dashboardController = {
           .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
           .whereIn('status.descriptionEng', ["Open", "Approved", "In Progress", "On Hold"])
           .where({ "service_orders.orgId": req.orgId })
-          .whereIn("service_requests.projectId", accessibleProjects),
+          .whereIn("service_requests.projectId", accessibleProjects)
+          .where((qb) => {
+            if (currentStartTime && currentEndTime) {
+              qb .whereBetween("service_orders.createdAt", [
+                currentStartTime,
+                currentEndTime,
+              ])
+            }
+            if (payload.projectId) {
+              qb.where("service_requests.projectId", payload.projectId)
+            }
+          }),
+         
 
         knex
           .from("survey_orders")
@@ -2432,7 +2408,18 @@ const dashboardController = {
             orgId: orgId,
             surveyOrderStatus: 'Pending',
           })
-          .whereIn("survey_orders.serviceRequestId", serviceReqId),
+          .whereIn("survey_orders.serviceRequestId", serviceReqId)
+          .where((qb) => {
+            if (currentStartTime && currentEndTime) {
+              qb .whereBetween("survey_orders.createdAt", [
+                currentStartTime,
+                currentEndTime,
+              ])
+            }
+            // if (payload.projectId) {
+            //   qb.where("survey_orders.projectId", payload.projectId)
+            // }
+          }),
 
 
       ]);
