@@ -3135,10 +3135,13 @@ const dashboardController = {
         return obj;
       });
 
+      //"q.quotaType == "1" ? q.noOfQuota : 0"
+      //openRequests ? openRequests.length : 0
+
       let finalData = _.flatten(
         final
           .filter((v) => !_.isEmpty(v))
-          .map((v) => _.keys(v).map((p) => ({ [p]: v[p].length })))
+          .map((v) => _.keys(v).map((p) => ({ [p]: v[p] ? v[p].length : 0 })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
