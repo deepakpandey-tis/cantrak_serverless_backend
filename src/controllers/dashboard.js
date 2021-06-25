@@ -101,16 +101,16 @@ const dashboardController = {
           .whereIn("service_requests.projectId", projectIds)
           .whereIn("serviceStatusCode", ["O"]),
         knex
-        .from("service_orders")
-        .leftJoin(
-          "service_requests",
-          "service_orders.serviceRequestId",
-          "service_requests.id"
-        )
-        .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
-        .whereIn('status.descriptionEng',["Open","Approved","In Progress","On Hold"])
-        .where({ "service_orders.orgId": req.orgId })
-        .whereIn("service_requests.projectId", projectIds),
+          .from("service_orders")
+          .leftJoin(
+            "service_requests",
+            "service_orders.serviceRequestId",
+            "service_requests.id"
+          )
+          .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+          .whereIn('status.descriptionEng', ["Open", "Approved", "In Progress", "On Hold"])
+          .where({ "service_orders.orgId": req.orgId })
+          .whereIn("service_requests.projectId", projectIds),
 
         knex
           .from("survey_orders")
@@ -122,32 +122,32 @@ const dashboardController = {
           })
           .whereIn("survey_orders.serviceRequestId", serviceReqId),
 
-          knex
-            .from("task_group_schedule")
-            .distinct("task_group_schedule_assign_assets.id")
-            .innerJoin(
-              "task_group_schedule_assign_assets",
-              "task_group_schedule.id",
-              "task_group_schedule_assign_assets.scheduleId"
-            )
-            .innerJoin(
-              "asset_master",
-              "task_group_schedule_assign_assets.assetId",
-              "asset_master.id"
-            )
-            .innerJoin(
-              "pm_master2",
-              "task_group_schedule.pmId",
-              "pm_master2.id"
-            )
-            .where({
-              "task_group_schedule.orgId": req.orgId,
-              "task_group_schedule_assign_assets.status" : 'O',
-              "task_group_schedule_assign_assets.isOverdue" : true
-            })
-            .whereIn(
-              "pm_master2.projectId", projectIds
-            )  
+        knex
+          .from("task_group_schedule")
+          .distinct("task_group_schedule_assign_assets.id")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .innerJoin(
+            "pm_master2",
+            "task_group_schedule.pmId",
+            "pm_master2.id"
+          )
+          .where({
+            "task_group_schedule.orgId": req.orgId,
+            "task_group_schedule_assign_assets.status": 'O',
+            "task_group_schedule_assign_assets.isOverdue": true
+          })
+          .whereIn(
+            "pm_master2.projectId", projectIds
+          )
 
       ]);
 
@@ -603,10 +603,10 @@ const dashboardController = {
       let startDate;
       let endDate;
 
-      console.log("request body data==========",req.body)
-       // Set timezone for moment
-       const timezone = 'Asia/Bangkok';
-       moment.tz.setDefault(payload.timezone);
+      console.log("request body data==========", req.body)
+      // Set timezone for moment
+      const timezone = 'Asia/Bangkok';
+      moment.tz.setDefault(payload.timezone);
       //  let currentDate = moment().format("YYYY-MM-DD");
       //  console.log(
       //      "Current Time:",
@@ -2318,6 +2318,841 @@ const dashboardController = {
         message: "Service Request by month priority data successfully!",
       });
     } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+  getCmDashboardData: async (req, res) => {
+    try {
+      let orgId = req.orgId;
+      const accessibleProjects = req.userProjectResources[0].projects;
+      let payload = req.body;
+      let projectResult = [];
+      let projectIds = [];
+      // if (payload.companyIds.length) {
+      //   projectResult = await knex
+      //     .from("projects")
+      //     .select(["id", "companyId", "projectName", "project as projectCode"])
+      //     .where((qb) => {
+      //       if (payload.companyIds.includes("all")) {
+      //       } else {
+      //         qb.whereIn("projects.companyId", payload.companyIds);
+      //       }
+      //     })
+      //     .where({ orgId: req.orgId });
+      // }
+      // projectIds = projectResult.map((v) => v.id);
+      // projectIds = _.uniqBy(projectIds);
+
+      // let prioritySeq = await knex("incident_priority")
+      //   .max("sequenceNo")
+      //   .where({ orgId: orgId });
+      // let priority;
+      // let priorityValue = null;
+      // if (prioritySeq.length) {
+      //   let maxSeq = prioritySeq[0].max;
+      //   priority = await knex("incident_priority")
+      //     .where({ sequenceNo: maxSeq, orgId: orgId })
+      //     .groupBy([
+      //       "incident_priority.incidentPriorityCode",
+      //       "incident_priority.id",
+      //     ])
+      //     .first();
+      //   priorityValue = priority.incidentPriorityCode;
+      // }
+
+
+
+      serviceReqId = await knex
+        .from("service_requests")
+        .select("service_requests.id")
+        .distinct("service_requests.id")
+        .where({ orgId: req.orgId })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where({
+          orgId: orgId,
+          moderationStatus: true,
+        })
+
+      serviceReqId = serviceReqId.map((v) => v.id);
+      serviceReqId = _.uniqBy(serviceReqId);
+      console.log("serviceORequestId", serviceReqId);
+
+
+
+      // pmMaster = await knex
+      //   .from("pm_master2")
+      //   .select("pm_master2.id")
+      //   .distinct("pm_master2.id")
+      //   .where({ orgId: req.orgId })
+      //   .whereIn("pm_master2.projectId", accessibleProjects)
+      // pmMaster = pmMaster.map((v) => v.id);
+      // pmMaster = _.uniqBy(pmMaster);
+      // console.log("pmMaster+!1111111", pmMaster);
+
+
+
+      // pmScheduleMaster = await knex
+      //   .from("task_group_schedule")
+      //   .select("task_group_schedule.id")
+      //   .distinct("task_group_schedule.id")
+      //   .where({ orgId: req.orgId })
+      //   .whereIn("task_group_schedule.pmId", pmMaster)
+      // pmScheduleMaster = pmScheduleMaster.map((v) => v.id);
+      // pmScheduleMaster = _.uniqBy(pmScheduleMaster);
+      // console.log("pmScheduleMaster+!1111111", pmScheduleMaster);
+
+
+      const [openRequests, openOrders, openSurveys] = await Promise.all([
+        knex
+          .from("service_requests")
+          .select("service_requests.serviceStatusCode as status")
+          .distinct("service_requests.id")
+          .where({ moderationStatus: true, orgId: req.orgId })
+          .whereIn("service_requests.projectId", accessibleProjects)
+          .whereIn("serviceStatusCode", ["O"]),
+        knex
+          .from("service_orders")
+          .leftJoin(
+            "service_requests",
+            "service_orders.serviceRequestId",
+            "service_requests.id"
+          )
+          .leftJoin("service_status AS status", "service_requests.serviceStatusCode", "status.statusCode")
+          .whereIn('status.descriptionEng', ["Open", "Approved", "In Progress", "On Hold"])
+          .where({ "service_orders.orgId": req.orgId })
+          .whereIn("service_requests.projectId", accessibleProjects),
+
+        knex
+          .from("survey_orders")
+          .select("survey_orders.surveyOrderStatus as status")
+          .distinct("survey_orders.id")
+          .where({
+            orgId: orgId,
+            surveyOrderStatus: 'Pending',
+          })
+          .whereIn("survey_orders.serviceRequestId", serviceReqId),
+
+
+      ]);
+
+      let open_service_requests = accessibleProjects.length ? openRequests.length : 0;
+      let open_service_orders = accessibleProjects.length ? openOrders.length : 0;
+      let open_survey_orders = accessibleProjects.length ? openSurveys.length : 0;
+      // let open_overdue_work_orders = accessibleProjects.length ? overDueWOrders.length : 0;
+
+      return res.status(200).json({
+        data: {
+          open_service_requests,
+          open_service_orders,
+          open_survey_orders,
+
+        },
+        message: "Dashboard data",
+      });
+    } catch (err) {
+      console.log("[controllers][parts][getParts] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+
+  getServiceRequestServiceOrderChartData: async (req, res) => {
+    try {
+      const reqData = req.body;
+      const accessibleProjects = req.userProjectResources[0].projects;
+
+      var getDaysArray = function (start, end) {
+        let dt = start;
+        let arr = [];
+        for (; dt <= end; dt.setDate(dt.getDate() + 1)) {
+          arr.push(new Date(dt));
+        }
+        return arr;
+      };
+
+      var dates = getDaysArray(
+        new Date(reqData.startDate),
+        new Date(reqData.endDate)
+      );
+
+      let projectId = reqData.projectId;
+
+      let final = [];
+      for (let d of dates) {
+        let startNewDate = moment(d).startOf("date").format();
+        let endNewDate = moment(d).endOf("date", "day").format();
+
+        let currentStartTime = new Date(startNewDate).getTime();
+        let currentEndTime = new Date(endNewDate).getTime();
+
+        [totalServiceRequest, totalServiceOrder] = await Promise.all([
+          knex
+            .from("service_requests")
+            .leftJoin(
+              "service_problems",
+              "service_requests.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
+            .leftJoin(
+              "incident_sub_categories",
+              "incident_categories.id",
+              "incident_sub_categories.incidentCategoryId"
+            )
+            .leftJoin(
+              "property_units",
+              "service_requests.houseId",
+              "property_units.id"
+            )
+            .leftJoin(
+              "assigned_service_team",
+              "service_requests.id",
+              "assigned_service_team.entityId"
+            )
+            .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            .select([
+              "service_requests.id",
+              "service_requests.houseId as houseId",
+              "service_requests.description as description",
+              "incident_categories.descriptionEng as category",
+              "incident_sub_categories.descriptionEng as problem",
+              "service_requests.priority",
+              "service_requests.serviceStatusCode as status",
+              "property_units.unitNumber as unitNo",
+              "service_requests.requestedBy as requestedBy",
+              "service_requests.createdAt as dateCreated",
+              "teams.teamName",
+              "teams.teamCode",
+            ])
+            .where({ "service_requests.orgId": req.orgId })
+            .whereBetween("service_requests.createdAt", [
+              currentStartTime,
+              currentEndTime,
+            ])
+            .where({ "service_requests.isCreatedFromSo": false })
+            .whereIn("service_requests.projectId", accessibleProjects)
+            .where((qb) => {
+              if (projectId) {
+                qb.where("service_requests.projectId", projectId)
+              }
+            })
+            .distinct("service_requests.id")
+            .orderBy("service_requests.id", "desc"),
+          // .offset(offset).limit(per_page)
+          knex
+            .from("service_orders")
+            .leftJoin(
+              "service_requests",
+              "service_orders.serviceRequestId",
+              "service_requests.id"
+            )
+            .select([
+              "service_orders.id as SoId",
+              "service_orders.createdAt as dateCreated",
+            ])
+            .orderBy("service_orders.id", "desc")
+            .where({ "service_orders.orgId": req.orgId })
+            .whereBetween("service_orders.createdAt", [
+              currentStartTime,
+              currentEndTime,
+            ])
+            //.whereIn("service_requests.projectId", accessibleProjects)
+            .whereIn("service_requests.projectId", accessibleProjects)
+            .where((qb) => {
+              if (projectId) {
+                qb.where("service_requests.projectId", projectId)
+              }
+            }),
+        ]);
+
+        final.push({
+          date: moment(d).format("L"),
+          totalServiceRequest: _.uniqBy(totalServiceRequest, "id").length,
+          totalServiceOrder: _.uniqBy(totalServiceOrder, "SoId").length,
+        });
+      }
+
+      res.status(200).json({
+        data: { final },
+        message: "records",
+        // projectIds,
+      });
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+
+  getServiceRequestPieChartData: async (req, res) => {
+    try {
+      let payload = req.body;
+      let projectId = req.body.projectId;
+
+      console.log("payload data", payload)
+
+      let completedServiceRequest
+      let inProgressServiceRequest
+      let onHoldServiceRequest
+      let approvedServiceRequest
+      let openServiceRequest
+      let underSurveyServicerequest
+
+      let startNewDate = moment(payload.startDate).startOf("date").format();
+      let endNewDate = moment(payload.endDate).endOf("date", "day").format();
+
+      let currentStartTime = new Date(startNewDate).getTime();
+      let currentEndTime = new Date(endNewDate).getTime();
+
+      console.log("start and end date", currentStartTime, currentEndTime)
+
+
+
+      const accessibleProjects = req.userProjectResources[0].projects;
+
+      // if (currentEndTime && currentStartTime) {
+
+      completedServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'COM' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+
+      inProgressServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'IP' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+
+      onHoldServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'OH' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+
+      approvedServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'A' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+
+      openServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'O' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+
+      underSurveyServicerequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'COM' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+
+      inProgressServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'IP' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+
+
+      // }
+
+      let OPEN = openServiceRequest.length
+      let COMPLETED = completedServiceRequest.length
+      let INPROGRESS = inProgressServiceRequest.length
+      let ONHOLD = onHoldServiceRequest.length
+      let APPROVED = approvedServiceRequest.length
+      let UNDERSURVEY = underSurveyServicerequest.length
+
+
+      return res.status(200).json({
+        data: {
+          OPEN,
+          COMPLETED,
+          INPROGRESS,
+          ONHOLD,
+          APPROVED,
+          UNDERSURVEY
+        }
+      })
+
+    } catch (err) {
+
+      console.log(
+        "[controllers][CM_dashboard][get Pie chart] :  Error",
+        err
+      );
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+
+  getPieChartForProblemType: async (req, res) => {
+    try {
+      let problems = null;
+
+      let payload = req.body;
+
+      let startNewDate = moment(payload.startDate).startOf("date").format();
+      let endNewDate = moment(payload.endDate).endOf("date", "day").format();
+
+      let currentStartTime = new Date(startNewDate).getTime();
+      let currentEndTime = new Date(endNewDate).getTime();
+
+      let final = [];
+      // for (let d of dates) {
+
+      const accessibleProjects = req.userProjectResources[0].projects;
+      problems = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "incident_type",
+          "incident_sub_categories.incidentTypeId",
+          "incident_type.id"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_problems.serviceRequestId",
+          "incident_type.typeCode as categoryCode",
+          "incident_categories.descriptionEng",
+        ])
+        .where({
+          "service_requests.orgId": req.orgId,
+        })
+        .where({ "service_requests.orgId": req.orgId })
+        .whereIn("property_units.projectId", accessibleProjects)
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .where((qb) => {
+          if (payload.projectId) {
+            qb.where("property_units.projectId", payload.projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+      let grouped = _.groupBy(problems, "categoryCode");
+
+      // let problemWise = _.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
+      final.push(grouped); //totalServiceRequest: problems.length })
+      //}
+
+      final = final.map((obj) => {
+        obj["Others"] = obj[null];
+        delete obj[null];
+        return obj;
+      });
+
+      let finalData = _.flatten(
+        final
+          .filter((v) => !_.isEmpty(v))
+          .map((v) => _.keys(v).map((p) => ({ [p]: v[p]?.length })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+      return res.status(200).json({
+        data: finalData,
+      });
+    } catch (err) {
+      console.log("[controllers][dashboard][getAssesList] : Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });

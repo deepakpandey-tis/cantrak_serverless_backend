@@ -127,4 +127,36 @@ router.post(
 
 router.get("/pm-status-clone", pmController.pmStatusClone);
 
+router.post(
+  "/get-pm-work-order-chart-data",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getPmWorkorderChart
+)
+
+router.post(
+  "/get-work-order-pie-chart-data",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getWorkOrderForPieChart
+)
+
+router.post(
+  "/get-pm-dashboard-card-data",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getPmDashboardCardData
+)
+
+router.get(
+  '/get-project-list-for-pm',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getProjectList
+)
+
 module.exports = router;
