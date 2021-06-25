@@ -332,6 +332,8 @@ const parcelHelper = {
         templatePath
       );
 
+                // `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
+
       let pData = [];
       let pId = [];
       let index = 0;
@@ -340,9 +342,7 @@ const parcelHelper = {
         async (data) => {
           try {
             if (pData.length <  8) {
-              let qrString = JSON.stringify(
-                `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
-              );
+              let qrString = "org~" + data.orgId + "~unitNumber~" + data.unitNumber + "~parcel~" + data.id
               // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
               let qrCodeDataURI = await QRCODE.toDataURL(
                 qrString
@@ -358,9 +358,10 @@ const parcelHelper = {
               pData = [];
               pId = [];
 
-              let qrString = JSON.stringify(
-                "org~" + data.orgId + "~unitNumber~" + data.unitNumber + "~parcel~" + data.id
-              );
+              
+              
+              let qrString = "org~" + data.orgId + "~unitNumber~" + data.unitNumber + "~parcel~" + data.id
+              
               // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
               let qrCodeDataURI = await QRCODE.toDataURL(
                 qrString
