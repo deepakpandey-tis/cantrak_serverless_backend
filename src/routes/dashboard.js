@@ -109,6 +109,14 @@ router.post(
     dashboardController.getServiceRequestPieChartData
 )
 
+router.post(
+    "/get-cm-problem-type-chart-data",
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isCMAccessible,
+    dashboardController.getPieChartForProblemType
+)
+
 
 
 

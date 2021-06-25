@@ -2596,7 +2596,7 @@ const dashboardController = {
       let payload = req.body;
       let projectId = req.body.projectId;
 
-      console.log("payload data",payload)
+      console.log("payload data", payload)
 
       let completedServiceRequest
       let inProgressServiceRequest
@@ -2610,8 +2610,8 @@ const dashboardController = {
 
       let currentStartTime = new Date(startNewDate).getTime();
       let currentEndTime = new Date(endNewDate).getTime();
-     
-      console.log("start and end date", currentStartTime , currentEndTime)
+
+      console.log("start and end date", currentStartTime, currentEndTime)
 
 
 
@@ -2619,404 +2619,404 @@ const dashboardController = {
 
       // if (currentEndTime && currentStartTime) {
 
-         completedServiceRequest = await knex
-          .from("service_requests")
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin(
-            "incident_sub_categories",
-            "incident_categories.id",
-            "incident_sub_categories.incidentCategoryId"
-          )
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "assigned_service_team",
-            "service_requests.id",
-            "assigned_service_team.entityId"
-          )
-          .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
-          .select([
-            "service_requests.id",
-            "service_requests.houseId as houseId",
-            "service_requests.description as description",
-            "incident_categories.descriptionEng as category",
-            "incident_sub_categories.descriptionEng as problem",
-            "service_requests.priority",
-            "service_requests.serviceStatusCode as status",
-            "property_units.unitNumber as unitNo",
-            "service_requests.requestedBy as requestedBy",
-            "service_requests.createdAt as dateCreated",
-            "teams.teamName",
-            "teams.teamCode",
-          ])
-          .where({ "service_requests.orgId": req.orgId , "service_requests.serviceStatusCode": 'COM' })
-          .whereBetween("service_requests.createdAt", [
-            currentStartTime,
-            currentEndTime,
-          ])
-          .where({ "service_requests.isCreatedFromSo": false })
-          .whereIn("service_requests.projectId", accessibleProjects)
-          .where((qb) => {
-            if (projectId) {
-              qb.where("service_requests.projectId", projectId)
-            }
-          })
-          .distinct("service_requests.id")
-          .orderBy("service_requests.id", "desc");
+      completedServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'COM' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
 
-         inProgressServiceRequest = await knex
-          .from("service_requests")
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin(
-            "incident_sub_categories",
-            "incident_categories.id",
-            "incident_sub_categories.incidentCategoryId"
-          )
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "assigned_service_team",
-            "service_requests.id",
-            "assigned_service_team.entityId"
-          )
-          .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
-          .select([
-            "service_requests.id",
-            "service_requests.houseId as houseId",
-            "service_requests.description as description",
-            "incident_categories.descriptionEng as category",
-            "incident_sub_categories.descriptionEng as problem",
-            "service_requests.priority",
-            "service_requests.serviceStatusCode as status",
-            "property_units.unitNumber as unitNo",
-            "service_requests.requestedBy as requestedBy",
-            "service_requests.createdAt as dateCreated",
-            "teams.teamName",
-            "teams.teamCode",
-          ])
-          .where({ "service_requests.orgId": req.orgId , "service_requests.serviceStatusCode": 'IP' })
-          .whereBetween("service_requests.createdAt", [
-            currentStartTime,
-            currentEndTime,
-          ])
-          .where({ "service_requests.isCreatedFromSo": false })
-          .whereIn("service_requests.projectId", accessibleProjects)
-          .where((qb) => {
-            if (projectId) {
-              qb.where("service_requests.projectId", projectId)
-            }
-          })
-          .distinct("service_requests.id")
-          .orderBy("service_requests.id", "desc");
+      inProgressServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'IP' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
 
-         onHoldServiceRequest = await knex
-          .from("service_requests")
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin(
-            "incident_sub_categories",
-            "incident_categories.id",
-            "incident_sub_categories.incidentCategoryId"
-          )
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "assigned_service_team",
-            "service_requests.id",
-            "assigned_service_team.entityId"
-          )
-          .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
-          .select([
-            "service_requests.id",
-            "service_requests.houseId as houseId",
-            "service_requests.description as description",
-            "incident_categories.descriptionEng as category",
-            "incident_sub_categories.descriptionEng as problem",
-            "service_requests.priority",
-            "service_requests.serviceStatusCode as status",
-            "property_units.unitNumber as unitNo",
-            "service_requests.requestedBy as requestedBy",
-            "service_requests.createdAt as dateCreated",
-            "teams.teamName",
-            "teams.teamCode",
-          ])
-          .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'OH' })
-          .whereBetween("service_requests.createdAt", [
-            currentStartTime,
-            currentEndTime,
-          ])
-          .where({ "service_requests.isCreatedFromSo": false })
-          .whereIn("service_requests.projectId", accessibleProjects)
-          .where((qb) => {
-            if (projectId) {
-              qb.where("service_requests.projectId", projectId)
-            }
-          })
-          .distinct("service_requests.id")
-          .orderBy("service_requests.id", "desc");
+      onHoldServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'OH' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
 
-         approvedServiceRequest = await knex
-          .from("service_requests")
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin(
-            "incident_sub_categories",
-            "incident_categories.id",
-            "incident_sub_categories.incidentCategoryId"
-          )
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "assigned_service_team",
-            "service_requests.id",
-            "assigned_service_team.entityId"
-          )
-          .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
-          .select([
-            "service_requests.id",
-            "service_requests.houseId as houseId",
-            "service_requests.description as description",
-            "incident_categories.descriptionEng as category",
-            "incident_sub_categories.descriptionEng as problem",
-            "service_requests.priority",
-            "service_requests.serviceStatusCode as status",
-            "property_units.unitNumber as unitNo",
-            "service_requests.requestedBy as requestedBy",
-            "service_requests.createdAt as dateCreated",
-            "teams.teamName",
-            "teams.teamCode",
-          ])
-          .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'A' })
-          .whereBetween("service_requests.createdAt", [
-            currentStartTime,
-            currentEndTime,
-          ])
-          .where({ "service_requests.isCreatedFromSo": false })
-          .whereIn("service_requests.projectId", accessibleProjects)
-          .where((qb) => {
-            if (projectId) {
-              qb.where("service_requests.projectId", projectId)
-            }
-          })
-          .distinct("service_requests.id")
-          .orderBy("service_requests.id", "desc");
+      approvedServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'A' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
 
-         openServiceRequest = await knex
-          .from("service_requests")
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin(
-            "incident_sub_categories",
-            "incident_categories.id",
-            "incident_sub_categories.incidentCategoryId"
-          )
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "assigned_service_team",
-            "service_requests.id",
-            "assigned_service_team.entityId"
-          )
-          .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
-          .select([
-            "service_requests.id",
-            "service_requests.houseId as houseId",
-            "service_requests.description as description",
-            "incident_categories.descriptionEng as category",
-            "incident_sub_categories.descriptionEng as problem",
-            "service_requests.priority",
-            "service_requests.serviceStatusCode as status",
-            "property_units.unitNumber as unitNo",
-            "service_requests.requestedBy as requestedBy",
-            "service_requests.createdAt as dateCreated",
-            "teams.teamName",
-            "teams.teamCode",
-          ])
-          .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'O' })
-          .whereBetween("service_requests.createdAt", [
-            currentStartTime,
-            currentEndTime,
-          ])
-          .where({ "service_requests.isCreatedFromSo": false })
-          .whereIn("service_requests.projectId", accessibleProjects)
-          .where((qb) => {
-            if (projectId) {
-              qb.where("service_requests.projectId", projectId)
-            }
-          })
-          .distinct("service_requests.id")
-          .orderBy("service_requests.id", "desc");
+      openServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'O' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
 
-          underSurveyServicerequest = await knex
-          .from("service_requests")
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin(
-            "incident_sub_categories",
-            "incident_categories.id",
-            "incident_sub_categories.incidentCategoryId"
-          )
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "assigned_service_team",
-            "service_requests.id",
-            "assigned_service_team.entityId"
-          )
-          .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
-          .select([
-            "service_requests.id",
-            "service_requests.houseId as houseId",
-            "service_requests.description as description",
-            "incident_categories.descriptionEng as category",
-            "incident_sub_categories.descriptionEng as problem",
-            "service_requests.priority",
-            "service_requests.serviceStatusCode as status",
-            "property_units.unitNumber as unitNo",
-            "service_requests.requestedBy as requestedBy",
-            "service_requests.createdAt as dateCreated",
-            "teams.teamName",
-            "teams.teamCode",
-          ])
-          .where({ "service_requests.orgId": req.orgId , "service_requests.serviceStatusCode": 'COM' })
-          .whereBetween("service_requests.createdAt", [
-            currentStartTime,
-            currentEndTime,
-          ])
-          .where({ "service_requests.isCreatedFromSo": false })
-          .whereIn("service_requests.projectId", accessibleProjects)
-          .where((qb) => {
-            if (projectId) {
-              qb.where("service_requests.projectId", projectId)
-            }
-          })
-          .distinct("service_requests.id")
-          .orderBy("service_requests.id", "desc");
+      underSurveyServicerequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'COM' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
 
-         inProgressServiceRequest = await knex
-          .from("service_requests")
-          .leftJoin(
-            "service_problems",
-            "service_requests.id",
-            "service_problems.serviceRequestId"
-          )
-          .leftJoin(
-            "incident_categories",
-            "service_problems.categoryId",
-            "incident_categories.id"
-          )
-          .leftJoin(
-            "incident_sub_categories",
-            "incident_categories.id",
-            "incident_sub_categories.incidentCategoryId"
-          )
-          .leftJoin(
-            "property_units",
-            "service_requests.houseId",
-            "property_units.id"
-          )
-          .leftJoin(
-            "assigned_service_team",
-            "service_requests.id",
-            "assigned_service_team.entityId"
-          )
-          .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
-          .select([
-            "service_requests.id",
-            "service_requests.houseId as houseId",
-            "service_requests.description as description",
-            "incident_categories.descriptionEng as category",
-            "incident_sub_categories.descriptionEng as problem",
-            "service_requests.priority",
-            "service_requests.serviceStatusCode as status",
-            "property_units.unitNumber as unitNo",
-            "service_requests.requestedBy as requestedBy",
-            "service_requests.createdAt as dateCreated",
-            "teams.teamName",
-            "teams.teamCode",
-          ])
-          .where({ "service_requests.orgId": req.orgId , "service_requests.serviceStatusCode": 'IP' })
-          .whereBetween("service_requests.createdAt", [
-            currentStartTime,
-            currentEndTime,
-          ])
-          .where({ "service_requests.isCreatedFromSo": false })
-          .whereIn("service_requests.projectId", accessibleProjects)
-          .where((qb) => {
-            if (projectId) {
-              qb.where("service_requests.projectId", projectId)
-            }
-          })
-          .distinct("service_requests.id")
-          .orderBy("service_requests.id", "desc");
+      inProgressServiceRequest = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_requests.id",
+          "service_requests.houseId as houseId",
+          "service_requests.description as description",
+          "incident_categories.descriptionEng as category",
+          "incident_sub_categories.descriptionEng as problem",
+          "service_requests.priority",
+          "service_requests.serviceStatusCode as status",
+          "property_units.unitNumber as unitNo",
+          "service_requests.requestedBy as requestedBy",
+          "service_requests.createdAt as dateCreated",
+          "teams.teamName",
+          "teams.teamCode",
+        ])
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'IP' })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
 
 
       // }
@@ -3050,7 +3050,114 @@ const dashboardController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
     }
-  }
+  },
+
+  getPieChartForProblemType: async (req, res) => {
+    try {
+      let problems = null;
+
+      let payload = req.body;
+
+      let startNewDate = moment(payload.startDate).startOf("date").format();
+      let endNewDate = moment(payload.endDate).endOf("date", "day").format();
+
+      let currentStartTime = new Date(startNewDate).getTime();
+      let currentEndTime = new Date(endNewDate).getTime();
+
+      let final = [];
+      // for (let d of dates) {
+
+      const accessibleProjects = req.userProjectResources[0].projects;
+      problems = await knex
+        .from("service_requests")
+        .leftJoin(
+          "service_problems",
+          "service_requests.id",
+          "service_problems.serviceRequestId"
+        )
+        .leftJoin(
+          "incident_categories",
+          "service_problems.categoryId",
+          "incident_categories.id"
+        )
+        .leftJoin(
+          "incident_sub_categories",
+          "incident_categories.id",
+          "incident_sub_categories.incidentCategoryId"
+        )
+        .leftJoin(
+          "incident_type",
+          "incident_sub_categories.incidentTypeId",
+          "incident_type.id"
+        )
+        .leftJoin(
+          "property_units",
+          "service_requests.houseId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "assigned_service_team",
+          "service_requests.id",
+          "assigned_service_team.entityId"
+        )
+        .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+        .select([
+          "service_problems.serviceRequestId",
+          "incident_type.typeCode as categoryCode",
+          "incident_categories.descriptionEng",
+        ])
+        .where({
+          "service_requests.orgId": req.orgId,
+        })
+        .where({ "service_requests.orgId": req.orgId })
+        .whereIn("property_units.projectId", accessibleProjects)
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .where((qb) => {
+          if (payload.projectId) {
+            qb.where("property_units.projectId", payload.projectId)
+          }
+        })
+        .distinct("service_requests.id")
+        .orderBy("service_requests.id", "desc");
+      let grouped = _.groupBy(problems, "categoryCode");
+
+      // let problemWise = _.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
+      final.push(grouped); //totalServiceRequest: problems.length })
+      //}
+
+      final = final.map((obj) => {
+        obj["Others"] = obj[null];
+        delete obj[null];
+        return obj;
+      });
+
+      let finalData = _.flatten(
+        final
+          .filter((v) => !_.isEmpty(v))
+          .map((v) => _.keys(v).map((p) => ({ [p]: v[p]?.length })))
+      ).reduce((a, p) => {
+        let l = _.keys(p)[0];
+        if (a[l]) {
+          a[l] += p[l];
+        } else {
+          a[l] = p[l];
+        }
+        return a;
+      }, {});
+      return res.status(200).json({
+        data: finalData,
+      });
+    } catch (err) {
+      console.log("[controllers][dashboard][getAssesList] : Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
 };
 
 function getProblemTypeChart(priority, data) {
