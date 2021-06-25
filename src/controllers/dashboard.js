@@ -3138,7 +3138,7 @@ const dashboardController = {
       let finalData = _.flatten(
         final
           .filter((v) => !_.isEmpty(v))
-          .map((v) => _.keys(v).map((p) => ({ [p]: v[p]?.length })))
+          .map((v) => _.keys(v).map((p) => ({ [p]: v[p].length })))
       ).reduce((a, p) => {
         let l = _.keys(p)[0];
         if (a[l]) {
