@@ -1344,6 +1344,124 @@ const pmController = {
     }
   },
 
+  getWorkOrderToAssignedTechnicianForBarChart: async (req, res) => {
+    try {
+
+
+      const reqData = req.body;
+
+      let projectId = req.body.projectId
+      const accessibleProjects = req.userProjectResources[0].projects;
+
+      let currentStartTime = moment(reqData.startDate).format("YYYY-MM-DD")
+      let currentEndTime = moment(reqData.endDate).format("YYYY-MM-DD")
+
+      let assignedUser = await knex
+        .from("assigned_service_team")
+        .leftJoin("users", "assigned_service_team.userId", "users.id")
+        .leftJoin("task_group_schedule_assign_assets", "assigned_service_team.entityId", "task_group_schedule_assign_assets.id")
+        .leftJoin("asset_master",
+          "task_group_schedule_assign_assets.assetId",
+          "asset_master.id")
+        .leftJoin(
+          "asset_location",
+          "asset_master.id",
+          "asset_location.assetId"
+        )
+        .leftJoin("projects", "asset_location.projectId", "projects.id")
+        .select([
+          "assigned_service_team.teamId",
+          "users.userName",
+          "users.id",
+          "users.name"
+        ])
+        .where({
+          "assigned_service_team.entityType": "work_order"
+        })
+        .whereNotNull("assigned_service_team.teamId")
+        .whereNotNull("users.userName")
+        .whereRaw(
+          `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') >='${currentStartTime}'`
+        )
+        .whereRaw(
+          `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<= '${currentEndTime}'`
+        )
+        .whereIn("projects.id", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("projects.id", projectId)
+          }
+        })
+
+      assignedUser = _.uniqBy(assignedUser, "id")
+
+      let final = [];
+      for (let tech of assignedUser) {
+        let workOrders = await knex
+          .from("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .leftJoin(
+            "asset_location",
+            "asset_master.id",
+            "asset_location.assetId"
+          )
+          .leftJoin("projects", "asset_location.projectId", "projects.id")
+          .leftJoin("assigned_service_team", "task_group_schedule_assign_assets.id", "assigned_service_team.entityId")
+          .leftJoin("users", "assigned_service_team.userId", "users.id")
+          .select([
+            "task_group_schedule_assign_assets.id as workOrderId",
+          ])
+          .where({
+            "assigned_service_team.entityType": "work_order", "users.id": tech.id
+          })
+          .where({
+            "task_group_schedule_assign_assets.status": 'O',
+            "task_group_schedule.orgId": req.orgId,
+          })
+          .whereIn("projects.id", accessibleProjects)
+          .whereRaw(
+            `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') >='${currentStartTime}'`
+          )
+          .whereRaw(
+            `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<= '${currentEndTime}'`
+          )
+          .where((qb) => {
+            if (projectId) {
+              qb.where("projects.id", projectId)
+            }
+          })
+          .orderBy("workOrderId", "asc")
+        final.push({
+          technician: tech.name,
+          totalWorkOrder: _.uniqBy(workOrders, "workOrderId").length,
+        });
+
+      }
+
+      return res.status(200).json({
+        data: {
+          final,
+          // assignedUser,
+          currentStartTime,
+          currentEndTime
+        }
+      })
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+
   getPmWorkorderChart: async (req, res) => {
     try {
 

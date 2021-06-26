@@ -117,6 +117,14 @@ router.post(
     dashboardController.getPieChartForProblemType
 )
 
+router.post(
+    "/get-technician-assigned-task-for-barchart",
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isCMAccessible,
+    dashboardController.getServiceTaskAssignedToTecnicianChartData
+)
+
 
 
 
