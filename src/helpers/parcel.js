@@ -359,7 +359,7 @@ const parcelHelper = {
               pId = [];
 
               let qrString = JSON.stringify(
-                `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
+                "org~" + data.orgId + "~unitNumber~" + data.unitNumber + "~parcel~" + data.id
               );
               // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
               let qrCodeDataURI = await QRCODE.toDataURL(
