@@ -159,4 +159,12 @@ router.get(
   pmController.getProjectList
 )
 
+router.post(
+  '/get-workorder-chart-data-for-assigned-user',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getWorkOrderToAssignedTechnicianForBarChart
+)
+
 module.exports = router;

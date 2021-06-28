@@ -2345,9 +2345,9 @@ const dashboardController = {
           orgId: orgId,
           moderationStatus: true,
         })
-        .where((qb)=>{
-          if(payload.projectId){
-            qb.where("service_requests.projectId",payload.projectId)
+        .where((qb) => {
+          if (payload.projectId) {
+            qb.where("service_requests.projectId", payload.projectId)
           }
         })
 
@@ -2389,7 +2389,7 @@ const dashboardController = {
           .whereIn("service_requests.projectId", accessibleProjects)
           .where((qb) => {
             if (currentStartTime && currentEndTime) {
-              qb .whereBetween("service_orders.createdAt", [
+              qb.whereBetween("service_orders.createdAt", [
                 currentStartTime,
                 currentEndTime,
               ])
@@ -2398,7 +2398,7 @@ const dashboardController = {
               qb.where("service_requests.projectId", payload.projectId)
             }
           }),
-         
+
 
         knex
           .from("survey_orders")
@@ -2411,7 +2411,7 @@ const dashboardController = {
           .whereIn("survey_orders.serviceRequestId", serviceReqId)
           .where((qb) => {
             if (currentStartTime && currentEndTime) {
-              qb .whereBetween("survey_orders.createdAt", [
+              qb.whereBetween("survey_orders.createdAt", [
                 currentStartTime,
                 currentEndTime,
               ])
@@ -2440,6 +2440,166 @@ const dashboardController = {
       });
     } catch (err) {
       console.log("[controllers][parts][getParts] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+  getServiceTaskAssignedToTecnicianChartData: async (req, res) => {
+    try {
+
+
+      let reqData = req.body;
+      let projectId = req.body.projectId;
+
+      let startNewDate = moment(reqData.startDate).startOf("date").format();
+      let endNewDate = moment(reqData.endDate).endOf("date", "day").format();
+
+      let currentStartTime = new Date(startNewDate).getTime();
+      let currentEndTime = new Date(endNewDate).getTime();
+
+      const accessibleProjects = req.userProjectResources[0].projects;
+
+      let assignedTechnician = await knex
+        .from("users")
+        .leftJoin("assigned_service_team", "users.id", "assigned_service_team.userId")
+        .leftJoin("service_requests", "assigned_service_team.entityId", "service_requests.id")
+        .select([
+          "users.name",
+          "service_requests.id as SOId",
+          "users.id",
+          "users.userName"
+        ])
+        .where({ "service_requests.orgId": req.orgId })
+        .whereBetween("service_requests.createdAt", [
+          currentStartTime,
+          currentEndTime,
+        ])
+        .where({ "service_requests.isCreatedFromSo": false })
+        .whereIn("service_requests.projectId", accessibleProjects)
+        .where((qb) => {
+          if (projectId) {
+            qb.where("service_requests.projectId", projectId)
+          }
+        })
+
+        assignedTechnician = _.uniqBy(assignedTechnician,"id")
+
+      console.log("list of technician", assignedTechnician)
+
+      let final = [];
+      for(let tech of assignedTechnician){
+        [totalServiceRequest, totalServiceOrder] = await Promise.all([
+          knex
+            .from("service_requests")
+            .leftJoin(
+              "service_problems",
+              "service_requests.id",
+              "service_problems.serviceRequestId"
+            )
+            .leftJoin(
+              "incident_categories",
+              "service_problems.categoryId",
+              "incident_categories.id"
+            )
+            .leftJoin(
+              "incident_sub_categories",
+              "incident_categories.id",
+              "incident_sub_categories.incidentCategoryId"
+            )
+            .leftJoin(
+              "property_units",
+              "service_requests.houseId",
+              "property_units.id"
+            )
+            .leftJoin(
+              "assigned_service_team",
+              "service_requests.id",
+              "assigned_service_team.entityId"
+            )
+            .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            .leftJoin("users","assigned_service_team.userId","users.id")
+            .select([
+              "service_requests.id",
+              "service_requests.houseId as houseId",
+              "service_requests.description as description",
+              "incident_categories.descriptionEng as category",
+              "incident_sub_categories.descriptionEng as problem",
+              "service_requests.priority",
+              "service_requests.serviceStatusCode as status",
+              "property_units.unitNumber as unitNo",
+              "service_requests.requestedBy as requestedBy",
+              "service_requests.createdAt as dateCreated",
+              "teams.teamName",
+              "teams.teamCode",
+              "users.name"
+            ])
+            .where({ "service_requests.orgId": req.orgId," users.id" : tech.id  })
+            .whereBetween("service_requests.createdAt", [
+              currentStartTime,
+              currentEndTime,
+            ])
+            .where({ "service_requests.isCreatedFromSo": false })
+            .whereIn("service_requests.projectId", accessibleProjects)
+            .where((qb) => {
+              if (projectId) {
+                qb.where("service_requests.projectId", projectId)
+              }
+            })
+            .distinct("service_requests.id")
+            .orderBy("service_requests.id", "desc"),
+          // .offset(offset).limit(per_page)
+          knex
+            .from("service_orders")
+            .leftJoin(
+              "service_requests",
+              "service_orders.serviceRequestId",
+              "service_requests.id"
+            )
+            .leftJoin(
+              "assigned_service_team",
+              "service_requests.id",
+              "assigned_service_team.entityId"
+            )
+            .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            .leftJoin("users","assigned_service_team.userId","users.id")
+            .select([
+              "service_orders.id as SoId",
+              "service_orders.createdAt as dateCreated",
+            ])
+
+            .orderBy("service_orders.id", "desc")
+            .where({ "service_orders.orgId": req.orgId," users.id" : tech.id  })
+            .whereBetween("service_orders.createdAt", [
+              currentStartTime,
+              currentEndTime,
+            ])
+            //.whereIn("service_requests.projectId", accessibleProjects)
+            .whereIn("service_requests.projectId", accessibleProjects)
+            .where((qb) => {
+              if (projectId) {
+                qb.where("service_requests.projectId", projectId)
+              }
+            }),
+        ]);
+
+        tech = _.omit(tech, ["SOId","id"])
+        final.push({
+          technician: tech.name,
+          totalServiceRequest: _.uniqBy(totalServiceRequest, "id").length,
+          totalServiceOrder: _.uniqBy(totalServiceOrder, "SoId").length,
+        });
+      }
+
+      
+
+      return res.status(200).json({
+        data:{
+          final
+        }
+      })
+
+    } catch (err) {
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
