@@ -2464,11 +2464,6 @@ const dashboardController = {
         .from("assigned_service_team")
         .leftJoin("users","assigned_service_team.userId","users.id")
         .leftJoin("service_requests", "assigned_service_team.entityId", "service_requests.id")
-        .leftJoin(
-          "service_orders",
-          "service_requests.id",
-          "service_orders.serviceRequestId"
-        )
         .select([
           "users.name",
           "service_requests.id as SOId",
@@ -2476,18 +2471,6 @@ const dashboardController = {
           "users.userName"
         ])
         .where({ "service_requests.orgId": req.orgId })
-        // .where((qb)=>{
-        //   qb.whereBetween("service_requests.createdAt", [
-        //       currentStartTime,
-        //       currentEndTime,
-        //     ])
-        //   qb.orWhereBetween(
-        //     "service_orders.createdAt", [
-        //       currentStartTime,
-        //       currentEndTime,
-        //     ]
-        //   )
-        // })
         .where({ "service_requests.isCreatedFromSo": false })
         .whereIn("service_requests.projectId", accessibleProjects)
         .where((qb) => {
@@ -2498,7 +2481,7 @@ const dashboardController = {
 
         assignedTechnician = _.uniqBy(assignedTechnician,"id")
 
-      console.log("list of technician", assignedTechnician)
+      // console.log("list of technician", assignedTechnician)
 
       let final = [];
       for(let tech of assignedTechnician){
