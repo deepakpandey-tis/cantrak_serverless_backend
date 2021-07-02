@@ -2491,6 +2491,7 @@ const dashboardController = {
       for(let tech of assignedTechnician){
         [totalServiceRequest, totalServiceOrder] = await Promise.all([
           knex
+            .count("* as count")
             .from("service_requests")
             .leftJoin(
               "service_problems",
@@ -2519,21 +2520,6 @@ const dashboardController = {
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin("users","assigned_service_team.userId","users.id")
-            .select([
-              "service_requests.id",
-              "service_requests.houseId as houseId",
-              "service_requests.description as description",
-              "incident_categories.descriptionEng as category",
-              "incident_sub_categories.descriptionEng as problem",
-              "service_requests.priority",
-              "service_requests.serviceStatusCode as status",
-              "property_units.unitNumber as unitNo",
-              "service_requests.requestedBy as requestedBy",
-              "service_requests.createdAt as dateCreated",
-              "teams.teamName",
-              "teams.teamCode",
-              "users.name"
-            ])
             .where({ "service_requests.orgId": req.orgId," users.id" : tech.id  })
             .whereBetween("service_requests.createdAt", [
               currentStartTime,
@@ -2546,10 +2532,11 @@ const dashboardController = {
                 qb.where("service_requests.projectId", projectId)
               }
             })
-            .distinct("service_requests.id")
-            .orderBy("service_requests.id", "desc"),
-          // .offset(offset).limit(per_page)
+            // .distinct("service_requests.id")
+
+            .first(),
           knex
+          .count("* as count")
             .from("service_orders")
             .leftJoin(
               "service_requests",
@@ -2563,12 +2550,6 @@ const dashboardController = {
             )
             .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin("users","assigned_service_team.userId","users.id")
-            .select([
-              "service_orders.id as SoId",
-              "service_orders.createdAt as dateCreated",
-            ])
-
-            .orderBy("service_orders.id", "desc")
             .where({ "service_orders.orgId": req.orgId," users.id" : tech.id  })
             .whereBetween("service_orders.createdAt", [
               currentStartTime,
@@ -2580,14 +2561,18 @@ const dashboardController = {
               if (projectId) {
                 qb.where("service_requests.projectId", projectId)
               }
-            }),
+            })
+            // .distinct("service_orders.id")
+            .first()
         ]);
 
         tech = _.omit(tech, ["SOId","id"])
         final.push({
           technician: tech.name,
-          totalServiceRequest: _.uniqBy(totalServiceRequest, "id").length,
-          totalServiceOrder: _.uniqBy(totalServiceOrder, "SoId").length,
+          totalServiceRequest:totalServiceRequest.count,
+          totalServiceOrder:totalServiceOrder.count
+          // totalServiceRequest: _.uniqBy(totalServiceRequest, "id").count,
+          // totalServiceOrder: _.uniqBy(totalServiceOrder, "SoId").count,
         });
       }
 
