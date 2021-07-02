@@ -2471,10 +2471,10 @@ const dashboardController = {
           "users.userName"
         ])
         .where({ "service_requests.orgId": req.orgId })
-        .whereBetween("service_requests.createdAt", [
-          currentStartTime,
-          currentEndTime,
-        ])
+        // .whereBetween("service_requests.createdAt", [
+        //   currentStartTime,
+        //   currentEndTime,
+        // ])
         .where({ "service_requests.isCreatedFromSo": false })
         .whereIn("service_requests.projectId", accessibleProjects)
         .where((qb) => {
@@ -3170,20 +3170,20 @@ const dashboardController = {
 
       let OPEN = openServiceRequest.length
       let COMPLETED = completedServiceRequest.length
-      let INPROGRESS = inProgressServiceRequest.length
-      let ONHOLD = onHoldServiceRequest.length
+      let In_Progress = inProgressServiceRequest.length
+      let On_Hold = onHoldServiceRequest.length
       let APPROVED = approvedServiceRequest.length
-      let UNDERSURVEY = underSurveyServicerequest.length
+      let Under_Survey = underSurveyServicerequest.length
 
 
       return res.status(200).json({
         data: {
           OPEN,
           COMPLETED,
-          INPROGRESS,
-          ONHOLD,
+          In_Progress,
+          On_Hold,
           APPROVED,
-          UNDERSURVEY
+          Under_Survey
         }
       })
 

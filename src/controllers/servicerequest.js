@@ -815,6 +815,8 @@ const serviceRequestController = {
         unit,
         company,
         project,
+        startDate,
+        endDate
       } = req.body;
       let total, rows;
       console.log("service request list===", req.body);
@@ -859,6 +861,11 @@ const serviceRequestController = {
 
       const d = new Date();
       let differencesTime = d.getTimezoneOffset();
+      let startNewDate = moment(req.body.startDate).startOf("date").format();
+      let endNewDate = moment(req.body.endDate).endOf("date", "day").format();
+
+      let currentStartTime = new Date(startNewDate).getTime();
+      let currentEndTime = new Date(endNewDate).getTime();
 
       moment.tz.setDefault(moment.tz.guess()); // now we've set the default time zone
       let selectedTimeZone = moment().tz();
@@ -946,7 +953,9 @@ const serviceRequestController = {
         status ||
         unit ||
         company ||
-        project
+        project ||
+        startDate ||
+        endDate
       ) {
         [total, rows] = await Promise.all([
           knex
@@ -1096,6 +1105,13 @@ const serviceRequestController = {
                 );
               }
 
+              if(startDate && endDate){
+                qb.whereBetween(
+                  "service_requests.createdAt",
+                  [currentStartTime, currentEndTime]
+                );
+              }
+
               if (requestedBy) {
                 qb.where(
                   "service_requests.requestedBy",
@@ -1130,10 +1146,11 @@ const serviceRequestController = {
                   project
                 );
               }
-              qb.whereIn(
-                "service_requests.projectId",
-                projectIds
-              );
+              // qb.whereIn(
+              //   "service_requests.projectId",
+              //   projectIds
+              // );
+              qb.whereIn("service_requests.projectId", accessibleProjects)
             })
 
             .groupBy([
@@ -1306,6 +1323,12 @@ const serviceRequestController = {
                 );
               }
 
+              if(startDate && endDate){
+                qb.whereBetween(
+                  "service_requests.createdAt",
+                  [currentStartTime, currentEndTime]
+                );
+              }
               if (requestedBy) {
                 qb.where(
                   "service_requests.requestedBy",
@@ -1340,10 +1363,11 @@ const serviceRequestController = {
                   project
                 );
               }
-              qb.whereIn(
-                "service_requests.projectId",
-                projectIds
-              );
+              // qb.whereIn(
+              //   "service_requests.projectId",
+              //   projectIds
+              // );
+              qb.whereIn("service_requests.projectId", accessibleProjects)
             })
             .offset(offset)
             .limit(per_page)
@@ -1474,10 +1498,11 @@ const serviceRequestController = {
               "service_requests.orgId": req.orgId,
               "service_requests.moderationStatus": true,
             })
-            .whereIn(
-              "service_requests.projectId",
-              projectIds
-            )
+            // .whereIn(
+            //   "service_requests.projectId",
+            //   projectIds
+            // )
+            .whereIn("service_requests.projectId", accessibleProjects)
             .where({
               "service_requests.isCreatedFromSo": false,
             })
@@ -1594,10 +1619,11 @@ const serviceRequestController = {
               "service_requests.orgId": req.orgId,
               "service_requests.moderationStatus": true,
             })
-            .whereIn(
-              "service_requests.projectId",
-              projectIds
-            )
+            // .whereIn(
+            //   "service_requests.projectId",
+            //   projectIds
+            // )
+            .whereIn("service_requests.projectId", accessibleProjects)
             .where({
               "service_requests.isCreatedFromSo": false,
             })

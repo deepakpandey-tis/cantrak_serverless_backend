@@ -254,14 +254,22 @@ const serviceOrderController = {
                 priority,
                 company,
                 project,
-                serviceRequestIdForShared
+                serviceRequestIdForShared,
+                startDate,
+                endDate
             } = req.body
 
             let reqData = req.query;
             let total, rows
-            const accessibleProjects = req.userProjectResources[0].projects
+            const accessibleProjects = req.userProjectResources[0].projects;
 
             let projectIds = req.accessibleProjects;
+
+            let startNewDate = moment(req.body.startDate).startOf("date").format();
+            let endNewDate = moment(req.body.endDate).endOf("date", "day").format();
+      
+            let currentStartTime = new Date(startNewDate).getTime();
+            let currentEndTime = new Date(endNewDate).getTime();
 
 
             let pagination = {};
@@ -450,7 +458,7 @@ const serviceOrderController = {
 
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId });
-                            qb.whereIn('service_requests.projectId', projectIds)
+                            qb.whereIn('service_requests.projectId', accessibleProjects)
                             if (filters) {
                                 qb.where(filters);
                             }
@@ -484,6 +492,9 @@ const serviceOrderController = {
                             // }
                             if (priority) {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
+                            }
+                            if(startDate && endDate){
+                                qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
                             }
 
                         }).groupBy([
@@ -558,7 +569,8 @@ const serviceOrderController = {
 
                         ]).where((qb) => {
                             qb.where({ 'service_orders.orgId': req.orgId })
-                            qb.whereIn('service_requests.projectId', projectIds)
+                            // qb.whereIn('service_requests.projectId', projectIds)
+                            qb.whereIn('service_requests.projectId', accessibleProjects)
                             if (filters) {
                                 qb.where(filters);
                             }
@@ -593,6 +605,9 @@ const serviceOrderController = {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
 
+                            if(startDate && endDate){
+                                qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
+                            }
 
                         }).offset(offset).limit(per_page).orderBy('service_orders.id', 'desc')
                 ])
@@ -636,8 +651,10 @@ const serviceOrderController = {
                         .leftJoin('companies', 'service_orders.companyId', 'companies.id')
                         .leftJoin('projects', 'property_units.projectId', 'projects.id')
                         .where({ "service_orders.orgId": req.orgId })
-                        .whereIn('service_requests.projectId', projectIds)
+                        // .whereIn('service_requests.projectId', projectIds)
+                        
                         .where(qb => {
+                            qb.whereIn('service_requests.projectId', accessibleProjects)
                             console.log("callleddddd==========>>>>")
                             
                             if (filters) {
@@ -682,6 +699,9 @@ const serviceOrderController = {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
 
+                            if(startDate && endDate){
+                                qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
+                            }
                         })
                         .groupBy([
                             "service_requests.id",
@@ -763,6 +783,7 @@ const serviceOrderController = {
                         .whereIn('service_requests.projectId', projectIds)
                         .where(qb => {
 
+                            qb.whereIn('service_requests.projectId', accessibleProjects)
                             console.log("value1 callleddddd==========>>>>")
                             if (filters) {
                                 qb.where(filters);
@@ -802,6 +823,9 @@ const serviceOrderController = {
                             }
                             if (priority) {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
+                            }
+                            if(startDate && endDate){
+                                qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
                             }
                         }).groupBy([
                             "service_requests.id",
@@ -893,7 +917,8 @@ const serviceOrderController = {
                         ])
                         .where(qb => {
                             qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', projectIds)
+                            // qb.whereIn('service_requests.projectId', projectIds)
+                            qb.whereIn('service_requests.projectId', accessibleProjects)
 
 
                             if (filters) {
@@ -940,6 +965,9 @@ const serviceOrderController = {
                             }
                             if (priority) {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
+                            }
+                            if(startDate && endDate){
+                                qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
                             }
 
                         })
@@ -1030,8 +1058,8 @@ const serviceOrderController = {
                         .where(qb => {
 
                             qb.where({ "service_orders.orgId": req.orgId });
-                            qb.whereIn('service_requests.projectId', projectIds)
-
+                            // qb.whereIn('service_requests.projectId', projectIds)
+                            qb.whereIn('service_requests.projectId', accessibleProjects)
 
                             if (filters) {
                                 qb.where(filters);
@@ -1076,6 +1104,9 @@ const serviceOrderController = {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
 
+                            if(startDate && endDate){
+                                qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
+                            }
                         })
                         .offset(offset)
                         .limit(per_page).orderBy('service_orders.id', 'desc')
