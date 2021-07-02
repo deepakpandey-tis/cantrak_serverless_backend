@@ -1416,7 +1416,7 @@ const pmController = {
             }
           })
           .first()
-          // .orderBy("workOrderId", "asc")
+        // .orderBy("workOrderId", "asc")
         final.push({
           technician: tech.name,
           totalWorkOrder: workOrders.count
@@ -1571,22 +1571,13 @@ const pmController = {
         openWorkOrder = await knex
           .count("* as count")
           .from("task_group_schedule_assign_assets")
-          .innerJoin(
-            "asset_master",
-            "task_group_schedule_assign_assets.assetId",
-            "asset_master.id"
-          )
-          .leftJoin(
-            "asset_location",
-            "asset_master.id",
-            "asset_location.assetId"
-          )
-          .leftJoin("projects", "asset_location.projectId", "projects.id")
+          .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
+          .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
           .where({
             "task_group_schedule_assign_assets.status": 'O',
             "task_group_schedule_assign_assets.orgId": req.orgId,
           })
-          .whereIn("projects.id", accessibleProjects)
+          .whereIn("pm_master2.projectId", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -1599,7 +1590,7 @@ const pmController = {
               )
             }
             if (projectId) {
-              qb.where("projects.id", projectId)
+              qb.where("pm_master2.projectId", projectId)
             }
 
           })
@@ -1610,28 +1601,13 @@ const pmController = {
         completedWorkOrder = await knex
           .count("* as count")
           .from("task_group_schedule_assign_assets")
-          // .from("task_group_schedule")
-          // .innerJoin(
-          //   "task_group_schedule_assign_assets",
-          //   "task_group_schedule.id",
-          //   "task_group_schedule_assign_assets.scheduleId"
-          // )
-          .innerJoin(
-            "asset_master",
-            "task_group_schedule_assign_assets.assetId",
-            "asset_master.id"
-          )
-          .leftJoin(
-            "asset_location",
-            "asset_master.id",
-            "asset_location.assetId"
-          )
-          .leftJoin("projects", "asset_location.projectId", "projects.id")
+          .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
+          .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
           .where({
             "task_group_schedule_assign_assets.status": 'COM',
             "task_group_schedule_assign_assets.orgId": req.orgId,
           })
-          .whereIn("projects.id", accessibleProjects)
+          .whereIn("pm_master2.projectId", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -1644,7 +1620,7 @@ const pmController = {
               )
             }
             if (projectId) {
-              qb.where("projects.id", projectId)
+              qb.where("pm_master2.projectId", projectId)
             }
 
           })
@@ -1655,29 +1631,14 @@ const pmController = {
         onScheduleWorkOrder = await knex
           .count("* as count")
           .from("task_group_schedule_assign_assets")
-          // .from("task_group_schedule")
-          // .innerJoin(
-          //   "task_group_schedule_assign_assets",
-          //   "task_group_schedule.id",
-          //   "task_group_schedule_assign_assets.scheduleId"
-          // )
-          .innerJoin(
-            "asset_master",
-            "task_group_schedule_assign_assets.assetId",
-            "asset_master.id"
-          )
-          .leftJoin(
-            "asset_location",
-            "asset_master.id",
-            "asset_location.assetId"
-          )
-          .leftJoin("projects", "asset_location.projectId", "projects.id")
+          .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
+          .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
           .where({
             "task_group_schedule_assign_assets.status": 'COM',
             "task_group_schedule_assign_assets.isOverdue": false,
             "task_group_schedule_assign_assets.orgId": req.orgId,
           })
-          .whereIn("projects.id", accessibleProjects)
+          .whereIn("pm_master2.projectId", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -1690,39 +1651,23 @@ const pmController = {
               )
             }
             if (projectId) {
-              qb.where("projects.id", projectId)
+              qb.where("pm_master2.projectId", projectId)
             }
 
           })
           .first()
-        // .orderBy("task_group_schedule_assign_assets.id", "asc");
 
         overdueWorkOrder = await knex
           .count("* as count")
           .from("task_group_schedule_assign_assets")
-          // .from("task_group_schedule")
-          // .innerJoin(
-          //   "task_group_schedule_assign_assets",
-          //   "task_group_schedule.id",
-          //   "task_group_schedule_assign_assets.scheduleId"
-          // )
-          .innerJoin(
-            "asset_master",
-            "task_group_schedule_assign_assets.assetId",
-            "asset_master.id"
-          )
-          .leftJoin(
-            "asset_location",
-            "asset_master.id",
-            "asset_location.assetId"
-          )
-          .leftJoin("projects", "asset_location.projectId", "projects.id")
+          .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
+          .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
           .where({
             "task_group_schedule_assign_assets.status": 'O',
             "task_group_schedule_assign_assets.isOverdue": true,
             "task_group_schedule_assign_assets.orgId": req.orgId,
           })
-          .whereIn("projects.id", accessibleProjects)
+          .whereIn("pm_master2.projectId", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -1735,7 +1680,7 @@ const pmController = {
               )
             }
             if (projectId) {
-              qb.where("projects.id", projectId)
+              qb.where("pm_master2.projectId", projectId)
             }
 
           })
@@ -1786,28 +1731,14 @@ const pmController = {
       const [openWorkOrder, openOverdueWorkOrder, completedOnSchedule, completedOverdue] = await Promise.all([
         knex
           .count("* as count")
-          .from("task_group_schedule")
-          .innerJoin(
-            "task_group_schedule_assign_assets",
-            "task_group_schedule.id",
-            "task_group_schedule_assign_assets.scheduleId"
-          )
-          .innerJoin(
-            "asset_master",
-            "task_group_schedule_assign_assets.assetId",
-            "asset_master.id"
-          )
-          .leftJoin(
-            "asset_location",
-            "asset_master.id",
-            "asset_location.assetId"
-          )
-          .leftJoin("projects", "asset_location.projectId", "projects.id")
+          .from("task_group_schedule_assign_assets")
+          .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
+          .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
           .where({
             "task_group_schedule_assign_assets.status": 'O',
             "task_group_schedule.orgId": req.orgId,
           })
-          .whereIn("projects.id", accessibleProjects)
+          .whereIn("pm_master2.projectId", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -1820,7 +1751,7 @@ const pmController = {
               )
             }
             if (projectId) {
-              qb.where("projects.id", projectId)
+              qb.where("pm_master2.projectId", projectId)
             }
 
           })
@@ -1828,29 +1759,15 @@ const pmController = {
         ,
         knex
           .count("* as count")
-          .from("task_group_schedule")
-          .innerJoin(
-            "task_group_schedule_assign_assets",
-            "task_group_schedule.id",
-            "task_group_schedule_assign_assets.scheduleId"
-          )
-          .innerJoin(
-            "asset_master",
-            "task_group_schedule_assign_assets.assetId",
-            "asset_master.id"
-          )
-          .leftJoin(
-            "asset_location",
-            "asset_master.id",
-            "asset_location.assetId"
-          )
-          .leftJoin("projects", "asset_location.projectId", "projects.id")
+          .from("task_group_schedule_assign_assets")
+          .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
+          .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
           .where({
             "task_group_schedule_assign_assets.status": 'O',
             "task_group_schedule_assign_assets.isOverdue": true,
             "task_group_schedule.orgId": req.orgId,
           })
-          .whereIn("projects.id", accessibleProjects)
+          .whereIn("pm_master2.projectId", accessibleProjects)
           .where((qb) => {
             if (currentStartTime) {
               qb.whereRaw(
@@ -1863,7 +1780,7 @@ const pmController = {
               )
             }
             if (projectId) {
-              qb.where("projects.id", projectId)
+              qb.where("pm_master2.projectId", projectId)
             }
 
           })
@@ -1871,28 +1788,14 @@ const pmController = {
         ,
         knex
           .count("* as count")
-          .from("task_group_schedule")
-          .innerJoin(
-            "task_group_schedule_assign_assets",
-            "task_group_schedule.id",
-            "task_group_schedule_assign_assets.scheduleId"
-          )
-          .innerJoin(
-            "asset_master",
-            "task_group_schedule_assign_assets.assetId",
-            "asset_master.id"
-          )
-          .leftJoin(
-            "asset_location",
-            "asset_master.id",
-            "asset_location.assetId"
-          )
-          .leftJoin("projects", "asset_location.projectId", "projects.id")
+          .from("task_group_schedule_assign_assets")
+          .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
+          .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
           .where({
             "task_group_schedule_assign_assets.status": 'COM',
             "task_group_schedule.orgId": req.orgId,
           })
-          .whereIn("projects.id", accessibleProjects)
+          .whereIn("pm_master2.projectId", accessibleProjects)
           .where((qb) => {
             qb.whereRaw(`task_group_schedule_assign_assets."completedAt" <= task_group_schedule_assign_assets."workOrderDeadlineTimestamp"`)
             if (currentStartTime) {
@@ -1906,7 +1809,7 @@ const pmController = {
               )
             }
             if (projectId) {
-              qb.where("projects.id", projectId)
+              qb.where("pm_master2.projectId", projectId)
             }
 
           })
@@ -1914,28 +1817,14 @@ const pmController = {
         ,
         knex
           .count("* as count")
-          .from("task_group_schedule")
-          .innerJoin(
-            "task_group_schedule_assign_assets",
-            "task_group_schedule.id",
-            "task_group_schedule_assign_assets.scheduleId"
-          )
-          .innerJoin(
-            "asset_master",
-            "task_group_schedule_assign_assets.assetId",
-            "asset_master.id"
-          )
-          .leftJoin(
-            "asset_location",
-            "asset_master.id",
-            "asset_location.assetId"
-          )
-          .leftJoin("projects", "asset_location.projectId", "projects.id")
+          .from("task_group_schedule_assign_assets")
+          .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
+          .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
           .where({
             "task_group_schedule_assign_assets.status": 'COM',
             "task_group_schedule.orgId": req.orgId,
           })
-          .whereIn("projects.id", accessibleProjects)
+          .whereIn("pm_master2.projectId", accessibleProjects)
           .where((qb) => {
             qb.whereRaw(`task_group_schedule_assign_assets."completedAt" > task_group_schedule_assign_assets."workOrderDeadlineTimestamp"`)
             if (currentStartTime) {
@@ -1949,7 +1838,7 @@ const pmController = {
               )
             }
             if (projectId) {
-              qb.where("projects.id", projectId)
+              qb.where("pm_master2.projectId", projectId)
             }
 
           })
