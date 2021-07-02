@@ -2461,9 +2461,14 @@ const dashboardController = {
       const accessibleProjects = req.userProjectResources[0].projects;
 
       let assignedTechnician = await knex
-        .from("users")
-        .leftJoin("assigned_service_team", "users.id", "assigned_service_team.userId")
+        .from("assigned_service_team")
+        .leftJoin("users","assigned_service_team.userId","users.id")
         .leftJoin("service_requests", "assigned_service_team.entityId", "service_requests.id")
+        .leftJoin(
+          "service_orders",
+          "service_requests.id",
+          "service_orders.serviceRequestId"
+        )
         .select([
           "users.name",
           "service_requests.id as SOId",
@@ -2471,10 +2476,18 @@ const dashboardController = {
           "users.userName"
         ])
         .where({ "service_requests.orgId": req.orgId })
-        // .whereBetween("service_requests.createdAt", [
-        //   currentStartTime,
-        //   currentEndTime,
-        // ])
+        // .where((qb)=>{
+        //   qb.whereBetween("service_requests.createdAt", [
+        //       currentStartTime,
+        //       currentEndTime,
+        //     ])
+        //   qb.orWhereBetween(
+        //     "service_orders.createdAt", [
+        //       currentStartTime,
+        //       currentEndTime,
+        //     ]
+        //   )
+        // })
         .where({ "service_requests.isCreatedFromSo": false })
         .whereIn("service_requests.projectId", accessibleProjects)
         .where((qb) => {
@@ -2518,7 +2531,7 @@ const dashboardController = {
               "service_requests.id",
               "assigned_service_team.entityId"
             )
-            .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            // .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin("users","assigned_service_team.userId","users.id")
             .where({ "service_requests.orgId": req.orgId," users.id" : tech.id  })
             .whereBetween("service_requests.createdAt", [
@@ -2548,7 +2561,7 @@ const dashboardController = {
               "service_requests.id",
               "assigned_service_team.entityId"
             )
-            .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+            // .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin("users","assigned_service_team.userId","users.id")
             .where({ "service_orders.orgId": req.orgId," users.id" : tech.id  })
             .whereBetween("service_orders.createdAt", [
