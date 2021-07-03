@@ -1445,100 +1445,70 @@ const pmController = {
 
       let projectId = req.body.projectId
       const accessibleProjects = req.userProjectResources[0].projects;
-      var getDaysArray = function (start, end) {
-        let dt = start;
-        let arr = [];
-        for (; dt <= end; dt.setDate(dt.getDate() + 1)) {
-          arr.push(new Date(dt));
-        }
-        return arr;
-      };
-
-      var dates = getDaysArray(
-        new Date(reqData.startDate),
-        new Date(reqData.endDate)
-      );
 
       let final = [];
+      [workOrderOpen, workOrderOpenOverdue] = await Promise.all([
+        knex
+          .count("* as workOrderOpen")
+          .select("workOrderDate as date")
+          .from("task_group_schedule_assign_assets")
+          .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
+          .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
+          .where({
+            "task_group_schedule_assign_assets.status": 'O',
+            "task_group_schedule_assign_assets.isOverdue": false,
+            "task_group_schedule_assign_assets.orgId": req.orgId,
+          })
+          .whereIn("pm_master2.projectId", accessibleProjects)
+          .whereBetween("task_group_schedule_assign_assets.workOrderDate", [reqData.startDate, reqData.endDate])
+          .where((qb) => {
+            if (projectId) {
+              qb.where("pm_master2.projectId", projectId)
+            }
+          })
+          .groupBy("workOrderDate"),
+        knex
+          .count("* as workOrderOpenOverdue")
+          .select("workOrderDate as date")
+          .from("task_group_schedule_assign_assets")
+          .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
+          .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
+          .where({
+            "task_group_schedule_assign_assets.status": 'O',
+            "task_group_schedule_assign_assets.isOverdue": true,
+            "task_group_schedule_assign_assets.orgId": req.orgId,
+          })
+          .whereIn("pm_master2.projectId", accessibleProjects)
+          .whereBetween("task_group_schedule_assign_assets.workOrderDate", [reqData.startDate, reqData.endDate])
+          .where((qb) => {
+            if (projectId) {
+              qb.where("pm_master2.projectId", projectId)
+            }
+          })
+          .groupBy("workOrderDate")
+      ]);
 
-      for (let d of dates) {
-        let startNewDate = moment(d).startOf("date").format();
-        let endNewDate = moment(d).endOf("date", "day").format();
+      // console.log("Work Order open", workOrderOpen, workOrderOpenOverdue)
 
-        let currentStartTime = new Date(startNewDate).getTime();
-        let currentEndTime = new Date(endNewDate).getTime();
+      // final = workOrderOpenOverdue.map((item, i) => Object.assign({}, item, workOrderOpen[i]))
 
-        let currentSTime = moment(currentStartTime).format("YYYY-MM-DD")
-        let currentETime = moment(currentEndTime).format("YYYY-MM-DD")
+      final = Object.values([...workOrderOpen, ...workOrderOpenOverdue].reduce((acc, cur) => {
+        let uniqDate = cur['date'];
+        acc[uniqDate] = { ...acc[uniqDate], ...cur } || cur;
+        return acc;
+      }, {}))
 
-        // console.log("dates start and end",currentSTime,currentETime)
+      const timezone = req.body.timezone;
+      moment.tz.setDefault(timezone);
 
-        if (currentSTime && currentETime) {
-
-          [workOrderOpen, workOrderOpenOverdue] = await Promise.all([
-            knex
-              .count("* as count")
-              .from("task_group_schedule_assign_assets")
-              .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
-              .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
-              .where({
-                "task_group_schedule_assign_assets.status": 'O',
-                "task_group_schedule_assign_assets.orgId": req.orgId,
-              })
-              .whereIn("pm_master2.projectId", accessibleProjects)
-              .whereRaw(
-                `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${currentSTime}'`
-
-              )
-              .where((qb) => {
-                if (projectId) {
-                  qb.where("pm_master2.projectId", projectId)
-                }
-              })
-              .first(),
-            knex
-              .count("* as count")
-              .from("task_group_schedule_assign_assets")
-              .leftJoin("task_group_schedule", "task_group_schedule_assign_assets.scheduleId", "task_group_schedule.id")
-              .leftJoin("pm_master2", "task_group_schedule.pmId", "pm_master2.id")
-              .where({
-                "task_group_schedule_assign_assets.status": 'O',
-                "task_group_schedule_assign_assets.isOverdue": true,
-                "task_group_schedule_assign_assets.orgId": req.orgId,
-              })
-              .whereIn("pm_master2.projectId", accessibleProjects)
-              .whereRaw(
-                // `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<='${currentSTime}'`
-                `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')='${currentSTime}'`
-              )
-              // .whereRaw(
-              //   `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')>='${currentETime}'`
-              // )
-              .where((qb) => {
-                if (projectId) {
-                  qb.where("pm_master2.projectId", projectId)
-                }
-              })
-              .first()
-          ]);
-
-        }
-
-        // console.log("Work Order open",workOrderOpen)
-
-        final.push({
-          date: moment(d).format("L"),
-          workOrderOpen: workOrderOpen.count,
-          workOrderOpenOverdue: workOrderOpenOverdue.count
-          // workOrderOpen: _.uniqBy(workOrderOpen, "workOrderId").length,
-          // workOrderOpenOverdue: _.uniqBy(workOrderOpenOverdue, "workOrderId").length,
-        });
-      }
+      final = final.map((d) => {
+        d.date = moment(d.date).format('YYYY-MM-DD')
+        return d;
+      })
 
       res.status(200).json({
         data: { final },
         message: "records",
-        // projectIds,
       });
     } catch (err) {
       res.status(500).json({
@@ -1552,8 +1522,6 @@ const pmController = {
       let payload = req.body;
 
       let projectId = req.body.projectId;
-      // console.log("data in payload===>>>>>", payload);
-      // let workOrderDate = moment(payload.workOrderDate).format("YYYY-MM-DD");
       let openWorkOrder;
       let completedWorkOrder;
       let overdueWorkOrder;
@@ -1565,8 +1533,6 @@ const pmController = {
       const accessibleProjects = req.userProjectResources[0].projects;
 
       if (currentEndTime && currentStartTime) {
-
-        // console.log("start and end time", currentStartTime, currentEndTime)
 
         openWorkOrder = await knex
           .count("* as count")
@@ -1595,8 +1561,6 @@ const pmController = {
 
           })
           .first()
-
-        // .orderBy("task_group_schedule_assign_assets.id", "asc");
 
         completedWorkOrder = await knex
           .count("* as count")
