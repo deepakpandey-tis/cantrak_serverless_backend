@@ -2514,7 +2514,6 @@ const dashboardController = {
               "service_requests.id",
               "assigned_service_team.entityId"
             )
-            // .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin("users","assigned_service_team.userId","users.id")
             .where({ "service_requests.orgId": req.orgId," users.id" : tech.id  })
             .whereBetween("service_requests.createdAt", [
@@ -2528,7 +2527,6 @@ const dashboardController = {
                 qb.where("service_requests.projectId", projectId)
               }
             })
-            // .distinct("service_requests.id")
 
             .first(),
           knex
@@ -2544,21 +2542,18 @@ const dashboardController = {
               "service_requests.id",
               "assigned_service_team.entityId"
             )
-            // .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
             .leftJoin("users","assigned_service_team.userId","users.id")
             .where({ "service_orders.orgId": req.orgId," users.id" : tech.id  })
             .whereBetween("service_orders.createdAt", [
               currentStartTime,
               currentEndTime,
             ])
-            //.whereIn("service_requests.projectId", accessibleProjects)
             .whereIn("service_requests.projectId", accessibleProjects)
             .where((qb) => {
               if (projectId) {
                 qb.where("service_requests.projectId", projectId)
               }
             })
-            // .distinct("service_orders.id")
             .first()
         ]);
 
@@ -2567,13 +2562,19 @@ const dashboardController = {
           technician: tech.name,
           totalServiceRequest:totalServiceRequest.count,
           totalServiceOrder:totalServiceOrder.count
-          // totalServiceRequest: _.uniqBy(totalServiceRequest, "id").count,
-          // totalServiceOrder: _.uniqBy(totalServiceOrder, "SoId").count,
         });
       }
 
-      
+      final = final.filter((v)=> v.totalServiceRequest > 0 || v.totalServiceOrder > 0)
+      final = final.map((d)=>{
+        if(d. technician == null){
+          d.technician = 'Not Assigned'
+        }
+        return d;
+      })
 
+      console.log("final array after filter",final)
+      
       return res.status(200).json({
         data:{
           final
@@ -2673,7 +2674,6 @@ const dashboardController = {
             })
             .distinct("service_requests.id")
             .orderBy("service_requests.id", "desc"),
-          // .offset(offset).limit(per_page)
           knex
             .from("service_orders")
             .leftJoin(
@@ -2691,7 +2691,6 @@ const dashboardController = {
               currentStartTime,
               currentEndTime,
             ])
-            //.whereIn("service_requests.projectId", accessibleProjects)
             .whereIn("service_requests.projectId", accessibleProjects)
             .where((qb) => {
               if (projectId) {
@@ -2710,7 +2709,6 @@ const dashboardController = {
       res.status(200).json({
         data: { final },
         message: "records",
-        // projectIds,
       });
     } catch (err) {
       res.status(500).json({
@@ -2723,8 +2721,6 @@ const dashboardController = {
     try {
       let payload = req.body;
       let projectId = req.body.projectId;
-
-      console.log("payload data", payload)
 
       let completedServiceRequest
       let inProgressServiceRequest
@@ -2739,7 +2735,7 @@ const dashboardController = {
       let currentStartTime = new Date(startNewDate).getTime();
       let currentEndTime = new Date(endNewDate).getTime();
 
-      console.log("start and end date", currentStartTime, currentEndTime)
+      // console.log("start and end date", currentStartTime, currentEndTime)
 
 
 

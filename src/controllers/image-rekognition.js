@@ -25,6 +25,16 @@ const imageRekognitionController = {
         ],
       });
     }
+  },
+
+  checkMeterManagementAccess: async (req,res) => {
+    try {
+      return res.status(200).json({
+        message: 'OK'
+      })
+    } catch (err) {
+      console.log('[controllers][image-rekognition][Access] :  Error', err);
+    }
   }
 }
 

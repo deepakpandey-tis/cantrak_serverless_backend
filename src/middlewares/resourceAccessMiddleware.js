@@ -3,12 +3,12 @@ const _ = require('lodash');
 
 
 const setAccessibleProjects = (req, resourceId) => {
-   // Set Projects (Only Related to this Resource) to req object....
-   let allProjectsWithResources = req.userProjectResources;
-   allProjectsWithResources = allProjectsWithResources.find(pfp => pfp.id == resourceId);
-   let accessibleProjects = allProjectsWithResources.projects;
-   accessibleProjects = _.uniqBy(accessibleProjects);
-   req.accessibleProjects = accessibleProjects;
+  // Set Projects (Only Related to this Resource) to req object....
+  let allProjectsWithResources = req.userProjectResources;
+  allProjectsWithResources = allProjectsWithResources.find(pfp => pfp.id == resourceId);
+  let accessibleProjects = allProjectsWithResources.projects;
+  accessibleProjects = _.uniqBy(accessibleProjects);
+  req.accessibleProjects = accessibleProjects;
 }
 
 const resourceAccessMiddleware = {
@@ -209,13 +209,28 @@ const resourceAccessMiddleware = {
     let keys = req.userProjectResources.map(v => v.id);
     if (keys.includes(15) || keys.includes("15")) {
       console.log('[middleware][resourceAccessMiddleware]: isVisitorManagementAccessible: ', true);
-      setAccessibleProjects(req, 11);
+      setAccessibleProjects(req, 15);
       next();
     } else {
       console.log('[middleware][resourceAccessMiddleware]: isVisitorManagementAccessible: ', false);
       next(createError(403));
     }
   },
+
+  isMeterManagementAccessible: async (req, res, next) => {
+    if (req.superAdmin) {
+      return next();
+    }
+    let keys = req.userProjectResources.map(v => v.id);
+    if (keys.includes(16) || keys.includes("16")) {
+      console.log('[middleware][resourceAccessMiddleware]: isMeterManagementAccessible: ', true);
+      setAccessibleProjects(req, 16);
+      next();
+    } else {
+      console.log('[middleware][resourceAccessMiddleware]: isMeterManagementAccessible: ', false);
+      next(createError(403));
+    }
+  }
 
 };
 
