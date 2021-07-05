@@ -11,6 +11,19 @@ const { promisify } = require("util");
 
 const redisConnectionHelper = {
 
+    getKeys: async (pattern) => {
+        try {
+
+            const getAsync = promisify(client.keys).bind(client);
+            const res = await getAsync(pattern);
+            return res;
+
+        } catch (err) {
+            console.error(`[helpers][redis][getKeys]: Error:`, err);
+            return err;
+        }
+    },
+
     getValue: async (key) => {
         try {
 
