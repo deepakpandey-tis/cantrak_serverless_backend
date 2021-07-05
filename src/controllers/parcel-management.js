@@ -1166,6 +1166,13 @@ const parcelManagementController = {
   /*parcel slip list */
   getParcelSlip: async (req, res) => {
     try {
+
+      let keyPattern = `parcel-docs-link-${req.orgId}*`;
+
+      let keys = await redisHelper.getKeys(keysPattern);
+
+
+
       let parcelSlipDocGeneratedList =
         await redisHelper.getValue(`parcel-docs-link`);
 
