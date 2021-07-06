@@ -14,7 +14,7 @@ const getSelfRegistrationPropertyUnits = async (req, res) => {
         , pu."projectId", p."projectName", pu."buildingPhaseId", bap."buildingPhaseCode"
         , bap.description as "buildingDescription",pu."floorZoneId", faz."floorZoneCode", faz.description
         , pu."unitNumber", pu.id as "unitId"
-        , u.id as "tenantId", u."name" as "tenantName"`;
+        , u.id as "tenantId", u."name" as "tenantName", uha."id" as "userHouseAllocationId"`;
 
         sqlFrom = ` FROM companies c, projects p, buildings_and_phases bap, floor_and_zones faz, property_units pu, user_house_allocation uha , users u`;
 
