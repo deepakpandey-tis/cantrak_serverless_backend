@@ -91,7 +91,7 @@ const imageRekognitionController = {
       let imagePath = image.s3Path;
 
       const extractedTextData = await extractTextFromImage(imagePath);
-      await knex('image_rekognition').where({ id: rekognitionId }).update({ rekognizedText: extractedTextData, prcoessed: true });
+      await knex('image_rekognition').where({ id: rekognitionId }).update({ rekognizedText: extractedTextData, processed: true });
 
       addedImageRekognition = await knex('image_rekognition').where({ id: rekognitionId }).first();
       return res.status(200).json({
