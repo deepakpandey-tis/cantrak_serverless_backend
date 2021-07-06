@@ -88,6 +88,14 @@ router.post(
 );
 
 router.post(
+    "/cancel-registration"
+    , authMiddleware.isAuthenticated
+    , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.cancelRegistration
+);
+
+router.post(
     "/checkin-visitor"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
@@ -101,6 +109,21 @@ router.post(
     , roleMiddleware.parseUserPermission
     , resourceAccessMiddleware.isVisitorManagementAccessible
     , visitorController.checkoutVisitor
+);
+
+router.get(
+    "/organisation-has-visitor-module"
+    , visitorController.organisationHasVisitorModule
+);
+
+router.post(
+    "/get-self-registration-property-units"
+    , visitorController.getSelfRegistrationPropertyUnits
+);
+
+router.post(
+    "/add-self-registration"
+    , visitorController.addSelfRegistration
 );
 
 module.exports = router;

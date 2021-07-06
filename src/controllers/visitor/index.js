@@ -11,6 +11,10 @@ const hasAnyVisitor = require('./has-any-visitor');
 const addInvitation = require('./add-invitation');
 const checkinVisitor = require('./checkin-visitor');
 const checkoutVisitor = require('./checkout-visitor');
+const organisationHasVisitorModule = require('./organisation-has-visitor-module');
+const getSelfRegistrationPropertyUnits = require('./get-self-registration-property-units');
+const addSelfRegistration = require('./add-self-registration');
+const cancelRegistration = require('./cancel-registration');
 
 module.exports = {
     getUserUnits,
@@ -26,4 +30,8 @@ module.exports = {
     addInvitation,
     checkinVisitor,
     checkoutVisitor,
+    organisationHasVisitorModule,
+    getSelfRegistrationPropertyUnits,
+    addSelfRegistration,
+    cancelRegistration,
 };
