@@ -103,6 +103,21 @@ router.post(
     , visitorController.checkoutVisitor
 );
 
+router.get(
+    "/organisation-has-visitor-module"
+    , visitorController.organisationHasVisitorModule
+);
+
+router.post(
+    "/get-self-registration-property-units"
+    , visitorController.getSelfRegistrationPropertyUnits
+);
+
+router.post(
+    "/add-self-registration"
+    , visitorController.addSelfRegistration
+);
+
 module.exports = router;
 
 /* ES6 module
