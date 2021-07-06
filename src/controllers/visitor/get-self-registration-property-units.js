@@ -1,5 +1,7 @@
 const knex = require('../../db/knex');
 
+// 2021/07/06 Select units which do not have tenant assigned. tables user_house_allocation and users are therefore now part of left join statement
+
 const getSelfRegistrationPropertyUnits = async (req, res) => {
     try {
         const visitorModule = 15;
@@ -16,7 +18,9 @@ const getSelfRegistrationPropertyUnits = async (req, res) => {
         , pu."unitNumber", pu.id as "unitId"
         , u.id as "tenantId", u."name" as "tenantName"`;
 
-        sqlFrom = ` FROM companies c, projects p, buildings_and_phases bap, floor_and_zones faz, property_units pu, user_house_allocation uha , users u`;
+        sqlFrom = ` FROM companies c, projects p, buildings_and_phases bap, floor_and_zones faz, property_units pu
+        left join user_house_allocation uha on pu.id = uha."houseId" and uha.status = '1'
+        left join users u on uha."userId" = u.id`;
 
         sqlWhere = ` WHERE pu."orgId" = ${payload.orgId} and pu."projectId" = ${payload.projectId}`;
         if(payload.buildingPhaseId){
@@ -24,8 +28,9 @@ const getSelfRegistrationPropertyUnits = async (req, res) => {
         }
 
         sqlWhere = sqlWhere + ` and pu."unitNumber" ILIKE '%${payload.unitNumber}%' and pu."isActive"
-         and pu."companyId" = c.id and c."isActive" and pu."projectId" = p.id and p."isActive" and pu."buildingPhaseId" = bap.id and bap."isActive" and pu."floorZoneId" = faz.id and faz."isActive"
-         and pu.id = uha."houseId" and uha."userId" = u.id`;
+         and pu."companyId" = c.id and c."isActive" and pu."projectId" = p.id and p."isActive" and pu."buildingPhaseId" = bap.id and bap."isActive" and pu."floorZoneId" = faz.id and faz."isActive"`;
+        // Select units which do not have tenant assigned. uha and u are therefore now part of left join statement
+        // and pu.id = uha."houseId" and uha."userId" = u.id`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
         //console.log("[controllers][Visitor][getSelfRegistrationPropertyUnits] sql: ", sqlStr);
