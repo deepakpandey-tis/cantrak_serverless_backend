@@ -515,24 +515,6 @@ const parcelManagementController = {
 
   generatePdfOfParcelDocument: async (req, res) => {
     try {
-      //const payload = req.body;
-
-      // const { agmId } = payload;
-      // console.log(
-      //   "[controllers][agm][generatePdfOfVotingDocument]: AgmId:",
-      //   agmId
-      // );
-
-      // if (!agmId) {
-      //   return res.status(400).json({
-      //     errors: [
-      //       {
-      //         code: "BAD_REQUEST",
-      //         message: "Please pass valid AgmId",
-      //       },
-      //     ],
-      //   });
-      // }
 
       // GET AGM Details...
       let total, rows;
@@ -546,10 +528,6 @@ const parcelManagementController = {
       let projectIds = [];
 
       projectIds = req.accessibleProjects;
-      //console.log("OrgData [][][][][JSON][][][][]:", req);
-
-      let payload = req.body;
-      let parcelList;
       let {
         unitId,
         tenantId,
@@ -589,9 +567,6 @@ const parcelManagementController = {
 
       console.log("parcel id for tenant", parcelId);
 
-      // const accessibleProjects = req.userProjectResources[0].projects;
-
-      // console.log('Project For pickup Parcel 2:', accessibleProjects);
 
       if (
         unitId ||
@@ -710,10 +685,7 @@ const parcelManagementController = {
                     "property_units.unitNumber": id,
                     "parcel_management.pickedUpType":
                       parcelType[0].pickedUpType,
-                    // "parcel_user_tis.tenantId":
-                    //   parcelUserData[0].tenantId,
-                    // "parcel_user_tis.unitId":
-                    //   parcelUserData[0].unitId,
+
                   });
                   qb.where(
                     "users.id",
@@ -811,11 +783,6 @@ const parcelManagementController = {
                 null
               )
               .where((qb) => {
-                // qb.where("parcel_user_non_tis.type", 2);
-                // qb.orWhere(
-                //   "parcel_user_non_tis.type",
-                //   null
-                // );
                 if (unitId) {
                   qb.where(
                     "property_units.unitNumber",
@@ -849,13 +816,8 @@ const parcelManagementController = {
                     parcelUserData
                   );
                   qb.where({
-                    // "property_units.unitNumber": id,
                     "parcel_management.pickedUpType":
                       parcelType[0].pickedUpType,
-                    // "parcel_user_tis.tenantId":
-                    //   parcelUserData[0].tenantId,
-                    // "parcel_user_tis.unitId":
-                    //   parcelUserData[0].unitId,
                   });
                   qb.where(
                     "users.id",
@@ -896,8 +858,7 @@ const parcelManagementController = {
                 "parcel_management.createdAt",
                 "desc"
               ),
-            // .offset(offset)
-            // .limit(perPage),
+
           ]);
         } catch (err) {
           console.log(
@@ -1024,8 +985,6 @@ const parcelManagementController = {
             .where("parcel_management.orgId", req.orgId)
             .where("parcel_management.parcelStatus", 1)
             .whereIn("projects.id", projectIds)
-            // .where("parcel_user_non_tis.type", 2)
-            // .orWhere("parcel_user_non_tis.type", null)
             .whereNot(
               "parcel_management.pickedUpType",
               null
@@ -1044,8 +1003,6 @@ const parcelManagementController = {
               "parcel_user_non_tis.name",
             ])
             .orderBy("parcel_management.createdAt", "desc"),
-          // .offset(offset)
-          // .limit(perPage),
         ]);
       }
 
@@ -1068,7 +1025,6 @@ const parcelManagementController = {
           .where({
             entityId: pd.id,
             entityType: "parcel_management",
-            // orgId: req.orgId,
           })
           .first();
         return {
@@ -1115,10 +1071,18 @@ const parcelManagementController = {
         .where({ id: req.orgId })
         .first();
 
-      let parcelSlipDocGeneratedList =
-        await redisHelper.getValue(`parcel-docs-link`);
+      let keyPattern = `parcel-docs-link-${req.orgId}*`;
 
-      console.log(parcelSlipDocGeneratedList);
+      let keys = await redisHelper.getKeys(keyPattern);
+
+      console.log("[Parcel][Controller][Parcel-slip-keys]", keys)
+      let parcelSlipDocGeneratedList = [];
+      for (let key of keys) {
+        let parcelDocs = await redisHelper.getValue(key);
+        parcelSlipDocGeneratedList.push(parcelDocs)
+      }
+
+      console.log("[Parcel][Controllers][Parcel-Docs]", parcelSlipDocGeneratedList);
 
       if (parcelSlipDocGeneratedList) {
         parcelSlipDocGeneratedList.push({
@@ -1131,13 +1095,13 @@ const parcelManagementController = {
           ),
         });
         await redisHelper.setValueWithExpiry(
-          `parcel-docs-link`,
+          `parcel-docs-link-${req.orgId}-${new Date().getTime()}`,
           parcelSlipDocGeneratedList,
           24 * 60 * 60
         );
       } else {
         await redisHelper.setValueWithExpiry(
-          `parcel-docs-link`,
+          `parcel-docs-link-${req.orgId}-${new Date().getTime()}`,
           [
             {
               requestId: requestId,
@@ -1166,11 +1130,41 @@ const parcelManagementController = {
   /*parcel slip list */
   getParcelSlip: async (req, res) => {
     try {
-      let parcelSlipDocGeneratedList =
-        await redisHelper.getValue(`parcel-docs-link`);
+
+
+      let keyPattern = `parcel-docs-link-${req.orgId}*`;
+
+      let keys = await redisHelper.getKeys(keyPattern);
+
+      console.log("[Parcel][Controller][Parcel-slip-keys]", keys)
+      let i = 0;
+      let parcelSlipDocGeneratedList = [];
+      for (let key of keys) {
+        console.log("parcel keys", i, key)
+
+        let parcelDocs = await redisHelper.getValue(key);
+
+        console.log("Parcel documents", i, parcelDocs)
+        parcelSlipDocGeneratedList.push(parcelDocs);
+
+        i++;
+
+      }
+      // let parcelSlipDocGeneratedList =
+      //   await redisHelper.getValue(key);
+
+      console.log("[Parcel-management][Controller][parcel-slip-docs]", parcelSlipDocGeneratedList)
+      let parcelSlipDoc = []
+      parcelSlipDocGeneratedList.map((d)=>{
+        d.map((v)=>{
+          if(v.requestId){
+            parcelSlipDoc.push(v)
+          }
+        })
+      })
 
       return res.status(200).json({
-        data: parcelSlipDocGeneratedList,
+        data: parcelSlipDoc,
         message: "",
       });
     } catch (err) {

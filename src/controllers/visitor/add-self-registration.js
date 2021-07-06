@@ -2,10 +2,10 @@ const knex = require('../../db/knex');
 
 const addRegistrationNotification = require("../../notifications/visitor/add-registration-notification");
 
-const addInvitation = async (req, res) => {
+const addSelfRegistration = async (req, res) => {
     try {
-        let userId = req.me.id;
-        let orgId = req.me.orgId;
+        let userId = 0;             // Visitor doing Self Registration does not has a record in ServiceMind. req.me.id;
+        // let orgId = req.me.orgId;   Must be passed by calling component because visitor doing self registration does not has a record in ServiceMind.
         let insertInvitation = [];
         let additionalGuest;
         let additionalGuestNo;
@@ -19,7 +19,7 @@ const addInvitation = async (req, res) => {
 
         // First Visitor
         let insertData = {
-            orgId: orgId,
+            // part of received object          orgId: orgId,
             // database sequence number id: 10,
             ...firstVisitor,
             arrivalDate: new Date(firstVisitor.arrivalDate).getTime(),
@@ -28,7 +28,6 @@ const addInvitation = async (req, res) => {
             createdAt: currentTime,
             updatedBy: userId,
             updatedAt: currentTime,
-//            orgId: req.orgId
         };
         console.log('first guest: ', insertData);
 
@@ -49,7 +48,7 @@ const addInvitation = async (req, res) => {
           additionalGuestNo = 0;
           for(let additionalVisitor of additionalVisitors){
             additionalGuest = {
-              orgId: orgId,
+              orgId: firstVisitor.orgId,
               ...additionalVisitor, 
               userHouseAllocationId: firstVisitor.userHouseAllocationId,
               arrivalDate: new Date(firstVisitor.arrivalDate).getTime(),
@@ -91,9 +90,9 @@ const addInvitation = async (req, res) => {
           const registration = {
             data: {
               sender: {
-                orgId: req.orgId,
-                id: req.me.id,
-                name: req.me.name,
+                orgId: firstVisitor.orgId,
+                id: userId,
+                name: insertInvitation[0].name,              // Visitor completed self registration
                 isCustomer: req.me.isCustomer,
               },
               receiver: {
@@ -121,7 +120,7 @@ const addInvitation = async (req, res) => {
         message: 'Invitation(s) added.'
       });
     } catch (err) {
-      console.log("[controllers][Visitor][addInvitation] :  Error", err);
+      console.log("[controllers][Visitor][addSelfRegistration] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -129,4 +128,4 @@ const addInvitation = async (req, res) => {
     }
 }
 
-module.exports = addInvitation;
+module.exports = addSelfRegistration;
