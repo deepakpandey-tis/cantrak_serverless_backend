@@ -72,7 +72,7 @@ const addSelfRegistration = async (req, res) => {
           }
 
           // Send registration notification
-          let orgData = await knex('organisations').where({ id: orgId }).first();
+          let orgData = await knex('organisations').where({ id: firstVisitor.orgId }).first();
 
           const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
           let arvDateStr = '';
