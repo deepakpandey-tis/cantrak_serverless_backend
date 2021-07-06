@@ -1,5 +1,7 @@
 const knex = require('../../db/knex');
 
+const addCheckoutNotification = require("../../notifications/visitor/add-checkout-notification");
+
 const checkoutVisitor = async (req, res) => {
     try {
         const visitorModule = 15;
@@ -85,6 +87,46 @@ const checkoutVisitor = async (req, res) => {
           .returning(['*']);
 
           updateInvitation = updateResult[0];
+
+          // Send check-out notification
+          let orgData = await knex('organisations').where({ id: orgId }).first();
+
+          const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+          let arvDateStr = '';
+          let arvDate = new Date(+visitorDetail.actualArrivalDate);
+          arvDateStr = arvDate.toLocaleDateString(undefined, options);
+
+          let depDateStr = '';
+          let depDate = new Date(+updateInvitation.actualDepartureDate);
+          depDateStr = depDate.toLocaleDateString(undefined, options);
+
+          //let curDate = new Date(+currentTime);
+          //depDate.setHours(0, 0, 0, 0);
+
+          console.log('add checkout arrival - departure dates: ', arvDate, arvDateStr, depDate, depDateStr);
+          const checkout = {
+            data: {
+              sender: {
+                orgId: req.orgId,
+                id: req.me.id,
+                name: req.me.name,
+                isCustomer: req.me.isCustomer,
+              },
+              receiver: {
+                id: updateInvitation.tenantId,
+                visitorNames: updateInvitation.name,
+                visitorArrivalDate: arvDateStr,
+                visitorDepartureDate: depDateStr,
+                visitorStayover: arvDateStr !== depDateStr,
+                visitorIds: updateInvitation.id,
+              },
+              payload: {
+                orgData: orgData
+              }
+            }
+          };
+          await addCheckoutNotification.send(checkout.data);
+
 
           trx.commit;
       });
