@@ -87,7 +87,8 @@ const imageRekognitionController = {
         });
       }
 
-      let imagePath = image.uploadPath;
+      console.log('[controllers][image-rekognition][detectTextInImage] :  Image Obj:', image);
+      let imagePath = image.s3Path;
 
       const extractedTextData = await extractTextFromImage(imagePath);
       await knex('image_rekognition').where({ id: rekognitionId }).update({ rekognizedText: extractedTextData, prcoessed: true });
