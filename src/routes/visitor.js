@@ -88,6 +88,14 @@ router.post(
 );
 
 router.post(
+    "/cancel-registration"
+    , authMiddleware.isAuthenticated
+    , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.cancelRegistration
+);
+
+router.post(
     "/checkin-visitor"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission

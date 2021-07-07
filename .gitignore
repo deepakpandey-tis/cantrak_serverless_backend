@@ -12,3 +12,5 @@ src/uploads/*
 # Webpack directories
 .webpack
 ~
+
+docker/data/**
