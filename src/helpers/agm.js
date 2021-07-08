@@ -569,8 +569,8 @@ const agmHelper = {
             // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
 
             // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
-            let sanitizedUnitNumber = pd.unitNumber;
-            sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-');
+            // let sanitizedUnitNumber = pd.unitNumber;
+            // sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-');
 
             // let sanitizedOwnerGroupNumber = pd.ownerGroupNo;
             // sanitizedOwnerGroupNumber = sanitizedOwnerGroupNumber.replace('#','-')
@@ -788,8 +788,8 @@ const agmHelper = {
             // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
 
             // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
-            let sanitizedUnitNumber = pd.unitNumber;
-            sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-'); // check alternative like replaceAll
+            // let sanitizedUnitNumber = pd.unitNumber;
+            // sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-'); // check alternative like replaceAll
             // let sanitizedOwnerGroupNumber = pd.ownerGroupNo;
             // sanitizedOwnerGroupNumber = sanitizedOwnerGroupNumber.replace('#','-')
             // let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${unitNumber}.pdf`;
