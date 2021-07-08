@@ -47,7 +47,8 @@ const getVisitorList = async (req, res) => {
         , pu2."id" "puId",  pu2."unitNumber", u2."name" "tenantName", vi.id id, vi."name", vi."createdAt", vi."status"
         , vi."arrivalDate", vi."actualArrivalDate", vi."departureDate", vi."actualDepartureDate", vi."propertyUnitsId", vi."registrationBy"`;
 
-        sqlFrom = ` FROM property_units pu2, user_house_allocation uha, visitor_invitations vi`;
+        sqlFrom = ` FROM property_units pu2, visitor_invitations vi`;
+        // 2021/07/08 sqlFrom += ` , user_house_allocation uha`;
         sqlFrom += ` LEFT OUTER JOIN users u2 ON vi."tenantId" = u2.id`;
 
         sqlWhere = ` WHERE pu2."orgId" = ${orgId}`;
@@ -72,12 +73,14 @@ const getVisitorList = async (req, res) => {
             sqlWhere += ` and pu2."projectId" in (${authorisedProjectIds})`
         }
 
-        sqlWhere += ` and pu2."orgId" = uha."orgId" and pu2.id = uha."houseId"`;
+        // 2021/07/08 sqlWhere += ` and pu2."orgId" = uha."orgId" and pu2.id = uha."houseId"`;
+        sqlWhere += ` and pu2."id" = vi."propertyUnitsId"`;
         if(payload.filter.tenantId){
-            sqlWhere += ` and uha."userId" = ${payload.filter.tenantId}`;
+            // 2021/07/08 sqlWhere += ` and uha."userId" = ${payload.filter.tenantId}`;
+            sqlWhere += ` and vi."tenantId" = ${payload.filter.tenantId}`;
         }
         // 2021/07/07 part of left outer join  sqlWhere += ` and uha."orgId" = u2."orgId" and uha."userId" = u2.id`;
-        sqlWhere += ` and uha."orgId" = vi."orgId" and uha.id = vi."userHouseAllocationId"`;
+        // 2021/07/08 sqlWhere += ` and uha."orgId" = vi."orgId" and uha.id = vi."userHouseAllocationId"`;
         if(visitorSelect === 1){                 // Schedule Visits / Check-ins: Active invitation / booking 
             sqlWhere += ` and  vi.status = 1 and vi."actualArrivalDate" is null`;
         }
@@ -175,4 +178,6 @@ module.exports = getVisitorList;
 
 /**
  * 2021/07/07  columns added to select statement: propertyUnitsId, registrationBy
+ * 2021/07/08  user_house_allocation table is removed from the FROM list
+ *             vi.propertyUnitsId is used to get unitNumber
  */

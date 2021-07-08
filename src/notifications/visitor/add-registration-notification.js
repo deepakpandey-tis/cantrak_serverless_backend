@@ -75,7 +75,7 @@ const addRegistrationNotification = {
             payload: {
                 subject: `Visitor Registration Notification`,
                 body: body,
-                subjectThai: `Visitor Registration Notification`,
+                subjectThai: `อนุมัติการลงทะเบียนผู้มาติดต่อ`,
                 bodyThai: bodyThai,
                 icon: icons,
                 image: images,
@@ -148,7 +148,7 @@ const addRegistrationNotification = {
             payload: {
                 subject: `Visitor Registration Notification`,
                 body: body,
-                subjectThai: `Visitor Registration Notification`,
+                subjectThai: `อนุมัติการลงทะเบียนผู้มาติดต่อ`,
                 bodyThai: bodyThai,
                 icon: icons,
                 image: images,
@@ -222,7 +222,7 @@ const addRegistrationNotification = {
             payload: {
                 subject: `Visitor Registration Notification`,
                 body: body,
-                subjectThai: `Visitor Registration Notification`,
+                subjectThai: `อนุมัติการลงทะเบียนผู้มาติดต่อ`,
                 bodyThai: bodyThai,
                 icon: icons,
                 image: images,
