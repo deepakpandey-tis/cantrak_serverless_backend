@@ -55,7 +55,7 @@ const addCheckoutNotification = {
             payload: {
                 subject: `Visitor Checked-out Notification`,
                 body: body,
-                subjectThai: `Visitor Checked-out Notification`,
+                subjectThai: `อนุมัติการลงทะเบียนออก`,
                 bodyThai: bodyThai,
                 icon: icons,
                 image: images,
@@ -109,7 +109,7 @@ const addCheckoutNotification = {
             payload: {
                 subject: `Visitor Checked-out Notification`,
                 body: body,
-                subjectThai: `Visitor Checked-out Notification`,
+                subjectThai: `อนุมัติการลงทะเบียนออก`,
                 bodyThai: bodyThai,
                 icon: icons,
                 image: images,
@@ -163,7 +163,7 @@ const addCheckoutNotification = {
             payload: {
                 subject: `Visitor Checked-out Notification`,
                 body: body,
-                subjectThai: `Visitor Checked-out Notification`,
+                subjectThai: `อนุมัติการลงทะเบียนออก`,
                 bodyThai: bodyThai,
                 icon: icons,
                 image: images,
