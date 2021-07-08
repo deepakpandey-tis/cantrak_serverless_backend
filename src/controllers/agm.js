@@ -1248,7 +1248,6 @@ const agmController = {
       return res.status(200).json({
         data: agmDetails,
         votingDocDownloadUrl,
-        owner: agmPropertyUnitOwners,
         message: "Agm Details Successfully!",
       });
     } catch (err) {
