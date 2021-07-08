@@ -573,7 +573,7 @@ const agmHelper = {
             sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-');
 
             let sanitizedOwnerGroupNumber = pd.ownerGroupNo;
-            sanitizedOwnerGroupNumber = sanitizedOwnerGroupNumber.replace('#','')
+            sanitizedOwnerGroupNumber = sanitizedOwnerGroupNumber.replace('#','-')
             // let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${pd.unitNumber}.pdf`;
             let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-ownerGroupNo-${sanitizedOwnerGroupNumber}.pdf`;
 
@@ -791,7 +791,7 @@ const agmHelper = {
             let sanitizedUnitNumber = pd.unitNumber;
             sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-'); // check alternative like replaceAll
             let sanitizedOwnerGroupNumber = pd.ownerGroupNo;
-            sanitizedOwnerGroupNumber = sanitizedOwnerGroupNumber.replace('#','')
+            sanitizedOwnerGroupNumber = sanitizedOwnerGroupNumber.replace('#','-')
             // let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${unitNumber}.pdf`;
             let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-ownerGroupNo-${sanitizedOwnerGroupNumber}.pdf`;
 
@@ -815,7 +815,10 @@ const agmHelper = {
           console.error("[helpers][agm][generateVotingDocument]: Inner Loop: Error", err);
           if (err.list && Array.isArray(err.list)) {
             err.list.forEach(item => {
-              console.error(`[helpers][agm][generateVotingDocument]: Inner Loop Each Error:`, item.message);
+              console.error(`[helpers][agm][generateVotingDocument]: Inner Loop Each Error:`, item);
+              for(var iv of item){
+                console.error(`[helpers][agm][generateVotingDocument]: Each Error inside loop:`, iv.message);
+                }
             });
           }
           throw new Error(err);
@@ -902,7 +905,11 @@ const agmHelper = {
       console.error("[helpers][agm][generateVotingDocument]:  Error", err);
       if (err.list && Array.isArray(err.list)) {
         err.list.forEach(item => {
-          console.error(`[helpers][agm][generateVotingDocument]: Each Error:`, item.message);
+          console.error(`[helpers][agm][generateVotingDocument]: Each Error:`, item);
+          for(var iv of item){
+          console.error(`[helpers][agm][generateVotingDocument]: Each Error inside loop:`, iv.message);
+          }
+
         });
       }
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };
