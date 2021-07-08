@@ -24,6 +24,7 @@ const addSelfRegistration = async (req, res) => {
             ...firstVisitor,
             arrivalDate: new Date(firstVisitor.arrivalDate).getTime(),
             departureDate: new Date(firstVisitor.departureDate).getTime(),
+            registrationBy: 3,
             createdBy: userId,
             createdAt: currentTime,
             updatedBy: userId,
@@ -46,30 +47,31 @@ const addSelfRegistration = async (req, res) => {
 
           // Additional Visitors
           additionalGuestNo = 0;
-          for(let additionalVisitor of additionalVisitors){
-            additionalGuest = {
-              orgId: firstVisitor.orgId,
-              ...additionalVisitor, 
-              userHouseAllocationId: firstVisitor.userHouseAllocationId,
-              arrivalDate: new Date(firstVisitor.arrivalDate).getTime(),
-              departureDate: new Date(firstVisitor.departureDate).getTime(),
-              tenantId: firstVisitor.tenantId,
-              createdBy: userId,
-              createdAt: currentTime,
-              updatedBy: userId,
-              updatedAt: currentTime,
-            };
-            console.log('additionalGuest: ', additionalGuest);
+          // for(let additionalVisitor of additionalVisitors){
+          //   additionalGuest = {
+          //     orgId: firstVisitor.orgId,
+          //     ...additionalVisitor, 
+          //     userHouseAllocationId: firstVisitor.userHouseAllocationId,
+          //     arrivalDate: new Date(firstVisitor.arrivalDate).getTime(),
+          //     departureDate: new Date(firstVisitor.departureDate).getTime(),
+          //     registrationBy: 3,
+          //     tenantId: firstVisitor.tenantId,
+          //     createdBy: userId,
+          //     createdAt: currentTime,
+          //     updatedBy: userId,
+          //     updatedAt: currentTime,
+          //   };
+          //   console.log('additionalGuest: ', additionalGuest);
 
-            additionalGuestNo += 1;
-            const insertResult = await knex
-            .insert(additionalGuest)
-            .returning(["*"])
-            .transacting(trx)
-            .into("visitor_invitations");
+          //   additionalGuestNo += 1;
+          //   const insertResult = await knex
+          //   .insert(additionalGuest)
+          //   .returning(["*"])
+          //   .transacting(trx)
+          //   .into("visitor_invitations");
 
-            insertInvitation[additionalGuestNo] = insertResult[0];
-          }
+          //   insertInvitation[additionalGuestNo] = insertResult[0];
+          // }
 
           // Send registration notification
           let orgData = await knex('organisations').where({ id: firstVisitor.orgId }).first();
@@ -93,7 +95,7 @@ const addSelfRegistration = async (req, res) => {
                 orgId: firstVisitor.orgId,
                 id: userId,
                 name: insertInvitation[0].name,              // Visitor completed self registration
-                isCustomer: req.me.isCustomer,
+                isCustomer: null,
               },
               receiver: {
                 id: insertInvitation[0].tenantId,

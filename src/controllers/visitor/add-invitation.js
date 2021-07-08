@@ -51,9 +51,11 @@ const addInvitation = async (req, res) => {
             additionalGuest = {
               orgId: orgId,
               ...additionalVisitor, 
+              propertyUnitsId: firstVisitor.propertyUnitsId,
               userHouseAllocationId: firstVisitor.userHouseAllocationId,
               arrivalDate: new Date(additionalVisitor.arrivalDate).getTime(),
               departureDate: new Date(additionalVisitor.departureDate).getTime(),
+              registrationBy: firstVisitor.registrationBy,
               tenantId: firstVisitor.tenantId,
               createdBy: userId,
               createdAt: currentTime,
@@ -130,3 +132,11 @@ const addInvitation = async (req, res) => {
 }
 
 module.exports = addInvitation;
+
+/**
+ * 2021/07/07 1) Visitor registration to a unit is allowed even if a tenant is not assigned to that unit
+ *                for this: a) added new column: propertyUnitsId
+ *                          b) from columns userHouseAllocationId and tenantId not null constraints removed
+ *            2) To show Registration By in admin panel 
+ *               added new column: registrationBy (1: by tenant 2: by admin 3: self using public url)
+ */

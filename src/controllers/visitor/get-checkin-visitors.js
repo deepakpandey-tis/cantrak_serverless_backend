@@ -19,10 +19,11 @@ const getCheckinVisitors = async (req, res) => {
         authorisedProjectIds = authorisedProjects.projects;
 
         sqlSelect = `SELECT vi.id, vi."orgId", vi."userHouseAllocationId", vi."name", vi."mobileNo", vi."arrivalDate", vi."departureDate", vi."vehicleNo", vi."actualArrivalDate", vi."actualDepartureDate"
-        , vi."status", vi."tenantId", vi."createdBy", vi."createdAt", vi."updatedBy", vi."updatedAt"
-        , uha."houseId", pu."unitNumber", u2."name" "tenantName", p2."projectName"`;
+        , vi."status", vi."tenantId", vi."createdBy", vi."createdAt", vi."updatedBy", vi."updatedAt", vi."propertyUnitsId" as "houseId", vi."registrationBy"
+        , pu."unitNumber", u2."name" "tenantName", p2."projectName"`;
 
-        sqlFrom = ` FROM visitor_invitations vi, user_house_allocation uha, property_units pu, users u2, projects p2 `;
+        sqlFrom = ` FROM visitor_invitations vi LEFT OUTER JOIN users u2 ON vi."tenantId" = u2.id`;
+        sqlFrom += ` , property_units pu, projects p2 `;
 
         // Always Active Invitations and are NOT checked-in
         sqlWhere = ` WHERE`;
@@ -30,8 +31,8 @@ const getCheckinVisitors = async (req, res) => {
             // In case of 0, complete list is returned
             sqlWhere += ` vi.id = ${visitorId} and`;
         }
-        sqlWhere += ` pu."orgId" = ${orgId} and vi."status" = 1 and vi."actualArrivalDate" is null and vi."userHouseAllocationId" = uha.id and uha."houseId" = pu.id`;
-        sqlWhere += ` and  vi."tenantId" = u2.id and pu."projectId" = p2.id `
+        sqlWhere += ` pu."orgId" = ${orgId} and vi."status" = 1 and vi."actualArrivalDate" is null and vi."propertyUnitsId" = pu.id`;
+        sqlWhere += ` and pu."projectId" = p2.id `
 
         // Visitors only of authorised projects of logged-in user
         sqlWhere += ` and pu."projectId" in (${authorisedProjectIds})`;
@@ -65,3 +66,8 @@ const getCheckinVisitors = async (req, res) => {
 }
 
 module.exports = getCheckinVisitors;
+
+/**
+ * 2021/07/07  1) columns added to select statement: propertyUnitsId, registrationBy
+ *             2) Since registration for a unit can be done without assigned tenant, users table is now left outer join to retrieve records where tenantId is null / 0
+ */

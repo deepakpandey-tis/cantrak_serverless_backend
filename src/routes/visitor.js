@@ -91,7 +91,6 @@ router.post(
     "/cancel-registration"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
-    , resourceAccessMiddleware.isVisitorManagementAccessible
     , visitorController.cancelRegistration
 );
 
