@@ -816,7 +816,7 @@ const agmHelper = {
           if (err.list && Array.isArray(err.list)) {
             err.list.forEach(item => {
               console.error(`[helpers][agm][generateVotingDocument]: Inner Loop Each Error:`, item);
-              for(var it of item){
+              for(var it of item.list){
                 console.error(`[helpers][agm][generateVotingDocument]: Inner Loop Each Error:`, it.message);
               }
             });
