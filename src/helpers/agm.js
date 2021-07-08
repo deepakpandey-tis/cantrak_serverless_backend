@@ -710,7 +710,7 @@ const agmHelper = {
       console.log('[helpers][agm][generateVotingDocument]: Data:', data);
 
       // let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true })
-      let agmPropertyUnitOwners = await knex.raw(`SELECT agm_owner_master."ownerGroupNo",(array_agg(agm_owner_master."ownerName"))[1] as "ownerName",json_agg(agm_owner_master."ownershipRatio") as "ownershipRatio",json_agg(agm_owner_master."unitId") as "unitId",json_agg(agm_owner_master."unitNumber") as "unitNumber",json_agg(agm_owner_master."id") as "id" from agm_owner_master GROUP BY (agm_owner_master."ownerGroupNo")`);
+      let agmPropertyUnitOwners = await knex.raw(`SELECT agm_owner_master."ownerGroupNo",(array_agg(agm_owner_master."ownerName"))[1] as "ownerName",array_agg(agm_owner_master."ownershipRatio") as "ownershipRatio",array_agg(agm_owner_master."unitId") as "unitId",array_agg(agm_owner_master."unitNumber") as "unitNumber",array_agg(agm_owner_master."id") as "id" from agm_owner_master GROUP BY (agm_owner_master."ownerGroupNo")`);
       // agmPropertyUnitOwners = agmPropertyUnitOwners.rows
       //Change above query to groupby "ownerGroupNumber" and get other grouped row data as json using func 'json_agg'
 
