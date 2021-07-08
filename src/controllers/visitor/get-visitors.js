@@ -12,9 +12,17 @@ const getVisitors = async (req, res) => {
 
         sqlStr = `SELECT vi.id, vi."orgId", vi."userHouseAllocationId", vi."name", vi."mobileNo", vi."arrivalDate", vi."departureDate", vi."vehicleNo", vi."actualArrivalDate", vi."actualDepartureDate"
         , vi."status", vi."tenantId", vi."createdBy", vi."createdAt", vi."updatedBy", vi."updatedAt"
+        , vi."propertyUnitsId" as "houseId", vi."registrationBy", pu."unitNumber"
+        FROM visitor_invitations vi, property_units pu
+        WHERE vi."orgId" = ${orgId} and vi."tenantId" = ${userId} and vi."propertyUnitsId" =  pu.id`;
+
+        /* 2021/07/07
+        sqlStr = `SELECT vi.id, vi."orgId", vi."userHouseAllocationId", vi."name", vi."mobileNo", vi."arrivalDate", vi."departureDate", vi."vehicleNo", vi."actualArrivalDate", vi."actualDepartureDate"
+        , vi."status", vi."tenantId", vi."createdBy", vi."createdAt", vi."updatedBy", vi."updatedAt"
         , uha."houseId", pu."unitNumber"
         FROM visitor_invitations vi, user_house_allocation uha, property_units pu
         WHERE vi."orgId" = ${orgId} and vi."tenantId" = ${userId} and vi."userHouseAllocationId" = uha.id and uha."houseId" = pu.id`;
+        */
 
         if(visitorSelect == 1){                 // Schedule Visits: Active invitation / booking 
             sqlStr = sqlStr + ` and vi."status" = 1 and vi."actualArrivalDate" is null 
@@ -57,3 +65,9 @@ const getVisitors = async (req, res) => {
 }
 
 module.exports = getVisitors;
+
+/**
+ * 2021/07/07   1. property unit id is now part of visitor_invitations table. propertyUnitsId is used to get unitNumber
+ *                 user_house_allocation is therefore not used to get unitNumber
+ *                 since registration of a unit without tenant assigned can be done, userHouseAllocationId and tenantId may be null
+ */
