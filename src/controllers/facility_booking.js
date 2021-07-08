@@ -701,9 +701,6 @@ const facilityBookingController = {
                 tenantName,
             } = req.body;
 
-
-
-
             moment.tz.setDefault(payload.timezone);
             let currentTime = moment();
 
@@ -746,6 +743,7 @@ const facilityBookingController = {
                 facilityName ||
                 tenantName
             ) {
+                console.log("IF called")
                 console.log("project id", projectId)
                 // try {
                 const index = companyId.indexOf(0)
@@ -882,12 +880,6 @@ const facilityBookingController = {
                             }
                             if (Status == "Approved,Pending,Cancelled,Confirmed") {
                                 console.log("All status", status)
-
-                                // qb.where("entity_bookings.isBookingConfirmed", false);
-                                // qb.orWhere("entity_bookings.isBookingConfirmed", true);
-                                // qb.orWhere("entity_bookings.confirmedType", 1);
-                                // qb.where("entity_bookings.isBookingCancelled", true);
-                                // qb.orWhere("entity_bookings.isBookingCancelled", false);
                                 qb.where({ "entity_bookings.isBookingConfirmed": true, "entity_bookings.isBookingCancelled": false, "entity_bookings.confirmedType": 1 })
                                 qb.orWhere({ "entity_bookings.isBookingConfirmed": false, "entity_bookings.isBookingCancelled": false })
                                 qb.orWhere({ "entity_bookings.isBookingCancelled": true })
@@ -896,12 +888,6 @@ const facilityBookingController = {
                             }
                             if (Status == "Approved,Pending,Cancelled,Confirmed,0") {
                                 console.log("All status 0", status);
-
-                                // qb.where("entity_bookings.isBookingConfirmed", false);
-                                // qb.orWhere("entity_bookings.isBookingConfirmed", true);
-                                // qb.orWhere("entity_bookings.confirmedType", 1);
-                                // qb.where("entity_bookings.isBookingCancelled", true);
-                                // qb.orWhere("entity_bookings.isBookingCancelled", false);
                                 qb.where({ "entity_bookings.isBookingConfirmed": true, "entity_bookings.isBookingCancelled": false, "entity_bookings.confirmedType": 1 })
                                 qb.orWhere({ "entity_bookings.isBookingConfirmed": false, "entity_bookings.isBookingCancelled": false })
                                 qb.orWhere({ "entity_bookings.isBookingCancelled": true })
@@ -1031,10 +1017,6 @@ const facilityBookingController = {
                                 });
                             }
                         }
-                        // if (facilityName) {
-                        //     console.log("Facility name 756", facilityName)
-                        //     qb.whereIn("facility_master.id", facilityName);
-                        // }
                     })
                     .where("entity_bookings.orgId", req.orgId)
                     .groupBy([
@@ -1048,12 +1030,6 @@ const facilityBookingController = {
                     ])
                     .orderBy("entity_bookings.id", "asc")
                     .distinct("entity_bookings.id");
-                // } catch (err) {
-                //     console.log("[controllers][facilityBooking][list] :  Error", err);
-                //     return res.status(500).json({
-                //         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
-                //     });
-                // }
             } else {
                 console.log("else returned");
                 facilityReportResult = await knex
