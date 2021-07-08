@@ -1217,6 +1217,7 @@ const agmController = {
         });
       }
 
+     
       let agmDetails = await knex("agm_master")
         .leftJoin(
           "companies",
@@ -1247,6 +1248,7 @@ const agmController = {
       return res.status(200).json({
         data: agmDetails,
         votingDocDownloadUrl,
+        owner: agmPropertyUnitOwners,
         message: "Agm Details Successfully!",
       });
     } catch (err) {
@@ -1875,7 +1877,7 @@ const agmController = {
           }
         }
       });
-    } catch (err) {}
+    } catch (err) { }
   },
   getUnitList: async (req, res) => {
     try {
@@ -2542,7 +2544,7 @@ const agmController = {
         data: insertVotingResult,
         message: "Vote data adjusted successfully!",
       });
-    } catch (err) {}
+    } catch (err) { }
   },
   getOwnerRegistrationList: async (req, res) => {
     try {
