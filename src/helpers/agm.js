@@ -381,10 +381,10 @@ const agmHelper = {
           });
 
         } catch (err) {
-          console.error("[helpers][announcement][sendAnnouncement]: Inner Loop: Error", err);
+          console.error("[helpers][agm][generateVotingDocument]: Inner Loop: Error", err);
           if (err.list && Array.isArray(err.list)) {
             err.list.forEach(item => {
-              console.error(`[helpers][announcement][sendAnnouncement]: Inner Loop Each Error:`, item.message);
+              console.error(`[helpers][agm][generateVotingDocument]: Inner Loop Each Error:`, item.message);
             });
           }
           throw new Error(err);
@@ -464,10 +464,10 @@ const agmHelper = {
 
     } catch (err) {
 
-      console.error("[helpers][announcement][sendAnnouncement]:  Error", err);
+      console.error("[helpers][agm][generateVotingDocument]:  Error", err);
       if (err.list && Array.isArray(err.list)) {
         err.list.forEach(item => {
-          console.error(`[helpers][announcement][sendAnnouncement]: Each Error:`, item.message);
+          console.error(`[helpers][agm][generateVotingDocument]: Each Error:`, item.message);
         });
       }
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };
@@ -591,10 +591,10 @@ const agmHelper = {
           });
 
         } catch (err) {
-          console.error("[helpers][announcement][sendAnnouncement]: Inner Loop: Error", err);
+          console.error("[helpers][agm][generateVotingDocument]: Inner Loop: Error", err);
           if (err.list && Array.isArray(err.list)) {
             err.list.forEach(item => {
-              console.error(`[helpers][announcement][sendAnnouncement]: Inner Loop Each Error:`, item.message);
+              console.error(`[helpers][agm][generateVotingDocument]: Inner Loop Each Error:`, item.message);
             });
           }
           throw new Error(err);
@@ -678,10 +678,10 @@ const agmHelper = {
 
     } catch (err) {
 
-      console.error("[helpers][announcement][sendAnnouncement]:  Error", err);
+      console.error("[helpers][agm][generateVotingDocument]:  Error", err);
       if (err.list && Array.isArray(err.list)) {
         err.list.forEach(item => {
-          console.error(`[helpers][announcement][sendAnnouncement]: Each Error:`, item.message);
+          console.error(`[helpers][agm][generateVotingDocument]: Each Error:`, item.message);
         });
       }
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };
@@ -807,10 +807,10 @@ const agmHelper = {
           });
 
         } catch (err) {
-          console.error("[helpers][announcement][sendAnnouncement]: Inner Loop: Error", err);
+          console.error("[helpers][agm][generateVotingDocument]: Inner Loop: Error", err);
           if (err.list && Array.isArray(err.list)) {
             err.list.forEach(item => {
-              console.error(`[helpers][announcement][sendAnnouncement]: Inner Loop Each Error:`, item.message);
+              console.error(`[helpers][agm][generateVotingDocument]: Inner Loop Each Error:`, item.message);
             });
           }
           throw new Error(err);
@@ -894,10 +894,10 @@ const agmHelper = {
 
     } catch (err) {
 
-      console.error("[helpers][announcement][sendAnnouncement]:  Error", err);
+      console.error("[helpers][agm][generateVotingDocument]:  Error", err);
       if (err.list && Array.isArray(err.list)) {
         err.list.forEach(item => {
-          console.error(`[helpers][announcement][sendAnnouncement]: Each Error:`, item.message);
+          console.error(`[helpers][agm][generateVotingDocument]: Each Error:`, item.message);
         });
       }
       return { code: "UNKNOWN_ERROR", message: err.message, error: err };
