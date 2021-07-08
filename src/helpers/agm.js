@@ -572,10 +572,10 @@ const agmHelper = {
             let sanitizedUnitNumber = pd.unitNumber;
             sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-');
 
-            let sanitizedOwnerGroupNumber = pd.ownerGroupNo;
-            sanitizedOwnerGroupNumber = sanitizedOwnerGroupNumber.replace('#','-')
+            // let sanitizedOwnerGroupNumber = pd.ownerGroupNo;
+            // sanitizedOwnerGroupNumber = sanitizedOwnerGroupNumber.replace('#','-')
             // let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${pd.unitNumber}.pdf`;
-            let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-ownerGroupNo-${sanitizedOwnerGroupNumber}.pdf`;
+            let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-ownerGroupNo-${pd.ownerGroupNo}.pdf`;
 
             const document = {
               html: htmlContents,
@@ -790,10 +790,10 @@ const agmHelper = {
             // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
             let sanitizedUnitNumber = pd.unitNumber;
             sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-'); // check alternative like replaceAll
-            let sanitizedOwnerGroupNumber = pd.ownerGroupNo;
-            sanitizedOwnerGroupNumber = sanitizedOwnerGroupNumber.replace('#','-')
+            // let sanitizedOwnerGroupNumber = pd.ownerGroupNo;
+            // sanitizedOwnerGroupNumber = sanitizedOwnerGroupNumber.replace('#','-')
             // let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${unitNumber}.pdf`;
-            let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-ownerGroupNo-${sanitizedOwnerGroupNumber}.pdf`;
+            let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-ownerGroupNo-${pd.ownerGroupNo}.pdf`;
 
             const document = {
               html: htmlContents,
