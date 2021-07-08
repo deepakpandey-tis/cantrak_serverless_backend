@@ -769,7 +769,7 @@ const agmHelper = {
             agenda.choices = await Parallel.map(agenda.choices, async (choice) => {
               let qrCodeObj = {
                 qrName: 'SM:AGM:VOTING',
-                ownerIds: pd.id,
+                // ownerIds: pd.id,
                 ownerGroupNo:pd.ownerGroupNo,
                 agendaId: agenda.id,
                 choice: choice.id
