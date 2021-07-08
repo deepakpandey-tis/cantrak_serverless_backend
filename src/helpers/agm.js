@@ -710,12 +710,12 @@ const agmHelper = {
       console.log('[helpers][agm][generateVotingDocument]: Data:', data);
 
       // let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true })
-      let agmPropertyUnitOwners = await knex.raw(`SELECT agm_owner_master."ownerGroupNo",json_agg(agm_owner_master."ownerName") as "ownerName",json_agg(agm_owner_master."ownershipRatio") as "ownershipRatio",json_agg(agm_owner_master."unitId") as "unitId",json_agg(agm_owner_master."unitNumber") as "unitNumber",json_agg(agm_owner_master."id") as "id" from agm_owner_master GROUP BY (agm_owner_master."ownerGroupNo")`);
-      agmPropertyUnitOwners = agmPropertyUnitOwners.rows
+      let agmPropertyUnitOwners = await knex.raw(`SELECT agm_owner_master."ownerGroupNo",(array_agg(agm_owner_master."ownerName"))[1] as "ownerName",json_agg(agm_owner_master."ownershipRatio") as "ownershipRatio",json_agg(agm_owner_master."unitId") as "unitId",json_agg(agm_owner_master."unitNumber") as "unitNumber",json_agg(agm_owner_master."id") as "id" from agm_owner_master GROUP BY (agm_owner_master."ownerGroupNo")`);
+      // agmPropertyUnitOwners = agmPropertyUnitOwners.rows
       //Change above query to groupby "ownerGroupNumber" and get other grouped row data as json using func 'json_agg'
 
-      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners);
-      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners Length:', agmPropertyUnitOwners.length);
+      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners.rows);
+      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners Length:', agmPropertyUnitOwners.rows.length);
 
 
       let agendas = await knex('agenda_master').where({ agmId: agmId, eligibleForVoting: true });
@@ -758,7 +758,7 @@ const agmHelper = {
       const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
       console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
 
-      await Parallel.each(agmPropertyUnitOwners, async (pd) => {
+      await Parallel.each(agmPropertyUnitOwners.rows, async (pd) => {
         console.log("[helpers][agm][generateVotingDocument]: Preparing for Property Owner: ", pd);
 
         try {
@@ -769,7 +769,7 @@ const agmHelper = {
             agenda.choices = await Parallel.map(agenda.choices, async (choice) => {
               let qrCodeObj = {
                 qrName: 'SM:AGM:VOTING',
-                // ownerIds: pd.id,
+                ownerIds: pd.id,
                 ownerGroupNo:pd.ownerGroupNo,
                 agendaId: agenda.id,
                 choice: choice.id
@@ -782,6 +782,8 @@ const agmHelper = {
               return choice;
             });
 
+            // let propertyOwnerData;
+            // propertyOwnerData.ownershipRatio = ''
             let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
             // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
 

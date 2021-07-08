@@ -1217,6 +1217,8 @@ const agmController = {
         });
       }
 
+      let agmPropertyUnitOwners = await knex.raw(`SELECT agm_owner_master."ownerGroupNo",(array_agg(agm_owner_master."ownerName"))[1] as "ownerName",json_agg(agm_owner_master."ownershipRatio") as "ownershipRatio",json_agg(agm_owner_master."unitId") as "unitId",json_agg(agm_owner_master."unitNumber") as "unitNumber",json_agg(agm_owner_master."id") as "id" from agm_owner_master GROUP BY (agm_owner_master."ownerGroupNo")`);
+      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners);
      
       let agmDetails = await knex("agm_master")
         .leftJoin(
@@ -1248,6 +1250,7 @@ const agmController = {
       return res.status(200).json({
         data: agmDetails,
         votingDocDownloadUrl,
+        owner:agmPropertyUnitOwners,
         message: "Agm Details Successfully!",
       });
     } catch (err) {
