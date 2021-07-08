@@ -571,7 +571,7 @@ const agmHelper = {
             // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
             let sanitizedUnitNumber = pd.unitNumber;
             sanitizedUnitNumber = sanitizedUnitNumber.replace('/', '-');
-            let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${unitNumber}.pdf`;
+            let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${pd.unitNumber}.pdf`;
 
             const document = {
               html: htmlContents,
