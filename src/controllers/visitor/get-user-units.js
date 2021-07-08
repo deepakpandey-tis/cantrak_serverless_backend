@@ -13,9 +13,9 @@ const getUserUnits = async (req, res) => {
         */
 
         // Returns only active Units ie. user_house_allocation.status = 1 and property_units.isActive
-        let rows = await knex.raw(`SELECT uha.id "userHouseAllocationId", pu."unitNumber" 
+        let rows = await knex.raw(`SELECT uha.id "userHouseAllocationId", pu."unitNumber", pu.id as "unitId" 
         FROM user_house_allocation uha , property_units pu 
-        WHERE uha."orgId" = ${req.me.orgId} and uha."userId" = ${req.me.id} and uha."status" = '1' and uha."houseId" = pu.id and pu."isActive" `)
+        WHERE uha."orgId" = ${req.me.orgId} and uha."userId" = ${req.me.id} and uha."status" = '1' and uha."houseId" = pu.id and pu."isActive" `);
 
         return res.status(200).json({
             data: {
@@ -42,3 +42,7 @@ const getUserUnits = async (req, res) => {
 }
 
 module.exports = getUserUnits;
+
+/**
+ * 2021/07/07   1) added: property_units.id in select. unit id is saved in visitor_invitations table
+ */

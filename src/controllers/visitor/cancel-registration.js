@@ -13,7 +13,7 @@ const cancelRegistration = async (req, res) => {
 
         // Cancel visitor registration
         let updateData = {
-            status: 2,
+            status: 3,
             updatedBy: userId,
             updatedAt: currentTime
         };

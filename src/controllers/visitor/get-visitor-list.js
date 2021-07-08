@@ -45,9 +45,10 @@ const getVisitorList = async (req, res) => {
         // sqlSelect = `SELECT pu2."orgId", pu2."companyId", pu2."projectId", pu2."buildingPhaseId"
         sqlSelect = `SELECT pu2."orgId", pu2."companyId", pu2."projectId", pu2."buildingPhaseId"
         , pu2."id" "puId",  pu2."unitNumber", u2."name" "tenantName", vi.id id, vi."name", vi."createdAt", vi."status"
-        , vi."arrivalDate", vi."actualArrivalDate", vi."departureDate", vi."actualDepartureDate"`;
+        , vi."arrivalDate", vi."actualArrivalDate", vi."departureDate", vi."actualDepartureDate", vi."propertyUnitsId", vi."registrationBy"`;
 
-        sqlFrom = ` FROM property_units pu2, user_house_allocation uha, users u2, visitor_invitations vi`;
+        sqlFrom = ` FROM property_units pu2, user_house_allocation uha, visitor_invitations vi`;
+        sqlFrom += ` LEFT OUTER JOIN users u2 ON vi."tenantId" = u2.id`;
 
         sqlWhere = ` WHERE pu2."orgId" = ${orgId}`;
         if(payload.filter.companyId){
@@ -75,8 +76,8 @@ const getVisitorList = async (req, res) => {
         if(payload.filter.tenantId){
             sqlWhere += ` and uha."userId" = ${payload.filter.tenantId}`;
         }
-        sqlWhere += ` and uha."orgId" = u2."orgId" and uha."userId" = u2.id`;
-        sqlWhere += ` and uha."orgId" = vi."orgId" and uha.id = vi."userHouseAllocationId" and uha."userId" = vi."tenantId"`;
+        // 2021/07/07 part of left outer join  sqlWhere += ` and uha."orgId" = u2."orgId" and uha."userId" = u2.id`;
+        sqlWhere += ` and uha."orgId" = vi."orgId" and uha.id = vi."userHouseAllocationId"`;
         if(visitorSelect === 1){                 // Schedule Visits / Check-ins: Active invitation / booking 
             sqlWhere += ` and  vi.status = 1 and vi."actualArrivalDate" is null`;
         }
@@ -95,6 +96,7 @@ const getVisitorList = async (req, res) => {
 
         // Adding id in order by to ensure list is displayed in the order visitors are added
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}, id asc`;
+        //console.log('get-visitor-list sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
@@ -170,3 +172,7 @@ const getVisitorList = async (req, res) => {
 }
 
 module.exports = getVisitorList;
+
+/**
+ * 2021/07/07  columns added to select statement: propertyUnitsId, registrationBy
+ */
