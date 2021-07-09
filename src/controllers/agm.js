@@ -1217,12 +1217,20 @@ const agmController = {
         });
       }
 
-      let agmPropertyUnitOwners = await knex.raw(`SELECT agm_owner_master."ownerGroupNo",(array_agg(agm_owner_master."ownerName"))[1] as "ownerName",array_agg(agm_owner_master."ownershipRatio") as "ownershipRatio",array_agg(agm_owner_master."unitId") as "unitId",array_agg(agm_owner_master."unitNumber") as "unitNumber",array_agg(agm_owner_master."id") as "id" from agm_owner_master where agm_owner_master."agmId" = ${payload.id}  GROUP BY (agm_owner_master."ownerGroupNo")`);
-      // agmPropertyUnitOwners = agmPropertyUnitOwners.rows
-      //Change above query to groupby "ownerGroupNumber" and get other grouped row data as json using func 'json_agg'
+      // let agendaId = 265;
+      // let agmPropertyUnitOwners = await knex.raw(`SELECT agm_owner_master."ownerGroupNo",
+      // (array_agg(agm_owner_master."ownerName"))[1] as "ownerName",
+      // array_agg(agm_owner_master."ownershipRatio") as "ownershipRatio",
+      // array_agg(agm_owner_master."actualOwnershipRatio") as "actualOwnershipRatio",
+      // array_agg(agm_owner_master."unitId") as "unitId",
+      // array_agg(agm_owner_master."unitNumber") as "unitNumber",
+      // array_agg(agm_owner_master."id") as "id",
+      // array_agg(agm_owner_master."houseId") as "houseId" ,
+      // array_agg(agenda_master."id") as "agendaId" 
+      // from agm_owner_master 
+      //left join agenda_master on agm_owner_master."agmId" = agenda_master."agmId" where agm_owner_master."agmId" = ${payload.id} and agenda_master."id" = ${agendaId} GROUP BY (agm_owner_master."ownerGroupNo")`);
+      // console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners.rows);
 
-      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners.rows);
-      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners Length:', agmPropertyUnitOwners.rows.length);
 
       let agmDetails = await knex("agm_master")
         .leftJoin(
@@ -1254,7 +1262,7 @@ const agmController = {
       return res.status(200).json({
         data: agmDetails,
         votingDocDownloadUrl,
-        owner:agmPropertyUnitOwners,
+        // owner:agmPropertyUnitOwners,
         message: "Agm Details Successfully!",
       });
     } catch (err) {
@@ -2022,10 +2030,10 @@ const agmController = {
     try {
       const payload = req.body;
 
-      const { agmId } = payload;
+      const { agmId, agendaId } = payload;
       console.log(
         "[controllers][agm][generatePdfOfVotingDocument]: AgmId:",
-        agmId
+        agmId , agendaId
       );
 
       if (!agmId) {
@@ -2038,7 +2046,7 @@ const agmController = {
           ],
         });
       }
-
+     
       // GET AGM Details...
       let agmDetails = await knex("agm_master")
         .leftJoin(
@@ -2073,6 +2081,7 @@ const agmController = {
       await queueHelper.addToQueue(
         {
           agmId: agmId,
+          agendaId:agendaId,
           data: {
             agmDetails,
           },
