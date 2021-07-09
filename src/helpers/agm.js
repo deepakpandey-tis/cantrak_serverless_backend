@@ -784,11 +784,11 @@ const agmHelper = {
 
             let propertyOwnerData;
             // get combined ownership Ratio;
-            let totalRatio = pd.ownershipRatio.reduce(function (a, b) {
+            let totalRatio = await pd.ownershipRatio.reduce(function (a, b) {
               return a + b;
             }, 0);
             propertyOwnerData.ownershipRatio = totalRatio;
-            let totalActualRatio = pd.actualOwnershipRatio.reduce(function (a, b) {
+            let totalActualRatio = await pd.actualOwnershipRatio.reduce(function (a, b) {
               return a + b;
             }, 0);
             propertyOwnerData.actualOwnershipRatio = totalActualRatio;
