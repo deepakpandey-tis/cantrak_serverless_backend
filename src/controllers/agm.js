@@ -1217,6 +1217,7 @@ const agmController = {
         });
       }
 
+      // let propertyOwnerData = {}
       // let agendaId = 265;
       // let agmPropertyUnitOwners = await knex.raw(`SELECT agm_owner_master."ownerGroupNo",
       // (array_agg(agm_owner_master."ownerName"))[1] as "ownerName",
@@ -1228,9 +1229,16 @@ const agmController = {
       // array_agg(agm_owner_master."houseId") as "houseId" ,
       // array_agg(agenda_master."id") as "agendaId" 
       // from agm_owner_master 
-      //left join agenda_master on agm_owner_master."agmId" = agenda_master."agmId" where agm_owner_master."agmId" = ${payload.id} and agenda_master."id" = ${agendaId} GROUP BY (agm_owner_master."ownerGroupNo")`);
+      // left join agenda_master on agm_owner_master."agmId" = agenda_master."agmId" where agm_owner_master."agmId" = ${payload.id} and agenda_master."id" = ${agendaId} GROUP BY (agm_owner_master."ownerGroupNo")`);
       // console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners.rows);
 
+      // let totalRatio = agmPropertyUnitOwners.rows[0].ownershipRatio.reduce(function (a, b) {
+      //   return a + b;
+      // }, 0)
+
+      // propertyOwnerData.ownershipRatio = totalRatio;
+
+      // console.log("Property owner data", propertyOwnerData)
 
       let agmDetails = await knex("agm_master")
         .leftJoin(
