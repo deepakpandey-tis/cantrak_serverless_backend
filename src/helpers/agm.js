@@ -718,7 +718,7 @@ const agmHelper = {
       console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners Length:', agmPropertyUnitOwners.rows.length);
 
 
-      let agendas = await knex('agenda_master').where({ agmId: agmId, eligibleForVoting: true });
+      let agendas = await knex('agenda_master').where({ agmId: agmId, eligibleForVoting: true, id:agendaId });
       console.log('[helpers][agm][generateVotingDocument]: agendas:', agendas);
 
       const Parallel = require("async-parallel");
