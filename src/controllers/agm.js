@@ -1232,13 +1232,13 @@ const agmController = {
       // left join agenda_master on agm_owner_master."agmId" = agenda_master."agmId" where agm_owner_master."agmId" = ${payload.id} and agenda_master."id" = ${agendaId} GROUP BY (agm_owner_master."ownerGroupNo")`);
       // console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners.rows);
 
-      // let totalRatio = agmPropertyUnitOwners.rows[0].ownershipRatio.reduce(function (a, b) {
+      // let totalRatio = await agmPropertyUnitOwners.rows[0].ownershipRatio.reduce(function (a, b) {
       //   return a + b;
       // }, 0)
 
       // propertyOwnerData.ownershipRatio = totalRatio;
 
-      // console.log("Property owner data", propertyOwnerData)
+      // console.log("Property owner data 1", propertyOwnerData)
 
       let agmDetails = await knex("agm_master")
         .leftJoin(
@@ -1549,6 +1549,14 @@ const agmController = {
           return { ...pd, choiceData };
         }
       );
+
+      agendaList = await Parallel.map(agendaList, async (pd)=> {
+        let votingDocDownloadUrl = await redisHelper.getValue(
+          `agm-${payload.agmId}-agendaId-${pd.id}-voting-docs-link`
+        );
+
+        return {...pd, votingDocDownloadUrl}
+      })
 
       // let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
 
