@@ -890,7 +890,7 @@ const agmHelper = {
       });
 
       console.log("[helpers][agm][generateVotingDocument]: s3FileDownloadUrl:", s3FileDownloadUrl);
-      await redisHelper.setValueWithExpiry(`agm-${agmId}-voting-docs-link`, { s3Url: s3FileDownloadUrl }, 2 * 60 * 60);
+      await redisHelper.setValueWithExpiry(`agm-${agmId}-agendaId-${agendaId}-voting-docs-link`, { s3Url: s3FileDownloadUrl }, 2 * 60 * 60);
 
 
       let sender = requestedBy;
