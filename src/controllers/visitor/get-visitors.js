@@ -24,12 +24,12 @@ const getVisitors = async (req, res) => {
         WHERE vi."orgId" = ${orgId} and vi."tenantId" = ${userId} and vi."userHouseAllocationId" = uha.id and uha."houseId" = pu.id`;
         */
 
-        if(visitorSelect == 1){                 // Schedule Visits: Active invitation / booking 
-            sqlStr = sqlStr + ` and vi."status" = 1 and vi."actualArrivalDate" is null 
+        if(visitorSelect == 1){                 // Schedule Visits for today or at a later date
+            sqlStr = sqlStr + ` and vi."status" = 1 and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') >= to_char(now(), 'YYYYMMDD') and vi."actualArrivalDate" is null 
             ORDER BY vi."arrivalDate" desc, vi.id` ;
         }
-        else if(visitorSelect == 2){            // Visitors History: Cancelled and Already visited
-            sqlStr = sqlStr + ` and (vi."status" = 3 or vi."actualArrivalDate" is not null) 
+        else if(visitorSelect == 2){            // Visitors History: Cancelled || No Show || Checked-out
+            sqlStr = sqlStr + ` and (vi."status" = 3 or (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') < to_char(now(), 'YYYYMMDD') and vi."actualArrivalDate" is null) or vi."actualDepartureDate" is not null) 
             ORDER BY vi."arrivalDate" desc, vi."actualArrivalDate" desc, vi.id asc` ;
         }
         /*
@@ -70,4 +70,6 @@ module.exports = getVisitors;
  * 2021/07/07   1. property unit id is now part of visitor_invitations table. propertyUnitsId is used to get unitNumber
  *                 user_house_allocation is therefore not used to get unitNumber
  *                 since registration of a unit without tenant assigned can be done, userHouseAllocationId and tenantId may be null
+ *                 visitor-list: arrival-date >= today-date
+ *                 history-list: cancelled || arrival-date < today-date || checked-out
  */

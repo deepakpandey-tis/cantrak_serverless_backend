@@ -31,7 +31,7 @@ const getCheckinVisitors = async (req, res) => {
             // In case of 0, complete list is returned
             sqlWhere += ` vi.id = ${visitorId} and`;
         }
-        sqlWhere += ` pu."orgId" = ${orgId} and vi."status" = 1 and vi."actualArrivalDate" is null and vi."propertyUnitsId" = pu.id`;
+        sqlWhere += ` pu."orgId" = ${orgId} and vi."status" = 1 and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') = to_char(now(), 'YYYYMMDD') and vi."actualArrivalDate" is null and vi."propertyUnitsId" = pu.id`;
         sqlWhere += ` and pu."projectId" = p2.id `
 
         // Visitors only of authorised projects of logged-in user
@@ -70,4 +70,5 @@ module.exports = getCheckinVisitors;
 /**
  * 2021/07/07  1) columns added to select statement: propertyUnitsId, registrationBy
  *             2) Since registration for a unit can be done without assigned tenant, users table is now left outer join to retrieve records where tenantId is null / 0
+ *             3) Only Visitors registered for today allowed for check-in
  */
