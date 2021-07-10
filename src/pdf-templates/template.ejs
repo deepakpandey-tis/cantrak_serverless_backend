@@ -1,4 +1,14 @@
-<div style="width: 100% !important;">
+<div style="width: 100% !important; position: relative;">
+  <div style="width: 150px; position: absolute; top: 0; right: 50; text-align: center;">
+    <h6 style="margin: 0px; padding: 0px;">
+      <span style="color: #F44439;">ห้ องชุดเลขที่ / Unit No</span>
+    </h6>
+    <% for (var i = 0; i < propertyOwner.houseId.length;  i++ ) { %>
+    <h6 style="margin: 0px; padding: 0px; padding-bottom: 3px;">
+      <span><%= propertyOwner.houseId[i] %></span>
+    </h6>
+    <% } %>
+  </div>
   <table style="width: 100%; margin-top: 20px;">
     <tr>
       <td style="text-align: center; padding-bottom: 15px;">
@@ -6,18 +16,6 @@
           <span style="color: #F44439;">วาระ / Agenda : </span
           ><span> <%= agenda.agendaNo  %></span>
         </h6>
-      </td>
-      <td rowspan="4" style="text-align: center; padding-bottom: 15px; width: 200px; vertical-align: top;">
-        <div style="width: 150px;">
-          <h6 style="margin: 0px; padding: 0px;">
-            <span style="color: #F44439;">ห้ องชุดเลขที่ / Unit No</span>
-          </h6>
-          <% for (var i = 0; i < propertyOwner.houseId.length;  i++ ) { %>
-          <h6 style="margin: 0px; padding: 0px; padding-bottom: 3px;">
-            <span><%= propertyOwner.houseId[i] %></span>
-          </h6>
-          <% } %>
-        </div>
       </td>
     </tr>
     <!-- <tr>
@@ -189,7 +187,7 @@
               <small style="padding: 0px; margin: 0px;">เจ้ าของห้ องชุด / Co-owner</small>
             </td>
             <td style="text-align: right;">
-              <small style="padding: 0px; margin: 0px;">ลงชื่อ / Sign ___________</small>
+              <small style="padding: 0px; margin: 0px;">ลงชื่อ / Sign _____________________</small>
             </td>
           </tr>
           <tr>
@@ -215,7 +213,7 @@
           ><span><%= propertyOwner.houseId %></span>
         </h6> -->
         <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">อัตาส่วนกรรมสิทธิ์ / Total Ownership Ratio : </span
+          <span style="color: #F44439;">อัตาส่วนกรรมสิทธิ์ / Actual Ownership Ratio : </span
           ><span><%= propertyOwner.actualOwnershipRatio %></span>
         </h6>
       </td>
@@ -223,10 +221,10 @@
     <tr>
       <td style="text-align: left; padding-top: 10px;">
         <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">อัตาส่วนกรรมสิทธิ์ / Ownership Ratio : </span
+          <span style="color: #F44439;">อัตาส่วนกรรมสิทธิ์ /Total Ownership Ratio : </span
           ><span><%= propertyOwner.ownershipRatio %></span>
         </h6>
       </td>
     </tr>
   </table>
-  </div>
+</div>
