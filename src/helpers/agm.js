@@ -784,16 +784,16 @@ const agmHelper = {
 
             let propertyOwnerData = {};
             // get combined ownership Ratio;
-            let totalRatio = await pd.ownershipRatio.reduce(function (a, b) {
-              return a + b;
-            }, 0);
-            console.log("[helpers][agm][generateVotingDocument]: total ratio",totalRatio)
-            propertyOwnerData.ownershipRatio = totalRatio;
+            // let totalRatio = await pd.ownershipRatio.reduce(function (a, b) {
+            //   return a + b;
+            // }, 0);
+            // console.log("[helpers][agm][generateVotingDocument]: total ratio",totalRatio)
+            // propertyOwnerData.ownershipRatio = totalRatio;
             let totalActualRatio = await pd.actualOwnershipRatio.reduce(function (a, b) {
               return a + b;
             }, 0);
             console.log("[helpers][agm][generateVotingDocument]: total actual ratio",totalActualRatio)
-            propertyOwnerData.actualOwnershipRatio = totalActualRatio;
+            propertyOwnerData.actualOwnershipRatio = totalActualRatio.toFixed(2);
             propertyOwnerData.houseId = pd.houseId
 
             console.log("[helpers][agm][generateVotingDocument]: owner pdf data",propertyOwnerData)
