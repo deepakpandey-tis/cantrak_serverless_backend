@@ -216,6 +216,8 @@ const parcelManagementController = {
 
         let orgUserDataPayload = req.body.org_user_data;
 
+        console.log("parcel user tis",orgUserDataPayload)
+
         orgUserData = await knex("parcel_user_tis").insert({
           parcelId: parcelResult.id,
           ...orgUserDataPayload,
@@ -402,6 +404,7 @@ const parcelManagementController = {
               mobileNumber:
                 noOrgUserDataPayload.tenantPhoneNo,
               address: noOrgUserDataPayload.tenantAddress,
+              propertyUnitData
             };
           }
         } else {
@@ -437,7 +440,7 @@ const parcelManagementController = {
           }
 
           receiverData = {
-            ...noOrgUserDataPayload,
+            ...noOrgUserDataPayload,propertyUnitData
           };
         }
 
