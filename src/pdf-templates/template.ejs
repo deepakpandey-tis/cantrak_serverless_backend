@@ -1,4 +1,14 @@
-<div style="width: 100% !important;">
+<div style="width: 100% !important; position: relative;">
+  <div style="width: 150px; position: absolute; top: 0; right: 50; text-align: center;">
+    <h6 style="margin: 0px; padding: 0px;">
+      <span style="color: #F44439;">ห้ องชุดเลขที่ / Unit No</span>
+    </h6>
+    <% for (var i = 0; i < propertyOwner.unitNumber.length;  i++ ) { %>
+    <h6 style="margin: 0px; padding: 0px; padding-bottom: 3px;">
+      <span><%= propertyOwner.unitNumber[i] %></span>
+    </h6>
+    <% } %>
+  </div>
   <table style="width: 100%; margin-top: 20px;">
     <tr>
       <td style="text-align: center; padding-bottom: 15px;">
@@ -213,4 +223,4 @@
       </td>
     </tr>
   </table>
-  </div>
+</div>
