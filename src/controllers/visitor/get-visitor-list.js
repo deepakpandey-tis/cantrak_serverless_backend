@@ -81,16 +81,16 @@ const getVisitorList = async (req, res) => {
         }
         // 2021/07/07 part of left outer join  sqlWhere += ` and uha."orgId" = u2."orgId" and uha."userId" = u2.id`;
         // 2021/07/08 sqlWhere += ` and uha."orgId" = vi."orgId" and uha.id = vi."userHouseAllocationId"`;
-        if(visitorSelect === 1){                 // Schedule Visits / Check-ins: Active invitation / booking 
-            sqlWhere += ` and  vi.status = 1 and vi."actualArrivalDate" is null`;
+        if(visitorSelect === 1){                 // Schedule Visits for today or at a later date
+            sqlWhere += ` and  vi.status = 1 and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') >= to_char(now(), 'YYYYMMDD') and vi."actualArrivalDate" is null`;
         }
         else
         if(visitorSelect === 2){                 // Schedule Departues / Check-outs: Active invitation / booking and Checked-ins
             sqlWhere += ` and  vi.status = 1 and vi."actualArrivalDate" is not null and vi."actualDepartureDate" is null`;
         }
         else
-        if(visitorSelect === 3){                // Visitors History: Cancelled and Already visited
-            sqlWhere += ` and (vi."status" = 3 or vi."actualDepartureDate" is not null)`;
+        if(visitorSelect === 3){                // Visitors History: Cancelled || No Show || Checked-out
+            sqlWhere += ` and (vi."status" = 3 or (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') < to_char(now(), 'YYYYMMDD') and vi."actualArrivalDate" is null) or vi."actualDepartureDate" is not null)`;
         }
 
         if(payload.filter.visitorName){
@@ -180,4 +180,6 @@ module.exports = getVisitorList;
  * 2021/07/07  columns added to select statement: propertyUnitsId, registrationBy
  * 2021/07/08  user_house_allocation table is removed from the FROM list
  *             vi.propertyUnitsId is used to get unitNumber
+ *             visitor-list: arrival-date >= today-date
+ *             history-list: cancelled || arrival-date < today-date || checked-out
  */

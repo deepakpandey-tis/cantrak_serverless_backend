@@ -635,10 +635,10 @@ const agmHelper = {
       }
 
       // Write Code to create Zip File...
-      await fs.ensureDir(mountPathRoot +  "/AGM/" + agmId + "/zipped-files");
+      await fs.ensureDir(mountPathRoot + "/AGM/" + agmId + "/zipped-files");
       console.log("[helpers][agm][generateVotingDocument]: ZipFile Directory Created/Ensured....");
 
-      const zipFileName = mountPathRoot +  "/AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
+      const zipFileName = mountPathRoot + "/AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
       console.log("[helpers][agm][generateVotingDocument]: Going To Create Zip file with name:", zipFileName);
       const uploadedZippedFileDetails = await makeZippedFileOnEFS(basePath, zipFileName);
 
@@ -695,7 +695,7 @@ const agmHelper = {
 
   },
 
-  generateVotingDocumentOnEFSv2: async ({ agmId, data, orgId, requestedBy }) => {
+  generateVotingDocumentOnEFSv2: async ({ agmId, agendaId, data, orgId, requestedBy }) => {
 
     let browser = null;
     let bucketName = process.env.S3_BUCKET_NAME;
@@ -709,14 +709,16 @@ const agmHelper = {
 
       console.log('[helpers][agm][generateVotingDocument]: Data:', data);
 
-      let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true });
+      // let agmPropertyUnitOwners = await knex('agm_owner_master').where({ agmId: agmId, eligibility: true })
+      let agmPropertyUnitOwners = await knex.raw(`SELECT agm_owner_master."ownerGroupNo",(array_agg(agm_owner_master."ownerName"))[1] as "ownerName",array_agg(agm_owner_master."ownershipRatio") as "ownershipRatio",array_agg(agm_owner_master."actualOwnershipRatio") as "actualOwnershipRatio",array_agg(agm_owner_master."unitId") as "unitId",array_agg(agm_owner_master."unitNumber") as "unitNumber",array_agg(agm_owner_master."id") as "id",array_agg(agm_owner_master."houseId") as "houseId" from agm_owner_master left join agenda_master on agm_owner_master."agmId" = agenda_master."agmId" where agm_owner_master."agmId" = ${agmId} and agenda_master."id" = ${agendaId} GROUP BY (agm_owner_master."ownerGroupNo")`);
+      // agmPropertyUnitOwners = agmPropertyUnitOwners.rows
       //Change above query to groupby "ownerGroupNumber" and get other grouped row data as json using func 'json_agg'
 
-      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners);
-      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners Length:', agmPropertyUnitOwners.length);
+      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners.rows);
+      console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners Length:', agmPropertyUnitOwners.rows.length);
 
 
-      let agendas = await knex('agenda_master').where({ agmId: agmId, eligibleForVoting: true });
+      let agendas = await knex('agenda_master').where({ agmId: agmId, eligibleForVoting: true, id:agendaId });
       console.log('[helpers][agm][generateVotingDocument]: agendas:', agendas);
 
       const Parallel = require("async-parallel");
@@ -756,7 +758,7 @@ const agmHelper = {
       const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
       console.log('[helpers][agm][generateVotingDocument]: PDF Template Path:', templatePath);
 
-      await Parallel.each(agmPropertyUnitOwners, async (pd) => {
+      await Parallel.each(agmPropertyUnitOwners.rows, async (pd) => {
         console.log("[helpers][agm][generateVotingDocument]: Preparing for Property Owner: ", pd);
 
         try {
@@ -767,12 +769,8 @@ const agmHelper = {
             agenda.choices = await Parallel.map(agenda.choices, async (choice) => {
               let qrCodeObj = {
                 qrName: 'SM:AGM:VOTING',
-                orgId: orgId,
-                agmId: agmId,
-                unitId: pd.unitId,
-                unitNumber: pd.unitNumber,   // Will be changed to unitNumber arrays
-                ownerMasterId: pd.id,
-                ownershipRatio: pd.ownershipRatio,  // Calculate all the grouped units for this owner and put sum of those here
+                ownerIds: pd.id,
+                ownerGroupNo: pd.ownerGroupNo,
                 agendaId: agenda.id,
                 choice: choice.id
               };
@@ -784,7 +782,24 @@ const agmHelper = {
               return choice;
             });
 
-            let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: pd });
+            let propertyOwnerData = {};
+            // get combined ownership Ratio;
+            // let totalRatio = await pd.ownershipRatio.reduce(function (a, b) {
+            //   return a + b;
+            // }, 0);
+            // console.log("[helpers][agm][generateVotingDocument]: total ratio",totalRatio)
+            // propertyOwnerData.ownershipRatio = totalRatio;
+            let totalActualRatio = await pd.actualOwnershipRatio.reduce(function (a, b) {
+              return a + b;
+            }, 0);
+            console.log("[helpers][agm][generateVotingDocument]: total actual ratio",totalActualRatio)
+            propertyOwnerData.actualOwnershipRatio = totalActualRatio.toFixed(2);
+            propertyOwnerData.houseId = pd.houseId
+
+            console.log("[helpers][agm][generateVotingDocument]: owner pdf data",propertyOwnerData)
+
+            let htmlContents = await ejs.renderFile(templatePath, { agmDetails, agenda, propertyOwner: propertyOwnerData });
+
             // console.log('[helpers][agm][generateVotingDocument]: htmlContents:', htmlContents);
 
             // let filename = `agm-${agmId}-pu-${pd.unitId}-agn-${agenda.id}.pdf`;
@@ -793,7 +808,7 @@ const agmHelper = {
             // let sanitizedOwnerGroupNumber = pd.ownerGroupNo;
             // sanitizedOwnerGroupNumber = sanitizedOwnerGroupNumber.replace('#','-')
             // let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-unit-${unitNumber}.pdf`;
-            let filename = `agm-${agmId}-proj-${pd.projectId}-agenda-${agenda.agendaNo}-ownerGroupNo-${pd.ownerGroupNo}.pdf`;
+            let filename = `agm-${agmId}-agenda-${agenda.agendaNo}-ownerGroupNo-${pd.ownerGroupNo}.pdf`;
 
             const document = {
               html: htmlContents,
@@ -816,7 +831,7 @@ const agmHelper = {
           if (err.list && Array.isArray(err.list)) {
             err.list.forEach(item => {
               console.error(`[helpers][agm][generateVotingDocument]: Inner Loop Each Error:`, item);
-              for(var it of item.list){
+              for (var it of item.list) {
                 console.error(`[helpers][agm][generateVotingDocument]: Inner Loop Each Error:`, it.message);
               }
             });
@@ -856,10 +871,10 @@ const agmHelper = {
       }
 
       // Write Code to create Zip File...
-      await fs.ensureDir(mountPathRoot +  "/AGM/" + agmId + "/zipped-files");
+      await fs.ensureDir(mountPathRoot + "/AGM/" + agmId + "/zipped-files");
       console.log("[helpers][agm][generateVotingDocument]: ZipFile Directory Created/Ensured....");
 
-      const zipFileName = mountPathRoot +  "/AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
+      const zipFileName = mountPathRoot + "/AGM/" + agmId + "/zipped-files/" + `${new Date().getTime()}.zip`;
       console.log("[helpers][agm][generateVotingDocument]: Going To Create Zip file with name:", zipFileName);
       const uploadedZippedFileDetails = await makeZippedFileOnEFS(basePath, zipFileName);
 
@@ -875,7 +890,7 @@ const agmHelper = {
       });
 
       console.log("[helpers][agm][generateVotingDocument]: s3FileDownloadUrl:", s3FileDownloadUrl);
-      await redisHelper.setValueWithExpiry(`agm-${agmId}-voting-docs-link`, { s3Url: s3FileDownloadUrl }, 2 * 60 * 60);
+      await redisHelper.setValueWithExpiry(`agm-${agmId}-agendaId-${agendaId}-voting-docs-link`, { s3Url: s3FileDownloadUrl }, 2 * 60 * 60);
 
 
       let sender = requestedBy;
