@@ -20,7 +20,7 @@ const getCalendarVisitorList = async (req, res) => {
         left join users u on vi."tenantId" = u.id
         , property_units pu
         WHERE vi."orgId" = ${orgId} and vi."propertyUnitsId" = pu.id and pu."companyId" = ${payload.companyId}
-        and (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') >= ${payload.starDate} and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') <= ${payload.endDate} and vi."actualArrivalDate" is null)  -- incoming visitors
+        and (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') >= '${payload.startDate}' and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') <= '${payload.endDate}' and vi."actualArrivalDate" is null)  -- incoming visitors
         and vi.status = 1
         union all
         select 2 visitor_type,
@@ -32,7 +32,7 @@ const getCalendarVisitorList = async (req, res) => {
         left join users u on vi."tenantId" = u.id
         , property_units pu
         where vi."orgId" = 89 and vi."propertyUnitsId" = pu.id and pu."companyId" = ${payload.companyId}
-        and (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') >= ${payload.starDate} and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') <= ${payload.endDate} and vi."actualArrivalDate" is null)
+        and (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') >= '${payload.startDate}' and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') <= '${payload.endDate}' and vi."actualArrivalDate" is null)
         and vi.status = 1
         and
         (
