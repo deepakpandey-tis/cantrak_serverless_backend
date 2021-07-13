@@ -125,6 +125,22 @@ router.post(
     , visitorController.addSelfRegistration
 );
 
+router.post(
+    "/get-calendar-count"
+    , authMiddleware.isAuthenticated
+    , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.getCalendarCount
+);
+
+router.get(
+    "/get-company-list"
+    , authMiddleware.isAuthenticated
+    , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.getCompanyList
+);
+
 module.exports = router;
 
 /* ES6 module
