@@ -33,7 +33,7 @@ const getVisitorsCount = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][Visitor][getVisotrsCount] :  Error", err);
+        console.log("[controllers][Visitor][getVisitorsCount] :  Error", err);
         return res.status(500).json({
           errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
     });
