@@ -15,6 +15,8 @@ const organisationHasVisitorModule = require('./organisation-has-visitor-module'
 const getSelfRegistrationPropertyUnits = require('./get-self-registration-property-units');
 const addSelfRegistration = require('./add-self-registration');
 const cancelRegistration = require('./cancel-registration');
+const getCalendarCount = require('./get-calendar-count');
+const getCompanyList = require('./get-company-list');
 
 module.exports = {
     getUserUnits,
@@ -34,4 +36,6 @@ module.exports = {
     getSelfRegistrationPropertyUnits,
     addSelfRegistration,
     cancelRegistration,
+    getCalendarCount,
+    getCompanyList,
 };

@@ -152,6 +152,7 @@ const agmController = {
               agendaNo: agenda.agendaNo,
               eligibleForVoting: eligibility,
               isMultiSelect: agenda.isMultiSelect,
+              agendaType: agenda.agendaType,
               updatedAt: currentTime,
               createdAt: currentTime,
               orgId: req.orgId,
@@ -656,10 +657,7 @@ const agmController = {
 
   updateOwner: async (req, res) => {
     try {
-      //console.log('atif');
-      // let payload = req.body;
       let resultData;
-      //console.log(req.body);
       await knex.transaction(async (trx) => {
         const payload = _.omit(req.body, [
           "joinOwnerName",
@@ -1217,29 +1215,6 @@ const agmController = {
         });
       }
 
-      // let propertyOwnerData = {}
-      // let agendaId = 265;
-      // let agmPropertyUnitOwners = await knex.raw(`SELECT agm_owner_master."ownerGroupNo",
-      // (array_agg(agm_owner_master."ownerName"))[1] as "ownerName",
-      // array_agg(agm_owner_master."ownershipRatio") as "ownershipRatio",
-      // array_agg(agm_owner_master."actualOwnershipRatio") as "actualOwnershipRatio",
-      // array_agg(agm_owner_master."unitId") as "unitId",
-      // array_agg(agm_owner_master."unitNumber") as "unitNumber",
-      // array_agg(agm_owner_master."id") as "id",
-      // array_agg(agm_owner_master."houseId") as "houseId" ,
-      // array_agg(agenda_master."id") as "agendaId" 
-      // from agm_owner_master 
-      // left join agenda_master on agm_owner_master."agmId" = agenda_master."agmId" where agm_owner_master."agmId" = ${payload.id} and agenda_master."id" = ${agendaId} GROUP BY (agm_owner_master."ownerGroupNo")`);
-      // console.log('[helpers][agm][generateVotingDocument]: AGM PU Owners:', agmPropertyUnitOwners.rows);
-
-      // let totalRatio = await agmPropertyUnitOwners.rows[0].ownershipRatio.reduce(function (a, b) {
-      //   return a + b;
-      // }, 0)
-
-      // propertyOwnerData.ownershipRatio = totalRatio;
-
-      // console.log("Property owner data 1", propertyOwnerData)
-
       let agmDetails = await knex("agm_master")
         .leftJoin(
           "companies",
@@ -1270,7 +1245,6 @@ const agmController = {
       return res.status(200).json({
         data: agmDetails,
         votingDocDownloadUrl,
-        // owner:agmPropertyUnitOwners,
         message: "Agm Details Successfully!",
       });
     } catch (err) {
@@ -1550,12 +1524,12 @@ const agmController = {
         }
       );
 
-      agendaList = await Parallel.map(agendaList, async (pd)=> {
+      agendaList = await Parallel.map(agendaList, async (pd) => {
         let votingDocDownloadUrl = await redisHelper.getValue(
           `agm-${payload.agmId}-agendaId-${pd.id}-voting-docs-link`
         );
 
-        return {...pd, votingDocDownloadUrl}
+        return { ...pd, votingDocDownloadUrl }
       })
 
       // let updateResult = await knex('agm_owner_master').update(updateData).where({ id: payload.id, orgId: req.orgId }).returning(["*"]);
@@ -1761,46 +1735,6 @@ const agmController = {
     }
   },
 
-  // updateOwner: async (req, res) => {
-  //   try {
-  //     let payload = req.body;
-  //     let updateOwner;
-  //     const schema = new Joi.object().keys({
-  //       agmId: Joi.number().required(),
-  //       unitNo: Joi.number().required(),
-  //       ownerName: Joi.string().required(),
-  //       eligibility: Joi.number().required(),
-  //       ownerId: Joi.number().required(),
-  //     });
-
-  //     const result = Joi.validate(payload, schema);
-  //     if (result && result.hasOwnProperty("error") && result.error) {
-  //       return res.status(400).json({
-  //         errors: [{ code: "VALIDATION_ERROR", message: result.error.message }],
-  //       });
-  //     }
-
-  //     let updateData = {
-  //       eligibility: payload.eligibility,
-  //       ownerName: payload.ownerName,
-  //       unitId: payload.unitId,
-  //     };
-
-  //     updateOwner = await knex("agm_owner_master")
-  //       .update(updateData)
-  //       .where({ id: payload.ownerId, orgId: req.orgId, agmId: payload.agmId })
-  //       .returning(["*"]);
-
-  //     return res.status(200).json({
-  //       data: updateOwner,
-  //       message: "Owner updated successfully!",
-  //     });
-  //   } catch (err) {
-  //     return res.status(500).json({
-  //       errors: [{ code: "UNKNOWN SERVER ERROR", message: err.message }],
-  //     });
-  //   }
-  // },
 
   /* Get Proxy Document List */
   getProxyDocumentList: async (req, res) => {
@@ -2049,7 +1983,7 @@ const agmController = {
       const { agmId, agendaId } = payload;
       console.log(
         "[controllers][agm][generatePdfOfVotingDocument]: AgmId:",
-        agmId , agendaId
+        agmId, agendaId
       );
 
       if (!agmId) {
@@ -2062,7 +1996,7 @@ const agmController = {
           ],
         });
       }
-     
+
       // GET AGM Details...
       let agmDetails = await knex("agm_master")
         .leftJoin(
@@ -2097,7 +2031,7 @@ const agmController = {
       await queueHelper.addToQueue(
         {
           agmId: agmId,
-          agendaId:agendaId,
+          agendaId: agendaId,
           data: {
             agmDetails,
           },
@@ -2338,17 +2272,17 @@ const agmController = {
       let currentUserOwnerShipRatio = await knex(
         "agm_owner_master"
       )
-      .sum("ownershipRatio")
+        .sum("ownershipRatio")
         .where({
           agmId: payload.agmId,
           // id: payload.ownerMasterId,
         })
-        .whereIn("id",payload.ownerMasterId)
+        .whereIn("id", payload.ownerMasterId)
         .first();
 
       currentUserOwnerShipRatio =
         currentUserOwnerShipRatio.sum ? currentUserOwnerShipRatio.sum
-        : 0;
+          : 0;
       console.log(
         `[controllers][agm][saveVotingData]: Current User Ownership Ratio:`,
         currentUserOwnerShipRatio
@@ -2398,24 +2332,24 @@ const agmController = {
       if (votingOption[0].isMultiSelect == true) {
         if (req.body.isUpdateVote == false) {
           try {
-            for(let id of ownerId){
-               let insertVotingData = {
-                  agmId: payload.agmId,
-                  ownerMasterId: id,
-                  agendaId: payload.agendaId,
-                  votingPower: payload.votingPower,
-                  selectedChoiceId: payload.selectedChoiceId,
-                  createdAt: currentTime,
-                  updatedAt: currentTime,
-                  orgId: req.orgId,
+            for (let id of ownerId) {
+              let insertVotingData = {
+                agmId: payload.agmId,
+                ownerMasterId: id,
+                agendaId: payload.agendaId,
+                votingPower: payload.votingPower,
+                selectedChoiceId: payload.selectedChoiceId,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+                orgId: req.orgId,
               };
 
-               insertVotingResult = await knex
-              .insert(insertVotingData)
-              .returning(["*"])
-              .into("agm_voting");
+              insertVotingResult = await knex
+                .insert(insertVotingData)
+                .returning(["*"])
+                .into("agm_voting");
             }
-           
+
           } catch (err) {
             let uniqueErrorMsg = `duplicate key value violates unique constraint`;
             if (err.message.includes(uniqueErrorMsg)) {
@@ -2434,7 +2368,7 @@ const agmController = {
                   // ownerMasterId: payload.ownerMasterId,
                   agendaId: payload.agendaId,
                 })
-                .whereIn("ownerMasterId",payload.ownerMasterId)
+                .whereIn("ownerMasterId", payload.ownerMasterId)
                 .returning(["*"])
                 .into("agm_voting");
             }
@@ -2447,27 +2381,27 @@ const agmController = {
               // ownerMasterId: payload.ownerMasterId,
               agendaId: payload.agendaId,
             })
-            .whereIn("ownerMasterId",payload.ownerMasterId)
+            .whereIn("ownerMasterId", payload.ownerMasterId)
             .del();
 
-          for(let id of ownerId){
-             let insertVotingData = {
-                  agmId: payload.agmId,
-                  ownerMasterId: id,
-                  agendaId: payload.agendaId,
-                  votingPower: payload.votingPower,
-                  selectedChoiceId: payload.selectedChoiceId,
-                  createdAt: currentTime,
-                  updatedAt: currentTime,
-                  orgId: req.orgId,
-              };
+          for (let id of ownerId) {
+            let insertVotingData = {
+              agmId: payload.agmId,
+              ownerMasterId: id,
+              agendaId: payload.agendaId,
+              votingPower: payload.votingPower,
+              selectedChoiceId: payload.selectedChoiceId,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+              orgId: req.orgId,
+            };
 
-               insertVotingResult = await knex
-            .insert(insertVotingData)
-            .returning(["*"])
-            .into("agm_voting");
+            insertVotingResult = await knex
+              .insert(insertVotingData)
+              .returning(["*"])
+              .into("agm_voting");
           }
-         
+
         }
       } else {
         let delVoting = await knex("agm_voting")
@@ -2476,27 +2410,27 @@ const agmController = {
             // ownerMasterId: payload.ownerMasterId,
             agendaId: payload.agendaId,
           })
-          .whereIn("ownerMasterId",payload.ownerMasterId)
+          .whereIn("ownerMasterId", payload.ownerMasterId)
           .del();
 
-          for(let id of ownerId){
-            let insertVotingData = {
-                  agmId: payload.agmId,
-                  ownerMasterId: id,
-                  agendaId: payload.agendaId,
-                  votingPower: payload.votingPower,
-                  selectedChoiceId: payload.selectedChoiceId,
-                  createdAt: currentTime,
-                  updatedAt: currentTime,
-                  orgId: req.orgId,
-              };
-                insertVotingResult = await knex
-                        .insert(insertVotingData)
-                        .returning(["*"])
-                        .into("agm_voting");
-          }
+        for (let id of ownerId) {
+          let insertVotingData = {
+            agmId: payload.agmId,
+            ownerMasterId: id,
+            agendaId: payload.agendaId,
+            votingPower: payload.votingPower,
+            selectedChoiceId: payload.selectedChoiceId,
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: req.orgId,
+          };
+          insertVotingResult = await knex
+            .insert(insertVotingData)
+            .returning(["*"])
+            .into("agm_voting");
+        }
 
-      
+
       }
 
       return res.status(200).json({
@@ -2565,12 +2499,12 @@ const agmController = {
       let currentUserOwnerShipRatio = await knex(
         "agm_owner_master"
       )
-      .sum('ownershipRatio')
+        .sum('ownershipRatio')
         .where({
           agmId: payload.agmId,
           // id: payload.ownerMasterId,
         })
-        .whereIn("id",payload.ownerMasterId)
+        .whereIn("id", payload.ownerMasterId)
         .first();
 
       // currentUserOwnerShipRatio =
@@ -2581,7 +2515,7 @@ const agmController = {
       // );
       currentUserOwnerShipRatio =
         currentUserOwnerShipRatio.sum ? currentUserOwnerShipRatio.sum
-        : 0;
+          : 0;
       console.log(
         `[controllers][agm][saveVotingData]: Current User Ownership Ratio:`,
         currentUserOwnerShipRatio
@@ -2614,28 +2548,28 @@ const agmController = {
 
       for (let choice of payload.selectedChoiceId) {
 
-        for(let id of ownerId){
-           let insertVotingData = {
-          agmId: payload.agmId,
-          ownerMasterId: payload.ownerMasterId,
-          agendaId: payload.agendaId,
-          votingPower: payload.votingPower,
-          selectedChoiceId: choice,
-          createdAt: currentTime,
-          updatedAt: currentTime,
-          orgId: req.orgId,
-        };
+        for (let id of ownerId) {
+          let insertVotingData = {
+            agmId: payload.agmId,
+            ownerMasterId: payload.ownerMasterId,
+            agendaId: payload.agendaId,
+            votingPower: payload.votingPower,
+            selectedChoiceId: choice,
+            createdAt: currentTime,
+            updatedAt: currentTime,
+            orgId: req.orgId,
+          };
 
-        insertVotingResult = await knex
-                  .insert(insertVotingData)
-                  .returning(["*"])
-                  .into("agm_voting");
+          insertVotingResult = await knex
+            .insert(insertVotingData)
+            .returning(["*"])
+            .into("agm_voting");
 
-                }
+        }
 
-       
 
-        
+
+
       }
 
       return res.status(200).json({
@@ -3092,7 +3026,7 @@ const agmController = {
         .select(["registrationType", "ownerName"])
         .where({
           // unitId: payload.unitId,
-          ownerGroupNo:payload.ownerGroupNo,
+          ownerGroupNo: payload.ownerGroupNo,
           agmId: payload.agmId,
           orgId: req.orgId,
         })
@@ -3104,7 +3038,7 @@ const agmController = {
           // ownerGroupNo: payload.ownerGroupNo,
           agendaId: payload.agendaId,
         })
-        .whereIn("ownerMasterId", payload.ownerMasterId);
+          .whereIn("ownerMasterId", payload.ownerMasterId);
       }
       //  else {
       //   return { message: "USER_NOT_REGISTERED" };
@@ -3121,6 +3055,7 @@ const agmController = {
           "agenda_choice.choiceValue",
           "agenda_master.agendaName",
           "agenda_master.isMultiSelect",
+          "agenda_master.agendaType"
         ])
         .where({
           "agenda_choice.agendaId": payload.agendaId,
@@ -3149,23 +3084,57 @@ const agmController = {
         .sum("ownershipRatio")
         .where({
           agmId: payload.agmId,
-          ownerGroupNo:payload.ownerGroupNo
+          ownerGroupNo: payload.ownerGroupNo
           // id: payload.ownerMasterId,
         })
         .first();
 
       currentUserOwnerShipRatio =
-       currentUserOwnerShipRatio.sum ? currentUserOwnerShipRatio.sum
-        : 0;
+        currentUserOwnerShipRatio.sum ? currentUserOwnerShipRatio.sum
+          : 0;
       console.log(
         `[controllers][agm][getScannedAgendaDetail]: Current User Ownership Ratio:`,
         currentUserOwnerShipRatio
       );
 
-      let votingPower = (
-        (currentUserOwnerShipRatio / totalOwnershipRatio) *
-        100
-      ).toFixed(3);
+      let agendaType = agendaChoiceData[0].agendaType;
+
+      let groupByOwners = await knex.raw(`SELECT agm_owner_master."ownerGroupNo",array_agg(agm_owner_master."ownershipRatio") as "ownershipRatio" from agm_owner_master where agm_owner_master."agmId" = ${payload.agmId} and agm_owner_master."registrationType" is not null GROUP BY (agm_owner_master."ownerGroupNo")`);
+
+      let groupByOwnerCount = groupByOwners.rowCount;
+      console.log("[controllers][agm][groupByOwnershipRatio]: Group By Number Ownership Ratio:", groupByOwners.rowCount)
+
+      let owners = await knex('agm_owner_master').count('*').where({ agmId: payload.agmId }).whereNotNull('registrationType').first();
+
+      let totalOwnersCount = owners.count;
+
+      console.log("[controllers][agm][groupByOwnershipRatio]: Owners Count:", totalOwnersCount)
+
+      let unitCount = await knex('agm_owner_master').count('unitId').where({ agmId: payload.agmId, ownerGroupNo: payload.ownerGroupNo }).whereNotNull('registrationType').first();
+
+      let ownerUnitCount = unitCount.count
+      console.log("[controllers][agm][groupByOwnershipRatio]: group unit Count:", unitCount)
+
+      // let calculatedGroupedOwnershipRatio = (.reduce((a, b) => a + b, 0);)
+
+      let votingPower;
+      if (agendaType == 1) {
+        votingPower = (
+          (currentUserOwnerShipRatio / totalOwnershipRatio) *
+          100
+        ).toFixed(3);
+      } else if (agendaType == 2) {
+        votingPower = (
+          (1 / groupByOwnerCount) *
+          100
+        ).toFixed(3);
+      } else if (agendaType == 3) {
+        votingPower = (
+          (ownerUnitCount / totalOwnersCount) *
+          100
+        ).toFixed(3);
+      }
+
       console.log(
         `[controllers][agm][getScannedAgendaDetail]: Calculated Voting Power:`,
         votingPower
