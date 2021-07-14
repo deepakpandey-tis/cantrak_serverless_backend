@@ -10,7 +10,7 @@ exports.up = async (knex) => {
 
     await knex.raw(`INSERT INTO public.testing_migration ("name","isActive","createdAt","updatedAt") VALUES
              ('Deepak', true, 1615465168491, 1615465168491),
-             ('Amar', true, 1615465168491, 1615465168491)
+             ('Amar', true, 1615465168491, 1615465168491),
              ('Atif', true, 1615465168491, 1615465168491);`
             );
             
