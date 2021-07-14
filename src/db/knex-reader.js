@@ -14,20 +14,41 @@
 //     return parseFloat(value);
 // });
 
+function getReadOnlyDbHost() {
+    let DB_HOST = process.env.DB_HOST_READ_ONLY;
+    if (!DB_HOST || DB_HOST === '') {
+        console.log("Read Replica Not Available, Going to use default host.")
+        DB_HOST = process.env.DB_HOST;
+    }
+
+    return DB_HOST;
+}
+
+
+function getReadOnlyDbPort() {
+    let DB_PORT = process.env.DB_PORT_READ_ONLY;
+    if (!DB_PORT || DB_PORT === '') {
+        console.log("Read Replica Not Available, Going to use default port.")
+        DB_PORT = process.env.DB_PORT;
+    }
+
+    return DB_PORT;
+}
+
 
 module.exports = require('knex')({
     client: 'pg',
     connection: {
-        host: process.env.DB_HOST,
+        host: getReadOnlyDbHost(),
+        port: getReadOnlyDbPort(),
         user: process.env.DB_USER,
         password: process.env.DB_PASS,
-        database: process.env.DB_NAME,
-        port: process.env.DB_PORT
+        database: process.env.DB_NAME
     },
     debug: process.env.NODE_ENV === 'local' ? true : false,
     pool: {
-        min: 0,
-        max: 7,
+        min: 1,
+        max: 20,
         createTimeoutMillis: 3000,
         acquireTimeoutMillis: 26000,
         idleTimeoutMillis: 30000,
@@ -35,7 +56,7 @@ module.exports = require('knex')({
         createRetryIntervalMillis: 100,
         propagateCreateError: false, // <- default is true, set to false
         afterCreate: async (conn, done) => {
-            // await conn.query('SET timezone="UTC";');
+            await conn.query('SET timezone="Asia/Bangkok";');
             if (process.env.NODE_ENV === 'local') {
                 const oldConnections = await conn.query(`WITH inactive_connections AS (
                         SELECT
@@ -59,13 +80,6 @@ module.exports = require('knex')({
             }
             done(null, conn);
         }
-    },
-    migrations: {
-        tableName: 'knex_migrations',
-        directory: __dirname + '/migrations',
-    },
-    seeds: {
-        directory: __dirname + '/seeds'
     }
 });
 
