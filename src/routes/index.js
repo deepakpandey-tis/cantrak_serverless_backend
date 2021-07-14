@@ -83,6 +83,9 @@ const visitorRouter = require("./visitor");
 const agmTemplateRouter = require("./administration-features/agm-template");
 const parcelTypeRouter = require("./administration-features/parcel-type");
 
+const billPaymentRouter = require("./bill-payment");
+
+
 /* GET home page. */
 router.get("/", async (req, res, next) => {
   res.json({ app: "Serverless Express App" });
@@ -98,10 +101,7 @@ router.use("/users", usersRouter);
 router.use("/usermanagement", userManagementRouter);
 router.use("/servicerequest", serviceRequestRouter);
 router.use("/servicedetails", serviceDetailsRouter);
-router.use(
-  "/administration-features/property-setup",
-  propertySetupRouter
-);
+router.use("/administration-features/property-setup", propertySetupRouter);
 router.use(
   "/administration-features/property-category",
   propertyCategoryRouter
@@ -245,22 +245,14 @@ router.use(
 );
 router.use("/parcel-management", parcelManagementRouter);
 router.use("/facility-dashboard", facilityDashboardRouter);
-router.use(
-  "/administration-features/facility-type",
-  facilityTypeMaster
-);
+router.use("/administration-features/facility-type",facilityTypeMaster);
 
 router.use("/notifications", notificationRouter);
 
 router.use("/parcel", parcelNotificationRouter);
-router.use(
-  "/administration-features/banners",
-  bannersRouter
-);
-router.use(
-  "/service-request",
-  serviceRequestNotificationRouter
-);
+router.use("/administration-features/banners",bannersRouter);
+
+router.use("/service-request",serviceRequestNotificationRouter);
 
 router.use("/announcement", announcementRouter);
 
@@ -269,9 +261,8 @@ router.use("/agm", agmRouter);
 
 router.use("/visitor", visitorRouter);
 router.use("/agm-template", agmTemplateRouter);
-router.use(
-  "/administration-features/parcel-type",
-  parcelTypeRouter
-);
+router.use("/administration-features/parcel-type",parcelTypeRouter);
+
+router.use("/bill-payment",billPaymentRouter);
 
 module.exports = router;
