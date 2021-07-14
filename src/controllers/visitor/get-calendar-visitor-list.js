@@ -21,7 +21,7 @@ const getCalendarVisitorList = async (req, res) => {
          */
         sqlStr = `SELECT 1 "visitorType"
         , to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') "arrivalDate", to_char(to_timestamp(vi."departureDate" / 1000.0), 'YYYYMMDD') "departureDate"
-        , vi.id, vi."name", pu."unitNumber", u."name" "tenantName", vi."mobileNo"
+        , vi.id, vi."name", pu."unitNumber", u."name" "tenantName", vi."mobileNo", vi."vehicleNo"
         from visitor_invitations vi
         left join users u on vi."tenantId" = u.id
         , property_units pu
@@ -40,12 +40,19 @@ const getCalendarVisitorList = async (req, res) => {
         case when vi."actualArrivalDate" is not null then to_char(to_timestamp(vi."actualArrivalDate" / 1000.0), 'YYYYMMDD') else to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') end "arrivalDate",
         case when vi."actualDepartureDate" is not null then to_char(to_timestamp(vi."actualDepartureDate" / 1000.0), 'YYYYMMDD') else to_char(to_timestamp(vi."departureDate" / 1000.0), 'YYYYMMDD') end "departureDate",
         vi.id, vi."name", pu."unitNumber"
-        , u."name" "tenantName", vi."mobileNo"
+        , u."name" "tenantName", vi."mobileNo", vi."vehicleNo"
         from visitor_invitations vi
         left join users u on vi."tenantId" = u.id
         , property_units pu
-        where vi."orgId" = ${orgId} and vi."propertyUnitsId" = pu.id and pu."companyId" = ${payload.companyId}
-        and (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') >= '${payload.startDate}' and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') <= '${payload.endDate}' and vi."actualArrivalDate" is null)
+        where vi."orgId" = ${orgId} and vi."propertyUnitsId" = pu.id`;
+
+        if(payload.companyId > 0) {
+            // for selected company
+            sqlStr += ` and pu."companyId" = ${payload.companyId}`;
+        }
+        sqlStr += ` and pu."projectId" in (${authorisedProjectIds})`
+
+        sqlStr += ` and (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') >= '${payload.startDate}' and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') <= '${payload.endDate}' and vi."actualArrivalDate" is null)
         and vi.status = 1
         and
         (
