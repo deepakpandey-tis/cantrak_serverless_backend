@@ -1055,6 +1055,13 @@ const parcelManagementController = {
 
       let requestId = uuid();
 
+      let parcelSlipKey = `parcel-docs-link-${req.orgId}-${new Date().getTime()}`
+
+      console.log(
+        "[controllers][agm][generatePdfOfParcelDocument]: Parecel key:",
+        parcelSlipKey
+      );
+
       const queueHelper = require("../helpers/queue");
       await queueHelper.addToQueue(
         {
@@ -1064,6 +1071,7 @@ const parcelManagementController = {
             orgId: req.orgId,
           },
           orgId: req.orgId,
+          parcelSlipKey: parcelSlipKey,
           requestedBy: req.me,
         },
         "long-jobs",
@@ -1083,39 +1091,40 @@ const parcelManagementController = {
       // for (let key of keys) {
       //   let parcelDocs = await redisHelper.getValue(key);
 
-        // if (parcelDocs) {
-        //   parcelSlipDocGeneratedList.push({
-        //     requestId: requestId,
-        //     generatedBy: req.me,
-        //     orgData: orgData,
-        //     s3Url: null,
-        //     generatedAt: moment().format(
-        //       "MMMM DD, yyyy, hh:mm:ss A"
-        //     ),
-        //   });
-        //   await redisHelper.setValueWithExpiry(
-        //     `parcel-docs-link-${req.orgId}-${new Date().getTime()}`,
-        //     parcelSlipDocGeneratedList,
-        //     24 * 60 * 60
-        //   );
-        // } else {
-          await redisHelper.setValueWithExpiry(
-            `parcel-docs-link-${req.orgId}-${new Date().getTime()}`,
-            [
-              {
-                requestId: requestId,
-                generatedBy: req.me,
-                orgData: orgData,
-                s3Url: null,
-                generatedAt: moment().format(
-                  "MMMM DD, yyyy, hh:mm:ss A"
-                ),
-              },
-            ],
-            24 * 60 * 60
-          );
-        // }
-        // parcelSlipDocGeneratedList.push(parcelDocs)
+      // if (parcelDocs) {
+      //   parcelSlipDocGeneratedList.push({
+      //     requestId: requestId,
+      //     generatedBy: req.me,
+      //     orgData: orgData,
+      //     s3Url: null,
+      //     generatedAt: moment().format(
+      //       "MMMM DD, yyyy, hh:mm:ss A"
+      //     ),
+      //   });
+      //   await redisHelper.setValueWithExpiry(
+      //     `parcel-docs-link-${req.orgId}-${new Date().getTime()}`,
+      //     parcelSlipDocGeneratedList,
+      //     24 * 60 * 60
+      //   );
+      // } else {
+      await redisHelper.setValueWithExpiry(
+        // `parcel-docs-link-${req.orgId}-${new Date().getTime()}`,
+        parcelSlipKey,
+        [
+          {
+            requestId: requestId,
+            generatedBy: req.me,
+            orgData: orgData,
+            s3Url: null,
+            generatedAt: moment().format(
+              "MMMM DD, yyyy, hh:mm:ss A"
+            ),
+          },
+        ],
+        24 * 60 * 60
+      );
+      // }
+      // parcelSlipDocGeneratedList.push(parcelDocs)
       // }
 
       // console.log("[Parcel][Controllers][Parcel-Docs]", parcelSlipDocGeneratedList);
@@ -1182,7 +1191,7 @@ const parcelManagementController = {
 
         console.log("Parcel documents", i, parcelDocs)
         // if (parcelDocs.generatedBy && parcelDocs.orgId) {
-          parcelSlipDocGeneratedList.push(parcelDocs[0]);
+        parcelSlipDocGeneratedList.push(parcelDocs[0]);
 
         // }
 

@@ -263,6 +263,7 @@ const parcelHelper = {
     requestId,
     data,
     orgId,
+    parcelSlipKey,
     requestedBy,
   }) => {
     let browser = null;
@@ -332,7 +333,7 @@ const parcelHelper = {
         templatePath
       );
 
-                // `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
+      // `org~${data.orgId}~unitNumber~${data.unitNumber}~parcel~${data.id}`
 
       let pData = [];
       let pId = [];
@@ -341,7 +342,7 @@ const parcelHelper = {
         parcelData,
         async (data) => {
           try {
-            if (pData.length <  8) {
+            if (pData.length < 8) {
               let qrString = "org~" + data.orgId + "~unitNumber~" + data.unitNumber + "~parcel~" + data.id
               // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
               let qrCodeDataURI = await QRCODE.toDataURL(
@@ -358,10 +359,10 @@ const parcelHelper = {
               pData = [];
               pId = [];
 
-              
-              
+
+
               let qrString = "org~" + data.orgId + "~unitNumber~" + data.unitNumber + "~parcel~" + data.id
-              
+
               // console.log("[helpers][parcel][generatePendingParcel]: Qr String: ", qrString);
               let qrCodeDataURI = await QRCODE.toDataURL(
                 qrString
@@ -535,21 +536,21 @@ const parcelHelper = {
 
       console.log("[helpers][parcel][generatePendingParcel]: s3FileDownloadUrl:", s3FileDownloadUrl);
 
-      // let parcelSlipDocGeneratedList = await redisHelper.getValue(`parcel-docs-link-${orgId}-${new Date().getTime()}`);
-      // if (parcelSlipDocGeneratedList) {
-      //   parcelSlipDocGeneratedList.map((e) => {
-      //     let s3Url = e.s3Url;
-      //     if (e.requestId) {
-      //       s3Url = s3FileDownloadUrl;
-      //     }
-      //     e.s3Url = s3Url;
-      //   });
-      //   //parcelSlipDocGeneratedList.push({ requestId: requestId, generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") });
-      //   await redisHelper.setValueWithExpiry(`parcel-docs-link-${orgId}-${new Date().getTime()}`, parcelSlipDocGeneratedList, 24 * 60 * 60);
-      // } else {
+      let parcelSlipDocGeneratedList = await redisHelper.getValue(parcelSlipKey);
+      if (parcelSlipDocGeneratedList) {
+        parcelSlipDocGeneratedList.map((e) => {
+          let s3Url = e.s3Url;
+          if (e.requestId) {
+            s3Url = s3FileDownloadUrl;
+          }
+          e.s3Url = s3Url;
+        });
+        //parcelSlipDocGeneratedList.push({ requestId: requestId, generatedBy: requestedBy, orgId: orgId, s3Url: s3FileDownloadUrl, generatedAt: moment().format("MMMM DD, yyyy, hh:mm:ss A") });
+        await redisHelper.setValueWithExpiry(parcelSlipKey, parcelSlipDocGeneratedList, 24 * 60 * 60);
+      } else {
 
-      
-        await redisHelper.setValueWithExpiry(`parcel-docs-link-${orgId}-${new Date().getTime()}`,
+
+        await redisHelper.setValueWithExpiry(parcelSlipKey,
           [
             {
               requestId: requestId,
@@ -561,7 +562,7 @@ const parcelHelper = {
           ],
           24 * 60 * 60
         );
-      // }
+      }
 
       let sender = requestedBy;
       let receiver = requestedBy;
