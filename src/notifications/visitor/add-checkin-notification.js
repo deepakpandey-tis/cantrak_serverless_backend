@@ -45,7 +45,7 @@ const addCheckinNotification = {
         }
         else{// Visiting
             body = `${receiver.visitorNames} has successfully checked-in for visiting on ${receiver.visitorArrivalDate}.`;
-            bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ได้รับการลงทะเบียนแล้ว.`;
+            bodyThai = `ผู้มาติดต่อ ชื่อ ${receiver.visitorNames} เข้าพบวันที่ ${receiver.visitorArrivalDate} ทำการ checked-in เรียบร้อยแล้ว.`;
         }
 
         data = {
@@ -98,7 +98,7 @@ const addCheckinNotification = {
         }
         else{// Visiting
             body = `${receiver.visitorNames} has successfully checked-in for visiting on ${receiver.visitorArrivalDate}.`;
-            bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ได้รับการลงทะเบียนแล้ว.`;
+            bodyThai = `ผู้มาติดต่อ ชื่อ ${receiver.visitorNames} เข้าพบวันที่ ${receiver.visitorArrivalDate} ทำการ checked-in เรียบร้อยแล้ว.`;
         }
 
         data = {
@@ -151,7 +151,7 @@ const addCheckinNotification = {
         }
         else{// Visiting
             body = `${receiver.visitorNames} has successfully checked-in for visiting on ${receiver.visitorArrivalDate}.`;
-            bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ได้รับการลงทะเบียนแล้ว.`;
+            bodyThai = `ผู้มาติดต่อ ชื่อ ${receiver.visitorNames} เข้าพบวันที่ ${receiver.visitorArrivalDate} ทำการ checked-in เรียบร้อยแล้ว.`;
         }
 
         data = {
