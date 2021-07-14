@@ -2,6 +2,8 @@ const knex = require('../../db/knex');
 
 const getCalendarVisitorList = async (req, res) => {
     try {
+        const visitorModule = 15;
+
         let orgId = req.me.orgId;
         let userId = req.me.id;
         let payload = req.body;
