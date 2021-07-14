@@ -1654,17 +1654,17 @@ const pmController = {
       }
       // console.log("open work order", openWorkOrder)
 
-      let OPEN = openWorkOrder.count;
-      let COMPLETED = completedWorkOrder.count;
-      let OVERDUE = overdueWorkOrder.count;
+      let Open = openWorkOrder.count;
+      let Completed = completedWorkOrder.count;
+      let Overdue = overdueWorkOrder.count;
       let On_Schedule = onScheduleWorkOrder.count;
 
       return res.status(200).json({
         data: {
-          OPEN,
-          COMPLETED,
-          OVERDUE,
-          On_Schedule
+          Open,
+          Completed,
+          Overdue,
+          "On Schedule":On_Schedule
         }
       })
 
