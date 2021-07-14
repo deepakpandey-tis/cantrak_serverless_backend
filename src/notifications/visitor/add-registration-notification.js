@@ -56,7 +56,7 @@ const addRegistrationNotification = {
         else{// Visiting
             if(sender.id == 0){// Visitor Self Registration
                 body = `${sender.name} has self registred for visiting check-in on ${receiver.visitorArrivalDate}.`;
-                bodyThai = `${sender.name} has self registred for visiting check-in on ${receiver.visitorArrivalDate}.`;
+                bodyThai = `ผู้มาติดต่อ ชื่อ ${sender.name} ทำการลงทะเบียนเข้าพบวันที่ ${receiver.visitorArrivalDate} ผ่านระบบเรียบร้อยแล้ว.`;
             }
             else if(sender.isCustomer){
                 body = `Your pre-registration of ${receiver.visitorNames} has been confirmed for visiting check-in on ${receiver.visitorArrivalDate}.`;
@@ -129,7 +129,7 @@ const addRegistrationNotification = {
         else{// Visiting
             if(sender.id == 0){// Visitor Self Registration
                 body = `${sender.name} has self registred for visiting check-in on ${receiver.visitorArrivalDate}.`;
-                bodyThai = `${sender.name} has self registred for visiting check-in on ${receiver.visitorArrivalDate}.`;
+                bodyThai = `ผู้มาติดต่อ ชื่อ ${sender.name} ทำการลงทะเบียนเข้าพบวันที่ ${receiver.visitorArrivalDate} ผ่านระบบเรียบร้อยแล้ว.`;
             }
             else if(sender.isCustomer){
                 body = `Your pre-registration of ${receiver.visitorNames} has been confirmed for visiting check-in on ${receiver.visitorArrivalDate}.`;
@@ -202,7 +202,7 @@ const addRegistrationNotification = {
         else{// Visiting
             if(sender.id == 0){// Visitor Self Registration
                 body = `${sender.name} has self registred for visiting check-in on ${receiver.visitorArrivalDate}.`;
-                bodyThai = `${sender.name} has self registred for visiting check-in on ${receiver.visitorArrivalDate}.`;
+                bodyThai = `ผู้มาติดต่อ ชื่อ ${sender.name} ทำการลงทะเบียนเข้าพบวันที่ ${receiver.visitorArrivalDate} ผ่านระบบเรียบร้อยแล้ว.`;
             }
             else if(sender.isCustomer){
                 body = `Your pre-registration of ${receiver.visitorNames} has been confirmed for visiting check-in on ${receiver.visitorArrivalDate}.`;
