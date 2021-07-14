@@ -17,6 +17,7 @@ const addSelfRegistration = require('./add-self-registration');
 const cancelRegistration = require('./cancel-registration');
 const getCalendarCount = require('./get-calendar-count');
 const getCompanyList = require('./get-company-list');
+const getCalendarVisitorList = require('./get-calendar-visitor-list');
 
 module.exports = {
     getUserUnits,
@@ -38,4 +39,5 @@ module.exports = {
     cancelRegistration,
     getCalendarCount,
     getCompanyList,
+    getCalendarVisitorList,
 };

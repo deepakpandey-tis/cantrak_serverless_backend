@@ -528,9 +528,9 @@ const parcelManagementController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * perPage;
 
-      let projectIds = [];
+      // let projectIds = [];
 
-      projectIds = req.accessibleProjects;
+      let projectIds = req.accessibleProjects;
       let {
         unitId,
         tenantId,

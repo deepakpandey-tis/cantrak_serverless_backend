@@ -141,6 +141,14 @@ router.get(
     , visitorController.getCompanyList
 );
 
+router.post(
+    "/get-calendar-visitor-list"
+    , authMiddleware.isAuthenticated
+    , roleMiddleware.parseUserPermission
+    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.getCalendarVisitorList
+);
+
 module.exports = router;
 
 /* ES6 module
