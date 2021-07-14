@@ -64,7 +64,7 @@ const addRegistrationNotification = {
             }
             else{// Security Guard
                 body = `${sender.name} has registered ${receiver.visitorNames} for visiting check-in on ${receiver.visitorArrivalDate}.`;
-                bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ได้รับการลงทะเบียนแล้ว.`;
+                bodyThai = `${sender.name} ลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} เข้าพบวันที่ ${receiver.visitorArrivalDate} เรียบร้อยแล้ว.`;
             }
         }
 
@@ -137,7 +137,7 @@ const addRegistrationNotification = {
             }
             else{// Security Guard
                 body = `${sender.name} has registered ${receiver.visitorNames} for visiting check-in on ${receiver.visitorArrivalDate}.`;
-                bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ได้รับการลงทะเบียนแล้ว.`;
+                bodyThai = `${sender.name} ลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} เข้าพบวันที่ ${receiver.visitorArrivalDate} เรียบร้อยแล้ว.`;
             }
         }
 
@@ -210,7 +210,7 @@ const addRegistrationNotification = {
             }
             else{// Security Guard
                 body = `${sender.name} has registered ${receiver.visitorNames} for visiting check-in on ${receiver.visitorArrivalDate}.`;
-                bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ได้รับการลงทะเบียนแล้ว.`;
+                bodyThai = `${sender.name} ลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} เข้าพบวันที่ ${receiver.visitorArrivalDate} เรียบร้อยแล้ว.`;
             }
         }
 

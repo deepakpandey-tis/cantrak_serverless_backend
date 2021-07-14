@@ -44,8 +44,8 @@ const addCheckoutNotification = {
             bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ถึงวันที่ ${receiver.visitorDepartureDate} ได้รับการลงทะเบียนแล้ว.`;
         }
         else{// Visiting
-            body = `${receiver.visitorNames} has successfully checked-out for visiting on ${receiver.visitorArrivalDate}.`;
-            bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ได้รับการลงทะเบียนแล้ว.`;
+            body = `${receiver.visitorNames} has successfully checked-out for visiting on ${receiver.visitorDepartureDate}.`;
+            bodyThai = `ผู้มาติดต่อ ชื่อ ${receiver.visitorNames} ทำการ checked-out ณ วันที่ ${receiver.visitorDepartureDate} เรียบร้อยแล้ว.`;
         }
 
         data = {
@@ -98,8 +98,8 @@ const addCheckoutNotification = {
             bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ถึงวันที่ ${receiver.visitorDepartureDate} ได้รับการลงทะเบียนแล้ว.`;
         }
         else{// Visiting
-            body = `${receiver.visitorNames} has successfully checked-out for visiting on ${receiver.visitorArrivalDate}.`;
-            bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ได้รับการลงทะเบียนแล้ว.`;
+            body = `${receiver.visitorNames} has successfully checked-out for visiting on ${receiver.visitorDepartureDate}.`;
+            bodyThai = `ผู้มาติดต่อ ชื่อ ${receiver.visitorNames} ทำการ checked-out ณ วันที่ ${receiver.visitorDepartureDate} เรียบร้อยแล้ว.`;
         }
 
         data = {
@@ -152,8 +152,8 @@ const addCheckoutNotification = {
             bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ถึงวันที่ ${receiver.visitorDepartureDate} ได้รับการลงทะเบียนแล้ว.`;
         }
         else{// Visiting
-            body = `${receiver.visitorNames} has successfully checked-out for visiting on ${receiver.visitorArrivalDate}.`;
-            bodyThai = `การลงทะเบียนผู้มาติดต่อ ชื่อ ${receiver.visitorNames} วันที่ ${receiver.visitorArrivalDate} ได้รับการลงทะเบียนแล้ว.`;
+            body = `${receiver.visitorNames} has successfully checked-out for visiting on ${receiver.visitorDepartureDate}.`;
+            bodyThai = `ผู้มาติดต่อ ชื่อ ${receiver.visitorNames} ทำการ checked-out ณ วันที่ ${receiver.visitorDepartureDate} เรียบร้อยแล้ว.`;
         }
 
         data = {
