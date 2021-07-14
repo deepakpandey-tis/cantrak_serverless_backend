@@ -3145,22 +3145,22 @@ const dashboardController = {
 
       // }
 
-      let OPEN = openServiceRequest.length
-      let COMPLETED = completedServiceRequest.length
+      let Open = openServiceRequest.length
+      let Completed = completedServiceRequest.length
       let In_Progress = inProgressServiceRequest.length
       let On_Hold = onHoldServiceRequest.length
-      let APPROVED = approvedServiceRequest.length
+      let Approved = approvedServiceRequest.length
       let Under_Survey = underSurveyServicerequest.length
 
 
       return res.status(200).json({
         data: {
-          OPEN,
-          COMPLETED,
-          In_Progress,
-          On_Hold,
-          APPROVED,
-          Under_Survey
+          Open,
+          Completed,
+          "In Progress":In_Progress,
+          "On Hold":On_Hold,
+          Approved,
+          "Under Survey":Under_Survey
         }
       })
 
