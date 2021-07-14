@@ -45,7 +45,8 @@ const getVisitorList = async (req, res) => {
         // sqlSelect = `SELECT pu2."orgId", pu2."companyId", pu2."projectId", pu2."buildingPhaseId"
         sqlSelect = `SELECT pu2."orgId", pu2."companyId", pu2."projectId", pu2."buildingPhaseId"
         , pu2."id" "puId",  pu2."unitNumber", u2."name" "tenantName", vi.id id, vi."name", vi."createdAt", vi."status"
-        , vi."arrivalDate", vi."actualArrivalDate", vi."departureDate", vi."actualDepartureDate", vi."propertyUnitsId", vi."registrationBy"`;
+        , vi."arrivalDate", vi."actualArrivalDate", vi."departureDate", vi."actualDepartureDate", vi."propertyUnitsId", vi."registrationBy"
+        , vi."updatedAt"`;
 
         sqlFrom = ` FROM property_units pu2, visitor_invitations vi`;
         // 2021/07/08 sqlFrom += ` , user_house_allocation uha`;
@@ -90,7 +91,26 @@ const getVisitorList = async (req, res) => {
         }
         else
         if(visitorSelect === 3){                // Visitors History: Cancelled || No Show || Checked-out
-            sqlWhere += ` and (vi."status" = 3 or (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') < to_char(now(), 'YYYYMMDD') and vi."actualArrivalDate" is null) or vi."actualDepartureDate" is not null)`;
+            switch (+payload.filter.visitorStatus){
+                case 2: // Checked-out
+                    sqlWhere += ` and vi."actualDepartureDate" is not null`;
+                break ;
+
+                case 3: // Cancellation
+                    sqlWhere += ` and vi.status = 3`;
+                break ;
+
+                case 4: // No-Show
+                    sqlWhere += ` and vi.status = 1 and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') < to_char(now(), 'YYYYMMDD') and vi."actualArrivalDate" is null`;
+                break ;
+
+                default: // All
+                    sqlWhere += ` and (vi."status" = 3 or (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') < to_char(now(), 'YYYYMMDD') and vi."actualArrivalDate" is null) or vi."actualDepartureDate" is not null)`;
+                break ;
+            };
+
+            sortCol = '"updatedAt"';
+            sortOrder = 'DESC';
         }
 
         if(payload.filter.visitorName){
@@ -182,4 +202,6 @@ module.exports = getVisitorList;
  *             vi.propertyUnitsId is used to get unitNumber
  *             visitor-list: arrival-date >= today-date
  *             history-list: cancelled || arrival-date < today-date || checked-out
+ * 2021/07/14  returned column: updatedAt
+ *             filter: visitorStatus (1: All, 2: Checked-out, 3: Cancellation, 4: No-Show) added
  */

@@ -2,32 +2,18 @@ image: trion/ng-cli-karma:10.2.0
 
 stages:
   - deploy
+  - migrate
 
 cache:
   key: "25032021"
   paths:
     - node_modules/
 
-# deploy_master:
-#   stage: deploy
-#   environment: Production
-#   only:
-#     - stage
-
-#   script:
-#     - node -v
-#     - rm ./package-lock.json
-#     - npm install -g serverless
-#     - npm install
-#     - sls config credentials --profile tis-dev --provider aws --key $AWS_KEY --secret $AWS_SECRET
-#     - NODE_ENV=dev sls deploy --stage dev --aws-profile tis-dev --config serverless.prod.yml
-#     - echo 'Success'
 
 deploy_master:
   stage: deploy
   only:
     - master
-
   script:
     - node -v
     - rm ./package-lock.json
@@ -40,11 +26,29 @@ deploy_master:
 
 
 
+migrate_master:
+  image: curlimages/curl:7.77.0
+  stage: migrate
+  only:
+    - master
+  needs: [
+    deploy_master
+  ]  
+  script:
+    - curl -V
+    - curl -v https://rme4pik2uf.execute-api.us-east-1.amazonaws.com/production/db-migration/migrate-latest
+    - echo 'Success'
+
+
+
+
+
+
+#### Staging 
 deploy_stage:
   stage: deploy
   only:
     - stage
-
   script:
     - node -v
     - rm ./package-lock.json
@@ -53,4 +57,18 @@ deploy_stage:
     - sls config credentials --profile servicemind-stage --provider aws --key ${STAGE_AWS_KEY} --secret ${STAGE_AWS_SECRET}
     # - sls prune -n 3 --profile servicemind-stage
     - SLS_DEBUG=* NODE_ENV=stage sls deploy --stage stage --aws-profile servicemind-stage --config serverless.stage.yml
+    - echo 'Success'
+
+
+migrate_stage:
+  image: curlimages/curl:7.77.0
+  stage: migrate
+  only:
+    - stage
+  needs: [
+    deploy_stage
+  ]    
+  script:
+    - curl -V
+    - curl -v https://fdwvancxv3.execute-api.us-east-1.amazonaws.com/stage/db-migration/migrate-latest
     - echo 'Success'
