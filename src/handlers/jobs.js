@@ -192,11 +192,11 @@ module.exports.longJobsProcessor = async (event, context) => {
 
     const parcelHelper = require('../helpers/parcel');
 
-    const { requestId, data, orgId, requestedBy } = recordData;
+    const { requestId, data, orgId, parcelSlipKey, requestedBy } = recordData;
 
     if (data.parcelList.length > 0) {
       // await agmHelper.generateVotingDocument({ agmId, data, orgId, requestedBy });
-      await parcelHelper.generateParcelSlipDocumentOnEFSv2({ requestId, data, orgId, requestedBy });
+      await parcelHelper.generateParcelSlipDocumentOnEFSv2({ requestId, data, orgId, parcelSlipKey, requestedBy });
     } else {
       console.log('[handlers][longJobsProcessor]', 'Pending Parcel List not found. Hence Pending Parcel Documents can not be generated.');
       throw Error('Pending Parcel List not found. Hence Pending Parcel Documents can not be generated.');
