@@ -1,6 +1,7 @@
-var express = require("express");
-var router = express.Router();
+const express = require("express");
+const router = express.Router();
 
+const dbMigrationRouter = require("./db-migration");
 const usersRouter = require("./users");
 const entranceRouter = require("./entrance");
 const userManagementRouter = require("./user-management");
@@ -264,5 +265,7 @@ router.use("/agm-template", agmTemplateRouter);
 router.use("/administration-features/parcel-type",parcelTypeRouter);
 
 router.use("/bill-payment",billPaymentRouter);
+router.use("/db-migration",dbMigrationRouter);
+
 
 module.exports = router;
