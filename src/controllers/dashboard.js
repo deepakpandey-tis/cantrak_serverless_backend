@@ -9,6 +9,7 @@ const moment = MomentRange.extendMoment(Moment);
 const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
+const { whereBetween } = require("../db/knex");
 
 const dashboardController = {
   getDashboardData: async (req, res) => {
@@ -2471,17 +2472,21 @@ const dashboardController = {
           "users.userName"
         ])
         .where({ "service_requests.orgId": req.orgId })
-        .where({ "service_requests.isCreatedFromSo": false })
+        // .where({ "service_requests.isCreatedFromSo": false })
         .whereIn("service_requests.projectId", accessibleProjects)
         .where((qb) => {
           if (projectId) {
             qb.where("service_requests.projectId", projectId)
           }
         })
+        .where((qb)=>{
+          qb.where("assigned_service_team.entityType",'service_requests')
+          qb.orWhere("assigned_service_team.entityType",'service_orders')
+        })
 
         assignedTechnician = _.uniqBy(assignedTechnician,"id")
 
-      // console.log("list of technician", assignedTechnician)
+      console.log("list of technician", assignedTechnician)
 
       let final = [];
       for(let tech of assignedTechnician){
@@ -2565,7 +2570,7 @@ const dashboardController = {
         });
       }
 
-      final = final.filter((v)=> v.totalServiceRequest > 0 || v.totalServiceOrder > 0)
+      // final = final.filter((v)=> v.totalServiceRequest > 0 || v.totalServiceOrder > 0)
       final = final.map((d)=>{
         if(d. technician == null){
           d.technician = 'Not Assigned'
@@ -3252,6 +3257,9 @@ const dashboardController = {
       // let problemWise = _.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
       final.push(grouped); //totalServiceRequest: problems.length })
       //}
+
+      console.log("Final data",final)
+
 
       final = final.map((obj) => {
         obj["Others"] = obj[null];
