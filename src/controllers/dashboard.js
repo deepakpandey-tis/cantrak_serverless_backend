@@ -2472,7 +2472,7 @@ const dashboardController = {
           "users.userName"
         ])
         .where({ "service_requests.orgId": req.orgId })
-        // .where({ "service_requests.isCreatedFromSo": false })
+        .where({ "service_requests.isCreatedFromSo": false })
         .whereIn("service_requests.projectId", accessibleProjects)
         .where((qb) => {
           if (projectId) {
