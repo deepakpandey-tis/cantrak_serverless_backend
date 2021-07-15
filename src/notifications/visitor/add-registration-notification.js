@@ -42,7 +42,7 @@ const addRegistrationNotification = {
         if(receiver.visitorStayover){
             if(sender.id == 0){// Visitor Self Registration
                 body = `${sender.name} has self registred for stayover check-in on ${receiver.visitorArrivalDate} - ${receiver.visitorDepartureDate}.`;
-                bodyThai = `${sender.name} has self registred for stayover check-in on ${receiver.visitorArrivalDate} - ${receiver.visitorDepartureDate}.`;
+                bodyThai = `${sender.name} ทำการลงทะเบียนเข้าพบวันที่ ${receiver.visitorArrivalDate} ถึง ${receiver.visitorDepartureDate} ผ่านระบบเรียบร้อยแล้ว.`;
             }
             else if(sender.isCustomer){
                 body = `Your pre-registration of ${receiver.visitorNames} has been confirmed for stayover check-in on ${receiver.visitorArrivalDate} - ${receiver.visitorDepartureDate}.`;
@@ -115,7 +115,7 @@ const addRegistrationNotification = {
         if(receiver.visitorStayover){
             if(sender.id == 0){// Visitor Self Registration
                 body = `${sender.name} has self registred for stayover check-in on ${receiver.visitorArrivalDate} - ${receiver.visitorDepartureDate}.`;
-                bodyThai = `${sender.name} has self registred for stayover check-in on ${receiver.visitorArrivalDate} - ${receiver.visitorDepartureDate}.`;
+                bodyThai = `${sender.name} ทำการลงทะเบียนเข้าพบวันที่ ${receiver.visitorArrivalDate} ถึง ${receiver.visitorDepartureDate} ผ่านระบบเรียบร้อยแล้ว.`;
             }
             else if(sender.isCustomer){
                 body = `Your pre-registration of ${receiver.visitorNames} has been confirmed for stayover check-in on ${receiver.visitorArrivalDate} - ${receiver.visitorDepartureDate}.`;
@@ -188,7 +188,7 @@ const addRegistrationNotification = {
         if(receiver.visitorStayover){
             if(sender.id == 0){// Visitor Self Registration
                 body = `${sender.name} has self registred for stayover check-in on ${receiver.visitorArrivalDate} - ${receiver.visitorDepartureDate}.`;
-                bodyThai = `${sender.name} has self registred for stayover check-in on ${receiver.visitorArrivalDate} - ${receiver.visitorDepartureDate}.`;
+                bodyThai = `${sender.name} ทำการลงทะเบียนเข้าพบวันที่ ${receiver.visitorArrivalDate} ถึง ${receiver.visitorDepartureDate} ผ่านระบบเรียบร้อยแล้ว.`;
             }
             else if(sender.isCustomer){
                 body = `Your pre-registration of ${receiver.visitorNames} has been confirmed for stayover check-in on ${receiver.visitorArrivalDate} - ${receiver.visitorDepartureDate}.`;
