@@ -1,7 +1,6 @@
 const Joi = require("@hapi/joi");
 const moment = require("moment");
 const uuidv4 = require("uuid/v4");
-var jwt = require("jsonwebtoken");
 const _ = require("lodash");
 
 const knex = require("../../db/knex");
@@ -14,144 +13,20 @@ const XLSX = require("xlsx");
 const fs = require('fs');
 
 const customerController = {
+  
   getCustomers: async (req, res) => {
     try {
 
-      let projectIds = [];
-      let projectsForTenants = req.userProjectResources
-      projectsForTenants = projectsForTenants.find(pfp => pfp.id == 7)
-      console.log('Project For Tenants:', projectsForTenants);
-      let accessibleProjects = projectsForTenants.projects;
-      console.log('Project For Tenants:', accessibleProjects);
-      projectIds =  _.uniqBy(accessibleProjects);
-      console.log('ProjectIds:', projectIds);
+      let projectIds = req.accessibleProjects;
 
-
-      let userDetails = null;
-      let units = null;
-      let fullLocationDetails = [];
-      let customerId = req.query.customerId;
-      if (customerId) {
-        userDetails = await knex("users")
-          .leftJoin('user_house_allocation', 'users.id', 'user_house_allocation.userId')
-          .leftJoin('property_units', 'user_house_allocation.houseId', 'property_units.id')
-          .leftJoin(
-            "buildings_and_phases",
-            "property_units.buildingPhaseId",
-            "buildings_and_phases.id"
-          )
-          .leftJoin(
-            "projects",
-            "property_units.projectId",
-            "projects.id"
-          )
-          .leftJoin(
-            "companies",
-            "property_units.companyId",
-            "companies.id"
-          )
-          .leftJoin(
-            "floor_and_zones",
-            "property_units.floorZoneId",
-            "floor_and_zones.id"
-          )
-          .select([
-            "users.*",
-            "buildings_and_phases.buildingPhaseCode",
-            "projects.projectName",
-            "companies.companyName",
-            "floor_and_zones.floorZoneCode",
-            "property_units.unitNumber",
-            "property_units.id as house",
-            "user_house_allocation.status",
-            "companies.companyId",
-            "projects.project as projectId",
-            "buildings_and_phases.description as buildingDescription",
-            "floor_and_zones.description as floorDescription",
-            "property_units.description as propertyUnitDescription"
-
-          ])
-          .where({'users.id': customerId,'users.orgId':req.orgId})
-          // .where({ 'users.id': customerId, 'users.emailVerified': true });
-
-
-        // Users property units start
-        units = await knex('user_house_allocation').select(['houseId', 'id']).where({ userId: customerId })
-        for (let u of units) {
-          let a = await knex('property_units').select([
-            'companyId',
-            'projectId',
-            'buildingPhaseId',
-            'floorZoneId',
-            'id as unit'
-          ]).where({ id: u.houseId })
-          fullLocationDetails.push(a)
-
-        }
-
-        let userResult;
-        if (userDetails.length) {
-
-          userResult = userDetails[0];
-
-        } else {
-
-          userResult = await knex('requested_by').select('name', 'email', 'mobile as mobileNo').where({ id: customerId, orgId: req.orgId }).first();
-
-        }
-
-        // users property units end
-        return res.status(200).json({
-          userDetails: { ...userResult, propertyDetails: userDetails, fullLocationDetails },
-        });
-      }
-
-      let filters = {}
-      let { name, organisation } = req.body;
-      if (name) {
-        //filters['users.name'] = name;
-      }
-      // if (email) {
-      //   //filters['users.email'] = email
-      // }
-      // if (mobile) {
-      //   //filters['users.mobileNo'] = mobile;
-      // }
-
-      // if (company) {
-      //   filters['property_units.companyId'] = company;
-      // }
-      // if (project) {
-      //   filters['property_units.projectId'] = project;
-      // }
-      // if (building) {
-      //   filters['property_units.buildingPhaseId'] = building;
-      // }
-      // if (floor) {
-      //   filters['property_units.floorZoneId'] = floor;
-      // }
-      // if (houseId) {
-      //   filters['property_units.houseId'] = houseId;
-      // }
-
-
-
-      let reqData = req.query;
-
-      console.log("Req.orgId: ", req.orgId);
-
-      //console.log("==============", orgId, "=================");
+      let queryData = req.query;
 
       let pagination = {};
-      let per_page = reqData.per_page || 10;
-      let page = reqData.current_page || 1;
+      let per_page = queryData.per_page || 10;
+      let page = queryData.current_page || 1;
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
-      let role = req.me.roles[0];
-      let adminName = req.me.name;
       let total, rows;
-      let teamUser;
-      let id = req.me.id;
 
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
@@ -159,219 +34,112 @@ const customerController = {
         sortPayload.orderBy = "asc"
       }
 
+      let filters = {};
+      let { name, organisation } = req.body;
 
-      if (role === "superAdmin" && adminName === "superAdmin") {
-
-        [total, rows] = await Promise.all([
-          knex("users")
-            .leftJoin(
-              "application_user_roles",
-              "users.id",
-              "application_user_roles.userId"
-            )
-            .leftJoin(
-              "user_house_allocation",
-              "users.id",
-              "user_house_allocation.userId"
-            )
-            .leftJoin(
-              "property_units",
-              "user_house_allocation.houseId",
-              "property_units.id"
-            )
-            .select([
-              "users.name as name",
-              "users.email as email",
-              // "user_house_allocation.houseId as houseId",
-              "users.id as userId",
-              "property_units.unitNumber",
-              "users.isActive",
-              "users.createdAt as signUpDate",
-              "users.activatedDate as activationDate",
-              "users.lastLogin as lastVisit"
-            ])
-            .where({
-              "application_user_roles.roleId": 4,
-              "users.emailVerified": true,
-              // "users.orgId": req.orgId
-            })
-            // .whereIn("property_units.projectId",projectIds)
-            .andWhere(qb => {
-              if (Object.keys(filters).length || name || organisation) {
-
-                if (name) {
-                  qb.where('users.name', 'iLIKE', `%${name}%`)
-                  qb.orWhere('users.email', 'iLIKE', `%${name}%`)
-                  qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
-                }
-                if (organisation) {
-                  qb.where('users.orgId', organisation)
-                }
+      [total, rows] = await Promise.all([
+        knex("users")
+          .leftJoin(
+            "application_user_roles",
+            "users.id",
+            "application_user_roles.userId"
+          )
+          .leftJoin(
+            "user_house_allocation",
+            "users.id",
+            "user_house_allocation.userId"
+          )
+          .leftJoin(
+            "property_units",
+            "user_house_allocation.houseId",
+            "property_units.id"
+          )
+          .select([
+            "users.name as name",
+            "users.email as email",
+            "user_house_allocation.houseId as houseId",
+            "users.id as userId",
+            "property_units.unitNumber",
+            "users.isActive",
+            "users.createdAt as signUpDate",
+            "users.activatedDate as activationDate",
+            "users.lastLogin as lastVisit"
+          ])
+          .where({
+            "application_user_roles.roleId": 4,
+            "users.orgId": req.orgId,
+            "users.emailVerified": true
+          })
+          // .groupBy(['users.id', 'property_units.id'])
+          .distinct(['users.id'])
+          .whereIn('property_units.projectId', projectIds)
+          .andWhere(qb => {
+            if (Object.keys(filters).length || name ) {
+              if (name) {
+                qb.where('users.name', 'iLIKE', `%${name}%`)
+                qb.orWhere('users.email', 'iLIKE', `%${name}%`)
+                qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
+                qb.orWhere('property_units.unitNumber', 'iLIKE', `%${name}%`)
               }
-            })
-            .groupBy(['users.id', 'property_units.id'])
-            .distinct(['users.id'])
-          ,
-          knex("users")
-            .leftJoin(
-              "application_user_roles",
-              "users.id",
-              "application_user_roles.userId"
-            )
-            .leftJoin(
-              "user_house_allocation",
-              "users.id",
-              "user_house_allocation.userId"
-            )
-            .leftJoin(
-              "property_units",
-              "user_house_allocation.houseId",
-              "property_units.id"
-            )
-            .select([
-              "users.name as name",
-              "users.email as email",
-              //"user_house_allocation.houseId as houseId",
-              "users.id as userId",
-              "property_units.unitNumber",
-              "users.isActive",
-              "users.createdAt as signUpDate",
-              "users.activatedDate as activationDate",
-              "users.lastLogin as lastVisit"
-            ])
-            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
-            .where({
-              "application_user_roles.roleId": 4,
-              "users.emailVerified": true,
-              // "users.orgId": req.orgId
-            })
-            // .whereIn("property_units.projectId",projectIds)
-            .andWhere(qb => {
-              if (Object.keys(filters).length || name || organisation) {
-                if (name) {
-                  qb.where('users.name', 'iLIKE', `%${name}%`)
-                  qb.orWhere('users.email', 'iLIKE', `%${name}%`)
-                  qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
-                }
-                if (organisation) {
-                  qb.where('users.orgId', organisation)
-                }
+              if (organisation) {
+                qb.where('users.orgId', organisation)
               }
-            })
-            .groupBy(['users.id', 'property_units.id'])
-            .distinct(['users.id'])
-            .offset(offset)
-            .limit(per_page)
-        ]);
-
-      } else {
-
-        let resourceProject = req.userProjectResources[0].projects;
-
-        [total, rows] = await Promise.all([
-          knex("users")
-            .leftJoin(
-              "application_user_roles",
-              "users.id",
-              "application_user_roles.userId"
-            )
-            .leftJoin(
-              "user_house_allocation",
-              "users.id",
-              "user_house_allocation.userId"
-            )
-            .leftJoin(
-              "property_units",
-              "user_house_allocation.houseId",
-              "property_units.id"
-            )
-            .select([
-              "users.name as name",
-              "users.email as email",
-              //"user_house_allocation.houseId as houseId",
-              "users.id as userId",
-              "property_units.unitNumber",
-              "users.isActive",
-              "users.createdAt as signUpDate",
-              "users.activatedDate as activationDate",
-              "users.lastLogin as lastVisit"
-            ])
-            .where({
-              "application_user_roles.roleId": 4,
-              "users.orgId": req.orgId,
-              "users.emailVerified": true
-            })
-            .groupBy(['users.id', 'property_units.id'])
-            .distinct(['users.id'])
-            .whereIn('property_units.projectId', projectIds)
-            .andWhere(qb => {
-              if (Object.keys(filters).length || name || organisation) {
-                if (name) {
-                  qb.where('users.name', 'iLIKE', `%${name}%`)
-                  qb.orWhere('users.email', 'iLIKE', `%${name}%`)
-                  qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
-                }
-                if (organisation) {
-                  qb.where('users.orgId', organisation)
-                }
+            }
+          })
+        ,
+        knex("users")
+          .leftJoin(
+            "application_user_roles",
+            "users.id",
+            "application_user_roles.userId"
+          )
+          .leftJoin(
+            "user_house_allocation",
+            "users.id",
+            "user_house_allocation.userId"
+          )
+          .leftJoin(
+            "property_units",
+            "user_house_allocation.houseId",
+            "property_units.id"
+          )
+          .select([
+            "users.name as name",
+            "users.email as email",
+            // "property_units.id as houseId",
+            "user_house_allocation.houseId as houseId",
+            "users.id as userId",
+            "property_units.unitNumber",
+            "users.isActive",
+            "users.createdAt as signUpDate",
+            "users.activatedDate as activationDate",
+            "users.lastLogin as lastVisit"
+          ])
+          .orderBy(sortPayload.sortBy, sortPayload.orderBy)
+          .where({
+            "application_user_roles.roleId": 4,
+            "users.orgId": req.orgId,
+            "users.emailVerified": true
+          })
+          .whereIn('property_units.projectId', projectIds)
+          .andWhere(qb => {
+            if (Object.keys(filters).length || name ) {
+              if (name) {
+                qb.where('users.name', 'iLIKE', `%${name}%`)
+                qb.orWhere('users.email', 'iLIKE', `%${name}%`)
+                qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
+                qb.orWhere('property_units.unitNumber', 'iLIKE', `%${name}%`)
               }
-            })
-
-          ,
-          knex("users")
-            .leftJoin(
-              "application_user_roles",
-              "users.id",
-              "application_user_roles.userId"
-            )
-            .leftJoin(
-              "user_house_allocation",
-              "users.id",
-              "user_house_allocation.userId"
-            )
-            .leftJoin(
-              "property_units",
-              "user_house_allocation.houseId",
-              "property_units.id"
-            )
-            .select([
-              "users.name as name",
-              "users.email as email",
-              //"property_units.id as houseId",
-              //"user_house_allocation.houseId as houseId",
-              "users.id as userId",
-              "property_units.unitNumber",
-              "users.isActive",
-              "users.createdAt as signUpDate",
-              "users.activatedDate as activationDate",
-              "users.lastLogin as lastVisit"
-            ])
-            .orderBy(sortPayload.sortBy, sortPayload.orderBy)
-            .where({
-              "application_user_roles.roleId": 4,
-              "users.orgId": req.orgId,
-              "users.emailVerified": true
-            })
-            .whereIn('property_units.projectId', projectIds)
-            .andWhere(qb => {
-              if (Object.keys(filters).length || name || organisation) {
-
-                if (name) {
-                  qb.where('users.name', 'iLIKE', `%${name}%`)
-                  qb.orWhere('users.email', 'iLIKE', `%${name}%`)
-                  qb.orWhere('users.mobileNo', 'iLIKE', `%${name}%`)
-                }
-                if (organisation) {
-                  qb.where('users.orgId', organisation)
-                }
+              if (organisation) {
+                qb.where('users.orgId', organisation)
               }
-            })
-            .groupBy(['users.id', 'property_units.id'])
-            .distinct(['users.id'])
-            .offset(offset)
-            .limit(per_page)
-        ]);
-      }
+            }
+          })
+          // .groupBy(['users.id', 'property_units.id'])
+          .distinct(['users.id'])
+          .offset(offset)
+          .limit(per_page)
+      ]);
 
       let count = total.length;
       pagination.total = count;
@@ -381,39 +149,16 @@ const customerController = {
       pagination.last_page = Math.ceil(count / per_page);
       pagination.current_page = page;
       pagination.from = offset;
-      //      pagination.data = rows;
-
-
-
-      let Parallel = require('async-parallel');
-      pagination.data = await Parallel.map(rows, async pd => {
-
-        let houseData = await knex.from('user_house_allocation').where({ userId: pd.userId }).first();
-
-        if (houseData) {
-          return {
-            ...pd,
-            houseId: houseData.houseId
-          }
-        } else {
-          return {
-            ...pd,
-            houseId: ""
-          }
-        }
-      })
-
+      pagination.data = rows;
 
       return res.status(200).json({
         data: {
           customers: pagination
         }
       });
+      
     } catch (err) {
-      console.log(
-        "[controllers][survey Orders][getSurveyOrders] :  Error",
-        err
-      );
+      console.log("[controllers][administration-features][getCustomers] :  Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
@@ -824,7 +569,7 @@ const customerController = {
       });
     } catch (err) {
       console.log(
-        "[controllers][survey Orders][getSurveyOrders] :  Error",
+        "[controllers][administration-features][getSurveyOrders] :  Error",
         err
       );
       res.status(500).json({
@@ -886,7 +631,7 @@ const customerController = {
       })
     } catch (err) {
       console.log(
-        "[controllers][survey Orders][getSurveyOrders] :  Error",
+        "[controllers][administration-features][getSurveyOrders] :  Error",
         err
       );
       res.status(500).json({
@@ -1851,7 +1596,7 @@ const customerController = {
       }
     } catch (err) {
       console.log(
-        "[controllers][survey Orders][getSurveyOrders] :  Error",
+        "[controllers][administration-features][getSurveyOrders] :  Error",
         err
       );
       res.status(500).json({

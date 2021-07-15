@@ -1372,12 +1372,12 @@ const pmController = {
         })
         .whereNotNull("assigned_service_team.teamId")
         .whereNotNull("users.userName")
-        .whereRaw(
-          `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') >='${currentStartTime}'`
-        )
-        .whereRaw(
-          `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<= '${currentEndTime}'`
-        )
+        // .whereRaw(
+        //   `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') >='${currentStartTime}'`
+        // )
+        // .whereRaw(
+        //   `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<= '${currentEndTime}'`
+        // )
         .whereIn("pm_master2.projectId", accessibleProjects)
         .where((qb) => {
           if (projectId) {
