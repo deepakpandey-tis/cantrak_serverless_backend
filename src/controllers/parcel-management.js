@@ -518,19 +518,9 @@ const parcelManagementController = {
 
   generatePdfOfParcelDocument: async (req, res) => {
     try {
-
-      // GET AGM Details...
-      let total, rows;
-      let reqData = req.query;
-      let pagination = {};
-      let perPage = reqData.limit || 10;
-      let page = reqData.page || 1;
-      if (page < 1) page = 1;
-      let offset = (page - 1) * perPage;
-
-      // let projectIds = [];
-
       let projectIds = req.accessibleProjects;
+
+      // console.log("Project Ids", projectIds)
       let {
         unitId,
         tenantId,
@@ -545,6 +535,7 @@ const parcelManagementController = {
       } = req.body;
 
       let parcel;
+
 
       let createDateFrom = moment(createdDateFrom)
         .startOf("date")
@@ -568,449 +559,155 @@ const parcelManagementController = {
           .first();
       }
 
-      console.log("parcel id for tenant", parcelId);
+      let parcelType;
+      let parcelUserData;
 
+      if (parcelId) {
+        parcelType = await knex
+          .from("parcel_management")
+          .select("parcel_management.pickedUpType")
+          .where("parcel_management.id", parcelId);
 
-      if (
-        unitId ||
-        tenantId ||
-        buildingPhaseId ||
-        trackingNumber ||
-        id ||
-        parcelId ||
-        tenantName ||
-        createdDateFrom ||
-        createdDateTo ||
-        displayId
-      ) {
-        try {
-          let parcelType;
-          let parcelUserData;
+        parcelUserData = await knex("parcel_user_tis")
+          .select([
+            "parcel_user_tis.tenantId",
+            "parcel_user_tis.unitId",
+          ])
+          .where("parcel_user_tis.parcelId", parcelId);
 
-          if (parcelId) {
-            parcelType = await knex
-              .from("parcel_management")
-              .select("parcel_management.pickedUpType")
-              .where("parcel_management.id", parcelId);
-
-            parcelUserData = await knex("parcel_user_tis")
-              .select([
-                "parcel_user_tis.tenantId",
-                "parcel_user_tis.unitId",
-              ])
-              .where("parcel_user_tis.parcelId", parcelId);
-
-            console.log(
-              "parcel user data",
-              parcelUserData[0]
-            );
-          }
-          // console.log("parcelType1",parcelType[0].pickedUpType)
-
-          [total, rows] = await Promise.all([
-            knex
-              .count("* as count")
-              .from("parcel_management")
-              .leftJoin(
-                "parcel_user_tis",
-                "parcel_management.id",
-                "parcel_user_tis.parcelId"
-              )
-              .leftJoin(
-                "parcel_user_non_tis",
-                "parcel_management.id",
-                "parcel_user_non_tis.parcelId"
-              )
-              .leftJoin(
-                "property_units",
-                "parcel_user_tis.unitId",
-                "property_units.id"
-              )
-              .leftJoin(
-                "users",
-                "parcel_user_tis.tenantId",
-                "users.id"
-              )
-              // .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
-              .leftJoin(
-                "projects",
-                "parcel_user_tis.projectId",
-                "projects.id"
-              )
-              .leftJoin(
-                "buildings_and_phases",
-                "parcel_user_tis.buildingPhaseId",
-                "buildings_and_phases.id"
-              )
-              .where("parcel_management.orgId", req.orgId)
-              .where("parcel_management.parcelStatus", 1)
-              .whereIn("projects.id", projectIds)
-              .whereNot(
-                "parcel_management.pickedUpType",
-                null
-              )
-              .where((qb) => {
-                // qb.where("parcel_user_non_tis.type", 2);
-                // qb.orWhere(
-                //   "parcel_user_non_tis.type",
-                //   null
-                // );
-                if (unitId) {
-                  qb.where(
-                    "property_units.unitNumber",
-                    unitId
-                  );
-                }
-                if (trackingNumber) {
-                  qb.where(
-                    "parcel_management.trackingNumber",
-                    trackingNumber
-                  );
-                }
-                if (tenantId) {
-                  qb.where("users.id", tenantId);
-                }
-                if (buildingPhaseId) {
-                  qb.where(
-                    "parcel_user_tis.buildingPhaseId",
-                    buildingPhaseId
-                  );
-                }
-                if (tenantName && parcel) {
-                  qb.where(
-                    "parcel_management.id",
-                    parcel.parcelId
-                  );
-                }
-                if (parcelUserData) {
-                  console.log("parcel and unit id");
-                  qb.where({
-                    "property_units.unitNumber": id,
-                    "parcel_management.pickedUpType":
-                      parcelType[0].pickedUpType,
-
-                  });
-                  qb.where(
-                    "users.id",
-                    parcelUserData[0].tenantId
-                  );
-                  qb.where(
-                    "property_units.id",
-                    parcelUserData[0].unitId
-                  );
-                }
-                if (createdDateFrom && createdDateTo) {
-                  qb.whereBetween(
-                    "parcel_management.createdAt",
-                    [fromNewDate, toNewDate]
-                  );
-                }
-                if (displayId) {
-                  qb.where("parcel_management.displayId", displayId)
-                }
-              })
-              .where((qb) => {
-                qb.where("parcel_user_non_tis.type", 2);
-                qb.orWhere(
-                  "parcel_user_non_tis.type",
-                  null
-                );
-              })
-              .groupBy([
-                "parcel_management.id",
-                "property_units.id",
-                "users.id",
-                "parcel_user_tis.unitId",
-                "buildings_and_phases.buildingPhaseCode",
-                "buildings_and_phases.description",
-                "parcel_user_non_tis.name",
-              ]),
-            // .first(),
-            knex
-              .from("parcel_management")
-              .leftJoin(
-                "parcel_user_tis",
-                "parcel_management.id",
-                "parcel_user_tis.parcelId"
-              )
-              .leftJoin(
-                "parcel_user_non_tis",
-                "parcel_management.id",
-                "parcel_user_non_tis.parcelId"
-              )
-              .leftJoin(
-                "property_units",
-                "parcel_user_tis.unitId",
-                "property_units.id"
-              )
-              .leftJoin(
-                "users",
-                "parcel_user_tis.tenantId",
-                "users.id"
-              )
-              // .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
-              .leftJoin(
-                "projects",
-                "parcel_user_tis.projectId",
-                "projects.id"
-              )
-              .leftJoin(
-                "buildings_and_phases",
-                "parcel_user_tis.buildingPhaseId",
-                "buildings_and_phases.id"
-              )
-
-              .select([
-                "parcel_management.id",
-                "parcel_management.orgId",
-                "parcel_user_tis.unitId",
-                "parcel_management.trackingNumber",
-                "parcel_management.parcelStatus",
-                "users.name as tenant",
-                "users.id as tenantId",
-                "parcel_management.createdAt",
-                "parcel_management.pickedUpType",
-                "buildings_and_phases.buildingPhaseCode",
-                "buildings_and_phases.description as buildingName",
-                "parcel_user_non_tis.name",
-                "property_units.unitNumber",
-                "parcel_management.description as remarks",
-                "parcel_management.displayId",
-                "parcel_management.qrCode",
-              ])
-              .where("parcel_management.orgId", req.orgId)
-              .where("parcel_management.parcelStatus", 1)
-              .whereIn("projects.id", projectIds)
-              .whereNot(
-                "parcel_management.pickedUpType",
-                null
-              )
-              .where((qb) => {
-                if (unitId) {
-                  qb.where(
-                    "property_units.unitNumber",
-                    unitId
-                  );
-                }
-                if (trackingNumber) {
-                  qb.where(
-                    "parcel_management.trackingNumber",
-                    trackingNumber
-                  );
-                }
-                if (tenantId) {
-                  qb.where("users.id", tenantId);
-                }
-                if (buildingPhaseId) {
-                  qb.where(
-                    "parcel_user_tis.buildingPhaseId",
-                    buildingPhaseId
-                  );
-                }
-                if (tenantName && parcel) {
-                  qb.where(
-                    "parcel_management.id",
-                    parcel.parcelId
-                  );
-                }
-                if (parcelUserData) {
-                  console.log(
-                    "parcel user data1",
-                    parcelUserData
-                  );
-                  qb.where({
-                    "parcel_management.pickedUpType":
-                      parcelType[0].pickedUpType,
-                  });
-                  qb.where(
-                    "users.id",
-                    parcelUserData[0].tenantId
-                  );
-                  qb.where(
-                    "property_units.id",
-                    parcelUserData[0].unitId
-                  );
-                }
-                if (createdDateFrom && createdDateTo) {
-                  qb.whereBetween(
-                    "parcel_management.createdAt",
-                    [fromNewDate, toNewDate]
-                  );
-                }
-                if (displayId) {
-                  qb.where("parcel_management.displayId", displayId)
-                }
-              })
-              .where((qb) => {
-                qb.where("parcel_user_non_tis.type", 2);
-                qb.orWhere(
-                  "parcel_user_non_tis.type",
-                  null
-                );
-              })
-              .groupBy([
-                "parcel_management.id",
-                "property_units.id",
-                "users.id",
-                "parcel_user_tis.unitId",
-                "buildings_and_phases.buildingPhaseCode",
-                "buildings_and_phases.description",
-                "parcel_user_non_tis.name",
-              ])
-              .orderBy(
-                "parcel_management.createdAt",
-                "desc"
-              ),
-
-          ]);
-        } catch (err) {
-          console.log(
-            "[controllers][parcel_management][list] :  Error",
-            err
-          );
-          return res.status(500).json({
-            errors: [
-              {
-                code: "UNKNOWN_SERVER_ERROR",
-                message: err.message,
-              },
-            ],
-          });
-        }
-      } else {
-        [total, rows] = await Promise.all([
-          knex
-            .count("* as count")
-            .from("parcel_management")
-            .leftJoin(
-              "parcel_user_tis",
-              "parcel_management.id",
-              "parcel_user_tis.parcelId"
-            )
-            .leftJoin(
-              "parcel_user_non_tis",
-              "parcel_management.id",
-              "parcel_user_non_tis.parcelId"
-            )
-            .leftJoin(
-              "property_units",
-              "parcel_user_tis.unitId",
-              "property_units.id"
-            )
-            .leftJoin(
-              "users",
-              "parcel_user_tis.tenantId",
-              "users.id"
-            )
-            // .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
-            .leftJoin(
-              "projects",
-              "parcel_user_tis.projectId",
-              "projects.id"
-            )
-            .leftJoin(
-              "buildings_and_phases",
-              "parcel_user_tis.buildingPhaseId",
-              "buildings_and_phases.id"
-            )
-            .where("parcel_management.orgId", req.orgId)
-            .where("parcel_management.parcelStatus", 1)
-            .whereIn("projects.id", projectIds)
-            .whereNot(
-              "parcel_management.pickedUpType",
-              null
-            )
-            .where((qb) => {
-              qb.where("parcel_user_non_tis.type", 2);
-              qb.orWhere("parcel_user_non_tis.type", null);
-            })
-            .groupBy([
-              "parcel_management.id",
-              "property_units.id",
-              "users.id",
-              "parcel_user_tis.unitId",
-              "buildings_and_phases.buildingPhaseCode",
-              "buildings_and_phases.description",
-              "parcel_user_non_tis.name",
-            ]),
-          // .first(),
-          knex
-            .from("parcel_management")
-            .leftJoin(
-              "parcel_user_tis",
-              "parcel_management.id",
-              "parcel_user_tis.parcelId"
-            )
-            .leftJoin(
-              "parcel_user_non_tis",
-              "parcel_management.id",
-              "parcel_user_non_tis.parcelId"
-            )
-            .leftJoin(
-              "property_units",
-              "parcel_user_tis.unitId",
-              "property_units.id"
-            )
-            .leftJoin(
-              "users",
-              "parcel_user_tis.tenantId",
-              "users.id"
-            )
-            // .leftJoin("companies", "parcel_user_tis.companyId", "companies.id")
-            .leftJoin(
-              "projects",
-              "parcel_user_tis.projectId",
-              "projects.id"
-            )
-            .leftJoin(
-              "buildings_and_phases",
-              "parcel_user_tis.buildingPhaseId",
-              "buildings_and_phases.id"
-            )
-            .select([
-              "parcel_management.id",
-              "parcel_user_tis.unitId",
-              "parcel_management.orgId",
-              "parcel_management.trackingNumber",
-              "parcel_management.parcelStatus",
-              "users.name as tenant",
-              "users.id as tenantId",
-              "parcel_management.createdAt",
-              "parcel_management.pickedUpType",
-              "buildings_and_phases.buildingPhaseCode",
-              "buildings_and_phases.description as buildingName",
-              "parcel_user_non_tis.name",
-              "property_units.unitNumber",
-              "parcel_management.description as remarks",
-              "parcel_management.displayId",
-              "parcel_management.qrCode",
-            ])
-            .where("parcel_management.orgId", req.orgId)
-            .where("parcel_management.parcelStatus", 1)
-            .whereIn("projects.id", projectIds)
-            .whereNot(
-              "parcel_management.pickedUpType",
-              null
-            )
-            .where((qb) => {
-              qb.where("parcel_user_non_tis.type", 2);
-              qb.orWhere("parcel_user_non_tis.type", null);
-            })
-            .groupBy([
-              "parcel_management.id",
-              "property_units.id",
-              "users.id",
-              "parcel_user_tis.unitId",
-              "buildings_and_phases.buildingPhaseCode",
-              "buildings_and_phases.description",
-              "parcel_user_non_tis.name",
-            ])
-            .orderBy("parcel_management.createdAt", "desc"),
-        ]);
+        console.log(
+          "parcel user data",
+          parcelUserData[0]
+        );
       }
 
+      let parcelData = await knex
+        .from("parcel_management")
+        .leftJoin(
+          "parcel_user_tis",
+          "parcel_management.id",
+          "parcel_user_tis.parcelId"
+        )
+        .leftJoin(
+          "parcel_user_non_tis",
+          "parcel_management.id",
+          "parcel_user_non_tis.parcelId"
+        )
+        .leftJoin(
+          "property_units",
+          "parcel_user_tis.unitId",
+          "property_units.id"
+        )
+        .leftJoin(
+          "users",
+          "parcel_user_tis.tenantId",
+          "users.id"
+        )
+        .leftJoin(
+          "projects",
+          "parcel_user_tis.projectId",
+          "projects.id"
+        )
+        .leftJoin(
+          "buildings_and_phases",
+          "parcel_user_tis.buildingPhaseId",
+          "buildings_and_phases.id"
+        )
+        .select([
+          "parcel_management.id",
+          "parcel_management.orgId",
+          "parcel_user_tis.unitId",
+          "parcel_management.trackingNumber",
+          "parcel_management.parcelStatus",
+          "users.name as tenant",
+          "users.id as tenantId",
+          "parcel_management.createdAt",
+          "parcel_management.pickedUpType",
+          "buildings_and_phases.buildingPhaseCode",
+          "buildings_and_phases.description as buildingName",
+          "parcel_user_non_tis.name",
+          "property_units.unitNumber",
+          "parcel_management.description as remarks",
+          "parcel_management.displayId",
+          "parcel_management.qrCode",
+        ])
+        .where("parcel_management.orgId", req.orgId)
+        .where("parcel_management.parcelStatus", 1)
+        .whereIn("projects.id", projectIds)
+        .whereNot(
+          "parcel_management.pickedUpType",
+          null
+        )
+        .where((qb) => {
+          if (unitId) {
+            qb.where(
+              "property_units.unitNumber",
+              unitId
+            );
+          }
+          if (trackingNumber) {
+            qb.where(
+              "parcel_management.trackingNumber",
+              trackingNumber
+            );
+          }
+          if (tenantId) {
+            qb.where("users.id", tenantId);
+          }
+          if (buildingPhaseId) {
+            qb.where(
+              "parcel_user_tis.buildingPhaseId",
+              buildingPhaseId
+            );
+          }
+          if (tenantName && parcel) {
+            qb.where(
+              "parcel_management.id",
+              parcel.parcelId
+            );
+          }
+          if (parcelUserData) {
+            console.log(
+              "parcel user data1",
+              parcelUserData
+            );
+            qb.where({
+              "parcel_management.pickedUpType":
+                parcelType[0].pickedUpType,
+            });
+            qb.where(
+              "users.id",
+              parcelUserData[0].tenantId
+            );
+            qb.where(
+              "property_units.id",
+              parcelUserData[0].unitId
+            );
+          }
+          if (createdDateFrom && createdDateTo) {
+            qb.whereBetween(
+              "parcel_management.createdAt",
+              [fromNewDate, toNewDate]
+            );
+          }
+          if (displayId) {
+            qb.where("parcel_management.displayId", displayId)
+          }
+        })
+        .where((qb) => {
+          qb.where("parcel_user_non_tis.type", 2);
+          qb.orWhere(
+            "parcel_user_non_tis.type",
+            null
+          );
+        })
+        .orderBy(
+          "parcel_management.createdAt",
+          "desc"
+        )
+
       const Parallel = require("async-parallel");
-      rows = await Parallel.map(rows, async (pd) => {
+      parcelData = await Parallel.map(parcelData, async (pd) => {
         let tenantData = await knex
           .from("parcel_user_non_tis")
           .select("*")
@@ -1021,7 +718,7 @@ const parcelManagementController = {
 
         return { ...pd, tenantData };
       });
-      rows = await Parallel.map(rows, async (pd) => {
+      parcelData = await Parallel.map(parcelData, async (pd) => {
         let imageResult = await knex
           .from("images")
           .select("s3Url", "title", "name")
@@ -1036,21 +733,9 @@ const parcelManagementController = {
         };
       });
 
-      let parcelListData = {
-        data: {
-          parcel: rows,
-          total: total.length,
-          from: (page - 1) * perPage + 1,
-          to: page * perPage,
-          nextPage:
-            total.length > page * perPage ? page + 1 : null,
-        },
-        message: "parcel List!",
-      };
-
       console.log(
         "[controllers][agm][generatePdfOfParcelDocument]: Parecel Details:",
-        parcelListData
+        parcelData
       );
 
       let requestId = uuid();
@@ -1067,7 +752,7 @@ const parcelManagementController = {
         {
           uuid: requestId,
           data: {
-            parcelList: rows,
+            parcelList: parcelData,
             orgId: req.orgId,
           },
           orgId: req.orgId,
@@ -1087,28 +772,7 @@ const parcelManagementController = {
       let keys = await redisHelper.getKeys(keyPattern);
 
       console.log("[Parcel][Controller][Parcel-slip-keys]", keys)
-      // let parcelSlipDocGeneratedList = [];
-      // for (let key of keys) {
-      //   let parcelDocs = await redisHelper.getValue(key);
-
-      // if (parcelDocs) {
-      //   parcelSlipDocGeneratedList.push({
-      //     requestId: requestId,
-      //     generatedBy: req.me,
-      //     orgData: orgData,
-      //     s3Url: null,
-      //     generatedAt: moment().format(
-      //       "MMMM DD, yyyy, hh:mm:ss A"
-      //     ),
-      //   });
-      //   await redisHelper.setValueWithExpiry(
-      //     `parcel-docs-link-${req.orgId}-${new Date().getTime()}`,
-      //     parcelSlipDocGeneratedList,
-      //     24 * 60 * 60
-      //   );
-      // } else {
       await redisHelper.setValueWithExpiry(
-        // `parcel-docs-link-${req.orgId}-${new Date().getTime()}`,
         parcelSlipKey,
         [
           {
@@ -1123,51 +787,16 @@ const parcelManagementController = {
         ],
         24 * 60 * 60
       );
-      // }
-      // parcelSlipDocGeneratedList.push(parcelDocs)
-      // }
-
-      // console.log("[Parcel][Controllers][Parcel-Docs]", parcelSlipDocGeneratedList);
-
-      // if (parcelSlipDocGeneratedList) {
-      //   parcelSlipDocGeneratedList.push({
-      //     requestId: requestId,
-      //     generatedBy: req.me,
-      //     orgData: orgData,
-      //     s3Url: null,
-      //     generatedAt: moment().format(
-      //       "MMMM DD, yyyy, hh:mm:ss A"
-      //     ),
-      //   });
-      //   await redisHelper.setValueWithExpiry(
-      //     `parcel-docs-link-${req.orgId}-${new Date().getTime()}`,
-      //     parcelSlipDocGeneratedList,
-      //     24 * 60 * 60
-      //   );
-      // } else {
-      //   await redisHelper.setValueWithExpiry(
-      //     `parcel-docs-link-${req.orgId}-${new Date().getTime()}`,
-      //     [
-      //       {
-      //         requestId: requestId,
-      //         generatedBy: req.me,
-      //         orgData: orgData,
-      //         s3Url: null,
-      //         generatedAt: moment().format(
-      //           "MMMM DD, yyyy, hh:mm:ss A"
-      //         ),
-      //       },
-      //     ],
-      //     24 * 60 * 60
-      //   );
-      // }
-
       return res.status(200).json({
-        data: parcelListData,
+        data: parcelData,
         message:
           "We are preparing Pending Parcel List Document. Please wait for few minutes. Once generated we will notify you via App Notification & Email",
       });
     } catch (err) {
+      console.log(
+        "[controllers][parcelManagement][list] :  Error",
+        err
+      );
       res.status(500).json({ failed: true, error: err });
     }
   },
@@ -2070,9 +1699,11 @@ const parcelManagementController = {
                   );
                 }
                 if (parcelUserData) {
-                  console.log("parcel and unit id");
+                  console.log(
+                    "parcel user data1",
+                    parcelUserData
+                  );
                   qb.where({
-                    "property_units.unitNumber": id,
                     "parcel_management.pickedUpType":
                       parcelType[0].pickedUpType,
                   });
@@ -2105,16 +1736,6 @@ const parcelManagementController = {
                   null
                 );
               })
-              // .groupBy([
-              //   "parcel_management.id",
-              //   "property_units.id",
-              //   "users.id",
-              //   "parcel_user_tis.unitId",
-              //   "buildings_and_phases.buildingPhaseCode",
-              //   "buildings_and_phases.description",
-              //   "parcel_user_non_tis.name",
-              //   "storage.id",
-              // ]),
               .first(),
             knex
               .from("parcel_management")
@@ -2247,16 +1868,6 @@ const parcelManagementController = {
                   null
                 );
               })
-              // .groupBy([
-              //   "parcel_management.id",
-              //   "property_units.id",
-              //   "users.id",
-              //   "parcel_user_tis.unitId",
-              //   "buildings_and_phases.buildingPhaseCode",
-              //   "buildings_and_phases.description",
-              //   "parcel_user_non_tis.name",
-              //   "storage.id",
-              // ])
               .orderBy(
                 "parcel_management.createdAt",
                 "desc"
@@ -2329,16 +1940,16 @@ const parcelManagementController = {
             .where((qb) => {
               qb.where("parcel_user_non_tis.type", 2);
               qb.orWhere("parcel_user_non_tis.type", null);
-            })
-            .groupBy([
-              "parcel_management.id",
-              "property_units.id",
-              "users.id",
-              "parcel_user_tis.unitId",
-              "buildings_and_phases.buildingPhaseCode",
-              "buildings_and_phases.description",
-              "parcel_user_non_tis.name",
-            ]),
+            }).first(),
+            // .groupBy([
+            //   "parcel_management.id",
+            //   "property_units.id",
+            //   "users.id",
+            //   "parcel_user_tis.unitId",
+            //   "buildings_and_phases.buildingPhaseCode",
+            //   "buildings_and_phases.description",
+            //   "parcel_user_non_tis.name",
+            // ]),
           // .first(),
           knex
             .from("parcel_management")
@@ -2456,6 +2067,9 @@ const parcelManagementController = {
         };
       });
 
+
+      console.log("Total Parcel list count",total)
+
       let parcelSlipDocGeneratedList =
         await redisHelper.getValue(`parcel-docs-link`);
 
@@ -2463,7 +2077,7 @@ const parcelManagementController = {
       return res.status(200).json({
         data: {
           parcel: rows,
-          total: total.length,
+          total: total.count,
           from: (page - 1) * perPage + 1,
           to: page * perPage,
           nextPage:
