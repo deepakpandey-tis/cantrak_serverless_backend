@@ -12,12 +12,29 @@ const paymentLogSave = async (req, res) => {
         let pre_org_id = req.body.org_id;
 
         let queryData = {
-            query_name: 'payment_log_save',
+            "query_name":"payment_log_save", 
+            "record_id":null, 
+            "org_id":req.me.orgId,
+            "user_id" : req.me.id,
+            "payment_log_ref_id":null, 
+            "transaction_date":null,
+            "unit_number":null,
+            "status":"N",
+            "status_text":"NEW",
+            "bank_code":null,
+            "bank_name":null,
+            "payment_type":"QR",
+            "payment_type_description":null,
+            "last_status_code":null,
+            "last_business_code":null,
+            "actual_pay_amount":0.00,
             ...req.body
         };
 
+        console.log("[][]][][][][][][][][][][]][][]][] JSON [][]][][][[][][][]]][][[]][]", queryData);
+
         let dbret = await execDbProcedure(queryData);
-        //console.log(dbret);
+        console.log(dbret.return_value[0].payment_api_json);
 
         let scbPGDynamicConstants = dbret.return_value[0].payment_api_json // changes
 
@@ -29,7 +46,7 @@ const paymentLogSave = async (req, res) => {
         let accessToken;
         let scbtokendata = await billPaymentHelper.scbPaymentGeToken(scbPGDynamicConstants);
 
-        //console.log(scbtokendata);
+        console.log("[controllers][bill-payment][payment-log-save]: scbtokendata ",scbtokendata.data);
         if (scbtokendata.data.status.code == "1000") {
             accessToken = scbtokendata.data.data.accessToken;
         };
@@ -40,8 +57,13 @@ const paymentLogSave = async (req, res) => {
             record_id: null,
             request_description: 'Request for SCB Token',
             actual_pay_amount: 0,
-            request_json: scbtokendata,
-            response_json: data
+            request_json: { 
+                status: scbtokendata.status, 
+                statusText: scbtokendata.statusText,
+                headers: scbtokendata.headers,
+                config: scbtokendata.config
+            },
+            response_json: scbtokendata.data
         };
         //console.log(queryData);
         await execDbProcedure(queryData);
@@ -63,7 +85,12 @@ const paymentLogSave = async (req, res) => {
                 record_id: null,
                 request_description: 'Create SCB ThaiQRCode',
                 actual_pay_amount: null,
-                request_json: scbQRCode,
+                request_json: { 
+                    status: scbQRCode.status, 
+                    statusText: scbQRCode.statusText,
+                    headers: scbQRCode.headers,
+                    config: scbQRCode.config
+                },
                 response_json: scbQRCode.data
             };
 
@@ -78,7 +105,8 @@ const paymentLogSave = async (req, res) => {
             };
 
             let get_final_pm_log = await execDbProcedure(queryData);
-
+            
+            console.log("[controllers][bill-payment][payment-log-save]: get_final_pm_log ", get_final_pm_log);
             return res.status(200).send(get_final_pm_log);
         }
 

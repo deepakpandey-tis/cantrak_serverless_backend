@@ -12,7 +12,7 @@ const generalDbCall = async (req, res) => {
             return paymentLogSave(req, res);
         }
         else {
-            let queryData = {...req.body};
+            let queryData = {"user_id" : req.me.id, ...req.body};
 
             let retVal = await execDbProcedure(queryData);
             return res.status(200).send(retVal);
