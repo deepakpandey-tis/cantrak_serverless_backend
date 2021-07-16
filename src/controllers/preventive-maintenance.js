@@ -764,83 +764,180 @@ const pmController = {
       let page = reqData.current_page || 1;
       let offset = (page - 1) * per_page;
 
-      console.log("page size1", offset)
+      console.log("Pages and offset 1",page, offset)
+
+      let total, rows;
 
       moment.tz.setDefault(payload.timezone);
       let startNewDate = moment(fromDate).startOf("date").format();
       let endNewDate = moment(toDate).endOf("date", "day").format();
 
-      console.log("From Time", startNewDate, "To", endNewDate);
 
-      let pmResult = await knex("pm_master2")
-        .leftJoin("companies", "pm_master2.companyId", "companies.id")
-        .leftJoin("projects", "pm_master2.projectId", "projects.id")
-        .select([
-          "pm_master2.*",
-          "companies.companyId as companyCode",
-          "companies.companyName",
-          "companies.logoFile",
-          "projects.project as ProjectCode",
-          "projects.projectName",
-        ])
-        .where((qb) => {
-          // if (fromDate && toDate) {
-          //   qb.whereBetween("pm_master2.createdAt", [
-          //     payload.fromDate,
-          //     payload.toDate,
-          //   ]);
+      // let pmResult = await knex("pm_master2")
+      //   .leftJoin("companies", "pm_master2.companyId", "companies.id")
+      //   .leftJoin("projects", "pm_master2.projectId", "projects.id")
+      //   .select([
+      //     "pm_master2.*",
+      //     "companies.companyId as companyCode",
+      //     "companies.companyName",
+      //     "companies.logoFile",
+      //     "projects.project as ProjectCode",
+      //     "projects.projectName",
+      //   ])
+      //   .where((qb) => {
+      //     if (payload.companyId) {
+      //       qb.where({ "pm_master2.companyId": payload.companyId });
+      //     }
 
-          // }
+      //     if (payload.projectId) {
+      //       qb.where({ "pm_master2.projectId": payload.projectId });
+      //     } else {
+      //     }
 
-          if (payload.companyId) {
-            qb.where({ "pm_master2.companyId": payload.companyId });
-          }
+      //     qb.where({ "pm_master2.orgId": req.orgId });
+      //   });
 
-          if (payload.projectId) {
-            qb.where({ "pm_master2.projectId": payload.projectId });
-          } else {
-          }
+      // let n = pmResult;
 
-          qb.where({ "pm_master2.orgId": req.orgId });
-        });
+      // let pmIds = pmResult.map((it) => it.id);
 
-      let n = pmResult;
+      // let pmSchedule = await knex("task_group_schedule")
+      //   .leftJoin(
+      //     "task_group_schedule_assign_assets",
+      //     "task_group_schedule.id",
+      //     "task_group_schedule_assign_assets.scheduleId"
+      //   )
+      //   .leftJoin(
+      //     "asset_master",
+      //     "task_group_schedule_assign_assets.assetId",
+      //     "asset_master.id"
+      //   )
+      //   .select([
+      //     "task_group_schedule.id as scheduleId",
+      //     "task_group_schedule.taskGroupId",
+      //     "task_group_schedule.pmId",
+      //     "task_group_schedule_assign_assets.assetId",
+      //     "asset_master.assetName",
+      //     "asset_master.assetCode",
+      //     "task_group_schedule_assign_assets.status",
+      //     "task_group_schedule_assign_assets.pmDate",
+      //     "task_group_schedule_assign_assets.updatedAt",
+      //     "task_group_schedule_assign_assets.scheduleStatus",
+      //   ])
+      //   .whereBetween("task_group_schedule_assign_assets.pmDate", [
+      //     startNewDate,
+      //     endNewDate,
+      //   ])
+      //   .whereIn("task_group_schedule.pmId", pmIds)
+      //   .where({ "task_group_schedule.orgId": req.orgId });
 
-      let pmIds = pmResult.map((it) => it.id);
 
-      let pmSchedule = await knex("task_group_schedule")
-        .leftJoin(
-          "task_group_schedule_assign_assets",
-          "task_group_schedule.id",
-          "task_group_schedule_assign_assets.scheduleId"
-        )
-        .leftJoin(
-          "asset_master",
-          "task_group_schedule_assign_assets.assetId",
-          "asset_master.id"
-        )
-        .select([
-          "task_group_schedule.id as scheduleId",
-          "task_group_schedule.taskGroupId",
-          "task_group_schedule.pmId",
-          "task_group_schedule_assign_assets.assetId",
-          "asset_master.assetName",
-          "asset_master.assetCode",
-          "task_group_schedule_assign_assets.status",
-          "task_group_schedule_assign_assets.pmDate",
-          "task_group_schedule_assign_assets.updatedAt",
-          "task_group_schedule_assign_assets.scheduleStatus",
-        ])
-        .whereBetween("task_group_schedule_assign_assets.pmDate", [
-          startNewDate,
-          endNewDate,
-        ])
-        .whereIn("task_group_schedule.pmId", pmIds)
-        .where({ "task_group_schedule.orgId": req.orgId });
+      [total, rows] = await Promise.all([
+        knex
+          .count("* as count")
+          .from("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .innerJoin(
+            "pm_master2",
+            "task_group_schedule.pmId",
+            "pm_master2.id"
+          )
+          .leftJoin("companies", "pm_master2.companyId", "companies.id")
+          .leftJoin("projects", "pm_master2.projectId", "projects.id")
+          .whereBetween("task_group_schedule_assign_assets.pmDate", [
+            startNewDate,
+            endNewDate,
+          ])
+          // .whereIn("task_group_schedule.pmId", pmIds)
+          .where({ "task_group_schedule.orgId": req.orgId })
+          .where((qb) => {
+            if (payload.companyId) {
+              qb.where({ "pm_master2.companyId": payload.companyId });
+            }
 
-      filterProblem = pmSchedule.filter((v) => v.status == "COM");
+            if (payload.projectId) {
+              qb.where({ "pm_master2.projectId": payload.projectId });
+            } else {
+            }
 
-      let mapData = _.chain(pmSchedule)
+            qb.where({ "pm_master2.orgId": req.orgId });
+          })
+          .first(),
+
+        knex
+          .from("task_group_schedule")
+          .innerJoin(
+            "task_group_schedule_assign_assets",
+            "task_group_schedule.id",
+            "task_group_schedule_assign_assets.scheduleId"
+          )
+          .innerJoin(
+            "asset_master",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.id"
+          )
+          .innerJoin(
+            "pm_master2",
+            "task_group_schedule.pmId",
+            "pm_master2.id"
+          )
+          .leftJoin("companies", "pm_master2.companyId", "companies.id")
+          .leftJoin("projects", "pm_master2.projectId", "projects.id")
+          .select([
+            "pm_master2.*",
+            "companies.companyId as companyCode",
+            "companies.companyName",
+            "companies.logoFile",
+            "projects.project as ProjectCode",
+            "projects.projectName",
+            "task_group_schedule.id as scheduleId",
+            "task_group_schedule.taskGroupId",
+            "task_group_schedule.pmId",
+            "task_group_schedule_assign_assets.assetId",
+            "asset_master.assetName",
+            "asset_master.assetCode",
+            "task_group_schedule_assign_assets.status",
+            "task_group_schedule_assign_assets.pmDate",
+            "task_group_schedule_assign_assets.updatedAt",
+            "task_group_schedule_assign_assets.scheduleStatus",
+          ])
+          .whereBetween("task_group_schedule_assign_assets.pmDate", [
+            startNewDate,
+            endNewDate,
+          ])
+          // .whereIn("task_group_schedule.pmId", pmIds)
+          .where({ "task_group_schedule.orgId": req.orgId })
+          .where((qb) => {
+            if (payload.companyId) {
+              qb.where({ "pm_master2.companyId": payload.companyId });
+            }
+
+            if (payload.projectId) {
+              qb.where({ "pm_master2.projectId": payload.projectId });
+            } else {
+            }
+
+            qb.where({ "pm_master2.orgId": req.orgId });
+          })
+          .offset(offset)
+          .limit(per_page),
+      ])
+
+
+
+
+      filterProblem = rows.filter((v) => v.status == "COM");
+
+      let mapData = _.chain(rows)
         .groupBy("assetCode")
         .map((value, key) => ({
           assetCode: key,
@@ -862,7 +959,7 @@ const pmController = {
         .value();
 
       let final = [];
-      let grouped = _.groupBy(pmSchedule, "assetCode");
+      let grouped = _.groupBy(rows, "assetCode");
 
       final.push(grouped);
 
@@ -913,7 +1010,7 @@ const pmController = {
       let totalOn = 0;
       let totalOff = 0;
       const Parallel = require("async-parallel");
-      pmResult = await Parallel.map(mapData, async (item) => {
+      let pmResult = await Parallel.map(mapData, async (item) => {
         totalPlanOrder += Number(item.planOrder);
         totalWorkDone += Number(item.workDone);
         totalPercentage = (100 * totalWorkDone) / totalPlanOrder;
@@ -921,7 +1018,7 @@ const pmController = {
         totalOff += Number(item.off);
 
         return {
-          ...pmResult[0],
+          ...rows,
           fromDate,
           toDate,
           planOrder: item,
@@ -932,32 +1029,32 @@ const pmController = {
           totalOn: totalOn,
           totalOff: totalOff,
           workDoneChartData,
-          totalSchedule: pmSchedule.length,
+          // totalSchedule: pmSchedule.length,
           totalDone: filterProblem.length,
         };
       });
 
-      let total = pmResult.length;
-      let lastIndex;
+      total = total.count;
+      let pagination = {};
+      pagination.total = total;
+      pagination.current_page = page
+      pagination.last_Page = Math.ceil(total / 100)
 
-      if (total <= 100) {
-        lastIndex = total;
-      } else {
-        lastIndex = Math.floor(parseInt(total % 100) + offset)
-      }
-      console.log("offset", offset, "last index value", lastIndex)
-      pmResult = pmResult.slice(offset, lastIndex)
-
-      console.log("[preventive-maintenance][PMReport][PMResult][Length]", pmResult.length)
+      console.log("[preventive-maintenance][PMReport][PMResult][Length]", rows)
       res.json({
         data: pmResult,
         total: total,
+        pagination,
         // a: pmIds,
         // n,
         // pmResult,
         message: "Succesfull!",
       });
     } catch (err) {
+      console.log(
+        "[controllers][Preventive-maintenance][get-task-group-asset-pms-list] :  Error",
+        err
+      );
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
@@ -1372,12 +1469,12 @@ const pmController = {
         })
         .whereNotNull("assigned_service_team.teamId")
         .whereNotNull("users.userName")
-        .whereRaw(
-          `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') >='${currentStartTime}'`
-        )
-        .whereRaw(
-          `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<= '${currentEndTime}'`
-        )
+        // .whereRaw(
+        //   `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD') >='${currentStartTime}'`
+        // )
+        // .whereRaw(
+        //   `to_date(task_group_schedule_assign_assets."pmDate",'YYYY-MM-DD')<= '${currentEndTime}'`
+        // )
         .whereIn("pm_master2.projectId", accessibleProjects)
         .where((qb) => {
           if (projectId) {
@@ -1664,7 +1761,7 @@ const pmController = {
           Open,
           Completed,
           Overdue,
-          "On Schedule":On_Schedule
+          "On Schedule": On_Schedule
         }
       })
 

@@ -9,6 +9,7 @@ const moment = MomentRange.extendMoment(Moment);
 const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
+const { whereBetween } = require("../db/knex");
 
 const dashboardController = {
   getDashboardData: async (req, res) => {
@@ -2462,7 +2463,7 @@ const dashboardController = {
 
       let assignedTechnician = await knex
         .from("assigned_service_team")
-        .leftJoin("users","assigned_service_team.userId","users.id")
+        .leftJoin("users", "assigned_service_team.userId", "users.id")
         .leftJoin("service_requests", "assigned_service_team.entityId", "service_requests.id")
         .select([
           "users.name",
@@ -2478,13 +2479,17 @@ const dashboardController = {
             qb.where("service_requests.projectId", projectId)
           }
         })
+        .where((qb) => {
+          qb.where("assigned_service_team.entityType", 'service_requests')
+          qb.orWhere("assigned_service_team.entityType", 'service_orders')
+        })
 
-        assignedTechnician = _.uniqBy(assignedTechnician,"id")
+      assignedTechnician = _.uniqBy(assignedTechnician, "id")
 
-      // console.log("list of technician", assignedTechnician)
+      console.log("list of technician", assignedTechnician)
 
       let final = [];
-      for(let tech of assignedTechnician){
+      for (let tech of assignedTechnician) {
         [totalServiceRequest, totalServiceOrder] = await Promise.all([
           knex
             .count("* as count")
@@ -2514,8 +2519,8 @@ const dashboardController = {
               "service_requests.id",
               "assigned_service_team.entityId"
             )
-            .leftJoin("users","assigned_service_team.userId","users.id")
-            .where({ "service_requests.orgId": req.orgId," users.id" : tech.id  })
+            .leftJoin("users", "assigned_service_team.userId", "users.id")
+            .where({ "service_requests.orgId": req.orgId, " users.id": tech.id })
             .whereBetween("service_requests.createdAt", [
               currentStartTime,
               currentEndTime,
@@ -2530,7 +2535,7 @@ const dashboardController = {
 
             .first(),
           knex
-          .count("* as count")
+            .count("* as count")
             .from("service_orders")
             .leftJoin(
               "service_requests",
@@ -2542,8 +2547,8 @@ const dashboardController = {
               "service_requests.id",
               "assigned_service_team.entityId"
             )
-            .leftJoin("users","assigned_service_team.userId","users.id")
-            .where({ "service_orders.orgId": req.orgId," users.id" : tech.id  })
+            .leftJoin("users", "assigned_service_team.userId", "users.id")
+            .where({ "service_orders.orgId": req.orgId, " users.id": tech.id })
             .whereBetween("service_orders.createdAt", [
               currentStartTime,
               currentEndTime,
@@ -2557,26 +2562,26 @@ const dashboardController = {
             .first()
         ]);
 
-        tech = _.omit(tech, ["SOId","id"])
+        tech = _.omit(tech, ["SOId", "id"])
         final.push({
           technician: tech.name,
-          totalServiceRequest:totalServiceRequest.count,
-          totalServiceOrder:totalServiceOrder.count
+          totalServiceRequest: totalServiceRequest.count,
+          totalServiceOrder: totalServiceOrder.count
         });
       }
 
-      final = final.filter((v)=> v.totalServiceRequest > 0 || v.totalServiceOrder > 0)
-      final = final.map((d)=>{
-        if(d. technician == null){
+      // final = final.filter((v)=> v.totalServiceRequest > 0 || v.totalServiceOrder > 0)
+      final = final.map((d) => {
+        if (d.technician == null) {
           d.technician = 'Not Assigned'
         }
         return d;
       })
 
-      console.log("final array after filter",final)
-      
+      console.log("final array after filter", final)
+
       return res.status(200).json({
-        data:{
+        data: {
           final
         }
       })
@@ -3157,10 +3162,10 @@ const dashboardController = {
         data: {
           Open,
           Completed,
-          "In Progress":In_Progress,
-          "On Hold":On_Hold,
+          "In Progress": In_Progress,
+          "On Hold": On_Hold,
           Approved,
-          "Under Survey":Under_Survey
+          "Under Survey": Under_Survey
         }
       })
 
@@ -3247,20 +3252,22 @@ const dashboardController = {
         })
         .distinct("service_requests.id")
         .orderBy("service_requests.id", "desc");
+
+
       let grouped = _.groupBy(problems, "categoryCode");
 
       // let problemWise = _.keys(grouped).map(category => ({totalServiceRequests:grouped[category].length,category}))
       final.push(grouped); //totalServiceRequest: problems.length })
       //}
 
+      console.log("Final data", final)
+
+
       final = final.map((obj) => {
         obj["Others"] = obj[null];
         delete obj[null];
         return obj;
       });
-
-      //"q.quotaType == "1" ? q.noOfQuota : 0"
-      //openRequests ? openRequests.length : 0
 
       let finalData = _.flatten(
         final

@@ -536,6 +536,7 @@ const parcelManagementController = {
 
       let parcel;
 
+     
 
       let createDateFrom = moment(createdDateFrom)
         .startOf("date")
@@ -770,6 +771,9 @@ const parcelManagementController = {
       let keyPattern = `parcel-docs-link-${req.orgId}*`;
 
       let keys = await redisHelper.getKeys(keyPattern);
+
+      const timezone = "Asia/Bangkok";
+      moment.tz.setDefault(timezone);
 
       console.log("[Parcel][Controller][Parcel-slip-keys]", keys)
       await redisHelper.setValueWithExpiry(
@@ -1941,15 +1945,15 @@ const parcelManagementController = {
               qb.where("parcel_user_non_tis.type", 2);
               qb.orWhere("parcel_user_non_tis.type", null);
             }).first(),
-            // .groupBy([
-            //   "parcel_management.id",
-            //   "property_units.id",
-            //   "users.id",
-            //   "parcel_user_tis.unitId",
-            //   "buildings_and_phases.buildingPhaseCode",
-            //   "buildings_and_phases.description",
-            //   "parcel_user_non_tis.name",
-            // ]),
+          // .groupBy([
+          //   "parcel_management.id",
+          //   "property_units.id",
+          //   "users.id",
+          //   "parcel_user_tis.unitId",
+          //   "buildings_and_phases.buildingPhaseCode",
+          //   "buildings_and_phases.description",
+          //   "parcel_user_non_tis.name",
+          // ]),
           // .first(),
           knex
             .from("parcel_management")
@@ -2068,7 +2072,7 @@ const parcelManagementController = {
       });
 
 
-      console.log("Total Parcel list count",total)
+      console.log("Total Parcel list count", total)
 
       let parcelSlipDocGeneratedList =
         await redisHelper.getValue(`parcel-docs-link`);

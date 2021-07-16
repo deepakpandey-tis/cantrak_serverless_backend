@@ -274,6 +274,8 @@ const parcelHelper = {
     const ejs = require("ejs");
     const path = require("path");
 
+    const timezone = "Asia/Bangkok";
+    moment.tz.setDefault(timezone);
     //const requestId = uuid();
 
     try {
