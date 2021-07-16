@@ -99,10 +99,10 @@ const paymentLogSave = async (req, res) => {
             queryData = {
                 query_name: "payment_log_get",
                 record_id: payment_log_rid,
-                company: pre_company,
-                org_id: pre_org_id,
+                user_id: req.me.id,
                 status: "N"
             };
+            
 
             let get_final_pm_log = await execDbProcedure(queryData);
             
