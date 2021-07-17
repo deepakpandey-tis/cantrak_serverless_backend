@@ -22,7 +22,7 @@ provider:
   runtime: nodejs14.x
   stage: stage
   region: ap-southeast-1
-  memorySize: 3000
+  memorySize: 2560
   timeout: 29
   tracing:
     apiGateway: true
@@ -57,7 +57,12 @@ provider:
       Action:
         - cloudwatch:*
       Resource: 
-        - arn:aws:cloudwatch:::*                
+        - arn:aws:cloudwatch:::*
+    - Effect: Allow
+      Action:
+        - events:*
+      Resource: 
+        - arn:aws:events:::*                    
   iamManagedPolicies:
       - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
   environment:
@@ -68,7 +73,7 @@ provider:
     DB_NAME: tis_database
     DB_HOST: servicemind-staging-instance-1.cmfgsnqmcibk.ap-southeast-1.rds.amazonaws.com
     DB_PORT: 5432
-    SITE_URL: https://d3m3k4hno3r3ok.cloudfront.net
+    SITE_URL: https://d1rjriqru0gswu.cloudfront.net
     ORIGIN_URL: https://6w6qx81hqb.execute-api.ap-southeast-1.amazonaws.com/stage
     JWT_PRIVATE_KEY: t6785464sdxfkgxhil8ed@gus4560*&%$%5664)bu54654645
     S3_BUCKET_NAME: servicemind-resources-staging
