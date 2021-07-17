@@ -10,8 +10,11 @@ const scbPaymentBillEnquiry = async (req, res) => {
         let pre_record_id = req.body.record_id;
 
         let queryData = {
-            ...req.body,
-            query_name: 'payment_log_get',
+            query_name:"payment_log_get",
+            status:"%",
+            show_request_response_flag:false,
+            check_transaction_date:null,
+            ...req.body
         }
         let dbret = await execDbProcedure(queryData);
 
