@@ -1,11 +1,11 @@
-image: trion/ng-cli-karma:10.2.0
+image: trion/ng-cli-karma:12.1.1
 
 stages:
   - deploy
   - migrate
 
 cache:
-  key: "25032021"
+  key: "17072021"
   paths:
     - node_modules/
 
