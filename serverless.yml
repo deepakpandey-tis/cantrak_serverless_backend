@@ -60,8 +60,8 @@ provider:
     SQS_MAIL_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/925816896007/mail-queue
     SQS_LONG_JOBS_URL: https://sqs.us-east-1.amazonaws.com/925816896007/long-jobs
     FROM_EMAIL_ADDRESS: important-notifications@staging.servicemind.asia
-    NOTIFIER_ACCESS_KEY_ID: AKIA5PDX4XIDW7DJLY6P
-    NOTIFIER_SECRET_ACCESS_KEY: 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
+    ACCESS_KEY_ID: AKIA5PDX4XIDW7DJLY6P
+    SECRET_ACCESS_KEY: 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
     S3_BUCKET_URL:  http://local-bucket.s3.amazonaws.com:8000
     SOCKET_ENDPOINT: http://0.0.0.0:3001
     CDN_URL: http://local-bucket.s3.amazonaws.com:8000
