@@ -7,12 +7,9 @@ service:
   # frameworkVersion: "=X.X.X"
   
 plugins:
-  # - serverless-apigw-binary
-  - serverless-offline
-  - serverless-prune-plugin
-  # - serverless-dotenv-plugin
-  - serverless-s3-local
-
+  # - serverless-offline
+  # - serverless-s3-local
+  # - serverless-prune-plugin
 
 package:
   exclude:
@@ -22,11 +19,11 @@ package:
 
 provider:
   name: aws
-  runtime: nodejs12.x
-  stage: production
-  region: us-east-1
+  runtime: nodejs14.x
+  stage: prod
+  region: ap-southeast-1
   memorySize: 3000
-  timeout: 30
+  timeout: 29
   tracing:
     apiGateway: true
     lambda: true
@@ -56,6 +53,16 @@ provider:
         - ses:*
       Resource: 
         - arn:aws:ses:::*
+    - Effect: Allow
+      Action:
+        - cloudwatch:*
+      Resource: 
+        - arn:aws:cloudwatch:::*
+    - Effect: Allow
+      Action:
+        - events:*
+      Resource: 
+        - arn:aws:events:::*                    
   iamManagedPolicies:
       - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
   environment:
@@ -64,51 +71,51 @@ provider:
     DB_USER: servicemind
     DB_PASS: su99yTIS#2020
     DB_NAME: tis_database
-    DB_HOST: tis-sv-db.cluster-c1klhwsjgssk.us-east-1.rds.amazonaws.com
+    DB_HOST: servicemind-prod-instance-1.cq4cijk9avjt.ap-southeast-1.rds.amazonaws.com
     DB_PORT: 5432
-    SITE_URL: https://d3lw11mvhjp3jm.cloudfront.net
-    ORIGIN_URL: https://rme4pik2uf.execute-api.us-east-1.amazonaws.com/production
-    JWT_PRIVATE_KEY: t978546456tttGFDDgut###be@e5yrgdf)(bu54654645
-    S3_BUCKET_NAME: servicemind-resources
-    VAPID_PUBLIC_KEY: BP1mVU-oBoplZiZzNkUzA5LcPP8ujiWbS0yZgm2QbBBhew9F59R21MXZb7i002JfihBz7jc8I5ITsQYVZ-EVvk0
-    VAPID_PRIVATE_KEY: 5Jr-qKpJMn-KvpjSDhxxRDX7G8zNQnz5DPYIEnr64LU
-    ACCESS_KEY_ID: AKIAQRTFBT5LS3MGPM73
-    SECRET_ACCESS_KEY: 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
-    SQS_MAIL_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/037792882519/mail-queue
-    SQS_LONG_JOBS_URL: https://sqs.us-east-1.amazonaws.com/037792882519/long-jobs
-    FROM_EMAIL_ADDRESS: important-notifications@servicemind.asia
+    DB_HOST_READ_ONLY: servicemind-prod-instance-1-ap-southeast-1b.cq4cijk9avjt.ap-southeast-1.rds.amazonaws.com
+    DB_PORT_READ_ONLY: 5432
+    SITE_URL: https://d3m3k4hno3r3ok.cloudfront.net
+    ORIGIN_URL: https://6w6qx81hqb.execute-api.ap-southeast-1.amazonaws.com/stage
+    JWT_PRIVATE_KEY: t678kuhh5k46j54lnklsfg8e60*&5664)b4&df4444#5
+    S3_BUCKET_NAME: servicemind-resources-prod
+    VAPID_PUBLIC_KEY: BMpCMLxldme4F8BHAKyz41cAEh8FgFvibgwdJrM7LH8Th5t47J84NVGZiPhuTOEKRBOzfsJMAgXQueLjPyoc8z0
+    VAPID_PRIVATE_KEY: MwnSWApwHAJZXnhk6K1s9jqS_ndArrcMSGuI60c7gZc
+    ACCESS_KEY_ID: AKIARCB5JALMMWQLCPHX
+    SECRET_ACCESS_KEY: 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
+    SQS_MAIL_QUEUE_URL: https://sqs.ap-southeast-1.amazonaws.com/073142960856/mail-queue
+    SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/073142960856/long-jobs
+    FROM_EMAIL_ADDRESS: no-reply@servicemind.asia
     APP_ENV: PRODUCTION
-    ACCESS_KEY_ID: AKIAQRTFBT5LUXG4X564
-    SECRET_ACCESS_KEY: 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
-    S3_BUCKET_URL: https://servicemind-resources.s3.amazonaws.com
-    SOCKET_ENDPOINT: https://h7oq1mw2a1.execute-api.us-east-1.amazonaws.com/production
+    S3_BUCKET_URL:  https://servicemind-resources-prod.s3.ap-southeast-1.amazonaws.com
+    SOCKET_ENDPOINT: wss://msz3mgq914.execute-api.ap-southeast-1.amazonaws.com/stage
     CDN_URL: resources.servicemind.asia
-    REDIS_HOST: tis-prod-redis.ftr6oh.0001.use1.cache.amazonaws.com
+    REDIS_HOST: prod-redis.7if0si.ng.0001.apse1.cache.amazonaws.com
     REDIS_PORT: 6379
-    MNT_DIR: ${self:custom.localMountPath}
+    MNT_DIR: ${self:custom.localMountPath} 
     THIRDPARTY_SNS_ARN: arn:aws:sns:ap-southeast-1:351577941956:servicemind-thirdparty-notifications
     THIRDPARTY_SNS_ARN_REGION: ap-southeast-1
   vpc:
     securityGroupIds:
-      - sg-f4e38fd6
+      - sg-0b04bfab1291e87d0
     subnetIds:
-      - subnet-294c8076
-      - subnet-cec80ba8
-      - subnet-277fb106
-      - subnet-e50093a8
+      - subnet-072b38f50b7ec4740
+      - subnet-0d86435561ec54571
   
 
 custom:
-  serviceName: servicemind-backend
+  serviceName: servicemind
+  awsAccountId: 073142960856
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
-  bucket: servicemind-resources
-  defaultStage: production
+  bucket: servicemind-resources-prod
+  defaultStage: prod
   profiles:
-    dev: servicemind-dev
-    production: servicemind-production
-  efsAccessPoint: fsap-0c00dfe21523b194f
-  localMountPath: /mnt/efs
+    dev: dev
+    stage: stage
+    prod: prod
+  efsAccessPoint: fsap-0e40c7589c6ba78ed
+  localMountPath: /mnt/efs  
   
   
 functions:
@@ -123,10 +130,10 @@ functions:
           path: /{proxy+}
           method: ANY
           # cors: true
-
-
+  
   websocket:
     handler: src/handlers/socket.handler
+    memorySize: 2048
     events:
       - websocket:
           # Handles new connection requests
@@ -159,31 +166,32 @@ functions:
           # Handles disconnect messages
           route: $disconnect
 
-
   auth:
     handler: src/handlers/socket.auth
 
 
   queueProcessor:
     handler: src/handlers/jobs.queueProcessor
-    batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
     memorySize: 1024
     timeout: 150
     reservedConcurrency: 10                # <-- Concurrency control
     events:
-      - sqs: arn:aws:sqs:us-east-1:037792882519:mail-queue
+      - sqs: 
+          arn: arn:aws:sqs:${self:provider.region}:${self:custom.awsAccountId}:mail-queue
+          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
 
 
   longJobsProcessor:
     handler: src/handlers/jobs.longJobsProcessor
-    batchSize: 1                           # Using a batchSize of 1, so that messages succeed or fail on their own.
     memorySize: 5120
     timeout: 900                           # 15 Mins...
     reservedConcurrency: 10                # <-- Concurrency control
     events:
-      - sqs: arn:aws:sqs:us-east-1:037792882519:long-jobs
+      - sqs:
+          arn: arn:aws:sqs:${self:provider.region}:${self:custom.awsAccountId}:long-jobs
+          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
 
-
+          
   workOrderOverdueProcessor:
     handler: src/handlers/daily-tasks.workOrderOverdueProcessor
     memorySize: 512
@@ -203,17 +211,12 @@ functions:
           rate: cron(0 1 * * ? *)    # Utc 1 am every day i.e 8 am Morning Thai Time..
           enabled: true        
 
-dailyDbWakeUpProcessor:
+
+  dailyDbWakeUpProcessor:
     handler: src/handlers/daily-tasks.dBWakeUpTask
     memorySize: 256
     timeout:  300                     # Max Time out is 5 mins..
     events:
-      - schedule:
-          rate: cron(0 0 * * ? *)    # Utc 1 am every day i.e 7:00 am Morning Thai Time..
-          enabled: true
-      - schedule:
-          rate: cron(30 0 * * ? *)    # Utc 1 am every day i.e 7:30 am Morning Thai Time..
-          enabled: true
       - schedule:
           rate: cron(0 1 * * ? *)    # Utc 1 am every day i.e 8:00 am Morning Thai Time..
           enabled: true
@@ -224,11 +227,12 @@ dailyDbWakeUpProcessor:
           rate: cron(0 2 * * ? *)    # Utc 1 am every day i.e 9 am Morning Thai Time..
           enabled: true     
 
+
 resources:
   extensions:
     # Name of function <longJobsProcessor>
     LongJobsProcessorLambdaFunction:
       Properties:
         FileSystemConfigs:
-          - Arn: 'arn:aws:elasticfilesystem:${self:provider.region}:037792882519:access-point/${self:custom.efsAccessPoint}'
-            LocalMountPath: '${self:custom.localMountPath}'  
+          - Arn: 'arn:aws:elasticfilesystem:${self:provider.region}:${self:custom.awsAccountId}:access-point/${self:custom.efsAccessPoint}'
+            LocalMountPath: '${self:custom.localMountPath}'
