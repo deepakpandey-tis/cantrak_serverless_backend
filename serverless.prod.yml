@@ -46,6 +46,16 @@ provider:
         - sns:*
       Resource: 
         - arn:aws:sns:::*
+    - Effect: Allow
+      Action:
+        - rekognition:*
+      Resource: 
+        - arn:aws:rekognition:::*
+    - Effect: Allow
+      Action:
+        - ses:*
+      Resource: 
+        - arn:aws:ses:::*
   iamManagedPolicies:
       - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
   environment:
@@ -68,8 +78,8 @@ provider:
     SQS_LONG_JOBS_URL: https://sqs.us-east-1.amazonaws.com/037792882519/long-jobs
     FROM_EMAIL_ADDRESS: important-notifications@servicemind.asia
     APP_ENV: PRODUCTION
-    NOTIFIER_ACCESS_KEY_ID: AKIAQRTFBT5LUXG4X564
-    NOTIFIER_SECRET_ACCESS_KEY: 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
+    ACCESS_KEY_ID: AKIAQRTFBT5LUXG4X564
+    SECRET_ACCESS_KEY: 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
     S3_BUCKET_URL: https://servicemind-resources.s3.amazonaws.com
     SOCKET_ENDPOINT: https://h7oq1mw2a1.execute-api.us-east-1.amazonaws.com/production
     CDN_URL: resources.servicemind.asia
