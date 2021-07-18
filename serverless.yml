@@ -88,7 +88,7 @@ provider:
     S3_BUCKET_URL:  https://servicemind-resources-staging.s3.ap-southeast-1.amazonaws.com
     SOCKET_ENDPOINT: wss://msz3mgq914.execute-api.ap-southeast-1.amazonaws.com/stage
     CDN_URL: resources.staging.servicemind.asia
-    REDIS_HOST: staging-redis.q1qa2v.ng.0001.apse1.cache.amazonaws.com
+    REDIS_HOST: 127.0.0.1
     REDIS_PORT: 6379
     MNT_DIR: ${self:custom.localMountPath} 
     THIRDPARTY_SNS_ARN: arn:aws:sns:ap-southeast-1:175922227966:servicemind-thirdparty-notifications
