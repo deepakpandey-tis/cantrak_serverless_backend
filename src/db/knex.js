@@ -35,7 +35,7 @@ module.exports = require('knex')({
         createRetryIntervalMillis: 100,
         propagateCreateError: false, // <- default is true, set to false
         afterCreate: async (conn, done) => {
-            // await conn.query('SET timezone="UTC";');
+            await conn.query('SET timezone="Asia/Bangkok";');
             if (process.env.NODE_ENV === 'local') {
                 const oldConnections = await conn.query(`WITH inactive_connections AS (
                         SELECT

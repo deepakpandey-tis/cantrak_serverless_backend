@@ -7,8 +7,8 @@ const sendSNSMessage = async (messageBody, messageAttributes) => {
     console.log('[helpers][sns][sendSNSMessage]: THIRDPARTY_SNS_ARN:', process.env.THIRDPARTY_SNS_ARN);
 
     AWS.config.update({
-        accessKeyId: process.env.NOTIFIER_ACCESS_KEY_ID,
-        secretAccessKey: process.env.NOTIFIER_SECRET_ACCESS_KEY,
+        accessKeyId: process.env.ACCESS_KEY_ID,
+        secretAccessKey: process.env.SECRET_ACCESS_KEY,
     });
 
     AWS.config.update({ region: process.env.THIRDPARTY_SNS_ARN_REGION || 'us-east-2' });
