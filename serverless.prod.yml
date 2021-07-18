@@ -77,7 +77,7 @@ provider:
     DB_HOST_READ_ONLY: servicemind-prod-instance-1-ap-southeast-1b.cq4cijk9avjt.ap-southeast-1.rds.amazonaws.com
     DB_PORT_READ_ONLY: 5432
     SITE_URL: https://d3m3k4hno3r3ok.cloudfront.net
-    ORIGIN_URL: https://6w6qx81hqb.execute-api.ap-southeast-1.amazonaws.com/stage
+    ORIGIN_URL: https://f46f62eq43.execute-api.ap-southeast-1.amazonaws.com/production
     JWT_PRIVATE_KEY: t678kuhh5k46j54lnklsfg8e60*&5664)b4&df4444#5
     S3_BUCKET_NAME: servicemind-resources-prod
     VAPID_PUBLIC_KEY: BMpCMLxldme4F8BHAKyz41cAEh8FgFvibgwdJrM7LH8Th5t47J84NVGZiPhuTOEKRBOzfsJMAgXQueLjPyoc8z0
@@ -89,7 +89,7 @@ provider:
     FROM_EMAIL_ADDRESS: no-reply@servicemind.asia
     APP_ENV: PRODUCTION
     S3_BUCKET_URL:  https://servicemind-resources-prod.s3.ap-southeast-1.amazonaws.com
-    SOCKET_ENDPOINT: wss://msz3mgq914.execute-api.ap-southeast-1.amazonaws.com/stage
+    SOCKET_ENDPOINT: wss://84vtrodbe9.execute-api.ap-southeast-1.amazonaws.com/production
     CDN_URL: resources.servicemind.asia
     REDIS_HOST: prod-redis.7if0si.ng.0001.apse1.cache.amazonaws.com
     REDIS_PORT: 6379

@@ -20,7 +20,6 @@ deploy_master:
     - npm install -g serverless
     - npm install
     - sls config credentials --profile servicemind-production --provider aws --key $MASTER_AWS_KEY --secret $MASTER_AWS_SECRET
-    # - sls prune -n 3 --profile servicemind-production
     - NODE_ENV=production sls deploy --stage production --aws-profile servicemind-production --config serverless.prod.yml
     - echo 'Success'
 
@@ -36,7 +35,7 @@ migrate_master:
   ]  
   script:
     - curl -V
-    - curl -v https://rme4pik2uf.execute-api.us-east-1.amazonaws.com/production/db-migration/migrate-latest
+    - curl -v https://f46f62eq43.execute-api.ap-southeast-1.amazonaws.com/production/db-migration/migrate-latest
     - echo 'Success'
 
 
@@ -55,7 +54,6 @@ deploy_stage:
     - npm install -g serverless
     - npm install
     - sls config credentials --profile servicemind-stage --provider aws --key ${STAGE_AWS_KEY} --secret ${STAGE_AWS_SECRET}
-    # - sls prune -n 3 --profile servicemind-stage
     - SLS_DEBUG=* NODE_ENV=stage sls deploy --stage stage --aws-profile servicemind-stage --config serverless.stage.yml
     - echo 'Success'
 
