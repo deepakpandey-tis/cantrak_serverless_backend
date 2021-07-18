@@ -1,110 +1,121 @@
 
-service:
-  name: ${self:custom.serviceName}
-
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
-# frameworkVersion: "=X.X.X"
-
+service: ${self:custom.serviceName}
+  
+  # You can pin your service to only deploy with a specific Serverless version
+  # Check out our docs for more details
+  # frameworkVersion: "=X.X.X"
+  
 plugins:
   - serverless-offline
-  - serverless-s3-local
-  # - serverless-prune-plugin
+  # - serverless-s3-local
 
 package:
-  exclude:
-    - .vscode/**
-    - .serverless/**
-  
-  
+  patterns:
+    - '!.vscode/**'
+    - '!.serverless/**'
+
+
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs14.x
   stage: dev
-  region: us-east-1
-  memorySize: 2048
-  timeout: 30
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - s3:*
-      Resource: 
-        - arn:aws:s3:::*
-    - Effect: Allow
-      Action:
-        - sqs:*
-      Resource: 
-        - arn:aws:sqs:::*
-    - Effect: Allow
-      Action:
-        - sns:*
-      Resource: 
-        - arn:aws:sns:::*        
+  region: ap-southeast-1
+  memorySize: 2560
+  timeout: 29
+  tracing:
+    apiGateway: true
+    lambda: true
+  iam: 
+    role: 
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource: 
+            - arn:aws:s3:::*
+        - Effect: Allow
+          Action:
+            - sqs:*
+          Resource: 
+            - arn:aws:sqs:::*
+        - Effect: Allow
+          Action:
+            - sns:*
+          Resource: 
+            - arn:aws:sns:::*
+        - Effect: Allow
+          Action:
+            - rekognition:*
+          Resource: 
+            - arn:aws:rekognition:::*
+        - Effect: Allow
+          Action:
+            - ses:*
+          Resource: 
+            - arn:aws:ses:::*
+        - Effect: Allow
+          Action:
+            - cloudwatch:*
+          Resource: 
+            - arn:aws:cloudwatch:::*
+        - Effect: Allow
+          Action:
+            - events:*
+          Resource: 
+            - arn:aws:events:::*                    
+      managedPolicies:
+        - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
   environment:
     ENV: ${self:provider.stage}
     REGION: ${self:provider.region}
     DB_USER: servicemind
     DB_PASS: password
     DB_NAME: tis_database
-    DB_HOST: localhost
+    DB_HOST: 127.0.0.1
     DB_PORT: 5432
-    SITE_URL: http://localhost:4200
-    ORIGIN_URL: http://localhost:3000
-    IS_OFFLINE: true
-    JWT_PRIVATE_KEY: t978$wrtt435b4vjut#5dfghs)(bud33d3
-    S3_BUCKET_NAME: local-bucket
+    SITE_URL: https://d1rjriqru0gswu.cloudfront.net
+    ORIGIN_URL: https://6w6qx81hqb.execute-api.ap-southeast-1.amazonaws.com/stage
+    JWT_PRIVATE_KEY: t6785464sdxfkgxhil8ed@gus4560*&%$%5664)bu54654645
+    S3_BUCKET_NAME: servicemind-resources-staging
     VAPID_PUBLIC_KEY: BMpCMLxldme4F8BHAKyz41cAEh8FgFvibgwdJrM7LH8Th5t47J84NVGZiPhuTOEKRBOzfsJMAgXQueLjPyoc8z0
     VAPID_PRIVATE_KEY: MwnSWApwHAJZXnhk6K1s9jqS_ndArrcMSGuI60c7gZc
-    ACCESS_KEY_ID: S3RVER
-    SECRET_ACCESS_KEY: S3RVER
-    SQS_MAIL_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/925816896007/mail-queue
-    SQS_LONG_JOBS_URL: https://sqs.us-east-1.amazonaws.com/925816896007/long-jobs
-    FROM_EMAIL_ADDRESS: important-notifications@staging.servicemind.asia
-    ACCESS_KEY_ID: AKIA5PDX4XIDW7DJLY6P
-    SECRET_ACCESS_KEY: 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
-    S3_BUCKET_URL:  http://local-bucket.s3.amazonaws.com:8000
-    SOCKET_ENDPOINT: http://0.0.0.0:3001
-    CDN_URL: http://local-bucket.s3.amazonaws.com:8000
+    ACCESS_KEY_ID: AKIA37VN5NQI5HY4VFVN
+    SECRET_ACCESS_KEY: 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
+    SQS_MAIL_QUEUE_URL: https://sqs.ap-southeast-1.amazonaws.com/823924714513/mail-queue
+    SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/823924714513/long-jobs
+    FROM_EMAIL_ADDRESS: no-reply@staging.servicemind.asia
+    APP_ENV: STAGE
+    S3_BUCKET_URL:  https://servicemind-resources-staging.s3.ap-southeast-1.amazonaws.com
+    SOCKET_ENDPOINT: wss://msz3mgq914.execute-api.ap-southeast-1.amazonaws.com/stage
+    CDN_URL: resources.staging.servicemind.asia
     REDIS_HOST: 127.0.0.1
     REDIS_PORT: 6379
+    MNT_DIR: ${self:custom.localMountPath} 
     THIRDPARTY_SNS_ARN: arn:aws:sns:ap-southeast-1:175922227966:servicemind-thirdparty-notifications
     THIRDPARTY_SNS_ARN_REGION: ap-southeast-1
+  vpc:
+    securityGroupIds:
+      - sg-085a4849cdbd4f122
+    subnetIds:
+      - subnet-0b3c1343fe17b1d83
+      - subnet-020fa487922cff8e2
+  
 
 custom:
-  serviceName: tis-serverless-backend
+  serviceName: servicemind
+  awsAccountId: 823924714513
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
-  bucket: local-bucket
+  bucket: servicemind-resources-staging
   defaultStage: dev
   profiles:
-    dev: tis-dev
-    prod: tis-dev
-  apigwBinary:
-    types:
-      - "*/*"
-  s3:
-    # Uncomment the following line only if you want to specify host address of S3 service.
-    # adress: 0.0.0.0
-    # Uncomment the following line only if you want to specify S3 server address.
-    # Ordinary, this value is localhost. But you can modify this value to use other S3 server.
-    # host: 0.0.0.0
-    port: 8000
-    directory: ./tmp  # this directory must be already created.
-    # Uncomment the first line only if you want to use cors with specified policy
-    # Uncomment the second line only if you don't want to use cors
-    # Not uncomment the these lines only if your wanto use cors with default policy
-    cors: ./s3cors.xml
-    # website: relative/path/to/your/website.xml
-    # Uncomment only if you already have a S3 server running locally
-    # noStart: true
-
-# resources:
-#   Resources:
-#     NewResource:
-#       Type: AWS::S3::Bucket
-#       Properties:
-#         BucketName: ${self:custom.bucket}
-        
+    dev: dev
+    stage: stage
+    prod: prod
+  efsAccessPoint: fsap-0197f4070e2a915ba
+  localMountPath: /mnt/efs
+  
+  
 functions:
   app:
     handler: src/app.server # reference the file and exported method
@@ -118,41 +129,9 @@ functions:
           method: ANY
           # cors: true
   
-  s3hook:
-    handler: src/app.s3hook
-    events:
-      - s3: 
-         bucket: ${self:custom.bucket}
-         event: s3:*
-
-  queueProcessor:
-    handler: src/app.queueProcessor
-    memorySize: 1024
-    timeout: 150
-    reservedConcurrency: 10                # <-- Concurrency control
-    events:
-      - sqs:
-          arn: arn:aws:sqs:us-east-1:925816896007:mail-queue
-          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
-
-
-
-
-  longJobsProcessor:
-    handler: src/app.longJobsProcessor
-    memorySize: 2048
-    timeout: 900                           # 15 Mins...
-    reservedConcurrency: 10                # <-- Concurrency control
-    events:
-      - sqs:
-          arn: arn:aws:sqs:us-east-1:925816896007:long-jobs
-          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
-
-
-
-  
   websocket:
-    handler: src/socket.handler
+    handler: src/handlers/socket.handler
+    memorySize: 2048
     events:
       - websocket:
           # Handles new connection requests
@@ -168,7 +147,7 @@ functions:
             # See https://docs.aws.amazon.com/apigateway/latest/developerguide/request-response-data-mappings.html
             # for more details on API Gateway mappings.
             identitySource:
-              - "route.request.header.Auth"
+              # - "route.request.header.Auth"
               - "route.request.querystring.Auth"
 
       - websocket:
@@ -186,7 +165,8 @@ functions:
           route: $disconnect
 
   auth:
-    handler: src/socket.auth
+    handler: src/handlers/socket.auth
+          
 
   workOrderOverdueProcessor:
     handler: src/handlers/daily-tasks.workOrderOverdueProcessor
