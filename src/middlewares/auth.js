@@ -1,4 +1,5 @@
 const knex = require('../db/knex');
+const knexReader = require('../db/knex-reader');
 const createError = require('http-errors');
 var jwt = require('jsonwebtoken');
 const redisHelper = require('../helpers/redis');
@@ -27,7 +28,7 @@ const authMiddleware = {
                 req.id = decodedTokenData.id;
                 req.orgId = decodedTokenData.orgId;
 
-                let currentUser = await knex('users').where({ id: decodedTokenData.id }).first();
+                let currentUser = await knexReader('users').where({ id: decodedTokenData.id }).first();
 
                 // console.log('[middleware][auth]: Current User:', currentUser);
 
@@ -39,7 +40,7 @@ const authMiddleware = {
                     console.log(`[middleware][auth][isAuthenticated]: From Redis userApplicationRole:`, userApplicationRole);
                     if (!userApplicationRole) {
                         // An user can have atmost one application role
-                        userApplicationRole = await knex('application_user_roles').where({ userId: Number(currentUser.id) }).select('roleId', 'orgId').first();
+                        userApplicationRole = await knexReader('application_user_roles').where({ userId: Number(currentUser.id) }).select('roleId', 'orgId').first();
                         await redisHelper.setValueWithExpiry(key, userApplicationRole, 180);
                     }
 
