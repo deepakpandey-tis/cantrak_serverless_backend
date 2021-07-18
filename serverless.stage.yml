@@ -1,6 +1,5 @@
 
-service:
-  name: ${self:custom.serviceName}
+service: ${self:custom.serviceName}
   
   # You can pin your service to only deploy with a specific Serverless version
   # Check out our docs for more details
@@ -12,9 +11,9 @@ plugins:
   # - serverless-prune-plugin
 
 package:
-  exclude:
-    - .vscode/**
-    - .serverless/**
+  patterns:
+    - '!.vscode/**'
+    - '!.serverless/**'
 
 
 provider:
@@ -27,44 +26,46 @@ provider:
   tracing:
     apiGateway: true
     lambda: true
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - s3:*
-      Resource: 
-        - arn:aws:s3:::*
-    - Effect: Allow
-      Action:
-        - sqs:*
-      Resource: 
-        - arn:aws:sqs:::*
-    - Effect: Allow
-      Action:
-        - sns:*
-      Resource: 
-        - arn:aws:sns:::*
-    - Effect: Allow
-      Action:
-        - rekognition:*
-      Resource: 
-        - arn:aws:rekognition:::*
-    - Effect: Allow
-      Action:
-        - ses:*
-      Resource: 
-        - arn:aws:ses:::*
-    - Effect: Allow
-      Action:
-        - cloudwatch:*
-      Resource: 
-        - arn:aws:cloudwatch:::*
-    - Effect: Allow
-      Action:
-        - events:*
-      Resource: 
-        - arn:aws:events:::*                    
-  iamManagedPolicies:
-      - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
+  iam: 
+    role: 
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource: 
+            - arn:aws:s3:::*
+        - Effect: Allow
+          Action:
+            - sqs:*
+          Resource: 
+            - arn:aws:sqs:::*
+        - Effect: Allow
+          Action:
+            - sns:*
+          Resource: 
+            - arn:aws:sns:::*
+        - Effect: Allow
+          Action:
+            - rekognition:*
+          Resource: 
+            - arn:aws:rekognition:::*
+        - Effect: Allow
+          Action:
+            - ses:*
+          Resource: 
+            - arn:aws:ses:::*
+        - Effect: Allow
+          Action:
+            - cloudwatch:*
+          Resource: 
+            - arn:aws:cloudwatch:::*
+        - Effect: Allow
+          Action:
+            - events:*
+          Resource: 
+            - arn:aws:events:::*                    
+      managedPolicies:
+        - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
   environment:
     ENV: ${self:provider.stage}
     REGION: ${self:provider.region}
@@ -113,7 +114,7 @@ custom:
     stage: stage
     prod: prod
   efsAccessPoint: fsap-0197f4070e2a915ba
-  localMountPath: /mnt/efs  
+  localMountPath: /mnt/efs
   
   
 functions:
