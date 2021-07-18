@@ -70,5 +70,5 @@ migrate_stage:
   ]    
   script:
     - curl -V
-    - curl -v https://fdwvancxv3.execute-api.us-east-1.amazonaws.com/stage/db-migration/migrate-latest
+    - curl -v https://6w6qx81hqb.execute-api.ap-southeast-1.amazonaws.com/stage/db-migration/migrate-latest
     - echo 'Success'
