@@ -1,4 +1,5 @@
 const knex = require('../db/knex');
+const knexReader = require('../db/knex-reader');
 const createError = require('http-errors');
 
 
@@ -10,7 +11,7 @@ const userMiddleware = {
 
         try {
             let currentUser = req.me;
-            let userHouseId = await knex('user_house_allocation').where({ userId: currentUser.id }).select('houseId');
+            let userHouseId = await knexReader('user_house_allocation').where({ userId: currentUser.id }).select('houseId');
             console.log("userHouseId", userHouseId);
             currentUser.houseIds = userHouseId.map(v => v.houseId)//[userHouseId.houseId];
 
