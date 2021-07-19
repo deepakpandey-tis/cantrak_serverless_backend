@@ -1,4 +1,5 @@
 const knex = require('../db/knex');
+const knexReader = require('../db/knex-reader');
 const Joi = require('@hapi/joi');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -40,7 +41,7 @@ const entranceController = {
             loginPayload.userName = loginPayload.userName.trim();
 
             // check username & password not blank
-            loginResult = await knex('users').where(function () {
+            loginResult = await knexReader('users').where( function (){
                 this.where('userName', loginPayload.userName)
             }).orWhere({ mobileNo: loginPayload.userName }).orWhere({ email: loginPayload.userName }).first();
 
@@ -55,7 +56,7 @@ const entranceController = {
 
 
             /*CHECK ORGANISATION ACTIVE/INACTIVE OPEN */
-            let checkResult = await knex.from('organisations').where({ id: loginResult.orgId }).first();
+            let checkResult = await knexReader.from('organisations').where({ id: loginResult.orgId }).first();
 
             if (checkResult) {
                 if (!checkResult.isActive) {
@@ -82,14 +83,14 @@ const entranceController = {
 
 
             /*CHECK TEAM USER DISABLE OR NOT OPEN */
-            let userTeamResult = await knex.from('team_users').select('teamId').where({ userId: loginResult.id });
+            let userTeamResult = await knexReader.from('team_users').select('teamId').where({ userId: loginResult.id });
             if (userTeamResult.length) {
 
                 console.log("=============team Id=", userTeamResult, "==")
 
                 let teamIds = userTeamResult.map((v) => v.teamId)
 
-                let teamResult = await knex.from('teams').whereIn('teamId', teamIds).where({ disableLogin: true });
+                let teamResult = await knexReader.from('teams').whereIn('teamId', teamIds).where({ disableLogin: true });
 
                 if (teamResult.length) {
 
@@ -128,13 +129,13 @@ const entranceController = {
                     });
                 }
 
-                let socialAccounts = await knex('social_accounts').where({ userId: loginResult.id });
+                let socialAccounts = await knexReader('social_accounts').where({ userId: loginResult.id });
 
                 loginResult.socialAccounts = socialAccounts;
 
                 /*LAST LOGIN UPDATE OPEN */
                 let currentTime = new Date().getTime();
-                let updateLastLogin = await knex('users').update({ "lastLogin": currentTime }).where({ id: loginResult.id });
+                await knex('users').update({ "lastLogin": currentTime }).where({ id: loginResult.id });
                 /*LAST LOGIN UPDATE CLOSE */
 
                 login.user = _.omit(loginResult, ['password']);
@@ -148,7 +149,7 @@ const entranceController = {
 
 
                 // An user can have atmost one application role
-                let userApplicationRole = await knex('application_user_roles').where({ userId: Number(loginResult.id) }).select('roleId', 'orgId').first();
+                let userApplicationRole = await knexReader('application_user_roles').where({ userId: Number(loginResult.id) }).select('roleId', 'orgId').first();
                 switch (Number(userApplicationRole.roleId)) {
                     case 1:
                         login.user.isSuperAdmin = true;
@@ -172,13 +173,13 @@ const entranceController = {
                 if (login.user.isOrgAdmin) {
                     console.log("this is orgAdmin");
                     // get all the projects of this admin
-                    const projects = await knex("projects")
+                    const projects = await knexReader("projects")
                         .select("id")
                         .where({ orgId });
-                    const companies = await knex("companies")
+                    const companies = await knexReader("companies")
                         .select("id")
                         .where({ orgId });
-                    const resources = await knex(
+                    const resources = await knexReader(
                         "organisation_resources_master"
                     )
                         .select("resourceId as id")
@@ -200,11 +201,11 @@ const entranceController = {
                     //console.log(mappedProjects)
                     login.user.userCompanyResources = userCompanyResources;
                     login.user.userProjectResources = userProjectResources;
-                    console.log(userCompanyResources, userProjectResources);
+                    // console.log(userCompanyResources, userProjectResources);
                 }
 
                 if (login.user.isOrgUser) {
-                    const result = await knex("team_users")
+                    const result = await knexReader("team_users")
                         .innerJoin(
                             "team_roles_project_master",
                             "team_users.teamId",

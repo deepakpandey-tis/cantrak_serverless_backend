@@ -11,7 +11,7 @@ const scbAuthCode = "";
 
 const billPaymentHelper = {
 
-  scbPaymentGeToken: async ({ scbApplicationKey, scbApplicationSecret, get_token_url }) => {
+  scbPaymentGeToken: async ({ scbApplicationKey, scbApplicationSecret, getTokenUrl }) => {
 
     const data = JSON.stringify({
       "applicationKey": scbApplicationKey,
@@ -21,7 +21,7 @@ const billPaymentHelper = {
 
     const config = {
       method: 'post',
-      url: get_token_url,
+      url: getTokenUrl,
       headers: {
         "Content-Type": "application/json",
         "resourceOwnerId": scbApplicationKey,
@@ -36,7 +36,7 @@ const billPaymentHelper = {
   },
 
 
-  scbpaymentCreateThaiQRCode: async (accessToken, PaymentAmount, referenceId, { scbApplicationKey, scbppType, scbppId, createQR_url }) => {
+  scbpaymentCreateThaiQRCode: async (accessToken, PaymentAmount, referenceId, { scbApplicationKey, scbppType, scbppId, createQrUrl }) => {
     const data = JSON.stringify({
       "qrType": "PP",
       "ppType": scbppType,
@@ -49,7 +49,7 @@ const billPaymentHelper = {
     //console.log(accessToken);
     const config = {
       method: 'post',
-      url: createQR_url,
+      url: createQrUrl,
       headers: {
         "Content-Type": "application/json",
         "authorization": "Bearer " + accessToken,

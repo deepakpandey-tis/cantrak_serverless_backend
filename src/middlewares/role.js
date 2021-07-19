@@ -1,4 +1,5 @@
 const knex = require("../db/knex");
+const knexReader = require("../db/knex-reader");
 var jwt = require("jsonwebtoken");
 var _ = require("lodash");
 const createError = require("http-errors");
@@ -44,15 +45,15 @@ const roleMiddleware = {
 
           if (!userProjectResources || !userCompanyResources) {
             // get all the projects of this admin
-            const projects = await knex("projects")
+            const projects = await knexReader("projects")
               .select("id")
               .where({ orgId: req.orgId });
 
-            const companies = await knex("companies")
+            const companies = await knexReader("companies")
               .select("id")
               .where({ orgId: req.orgId });
 
-            const resources = await knex("organisation_resources_master")
+            const resources = await knexReader("organisation_resources_master")
               .select("resourceId as id")
               .where({ orgId: req.orgId });
 
@@ -85,7 +86,7 @@ const roleMiddleware = {
           console.log('[middleware][role]: parseUserPermission:', "User is orgUser");
 
           if (!userProjectResources) {
-            const result = await knex("team_users")
+            const result = await knexReader("team_users")
               .innerJoin(
                 "team_roles_project_master",
                 "team_users.teamId",

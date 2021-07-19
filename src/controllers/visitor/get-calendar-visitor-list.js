@@ -54,15 +54,15 @@ const getCalendarVisitorList = async (req, res) => {
         }
         sqlStr += ` and pu."projectId" in (${authorisedProjectIds})`
 
-        sqlStr += ` and (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') >= '${payload.startDate}' and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') <= '${payload.endDate}' and vi."actualArrivalDate" is null)
+        sqlStr += ` and vi."actualArrivalDate" is not null and vi."actualDepartureDate" is null
         and vi.status = 1
         and
         (
             (vi."actualArrivalDate" is not null and vi."actualDepartureDate" is null)  -- checked-in and not checked-out
             or
             (vi."actualArrivalDate" is not null and vi."actualDepartureDate" is not null)  -- checked-in and also checked-out
-            or
-            (vi."actualArrivalDate" is null and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') <> to_char(to_timestamp(vi."departureDate" / 1000.0), 'YYYYMMDD'))  -- visitor not checked-in and leaving same day (included in Incoming list)
+          --  or
+          --  (vi."actualArrivalDate" is null and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') <> to_char(to_timestamp(vi."departureDate" / 1000.0), 'YYYYMMDD'))  -- visitor not checked-in and leaving same day (included in Incoming list)
         )
         order by "arrivalDate", "unitNumber" ;
         `;

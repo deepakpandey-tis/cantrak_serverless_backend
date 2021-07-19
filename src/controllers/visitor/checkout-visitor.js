@@ -28,8 +28,11 @@ const checkoutVisitor = async (req, res) => {
         authorisedProjectIds = authorisedProjects.projects;
 
         sqlSelect = `SELECT vi.id`;
-        sqlFrom   = ` FROM visitor_invitations vi, user_house_allocation uha, property_units pu `;
-        sqlWhere  = ` WHERE vi.id = ${pkey} and vi."userHouseAllocationId" = uha.id and uha."houseId" = pu.id`;
+        // a tenant may not assigned to a property unit  
+        // sqlFrom   = ` FROM visitor_invitations vi, user_house_allocation uha, property_units pu `;
+        // sqlWhere  = ` WHERE vi.id = ${pkey} and vi."userHouseAllocationId" = uha.id and uha."houseId" = pu.id`;
+        sqlFrom   = ` FROM visitor_invitations vi, property_units pu `;
+        sqlWhere  = ` WHERE vi.id = ${pkey} and vi."propertyUnitsId" = pu.id`;
 
         // Visitors only of authorised projects of logged-in user
         sqlWhere += ` and pu."projectId" in (${authorisedProjectIds})`;
@@ -73,6 +76,8 @@ const checkoutVisitor = async (req, res) => {
         let updateData = {
           ...cols,
           actualDepartureDate: currentTime,
+          updatedBy: userId,
+          updatedAt: currentTime,
           checkedOutBy: userId,
           checkedOutAt: currentTime
       };
