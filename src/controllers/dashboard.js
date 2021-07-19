@@ -3260,7 +3260,7 @@ const dashboardController = {
       final.push(grouped); //totalServiceRequest: problems.length })
       //}
 
-      console.log("Final data", final)
+      // console.log("Final data", final)
 
 
       final = final.map((obj) => {
