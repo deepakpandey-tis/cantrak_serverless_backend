@@ -1,4 +1,4 @@
-const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 
 const getCalendarVisitorList = async (req, res) => {
     try {
@@ -23,7 +23,7 @@ const getCalendarVisitorList = async (req, res) => {
          */
         sqlStr = `SELECT 1 "visitorType"
         , to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') "arrivalDate", to_char(to_timestamp(vi."departureDate" / 1000.0), 'YYYYMMDD') "departureDate"
-        , vi.id, vi."name", pu."unitNumber", u."name" "tenantName", vi."mobileNo", vi."vehicleNo"
+        , vi.id, vi."name", pu."unitNumber", u."name" "tenantName", vi."mobileNo", vi."vehicleNo", vi."registrationBy"
         from visitor_invitations vi
         left join users u on vi."tenantId" = u.id
         , property_units pu
@@ -42,7 +42,7 @@ const getCalendarVisitorList = async (req, res) => {
         case when vi."actualArrivalDate" is not null then to_char(to_timestamp(vi."actualArrivalDate" / 1000.0), 'YYYYMMDD') else to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') end "arrivalDate",
         case when vi."actualDepartureDate" is not null then to_char(to_timestamp(vi."actualDepartureDate" / 1000.0), 'YYYYMMDD') else to_char(to_timestamp(vi."departureDate" / 1000.0), 'YYYYMMDD') end "departureDate",
         vi.id, vi."name", pu."unitNumber"
-        , u."name" "tenantName", vi."mobileNo", vi."vehicleNo"
+        , u."name" "tenantName", vi."mobileNo", vi."vehicleNo", vi."registrationBy"
         from visitor_invitations vi
         left join users u on vi."tenantId" = u.id
         , property_units pu
@@ -67,7 +67,7 @@ const getCalendarVisitorList = async (req, res) => {
         order by "arrivalDate", "unitNumber" ;
         `;
 
-        var selectedRecs = await knex.raw(sqlStr);
+        var selectedRecs = await knexReader.raw(sqlStr);
 
         visitorList = selectedRecs.rows;
         console.log(visitorList)

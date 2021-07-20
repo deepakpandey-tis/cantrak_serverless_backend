@@ -1,4 +1,4 @@
-const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 
 const getVisitors = async (req, res) => {
     try {
@@ -38,7 +38,7 @@ const getVisitors = async (req, res) => {
 
         console.log('[controllers][Visitor][getVisitors] sql: ', sqlStr);
         
-        var selectedRecs = await knex.raw(sqlStr);
+        var selectedRecs = await knexReader.raw(sqlStr);
 
         visitorDetail = selectedRecs.rows;
         //console.log(visitorDetail)

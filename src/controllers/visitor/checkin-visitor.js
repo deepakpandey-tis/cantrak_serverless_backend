@@ -1,4 +1,5 @@
 const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 
 const addCheckinNotification = require("../../notifications/visitor/add-checkin-notification");
 
@@ -40,7 +41,7 @@ const checkinVisitor = async (req, res) => {
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
         //console.log('get-checkin-visitors: ', sqlStr);
 
-        selectedRecs = await knex.raw(sqlStr);
+        selectedRecs = await knexReader.raw(sqlStr);
         if(selectedRecs.rows.length <= 0){
           return res.status(500).json({
             errors: [{ code: "ACCESS_DENIED", message: `Logged-in user ${userName} does not have permission for this project!` }]
@@ -51,7 +52,7 @@ const checkinVisitor = async (req, res) => {
         sqlStr = `SELECT *
         FROM visitor_invitations vi
         WHERE vi."id" = ${pkey} limit 1`;
-        selectedRecs = await knex.raw(sqlStr);
+        selectedRecs = await knexReader.raw(sqlStr);
         if(selectedRecs.rows.length > 0){
           visitorDetail = selectedRecs.rows[0];
           //console.log('checkin-visitors: ', visitorDetail);

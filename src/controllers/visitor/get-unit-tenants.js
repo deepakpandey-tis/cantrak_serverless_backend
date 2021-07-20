@@ -1,11 +1,11 @@
-const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 
 // It is a copy of facility_booking.getTenantByUnit()
 const getUnitTenants = async (req, res) => {
     try {
         const { unitId } = req.body;
 
-        let getTenants = await knex
+        let getTenants = await knexReader
             .from("user_house_allocation")
             .leftJoin("users", "user_house_allocation.userId", "users.id")
             .select(["users.name", "users.id", "user_house_allocation.id as userHouseAllocationId"])
