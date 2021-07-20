@@ -12,20 +12,19 @@ const scbPaymentCallback = async (req, res) => {
 
         //console.log(queryData);
         let dbret = await execDbProcedure(queryData);
-        //console.log(dbret);
-        let transactionId = dbret.return_value[0].scb_transaction_id;
-        let confirmId = dbret.return_value[0].record_id;
+        console.log(dbret);
 
-        let response_str = {};
-        response_str.resCode = "00";
-        response_str.resDesc = "success";
-        response_str.transactionId = transactionId;
-        response_str.confirmId = 'ScbPaymentCallBackLog:' + confirmId;
+        let returnValue = dbret.return_value && dbret.return_value[0] ? dbret.return_value : dbret.return_value;
+
+        let response_str = {
+            resCode: '00',
+            resDesc: 'Success',
+            transactionId: returnValue.transactionId,
+            confirmId: `ScbPaymentCallBackLog:${returnValue.record_id}`
+        };
+     
         console.log(response_str);
-
-        //check again later, transaction not being returned for now...
-        //let tq = scbpayment_transaction_inquiry(response_str, res);
-
+        
         res.status(200).send(response_str);
 
     } catch (err) {
