@@ -760,11 +760,11 @@ const pmController = {
       let filterProblem;
 
       let reqData = req.query;
-      let per_page = reqData.per_page || 100;
+      let per_page = reqData.per_page || 200;
       let page = reqData.current_page || 1;
       let offset = (page - 1) * per_page;
 
-      console.log("Pages and offset 1",page, offset)
+      console.log("Pages and offset",page, offset)
 
       let total, rows;
 

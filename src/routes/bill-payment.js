@@ -8,8 +8,6 @@ const roleMiddleware = require("../middlewares/role");
 
 router.post('/sc-payment-billInquiry', authMiddleware.isAuthenticated, billPaymentController.scbPaymentBillInquiry);
 
-router.post('/scbpayment_callback', authMiddleware.isAuthenticated, billPaymentController.scbPaymentCallback);
-
 router.post('/general_db_call', authMiddleware.isAuthenticated, billPaymentController.generalDbCall);
 
 router.post('/save-payment-log', authMiddleware.isAuthenticated, billPaymentController.paymentLogSave);
@@ -19,5 +17,7 @@ router.post('/get-invoice-history', authMiddleware.isAuthenticated, billPaymentC
 router.post('/save-image', authMiddleware.isAuthenticated, billPaymentController.saveImage);
 
 router.get('/get-invoice', authMiddleware.isAuthenticated, billPaymentController.getInvoice);
+
+router.post('/scbpayment_callback',  billPaymentController.scbPaymentCallback);   // Will be called by payment gateway so no middleware is needed
 
 module.exports = router;
