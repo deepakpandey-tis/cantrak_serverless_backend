@@ -3074,7 +3074,7 @@ const dashboardController = {
           "teams.teamName",
           "teams.teamCode",
         ])
-        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'COM' })
+        .where({ "service_requests.orgId": req.orgId, "service_requests.serviceStatusCode": 'US' })
         .whereBetween("service_requests.createdAt", [
           currentStartTime,
           currentEndTime,
