@@ -682,7 +682,7 @@ const singupController = {
       if (emailExistResult.length) {
 
         let orgMaster = await knex
-          .select("organisationName").from("organisations").where({ id: emailExistResult[0].orgId }).first();
+          .select("organisationName").from("organisations").where({ id: emailExistResult[0].orgId,  isActive: true }).first();
 
         org = orgMaster.organisationName;
 
