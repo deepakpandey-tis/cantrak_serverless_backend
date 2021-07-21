@@ -155,11 +155,11 @@ const singupController = {
       let units;
       if (orgId) {
         units = await knex("property_units")
-          .where({ floorZoneId: Number(floorZoneId), orgId: Number(orgId) , type : 1 })
+          .where({ floorZoneId: Number(floorZoneId), orgId: Number(orgId), type: 1 })
           .returning(["*"]);
       } else {
         units = await knex("property_units")
-          .where({ floorZoneId: Number(floorZoneId), type : 1 })
+          .where({ floorZoneId: Number(floorZoneId), type: 1 })
           .returning(["*"]);
       }
       return res.status(200).json({
@@ -536,19 +536,19 @@ const singupController = {
 
           /* Send Notification to other channels */
 
-          let orgMaster = await knex.from("organisations").where({ id: orgId}).first();
+          let orgMaster = await knex.from("organisations").where({ id: orgId }).first();
 
           let dataNos = {
             payload: {
               title: 'Tenant signup in ' + org,
               description: 'A tenant has signed up in ' + org + ', please check the details and activate the account in order to allow the tenant to use the available services.',
               orgData: orgMaster,
-              thaiTitle: 'ผู้เช่าลงทะเบียนใน '+ org,
+              thaiTitle: 'ผู้เช่าลงทะเบียนใน ' + org,
               thaiDetails: 'ลูกบ้านลงทะเบียนใหม่จากโครงการ ' + org + ', โปรดตรวจสอบข้อมูลและทำการยืนยันเพื่อให้ลูกบ้านสามารถเข้าใช้งานระบบได้'
             },
           };
 
-          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH','SOCKET_NOTIFY'];
+          const ALLOWED_CHANNELS = ['IN_APP', 'WEB_PUSH', 'SOCKET_NOTIFY'];
           console.log('User with in Loop: ', insertedUser);
           console.log('User with in Loop ID: ', insertedUser[0].id)
 
@@ -599,7 +599,7 @@ const singupController = {
                 floor: DataResult.floorZoneCode,
                 unit: DataResult.unit,
                 Org: org,
-                orgId:orgId,
+                orgId: orgId,
                 OTP: url + '/admin/administration-features/customers/unapproved-tenants/',
                 verifiedLink: url + '/verify-account/' + user.verifyToken,
               }
@@ -649,7 +649,7 @@ const singupController = {
             fullName: user[0].name,
             Org: org,
             urlData: url,
-            orgId:req.orgId
+            orgId: req.orgId
           }
         })
 
@@ -672,23 +672,38 @@ const singupController = {
   forgotPassword: async (req, res) => {
 
     try {
+
+      console.log("Forgot passworh host", req.body.host)
+      let host = req.body.host;
       let url;
       let org;
       let payload = req.body;
       let emailExistResult = await knex.from('users').where({ email: payload.email }).returning(['*']);
       if (emailExistResult.length) {
 
-        if (emailExistResult[0].orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
-          url = 'https://cbreconnect.servicemind.asia';
-          org = "CBRE Connect";
-        } else if (emailExistResult[0].orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
-          url = 'https://senses.servicemind.asia';
-          org = "Senses";
+        let orgMaster = await knex
+          .select("organisationName").from("organisations").where({ id: emailExistResult[0].orgId }).first();
+
+        org = orgMaster.organisationName;
+
+        // if (emailExistResult[0].orgId === '56' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
+        //   url = 'https://cbreconnect.servicemind.asia';
+        //   org = "CBRE Connect";
+        // } else if (emailExistResult[0].orgId === '89' && process.env.SITE_URL == 'https://d3lw11mvhjp3jm.cloudfront.net') {
+        //   url = 'https://senses.servicemind.asia';
+        //   org = "Senses";
+        // } else {
+        //   url = process.env.SITE_URL;
+        //   org = "ServiceMind";
+        // }
+
+        if (host !== 'localhost:4200') {
+          url = `https://${host}`
         } else {
-          url = process.env.SITE_URL;
-          org = "ServiceMind";
+          url = `http://localhost:4200`
         }
 
+        console.log("URL====>>>>>>>",url)
 
         let uid = uuid();
         await emailHelper.sendTemplateEmail({
@@ -792,7 +807,7 @@ const singupController = {
   },
   rejectAccount: async (req, res) => {
     try {
-      
+
       let user = await knex('users').select('*').where({ verifyToken: req.params.token })
       if (user && user.length) {
         await knex('users').update({ emailVerified: false, isActive: false }).where({ id: user[0].id })
