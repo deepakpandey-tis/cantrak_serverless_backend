@@ -1,4 +1,4 @@
-const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 
 const getUserUnits = async (req, res) => {
     try {
@@ -6,14 +6,14 @@ const getUserUnits = async (req, res) => {
         let userId = req.me.id
 
         /* using raw query
-        let rows = await knex.from('user_house_allocation as uha')
+        let rows = await knexReader.from('user_house_allocation as uha')
             .select(['uha.id', 'pu.unitNumber'])
             .where({'uha.orgId': req.me.orgId, 'uha.userId': req.me.id})
             .join('property_units as pu', 'uha.houseId', 'pu.id')
         */
 
         // Returns only active Units ie. user_house_allocation.status = 1 and property_units.isActive
-        let rows = await knex.raw(`SELECT uha.id "userHouseAllocationId", pu."unitNumber", pu.id as "unitId" 
+        let rows = await knexReader.raw(`SELECT uha.id "userHouseAllocationId", pu."unitNumber", pu.id as "unitId" 
         FROM user_house_allocation uha , property_units pu 
         WHERE uha."orgId" = ${req.me.orgId} and uha."userId" = ${req.me.id} and uha."status" = '1' and uha."houseId" = pu.id and pu."isActive" `);
 

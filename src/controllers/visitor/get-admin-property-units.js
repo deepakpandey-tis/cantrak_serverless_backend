@@ -1,4 +1,4 @@
-const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 
 const getAdminPropertyUnits = async (req, res) => {
     try {
@@ -27,7 +27,7 @@ const getAdminPropertyUnits = async (req, res) => {
 
          sqlStr = sqlSelect + sqlFrom + sqlWhere;
 
-         let units = await knex.raw(sqlStr);
+         let units = await knexReader.raw(sqlStr);
         return res.status(200).json({
             data: {
                 units: units.rows

@@ -1,4 +1,4 @@
-const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 
 const getVisitorsCount = async (req, res) => {
     try {
@@ -15,7 +15,7 @@ const getVisitorsCount = async (req, res) => {
         WHERE vi."orgId" = ${orgId} and vi."tenantId" = ${userId}
         GROUP BY vi."tenantId"`;
 
-        var selectedRecs = await knex.raw(sqlStr);
+        var selectedRecs = await knexReader.raw(sqlStr);
 
         visitorsCount = selectedRecs.rows[0];               // list contains only one row
         console.log(visitorsCount)
