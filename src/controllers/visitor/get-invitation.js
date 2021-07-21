@@ -1,4 +1,4 @@
-const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 // Now part of frontend const generateQRCode = require('../../helpers/generate-qrcode');
 
 const getInvitation = async (req, res) => {
@@ -22,10 +22,10 @@ const getInvitation = async (req, res) => {
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
         
-        var selectedRecs = await knex.raw(sqlStr);
+        var selectedRecs = await knexReader.raw(sqlStr);
 
         /*
-        selectedRecs = await knex("visitor_invitations")
+        selectedRecs = await knexReader("visitor_invitations")
           .join("user_house_allocation", "visitor_invitations.userHouseAllocationId", "=", "user_house_allocation.id")
           .join("property_units", "user_house_allocation.houseId", "=", "property_units.id")
           .select(
