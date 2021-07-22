@@ -977,13 +977,10 @@ const pmController = {
       pagination.last_Page = Math.ceil(total / 200)
 
       console.log("[preventive-maintenance][PMReport][PMResult][Length]", rows)
-      res.json({
+      return res.json({
         data: pmResult,
         total: total,
         pagination,
-        // a: pmIds,
-        // n,
-        // pmResult,
         message: "Succesfull!",
       });
     } catch (err) {
