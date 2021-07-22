@@ -583,15 +583,22 @@ const customerController = {
     try {
 
       let id = req.query.id;
+      let host = req.body.host;
       let uuidv4 = uuid()
       let updatedCustomer;
       let subject = "Reset Password"
       updatedCustomer = await knex('users').update({ "verifyToken": uuidv4 }).where({ id: id }).returning(['*'])
       let email = updatedCustomer[0].email;
 
+      let url;
+      if (host !== 'localhost:4200') {
+        url = `https://${host}`
+      } else {
+        url = `http://localhost:4200`
+      }
       let orgMaster = await knex('organisations').select('organisationName').where({ id: req.orgId, isActive: true }).first();
 
-      await emailHelper.sendTemplateEmail({ to: email, subject: subject, template: 'customer/password-reset.ejs', templateData: { fullName: updatedCustomer[0].name, resetPasswordUrl: `${process.env.SITE_URL}/reset-password/` + uuidv4, organisationName: orgMaster.organisationName, orgId: req.orgId } })
+      await emailHelper.sendTemplateEmail({ to: email, subject: subject, template: 'customer/password-reset.ejs', templateData: { fullName: updatedCustomer[0].name, resetPasswordUrl: `${url}/reset-password/` + uuidv4, organisationName: orgMaster.organisationName, orgId: req.orgId } })
       return res.status(200).json({
         data: updatedCustomer[0],
         message: "Password reset link sent. Please check your email!"
