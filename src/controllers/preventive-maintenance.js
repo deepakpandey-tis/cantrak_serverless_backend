@@ -754,6 +754,7 @@ const pmController = {
       let filterProblem;
 
       let reqData = req.query;
+
       let per_page = reqData.per_page || 200;
       let page = reqData.current_page || 1;
       let offset = (page - 1) * per_page;
@@ -973,16 +974,17 @@ const pmController = {
       let pagination = {};
       pagination.total = total;
       pagination.current_page = page
-      pagination.last_Page = Math.ceil(total / 100)
+      pagination.last_Page = Math.ceil(total / 200)
 
-      console.log("[preventive-maintenance][PMReport][PMResult][Length]", rows)
-      res.json({
+      console.log("[preventive-maintenance][PMReport][PMResult]", pmResult)
+      console.log("[preventive-maintenance][PMReport][pagination]", pagination)
+      console.log("[preventive-maintenance][PMReport][total]", total)
+
+
+      return res.json({
         data: pmResult,
         total: total,
         pagination,
-        // a: pmIds,
-        // n,
-        // pmResult,
         message: "Succesfull!",
       });
     } catch (err) {
