@@ -976,7 +976,11 @@ const pmController = {
       pagination.current_page = page
       pagination.last_Page = Math.ceil(total / 200)
 
-      console.log("[preventive-maintenance][PMReport][PMResult][Length]", rows)
+      console.log("[preventive-maintenance][PMReport][PMResult]", pmResult)
+      console.log("[preventive-maintenance][PMReport][pagination]", pagination)
+      console.log("[preventive-maintenance][PMReport][total]", total)
+
+
       return res.json({
         data: pmResult,
         total: total,
