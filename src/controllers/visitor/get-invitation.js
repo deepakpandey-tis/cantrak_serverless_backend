@@ -13,12 +13,12 @@ const getInvitation = async (req, res) => {
 
         //console.log('uid - iid', userId, invitationId);
         sqlSelect = `SELECT vi.*
-        , uha."houseId", pu2."unitNumber"`;
+        , pu."unitNumber", c."companyName", p."projectName", bap.description as "buildingDescription"`;
 
-        sqlFrom = ` FROM visitor_invitations vi, user_house_allocation uha, property_units pu2 `;
+        sqlFrom = ` FROM visitor_invitations vi, property_units pu, companies c, projects p, buildings_and_phases bap `;
 
         sqlWhere = ` WHERE vi."orgId" = ${req.me.orgId} and vi.id = ${invitationId} 
-        and vi."userHouseAllocationId" = uha.id and uha."houseId" = pu2.id`;
+        and vi."propertyUnitsId" = pu.id and pu."companyId" = c.id and pu."projectId" = p.id and pu."buildingPhaseId" = bap.id`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
         
