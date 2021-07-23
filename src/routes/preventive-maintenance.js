@@ -176,4 +176,20 @@ router.get(
 
 )
 
+router.post(
+  '/get-work-done-chart-data',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getWorkDoneChartDataForPMReport
+)
+
+router.post(
+  '/get-pm-work-report-chart-data',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getPMWorkReportChartData
+)
+
 module.exports = router;
