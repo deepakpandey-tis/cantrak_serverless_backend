@@ -958,7 +958,7 @@ const pmController = {
           projectCode: mapData[0].value. ProjectCode,
           comapnyName: mapData[0].value.companyName,
           projectName: mapData[0].value.projectName,
-          logofile: mapData[0].value.logoFile,
+          logoFile: mapData[0].value.logoFile,
           totalPlanOrder: totalPlanOrder,
           totalWorkDone: totalWorkDone,
           totalPercentage: totalPercentage.toFixed(2),
