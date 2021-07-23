@@ -949,7 +949,7 @@ const pmController = {
         totalOff += Number(item.off);
 
         return {
-          ...rows,
+          // ...rows,
           fromDate,
           toDate,
           planOrder: item,
