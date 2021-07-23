@@ -13,7 +13,8 @@ router.post('/get-customers',
     roleMiddleware.parseUserPermission,
     resourceAccessMiddleware.isPropertySetupAccessible,
     customerMiddleware.getCustomers)
-router.get('/reset-password', authMiddleware.isAuthenticated, customerMiddleware.resetPassword)
+// router.get('/reset-password', authMiddleware.isAuthenticated, customerMiddleware.resetPassword)
+router.post('/reset-password', authMiddleware.isAuthenticated, customerMiddleware.resetPassword)
 router.post('/disassociate-house', authMiddleware.isAuthenticated, customerMiddleware.disassociateHouse)
 
 router.post('/create-customer', authMiddleware.isAuthenticated, trimmerSpace.signUpTrimmer, customerMiddleware.createCustomer)

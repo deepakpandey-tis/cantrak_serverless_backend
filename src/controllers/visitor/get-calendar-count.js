@@ -1,4 +1,4 @@
-const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 
 const getCalendarCount = async (req, res) => {
     try {
@@ -51,7 +51,7 @@ const getCalendarCount = async (req, res) => {
             order by cdate
         ) x group by x.cdate;`;
 
-        var selectedRecs = await knex.raw(sqlStr);
+        var selectedRecs = await knexReader.raw(sqlStr);
 
         visitorsCount = selectedRecs.rows;               // list contains dates wise count of incoming visitors and inhouse visitors
         console.log(visitorsCount)

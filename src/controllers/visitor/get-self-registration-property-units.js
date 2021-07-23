@@ -1,4 +1,4 @@
-const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 
 // 2021/07/06 Select units which do not have tenant assigned. tables user_house_allocation and users are therefore now part of left join statement
 
@@ -35,7 +35,7 @@ const getSelfRegistrationPropertyUnits = async (req, res) => {
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
         //console.log("[controllers][Visitor][getSelfRegistrationPropertyUnits] sql: ", sqlStr);
 
-        let units = await knex.raw(sqlStr);
+        let units = await knexReader.raw(sqlStr);
         //console.log("[controllers][Visitor][getSelfRegistrationPropertyUnits] data: ", units);
         return res.status(200).json({
             data: {

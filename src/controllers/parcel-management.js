@@ -3802,5 +3802,30 @@ const parcelManagementController = {
       });
     }
   },
+
+  getUnitByBuilding: async (req, res) => {
+    try {
+        const { buildingId } = req.body;
+
+        let getPropertyUnits = await knex("property_units")
+            .select("*")
+            .where({ buildingPhaseId: buildingId, orgId: req.orgId, isActive: true, type:1 })
+            .orderBy("property_units.unitNumber", "asc");
+
+        getPropertyUnits = _.uniqBy(getPropertyUnits, "id");
+
+        let result = { units: getPropertyUnits };
+
+        return res.status(200).json({
+            data: {
+                data: result,
+            },
+        });
+    } catch (err) {
+        res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+        });
+    }
+},
 };
 module.exports = parcelManagementController;

@@ -158,4 +158,12 @@ router.get(
   parcelManagementController.getStorage
 )
 
+router.post(
+  "/get-property-unit-for-parcel",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isParcelManagementAccessible,
+  parcelManagementController.getUnitByBuilding
+)
+
 module.exports = router;

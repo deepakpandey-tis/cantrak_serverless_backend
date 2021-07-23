@@ -1,4 +1,4 @@
-const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 
 const organisationHasVisitorModule = async (req, res) => {
     try {
@@ -16,7 +16,7 @@ const organisationHasVisitorModule = async (req, res) => {
         sqlStr = sqlStr + ` limit 1`;
         //console.log('Org has Visitor Module sql: ', sqlStr);
 
-        var selectedRecs = await knex.raw(sqlStr);
+        var selectedRecs = await knexReader.raw(sqlStr);
 
         //console.log(selectedRecs.rows);
         selectedRecs.rows.length > 0 ? organisationResources = {hasVisitorModule: 1} : organisationResources = {hasVisitorModule: 0};

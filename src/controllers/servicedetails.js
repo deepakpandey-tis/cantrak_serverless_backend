@@ -693,11 +693,11 @@ const serviceDetailsController = {
             "service_requests.serviceType",
             "source_of_request.id"
           )
-          .leftJoin(
-            "images",
-            "service_requests.id",
-            "images.entityId"
-          )
+          // .leftJoin(
+          //   "images",
+          //   "service_requests.id",
+          //   "images.entityId"
+          // )
           .leftJoin(
             "service_status AS status",
             "service_requests.serviceStatusCode",
@@ -734,9 +734,9 @@ const serviceDetailsController = {
             //"reqBy.name as requestedBy",
             "users.name as createdUser",
             "source_of_request.descriptionEng as serviceType",
-            "images.s3Url",
-            "images.title",
-            "images.name",
+            // "images.s3Url",
+            // "images.title",
+            // "images.name",
             "property_units.*",
             "service_requests.requestedBy",
             "property_types.descriptionEng as propertyDescription",
@@ -760,6 +760,10 @@ const serviceDetailsController = {
           "[controllers][servicedetails][generaldetails]: View Data",
           DataResult
         );
+
+        // const Parallel = require('async-parallel');
+        
+        // DataResult = 
 
         //const incidentResult = await knex.insert(insertData).returning(['*']).transacting(trx).into('incident_type');
 

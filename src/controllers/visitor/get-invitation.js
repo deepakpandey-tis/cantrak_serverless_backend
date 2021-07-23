@@ -1,4 +1,4 @@
-const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 // Now part of frontend const generateQRCode = require('../../helpers/generate-qrcode');
 
 const getInvitation = async (req, res) => {
@@ -13,19 +13,19 @@ const getInvitation = async (req, res) => {
 
         //console.log('uid - iid', userId, invitationId);
         sqlSelect = `SELECT vi.*
-        , uha."houseId", pu2."unitNumber"`;
+        , pu."unitNumber", c."companyName", p."projectName", bap.description as "buildingDescription"`;
 
-        sqlFrom = ` FROM visitor_invitations vi, user_house_allocation uha, property_units pu2 `;
+        sqlFrom = ` FROM visitor_invitations vi, property_units pu, companies c, projects p, buildings_and_phases bap `;
 
         sqlWhere = ` WHERE vi."orgId" = ${req.me.orgId} and vi.id = ${invitationId} 
-        and vi."userHouseAllocationId" = uha.id and uha."houseId" = pu2.id`;
+        and vi."propertyUnitsId" = pu.id and pu."companyId" = c.id and pu."projectId" = p.id and pu."buildingPhaseId" = bap.id`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
         
-        var selectedRecs = await knex.raw(sqlStr);
+        var selectedRecs = await knexReader.raw(sqlStr);
 
         /*
-        selectedRecs = await knex("visitor_invitations")
+        selectedRecs = await knexReader("visitor_invitations")
           .join("user_house_allocation", "visitor_invitations.userHouseAllocationId", "=", "user_house_allocation.id")
           .join("property_units", "user_house_allocation.houseId", "=", "property_units.id")
           .select(

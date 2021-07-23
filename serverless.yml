@@ -74,7 +74,7 @@ provider:
     DB_HOST: 127.0.0.1
     DB_PORT: 5432
     SITE_URL: https://d1rjriqru0gswu.cloudfront.net
-    ORIGIN_URL: https://6w6qx81hqb.execute-api.ap-southeast-1.amazonaws.com/stage
+    ORIGIN_URL: http://localhost:3000/
     JWT_PRIVATE_KEY: t6785464sdxfkgxhil8ed@gus4560*&%$%5664)bu54654645
     S3_BUCKET_NAME: servicemind-resources-staging
     VAPID_PUBLIC_KEY: BMpCMLxldme4F8BHAKyz41cAEh8FgFvibgwdJrM7LH8Th5t47J84NVGZiPhuTOEKRBOzfsJMAgXQueLjPyoc8z0
