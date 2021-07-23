@@ -69,7 +69,7 @@ router.get(
     , visitorController.getCheckoutVisitors
 );
 
-router.get(
+router.post(
     "/get-visitors"
     , authMiddleware.isAuthenticated
     , visitorController.getVisitors
