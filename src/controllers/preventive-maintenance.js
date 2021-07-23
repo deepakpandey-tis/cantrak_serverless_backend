@@ -1918,6 +1918,39 @@ const pmController = {
       });
     }
   },
+
+  getCompanyList: async (req, res) => {
+    try {
+      let orgId = req.orgId;
+      let pagination = {}
+      let projectIds = req.accessibleProjects;
+
+      let companyIds = await knex('projects').select('companyId').whereIn('id', projectIds).where({ orgId: orgId, isActive: true });
+
+      companyIds = companyIds.map(v => v.companyId);
+
+      console.log("Company Ids",companyIds)
+
+      let companyResult = await knex('companies').select("id", "companyId", "companyName as CompanyName").where({ isActive: true, orgId: orgId }).whereIn("id", companyIds).orderBy('companies.companyId', 'asc');
+
+
+      pagination.data = companyResult;
+      return res.status(200).json({
+        data: {
+          companies: pagination
+        },
+        message: "Companies List!"
+      });
+
+    } catch (err) {
+
+      console.log("[controllers][preventive-maintenance][getCompany] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  }
 };
 module.exports = pmController;
 

@@ -167,4 +167,13 @@ router.post(
   pmController.getWorkOrderToAssignedTechnicianForBarChart
 )
 
+router.get(
+  '/company-lists-for-pm',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getCompanyList
+
+)
+
 module.exports = router;
