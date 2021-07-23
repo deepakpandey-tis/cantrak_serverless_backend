@@ -149,6 +149,14 @@ router.post(
     , visitorController.getCalendarVisitorList
 );
 
+router.post(
+    "/get-tenant-visitor-list"
+    , authMiddleware.isAuthenticated
+    //, roleMiddleware.parseUserPermission
+    //, resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.getTenantVisitorList
+);
+
 module.exports = router;
 
 /* ES6 module
