@@ -1927,7 +1927,7 @@ const taskGroupController = {
         assignedTeam = payloadFilter.assignedTeam;
       }
 
-      console.log("work order list data", req.body);
+      // console.log("work order list data", req.body);
 
       const payload = _.omit(payLoad, [
         "assetCategoryId",

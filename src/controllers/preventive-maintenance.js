@@ -747,10 +747,6 @@ const pmController = {
       let payload = req.body;
       let fromDate = payload.fromDate;
       let toDate = payload.toDate;
-      // let fromNewDate = moment(fromDate).startOf("date").format();
-      // let toNewDate = moment(toDate).endOf("date", "days").format();
-      // let fromTime = new Date(fromNewDate).getTime();
-      // let toTime = new Date(toNewDate).getTime();
       let filterProblem;
 
       let reqData = req.query;
@@ -758,8 +754,6 @@ const pmController = {
       let per_page = reqData.per_page || 100;
       let page = reqData.current_page || 1;
       let offset = (page - 1) * per_page;
-
-      console.log("Pages and offset", page, offset)
 
       let total, rows;
 
@@ -951,15 +945,6 @@ const pmController = {
       let fromDate = payload.fromDate;
       let toDate = payload.toDate;
       let filterProblem;
-
-      let reqData = req.query;
-
-      let per_page = reqData.per_page || 100;
-      let page = reqData.current_page || 1;
-      let offset = (page - 1) * per_page;
-
-      console.log("Pages and offset", page, offset)
-
       let total, rows;
 
       moment.tz.setDefault(payload.timezone);
@@ -992,7 +977,6 @@ const pmController = {
             startNewDate,
             endNewDate,
           ])
-          // .whereIn("task_group_schedule.pmId", pmIds)
           .where({ "task_group_schedule.orgId": req.orgId })
           .where((qb) => {
             if (payload.companyId) {
@@ -1006,7 +990,6 @@ const pmController = {
 
             qb.where({ "pm_master2.orgId": req.orgId });
           })
-          // .groupBy('asset_master.assetCategoryId'),
           .first(),
 
         knex
@@ -1036,9 +1019,7 @@ const pmController = {
             "projects.project as ProjectCode",
             "projects.projectName",
             "task_group_schedule.pmId",
-            // "asset_master.assetName",
             "asset_master.id as assetId",
-            // "asset_master.assetCode",
             "asset_master.assetCategoryId",
             "task_group_schedule_assign_assets.status",
             "task_group_schedule_assign_assets.scheduleStatus",
@@ -1048,7 +1029,6 @@ const pmController = {
             startNewDate,
             endNewDate,
           ])
-          // .whereIn("task_group_schedule.pmId", pmIds)
           .where({ "task_group_schedule.orgId": req.orgId })
           .where((qb) => {
             if (payload.companyId) {
@@ -1062,22 +1042,13 @@ const pmController = {
 
             qb.where({ "pm_master2.orgId": req.orgId });
           })
-        // .offset(offset)
-        // .limit(per_page),
       ])
-
-
-      // console.log("value in rows",rows)
-
-
-      // console.log("Total Value",total)
 
       filterProblem = rows.filter((v) => v.status == "COM");
 
       let mapData = _.chain(rows)
         .groupBy("assetCategoryId")
         .map((value, key) => ({
-          // assetCode: key,
           planOrder: value.length,
           value: value[0],
           allValue: value,
@@ -1101,7 +1072,15 @@ const pmController = {
 
       final.push(grouped);
 
+      // let assetCount = _.flatten(
+      //   final.filter((v) => !_.isEmpty(v))
+      //     .map((v) => {
+      //       let x = _.uniqBy(v, 'v.assetId')
+      //       console.log("value of x", x)
+      //     }
 
+      //     )
+      // )
 
       let chartData = _.flatten(
         final
@@ -1150,7 +1129,6 @@ const pmController = {
       let totalOff = 0;
       const Parallel = require("async-parallel");
       let pmResult = await Parallel.map(mapData, async (item) => {
-        console.log("item=====>>>>>", item)
         totalPlanOrder += Number(item.planOrder);
         totalWorkDone += Number(item.workDone);
         totalPercentage = (100 * totalWorkDone) / totalPlanOrder;
@@ -1158,7 +1136,6 @@ const pmController = {
         totalOff += Number(item.off);
 
         return {
-          // ...rows,
           fromDate,
           toDate,
           planOrder: { assetCategoryName: item.value.categoryName, planOrder: item.planOrder, workDone: item.workDone, percentage: item.percentage, on: item.on, off: item.off },
@@ -1175,24 +1152,11 @@ const pmController = {
           totalDone: filterProblem.length,
         };
       });
-
-      // pmResult.workDoneChartData = workDoneChartData;
-      // pmResult.chartData = chartData;
-
       total = total.count;
-      // let totalWO = totalWorkOrder.count;
-
-      // let pagination = {};
-      // pagination.total = total;
-      // pagination.current_page = page
-      // pagination.last_Page = Math.ceil(total / 100)
-      // pagination.workDoneChartData = workDoneChartData;
-      // pagination.chartData = chartData;
-
-
       return res.json({
         data: pmResult,
         chartData: { totalWO: total, workDoneChartData: workDoneChartData, chartData: chartData },
+        // final: final,
         message: "Succesfull!",
       });
 
@@ -1446,9 +1410,12 @@ const pmController = {
           "asset_master.id"
         )
         .select([
-          "task_group_schedule_assign_assets.*",
+          "task_group_schedule_assign_assets.displayId",
+          "task_group_schedule_assign_assets.pmDate",
+          "task_group_schedule_assign_assets.status",
           "pm_master2.name as pmName",
           "asset_master.assetSerial",
+          "task_group_schedule.repeatPeriod as repeatPeriod",
         ])
         .where((qb) => {
           if (fromDate && toDate) {
