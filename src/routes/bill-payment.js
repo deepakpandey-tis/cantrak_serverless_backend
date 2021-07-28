@@ -6,7 +6,7 @@ const authMiddleware = require('../middlewares/auth');
 const resourceAccessMiddleware = require("../middlewares/resourceAccessMiddleware");
 const roleMiddleware = require("../middlewares/role");
 
-router.post('/sc-payment-billInquiry', authMiddleware.isAuthenticated, billPaymentController.scbPaymentBillInquiry);
+router.post('/scb-payment-billInquiry', authMiddleware.isAuthenticated, billPaymentController.scbPaymentBillInquiry);
 
 router.post('/general_db_call', authMiddleware.isAuthenticated, billPaymentController.generalDbCall);
 

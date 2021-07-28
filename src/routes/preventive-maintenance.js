@@ -192,4 +192,12 @@ router.post(
   pmController.getPMWorkReportChartData
 )
 
+router.post(
+  '/get-pm-report-based-on-asset-category',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getPmReportBasedOnAssetCategory
+)
+
 module.exports = router;

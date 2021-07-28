@@ -8,13 +8,14 @@ const scbPaymentBillEnquiry = async (req, res) => {
 
         let check_transaction_date = req.body.check_transaction_date;
         let pre_record_id = req.body.record_id;
-
+        let userId = req.me.id;
         let queryData = {
             query_name:"payment_log_get",
             status:"%",
             show_request_response_flag:false,
             check_transaction_date:null,
-            ...req.body
+            ...req.body,
+            user_id: userId
         }
         let dbret = await execDbProcedure(queryData);
 
@@ -113,7 +114,7 @@ const scbPaymentBillEnquiry = async (req, res) => {
                 response_json: resstr,
             };
 
-            await execDbProcedure(qrystr);
+            await execDbProcedure(queryData);
             //end fetch bill inquiry block, save to database     
         }
         res.status(200).send(dbret);
