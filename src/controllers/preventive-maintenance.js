@@ -1416,6 +1416,7 @@ const pmController = {
           "pm_master2.name as pmName",
           "asset_master.assetSerial",
           "task_group_schedule.repeatPeriod as repeatPeriod",
+          "task_group_schedule_assign_assets.frequencyTagIds"
         ])
         .where((qb) => {
           if (fromDate && toDate) {

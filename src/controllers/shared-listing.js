@@ -29,6 +29,7 @@ const assetController = {
                 assetCode,
                 companyId
             } = req.body;
+
             let pagination = {};
             let per_page = reqData.per_page || 10;
             let page = reqData.current_page || 1;
