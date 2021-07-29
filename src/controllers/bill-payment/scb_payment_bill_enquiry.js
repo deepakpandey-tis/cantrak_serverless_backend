@@ -18,7 +18,7 @@ const scbPaymentBillEnquiry = async (req, res) => {
             user_id: userId
         }
         let dbret = await execDbProcedure(queryData);
-
+console.log(dbret);
         let scbPGDynamicConstants = dbret.return_value[0].payment_api_json // changes
         // scbApplicationKey = scbPGDynamicConstants.scbApplicationKey;
         // scbApplicationSecret = scbPGDynamicConstants.scbApplicationSecret;
@@ -53,7 +53,7 @@ const scbPaymentBillEnquiry = async (req, res) => {
         if (scbtokendata.data.status.code == "1000") {
             accessToken = scbtokendata.data.data.accessToken;
         };
-
+console.log(accessToken);
         if (accessToken) {
             let qrystr = { "query_name": "payment_log_json_req_res_save" };
             qrystr.payment_log_rid = pre_record_id;
@@ -72,7 +72,7 @@ const scbPaymentBillEnquiry = async (req, res) => {
             //grab the response json
             resstr.data = scbtokendata.data;
             qrystr.response_json = resstr;
-
+console.log("[][][][][] save token to db [][]][][[]",qrystr);
             await execDbProcedure(qrystr);
         }
         //end token block, to fetch token and save to database
@@ -85,13 +85,19 @@ const scbPaymentBillEnquiry = async (req, res) => {
 
        
         if (accessToken) {
+            console.log("before processsing billinquiry*********************************");
+            console.log("before processsing billinquiry********************************* scbPGDynamicConstants", scbPGDynamicConstants);
             try {
                 let scbBillInquiryRet = await billPaymentHelper.scbpaymentBillInquiryAPI(accessToken, transactionDate, referenceId, scbPGDynamicConstants);
+               console.log("bill inquiry*******",scbBillInquiryRet);
                 if (scbBillInquiryRet.data.status.code == "1000" && scbBillInquiryRet.data.data[0].billPaymentRef1 == referenceId) {
                     //console.log("here");
                     payment_success_flag = true;
                     reqstr = {
-                        ...scbBillInquiryRet,
+                        ...scbBillInquiryRet.config,
+                    };
+                    resstr = {
+                        ...scbBillInquiryRet.data,
                     };
                     //console.log(reqstr);
                 }
@@ -111,8 +117,11 @@ const scbPaymentBillEnquiry = async (req, res) => {
                 request_description: 'Bill Payment Inquiry',
                 actual_pay_amount: PaymentAmount,
                 request_json: reqstr,
-                response_json: resstr,
+                response_json: resstr
             };
+
+            console.log("query data ****** ", queryData);
+            console.log("query data JSON.stringify ****** ", JSON.stringify(queryData));
 
             await execDbProcedure(queryData);
             //end fetch bill inquiry block, save to database     
