@@ -65,11 +65,11 @@ const billPaymentHelper = {
   },
 
 
-  scbpaymentBillInquiryAPI: async (accessToken, transactionDate, referenceId, {scbApplicationKey, billInquiry_url, scbppId }) => {
+  scbpaymentBillInquiryAPI: async (accessToken, transactionDate, referenceId, {scbApplicationKey, billInquiryUrl, scbppId }) => {
     let data = '';
     const config = {
       method: 'get',
-      url: billInquiry_url + scbppId + '&reference1=' + referenceId + '&reference2=' + referenceId + '&transactionDate=' + transactionDate,
+      url: billInquiryUrl + scbppId + '&reference1=' + referenceId + '&reference2=' + referenceId + '&transactionDate=' + transactionDate,
       headers: {
         'Content-Type': "application/json",
         'authorization': 'Bearer ' + accessToken,
@@ -80,6 +80,7 @@ const billPaymentHelper = {
       },
       data: data
     };
+    console.log("processing inquiry**************************",config);
     return axios(config);
   }
 
