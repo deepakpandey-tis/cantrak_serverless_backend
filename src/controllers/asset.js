@@ -1850,7 +1850,7 @@ const assetController = {
       //   .where({ orgId: req.orgId });
 
       // Get all service orders
-      const service_orders = await knex("assigned_assets")
+      let service_orders = await knex("assigned_assets")
         .leftJoin(
           "service_requests",
           "assigned_assets.entityId",
@@ -1871,16 +1871,16 @@ const assetController = {
           "service_problems.categoryId",
           "incident_categories.id"
         )
-        .leftJoin(
-          "assigned_service_team",
-          "service_requests.id",
-          "assigned_service_team.entityId"
-        )
-        .leftJoin(
-          "users",
-          "assigned_service_team.userId",
-          "users.id"
-        )
+        // .leftJoin(
+        //   "assigned_service_team",
+        //   "service_requests.id",
+        //   "assigned_service_team.entityId"
+        // )
+        // .leftJoin(
+        //   "users",
+        //   "assigned_service_team.userId",
+        //   "users.id"
+        // )
         .leftJoin(
           "service_status AS status",
           "service_requests.serviceStatusCode",
@@ -1891,11 +1891,11 @@ const assetController = {
           "service_requests.createdBy",
           "u.id"
         )
-        .leftJoin(
-          "teams",
-          "assigned_service_team.teamId",
-          "teams.teamId"
-        )
+        // .leftJoin(
+        //   "teams",
+        //   "assigned_service_team.teamId",
+        //   "teams.teamId"
+        // )
         .leftJoin(
           "property_units",
           "service_requests.houseId",
@@ -1925,8 +1925,8 @@ const assetController = {
           "service_orders.createdAt as Date Created",
           "service_requests.houseId as houseId",
           "buildings_and_phases.description as Building Name",
-          "users.userName as Assigned Main User",
-          "teams.teamName as Team Name",
+          // "users.userName as Assigned Main User",
+          // "teams.teamName as Team Name",
           "requested_by.name as Requested By",
           "property_units.unitNumber as Unit Number",
           "service_requests.displayId as srDisplayId",
@@ -1937,7 +1937,40 @@ const assetController = {
           "assigned_assets.entityType": "service_requests",
           "assigned_assets.orgId": req.orgId,
           "assigned_assets.assetId": id,
+          // "assigned_service_team.entityType":'service_orders'
         });
+
+      const Parallel = require("async-parallel");
+
+      service_orders = await Parallel.map(service_orders, async (pd) => {
+        let teamResult = await knex
+          .from("assigned_service_team")
+          .leftJoin(
+            "teams",
+            "assigned_service_team.teamId",
+            "teams.teamId"
+          )
+          .leftJoin(
+            "users as mainUsers",
+            "assigned_service_team.userId",
+            "mainUsers.id"
+          )
+          .select([
+            "teams.teamName as Team Name",
+            "teams.teamCode",
+            "mainUsers.name as mainUser",
+            "mainUsers.userName as Assigned Main User"
+          ])
+          .where({
+            "assigned_service_team.orgId": req.orgId,
+            "assigned_service_team.entityType": "service_orders",
+            "assigned_service_team.entityId": pd["So Id"],
+          })
+          .first();
+
+        return { ...pd, ...teamResult }
+      })
+
 
       // if(service_orders && service_orders.length){
       //   for(let serviceOrder of service_orders){

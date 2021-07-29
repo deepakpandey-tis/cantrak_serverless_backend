@@ -628,7 +628,7 @@ const serviceDetailsController = {
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async (trx) => {
+      // await knex.transaction(async (trx) => {
         // Insert in users table,
         const incidentRequestPayload = req.body;
 
@@ -832,8 +832,8 @@ const serviceDetailsController = {
           );
           generalDetails.calculatedDuration = totalTimeInSec;
         }
-        trx.commit;
-      });
+        // trx.commit;
+      // });
 
       res.status(200).json({
         data: {

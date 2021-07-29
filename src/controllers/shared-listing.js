@@ -20,6 +20,7 @@ const assetController = {
             let reqData = req.query;
 
             //let filters = {}
+            console.log("Company Id======>>>>>>",req.body)
             let total, rows
             let {
                 assetName,
@@ -51,6 +52,20 @@ const assetController = {
                             "asset_master.companyId",
                             "companies.id"
                         )
+                        .leftJoin('asset_location', 'asset_master.id', 'asset_location.assetId')
+                        .leftJoin(
+                            "buildings_and_phases",
+                            "asset_location.buildingId",
+                            "buildings_and_phases.id"
+                        )
+
+                        .leftJoin(
+                            "property_units",
+                            "asset_location.unitId",
+                            "property_units.id"
+                        )
+                        .where({ 'asset_master.orgId': req.orgId })
+                        .where('asset_location.endDate', null)
                         .where(qb => {
                             if (assetName) {
                                 qb.where(
@@ -92,8 +107,8 @@ const assetController = {
                                 qb.where("asset_master.companyId", companyId);
                             }
                         })
-                        .first()
-                        .where({ 'asset_master.orgId': req.orgId }),
+                        .first(),
+                        
 
                     knex("asset_master")
                         .leftJoin(
@@ -191,7 +206,7 @@ const assetController = {
                 console.log('Error: ' + e.message)
             }
             //}
-             rows = _.uniqBy(rows, 'ID');
+            //  rows = _.uniqBy(rows, 'ID');
 
             let count = total.count;
             pagination.total = count;

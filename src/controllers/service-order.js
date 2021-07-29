@@ -23,7 +23,7 @@ const serviceOrderController = {
 
             await knex.transaction(async trx => {
                 let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
-                let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
+                let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
 
                 images = req.body.images
                 let serviceRequestId = req.body.serviceRequestId
@@ -267,7 +267,7 @@ const serviceOrderController = {
 
             let startNewDate = moment(req.body.startDate).startOf("date").format();
             let endNewDate = moment(req.body.endDate).endOf("date", "day").format();
-      
+
             let currentStartTime = new Date(startNewDate).getTime();
             let currentEndTime = new Date(endNewDate).getTime();
 
@@ -462,8 +462,8 @@ const serviceOrderController = {
                             if (filters) {
                                 qb.where(filters);
                             }
-                            if(serviceOrderStatus){
-                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
+                            if (serviceOrderStatus) {
+                                qb.whereIn('status.descriptionEng', serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
@@ -493,7 +493,7 @@ const serviceOrderController = {
                             if (priority) {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
-                            if(startDate && endDate){
+                            if (startDate && endDate) {
                                 qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
                             }
 
@@ -508,12 +508,12 @@ const serviceOrderController = {
                             'incident_categories.id',
                             // 'assigned_service_team.id',
                             // 'users.id',
-                             'u.id',
+                            'u.id',
                             "companies.id",
                             "projects.id",
                             // "assignUser.id",
                             // "user_house_allocation.id",
-                            'status.id', 
+                            'status.id',
                             // 'users.id'
                         ]),
 
@@ -574,8 +574,8 @@ const serviceOrderController = {
                             if (filters) {
                                 qb.where(filters);
                             }
-                            if(serviceOrderStatus){
-                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
+                            if (serviceOrderStatus) {
+                                qb.whereIn('status.descriptionEng', serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween('service_orders.completedOn', [completedFromDate, completedToDate])
@@ -605,7 +605,7 @@ const serviceOrderController = {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
 
-                            if(startDate && endDate){
+                            if (startDate && endDate) {
                                 qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
                             }
 
@@ -615,7 +615,7 @@ const serviceOrderController = {
 
                 [total, rows] = await Promise.all([
                     knex
-                    .count("* as count")
+                        .count("* as count")
                         .from("service_orders")
                         .leftJoin(
                             "service_requests",
@@ -652,18 +652,18 @@ const serviceOrderController = {
                         .leftJoin('projects', 'property_units.projectId', 'projects.id')
                         .where({ "service_orders.orgId": req.orgId })
                         // .whereIn('service_requests.projectId', projectIds)
-                        
+
                         .where(qb => {
                             qb.whereIn('service_requests.projectId', accessibleProjects)
                             console.log("callleddddd==========>>>>")
-                            
+
                             if (filters) {
 
-                                console.log("filters====================>>>>>>>>>>>>>>>>",filters)
+                                console.log("filters====================>>>>>>>>>>>>>>>>", filters)
                                 qb.where(filters);
                             }
-                            if(serviceOrderStatus){
-                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
+                            if (serviceOrderStatus) {
+                                qb.whereIn('status.descriptionEng', serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween("service_orders.completedOn", [
@@ -699,7 +699,7 @@ const serviceOrderController = {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
 
-                            if(startDate && endDate){
+                            if (startDate && endDate) {
                                 qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
                             }
                         })
@@ -788,8 +788,8 @@ const serviceOrderController = {
                             if (filters) {
                                 qb.where(filters);
                             }
-                            if(serviceOrderStatus){
-                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
+                            if (serviceOrderStatus) {
+                                qb.whereIn('status.descriptionEng', serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween("service_orders.completedOn", [
@@ -824,7 +824,7 @@ const serviceOrderController = {
                             if (priority) {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
-                            if(startDate && endDate){
+                            if (startDate && endDate) {
                                 qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
                             }
                         }).groupBy([
@@ -922,12 +922,12 @@ const serviceOrderController = {
 
 
                             if (filters) {
-                                console.log("filters====================>>>>>>>>>>>>>>>>1",filters)
+                                console.log("filters====================>>>>>>>>>>>>>>>>1", filters)
 
                                 qb.where(filters);
                             }
-                            if(serviceOrderStatus){
-                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
+                            if (serviceOrderStatus) {
+                                qb.whereIn('status.descriptionEng', serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween("service_orders.completedOn", [
@@ -966,7 +966,7 @@ const serviceOrderController = {
                             if (priority) {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
-                            if(startDate && endDate){
+                            if (startDate && endDate) {
                                 qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
                             }
 
@@ -986,7 +986,7 @@ const serviceOrderController = {
                             'property_units.id',
                             "companies.id",
                             "projects.id",
-                            
+
 
                         ]),
                     knex
@@ -1064,8 +1064,8 @@ const serviceOrderController = {
                             if (filters) {
                                 qb.where(filters);
                             }
-                            if(serviceOrderStatus){
-                                qb.whereIn('status.descriptionEng',serviceOrderStatus)
+                            if (serviceOrderStatus) {
+                                qb.whereIn('status.descriptionEng', serviceOrderStatus)
                             }
                             if (completedFromDate && completedToDate) {
                                 qb.whereBetween("service_orders.completedOn", [
@@ -1104,7 +1104,7 @@ const serviceOrderController = {
                                 qb.where('service_requests.priority', 'ilike', `%${priority}%`)
                             }
 
-                            if(startDate && endDate){
+                            if (startDate && endDate) {
                                 qb.whereBetween('service_orders.createdAt', [currentStartTime, currentEndTime])
                             }
                         })
@@ -1115,23 +1115,23 @@ const serviceOrderController = {
             }
             const Parallel = require('async-parallel');
 
-            rows = await Parallel.map(rows, async(row)=>{
+            rows = await Parallel.map(rows, async (row) => {
                 const teamData = await knex
                     .from("assigned_service_team")
-                    .leftJoin("teams","assigned_service_team.teamId","teams.teamId")
-                    .leftJoin("users","assigned_service_team.userId","users.id")
+                    .leftJoin("teams", "assigned_service_team.teamId", "teams.teamId")
+                    .leftJoin("users", "assigned_service_team.userId", "users.id")
                     .select([
                         "users.userName as Assigned Main User",
                         "teams.teamName as Team Name",
                         // "users.name as Created By",
-                      ])
-                      .where({
+                    ])
+                    .where({
                         "assigned_service_team.entityId": row.id,
                         "assigned_service_team.entityType": "service_requests",
-                      })
-                      .first()
+                    })
+                    .first()
 
-                      return { ...row, ...teamData };
+                return { ...row, ...teamData };
             })
 
 
@@ -1159,7 +1159,7 @@ const serviceOrderController = {
                 }
                 return {
                     ...pd,
-                    "Tenant Name":tetantResult ? tetantResult.name : ''
+                    "Tenant Name": tetantResult ? tetantResult.name : ''
                 }
 
 
@@ -1258,7 +1258,7 @@ const serviceOrderController = {
     updateServiceOrder: async (req, res) => {
         try {
             let ALLOWED_CHANNELS = ['IN_APP', 'EMAIL', 'WEB_PUSH', 'SOCKET_NOTIFY', 'LINE_NOTIFY'];
-            let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
+            let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
 
             await knex.transaction(async trx => {
                 let serviceOrder = null;
@@ -2193,7 +2193,7 @@ const serviceOrderController = {
             let assignUserResult;
 
             let sender = await knex.from("users").where({ id: req.me.id }).first();
-            let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH","SOCKET_NOTIFY"];
+            let ALLOWED_CHANNELS = ["IN_APP", "EMAIL", "WEB_PUSH", "SOCKET_NOTIFY"];
 
 
             await knex.transaction(async trx => {
@@ -2293,9 +2293,9 @@ const serviceOrderController = {
                 let createdBy;
                 let requestedBy;
                 serviceRequestResult = await knex('service_requests').where({ id: req.body.serviceReuqestId, orgId: req.orgId }).first();
-                let orgMaster = await knex.from("organisations").where({ id: req.orgId}).first();
+                let orgMaster = await knex.from("organisations").where({ id: req.orgId }).first();
 
-       
+
                 if (serviceRequestResult) {
 
                     userResult = await knex('users')
@@ -2758,7 +2758,8 @@ const serviceOrderController = {
     getServiceOrderDueDate: async (req, res) => {
         try {
             const soId = req.body.soId;
-            const so = await knex('service_orders').select('orderDueDate', 'displayId').where({ id: soId }).first();
+            const so = await knex
+                .from('service_orders').select('orderDueDate', 'displayId').where({ "id": soId }).first();
             if (so) {
                 return res.status(200).json({
                     data: {
@@ -2774,7 +2775,7 @@ const serviceOrderController = {
             })
         } catch (err) {
             console.log(
-                "[controllers][quotation][getQuotationDetails] :  Error",
+                "[controllers][Service-order][service-order-due-date] :  Error",
                 err
             );
             //trx.rollback
@@ -2930,7 +2931,7 @@ const serviceOrderController = {
                         qb.whereBetween('service_orders.createdAt', [payload.createFromDate, payload.createToDate])
                     }
                 })
-                .where({"assigned_service_team.entityType": "service_requests"})
+                .where({ "assigned_service_team.entityType": "service_requests" })
                 .whereIn('service_requests.projectId', accessibleProjects)
                 .distinct('service_requests.id')
                 .orderBy('service_requests.id', 'desc')
@@ -2984,7 +2985,7 @@ const serviceOrderController = {
                 }
                 return {
                     ...pd,
-                    "Tenant Name":tetantResult ? tetantResult.name : ''
+                    "Tenant Name": tetantResult ? tetantResult.name : ''
                 }
 
             })
