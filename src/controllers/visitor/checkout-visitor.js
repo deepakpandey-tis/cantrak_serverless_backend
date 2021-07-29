@@ -12,6 +12,7 @@ const checkoutVisitor = async (req, res) => {
         let userName = req.me.name;
         let visitorDetail = null;
         let updateInvitation = null;
+        let images = [];
         var selectedRecs;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
@@ -19,7 +20,7 @@ const checkoutVisitor = async (req, res) => {
         let currentTime = new Date().getTime();
 
         const payload = req.body;
-        const {pkey, cols} = payload.data;
+        const {pkey, cols, photoIdCards} = payload.data;
         console.log('pkey cols: ', pkey, cols);
 
         // Checking whether logged-in user is allowed to check-out visitors of tenant's project
@@ -94,6 +95,15 @@ const checkoutVisitor = async (req, res) => {
 
           updateInvitation = updateResult[0];
 
+          // Insert images in images table
+          let imagesData = photoIdCards;
+          if (imagesData && imagesData.length > 0) {
+            for (image of imagesData) {
+                let d = await knex.insert({ ...image, createdAt: currentTime, updatedAt: currentTime, orgId: req.orgId }).returning(['*']).transacting(trx).into('images');
+                images.push(d[0])
+            }
+          }
+
           // Send check-out notification
           let orgData = await knex('organisations').where({ id: orgId }).first();
 
@@ -139,7 +149,8 @@ const checkoutVisitor = async (req, res) => {
 
       return res.status(200).json({
         data: {
-          invitation: updateInvitation
+          invitation: updateInvitation,
+          photoIdCards: images
         },
         message: 'Check-out successfully completed!'
       });
@@ -153,3 +164,7 @@ const checkoutVisitor = async (req, res) => {
 }
 
 module.exports = checkoutVisitor;
+
+/**
+ * 2021/07/26 Code to insert (visitor ticket) in images table added
+ */

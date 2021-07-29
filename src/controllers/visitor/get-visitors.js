@@ -4,9 +4,11 @@ const getVisitors = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
+        let payload = req.body;
         let sqlStr = '';
 
-        let visitorSelect = req.query.visitorSelect;
+        //let visitorSelect = req.query.visitorSelect;
+        let visitorSelect = payload.visitorSelect;
 
         let visitorDetail = null;
 
@@ -29,8 +31,14 @@ const getVisitors = async (req, res) => {
             ORDER BY vi."arrivalDate" desc, vi.id` ;
         }
         else if(visitorSelect == 2){            // Visitors History: Cancelled || No Show || Checked-out
-            sqlStr = sqlStr + ` and (vi."status" = 3 or (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') < to_char(now(), 'YYYYMMDD') and vi."actualArrivalDate" is null) or vi."actualDepartureDate" is not null) 
-            ORDER BY vi."arrivalDate" desc, vi."actualArrivalDate" desc, vi.id asc` ;
+            sqlStr = sqlStr + ` and (vi."status" = 3 or (to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') < to_char(now(), 'YYYYMMDD') and vi."actualArrivalDate" is null) or vi."actualDepartureDate" is not null)`;
+            if(payload?.filter?.startDate){
+                sqlStr = sqlStr + ` and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') >= '${payload.filter.startDate}' and to_char(to_timestamp(vi."arrivalDate" / 1000.0), 'YYYYMMDD') <= '${payload.filter.endDate}'`;
+            }
+            sqlStr = sqlStr + ` ORDER BY vi."arrivalDate" desc, vi."actualArrivalDate" desc, vi.id asc` ;
+            if(payload?.filter?.limit && payload.filter.limit > 0){
+                sqlStr = sqlStr + ` limit ${payload.filter.limit}`;
+            }
         }
         /*
         else all visitors

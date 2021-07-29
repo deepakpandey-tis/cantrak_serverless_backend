@@ -69,7 +69,7 @@ router.get(
     , visitorController.getCheckoutVisitors
 );
 
-router.get(
+router.post(
     "/get-visitors"
     , authMiddleware.isAuthenticated
     , visitorController.getVisitors
@@ -147,6 +147,14 @@ router.post(
     , roleMiddleware.parseUserPermission
     , resourceAccessMiddleware.isVisitorManagementAccessible
     , visitorController.getCalendarVisitorList
+);
+
+router.post(
+    "/get-tenant-visitor-list"
+    , authMiddleware.isAuthenticated
+    //, roleMiddleware.parseUserPermission
+    //, resourceAccessMiddleware.isVisitorManagementAccessible
+    , visitorController.getTenantVisitorList
 );
 
 module.exports = router;

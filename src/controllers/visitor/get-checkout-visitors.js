@@ -36,6 +36,7 @@ const getCheckoutVisitors = async (req, res) => {
 
         // Visitors only of authorised projects of logged-in user
         sqlWhere += ` and pu."projectId" in (${authorisedProjectIds})`;
+        sqlWhere += ' ORDER BY vi."departureDate" desc'
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
         //console.log('get-checkin-visitors: ', sqlStr);

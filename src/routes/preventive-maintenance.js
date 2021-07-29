@@ -167,4 +167,37 @@ router.post(
   pmController.getWorkOrderToAssignedTechnicianForBarChart
 )
 
+router.get(
+  '/company-lists-for-pm',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getCompanyList
+
+)
+
+router.post(
+  '/get-work-done-chart-data',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getWorkDoneChartDataForPMReport
+)
+
+router.post(
+  '/get-pm-work-report-chart-data',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getPMWorkReportChartData
+)
+
+router.post(
+  '/get-pm-report-based-on-asset-category',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPMAccessible,
+  pmController.getPmReportBasedOnAssetCategory
+)
+
 module.exports = router;
