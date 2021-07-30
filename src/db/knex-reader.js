@@ -47,8 +47,8 @@ module.exports = require('knex')({
     },
     debug: process.env.NODE_ENV === 'local' ? true : false,
     pool: {
-        min: 1,
-        max: 20,
+        min: 0,
+        max: 7,
         
         // create operations are cancelled after this many milliseconds
         // if a resource cannot be acquired
