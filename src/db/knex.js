@@ -38,10 +38,10 @@ module.exports = require('knex')({
         acquireTimeoutMillis: 25000,
 
         // free resouces are destroyed after this many milliseconds
-        idleTimeoutMillis: 30000,
+        idleTimeoutMillis: 20000,
 
         // how often to check for idle resources to destroy
-        reapIntervalMillis: 1000,
+        reapIntervalMillis: 600,
 
         // how long to idle after failed create before trying again
         createRetryIntervalMillis: 300,
