@@ -2,8 +2,25 @@ const express = require('express');
 const sls = require('serverless-http');
 const createError = require('http-errors');
 const path = require('path');
-const i18n = require('i18n');
+// const i18n = require('i18n');
 const indexRouter = require('./routes/index');
+
+const knex = require('../src/db/knex');
+const knexReader = require('../src/db/knex-reader');
+
+
+// https://github.com/knex/knex/issues/1875
+// https://github.com/knex/knex/issues/3636
+const knexTestQuery = async () => {
+  try {
+    // do a test query to make sure the knex connection pool is ready to go after lambda unfreeze
+    await knex.raw(`select 1 as "one";`);
+    await knexReader.raw(`select 2 as "two";`);
+  } catch (err) {
+    // log but otherwise ignore errors here
+    console.log('Postgres-Knex Revalidate Pool Query Error:', err.message);
+  }
+}
 
 /**
  * App
@@ -31,6 +48,13 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, XMLHttpRequest, ngsw-bypass');
+  next();
+});
+
+
+app.use(async (req, res, next) => {
+  console.log('Validating Connection Pool of Knex...');
+  await knexTestQuery();
   next();
 });
 

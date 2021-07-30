@@ -48,12 +48,12 @@ module.exports = require('knex')({
     debug: process.env.NODE_ENV === 'local' ? true : false,
     pool: {
         min: 0,
-        max: 7,
-        
+        max: 10,
+
         // create operations are cancelled after this many milliseconds
         // if a resource cannot be acquired
         createTimeoutMillis: 5000,
-        
+
         // acquire promises are rejected after this many milliseconds
         // if a resource cannot be acquired
         acquireTimeoutMillis: 25000,
@@ -72,11 +72,8 @@ module.exports = require('knex')({
         // create is retried until acquireTimeoutMillis milliseconds has
         // passed.
         propagateCreateError: false, // <- default is true, set to false
-        
-        afterCreate: async (conn, done) => {
 
-            await conn.query(`select 1 as "one";`);
-            await conn.query(`select 2 as "two";`);
+        afterCreate: async (conn, done) => {
 
             await conn.query('SET timezone="Asia/Bangkok";');
 
@@ -101,6 +98,12 @@ module.exports = require('knex')({
                     select pg_terminate_backend(pid) from inactive_connections where rank > 1;`);
                 console.log('[Knex][Init][Pool] After Create, Closed Old Connections', oldConnections.rows);
             }
+
+            conn.on('error', (err) => {
+                console.log('POSTGRES CONNECTION ERROR:');
+                console.error(err)
+            });
+
             done(null, conn);
         }
     }
