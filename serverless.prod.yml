@@ -74,7 +74,7 @@ provider:
     DB_HOST: pg888-db-cluster-instance-1.cvlfqh5yw9tp.ap-southeast-1.rds.amazonaws.com
     DB_PORT: 5432
     SITE_URL: https://d3m3k4hno3r3ok.cloudfront.net
-    ORIGIN_URL: https://f46f62eq43.execute-api.ap-southeast-1.amazonaws.com/production
+    ORIGIN_URL: https://5dec4xg2n8.execute-api.ap-southeast-1.amazonaws.com/production
     JWT_PRIVATE_KEY: t6sadtrtt54ysfdf5y*hjhfd&56640)hkuksadasdas
     S3_BUCKET_NAME: pg888-resources
     VAPID_PUBLIC_KEY: BMpCMLxldme4F8BHAKyz41cAEh8FgFvibgwdJrM7LH8Th5t47J84NVGZiPhuTOEKRBOzfsJMAgXQueLjPyoc8z0
@@ -86,7 +86,7 @@ provider:
     FROM_EMAIL_ADDRESS: no-reply@servicemind.asia
     APP_ENV: PRODUCTION
     S3_BUCKET_URL:  https://pg888-resources.s3.ap-southeast-1.amazonaws.com
-    SOCKET_ENDPOINT: wss://84vtrodbe9.execute-api.ap-southeast-1.amazonaws.com/production
+    SOCKET_ENDPOINT: wss://k0l99tstv9.execute-api.ap-southeast-1.amazonaws.com/production
     # CDN_URL: resources.servicemind.asia
     REDIS_HOST: pg888-redis.kdebs8.ng.0001.apse1.cache.amazonaws.com
     REDIS_PORT: 6379
