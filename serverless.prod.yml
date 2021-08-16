@@ -6,9 +6,8 @@ service: ${self:custom.serviceName}
   # frameworkVersion: "=X.X.X"
   
 plugins:
-  # - serverless-offline
-  # - serverless-s3-local
-  # - serverless-prune-plugin
+  - serverless-plugin-lambda-insights
+
 
 package:
   patterns:
@@ -69,54 +68,49 @@ provider:
   environment:
     ENV: ${self:provider.stage}
     REGION: ${self:provider.region}
-    DB_USER: servicemind
-    DB_PASS: su99yTIS#2020
-    DB_NAME: tis_database
-    DB_HOST: servicemind-prod-instance-1.cq4cijk9avjt.ap-southeast-1.rds.amazonaws.com
+    DB_USER: pg888
+    DB_PASS: su99yTIS#2021
+    DB_NAME: pg888
+    DB_HOST: pg888-db-cluster-instance-1.cvlfqh5yw9tp.ap-southeast-1.rds.amazonaws.com
     DB_PORT: 5432
-    DB_HOST_READ_ONLY: servicemind-prod-instance-1-ap-southeast-1b.cq4cijk9avjt.ap-southeast-1.rds.amazonaws.com
-    DB_PORT_READ_ONLY: 5432
     SITE_URL: https://d3m3k4hno3r3ok.cloudfront.net
     ORIGIN_URL: https://f46f62eq43.execute-api.ap-southeast-1.amazonaws.com/production
-    JWT_PRIVATE_KEY: t678kuhh5k46j54lnklsfg8e60*&5664)b4&df4444#5
-    S3_BUCKET_NAME: servicemind-resources-prod
+    JWT_PRIVATE_KEY: t6sadtrtt54ysfdf5y*hjhfd&56640)hkuksadasdas
+    S3_BUCKET_NAME: pg888-resources
     VAPID_PUBLIC_KEY: BMpCMLxldme4F8BHAKyz41cAEh8FgFvibgwdJrM7LH8Th5t47J84NVGZiPhuTOEKRBOzfsJMAgXQueLjPyoc8z0
     VAPID_PRIVATE_KEY: MwnSWApwHAJZXnhk6K1s9jqS_ndArrcMSGuI60c7gZc
-    ACCESS_KEY_ID: AKIARCB5JALMMWQLCPHX
-    SECRET_ACCESS_KEY: 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
-    SQS_MAIL_QUEUE_URL: https://sqs.ap-southeast-1.amazonaws.com/073142960856/mail-queue
-    SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/073142960856/long-jobs
+    ACCESS_KEY_ID: AKIA2PLM3DNSLWMFB57N
+    SECRET_ACCESS_KEY: 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
+    SQS_MAIL_QUEUE_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/mail-queue
+    SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/long-jobs
     FROM_EMAIL_ADDRESS: no-reply@servicemind.asia
     APP_ENV: PRODUCTION
-    S3_BUCKET_URL:  https://servicemind-resources-prod.s3.ap-southeast-1.amazonaws.com
+    S3_BUCKET_URL:  https://pg888-resources.s3.ap-southeast-1.amazonaws.com
     SOCKET_ENDPOINT: wss://84vtrodbe9.execute-api.ap-southeast-1.amazonaws.com/production
-    CDN_URL: resources.servicemind.asia
-    REDIS_HOST: prod-redis.7if0si.ng.0001.apse1.cache.amazonaws.com
+    # CDN_URL: resources.servicemind.asia
+    REDIS_HOST: pg888-redis.kdebs8.ng.0001.apse1.cache.amazonaws.com
     REDIS_PORT: 6379
-    MNT_DIR: ${self:custom.localMountPath} 
-    THIRDPARTY_SNS_ARN: arn:aws:sns:ap-southeast-1:351577941956:servicemind-thirdparty-notifications
-    THIRDPARTY_SNS_ARN_REGION: ap-southeast-1
   vpc:
     securityGroupIds:
-      - sg-0b04bfab1291e87d0
+      - sg-03ab4859828983c2a
     subnetIds:
-      - subnet-072b38f50b7ec4740
-      - subnet-0d86435561ec54571
+      - subnet-04167c7353716ccb9
+      - subnet-054ddfd13f02560b9
   
 
 custom:
-  serviceName: servicemind
-  awsAccountId: "073142960856"
+  serviceName: pg888
+  awsAccountId: "720172161892"
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
-  bucket: servicemind-resources-prod
+  bucket: pg888-resources-prod
   defaultStage: prod
   profiles:
     dev: dev
     stage: stage
     prod: prod
-  efsAccessPoint: fsap-0e40c7589c6ba78ed
-  localMountPath: /mnt/efs
+  lambdaInsights:
+    defaultLambdaInsights: true #enables Lambda Insights for all functions
   
   
 functions:
@@ -171,7 +165,7 @@ functions:
     handler: src/handlers/socket.auth
 
 
-  queueProcessor:
+  SQS:
     handler: src/handlers/jobs.queueProcessor
     memorySize: 1024
     timeout: 150
@@ -201,39 +195,3 @@ functions:
       - schedule:
           rate: rate(1 hour)
           enabled: true
-
-
-  dailyDigestProcessor:
-    handler: src/handlers/daily-tasks.dailyDigestProcessor
-    memorySize: 1024
-    timeout:  899                     # Max Time out is 15 mins..
-    events:
-      - schedule:
-          rate: cron(0 1 * * ? *)    # Utc 1 am every day i.e 8 am Morning Thai Time..
-          enabled: true        
-
-
-  # dailyDbWakeUpProcessor:
-  #   handler: src/handlers/daily-tasks.dBWakeUpTask
-  #   memorySize: 256
-  #   timeout:  300                     # Max Time out is 5 mins..
-  #   events:
-  #     - schedule:
-  #         rate: cron(0 1 * * ? *)    # Utc 1 am every day i.e 8:00 am Morning Thai Time..
-  #         enabled: true
-  #     - schedule:
-  #         rate: cron(30 1 * * ? *)    # Utc 1 am every day i.e 8:30 am Morning Thai Time..
-  #         enabled: true
-  #     - schedule:
-  #         rate: cron(0 2 * * ? *)    # Utc 1 am every day i.e 9 am Morning Thai Time..
-  #         enabled: true     
-
-
-resources:
-  extensions:
-    # Name of function <longJobsProcessor>
-    LongJobsProcessorLambdaFunction:
-      Properties:
-        FileSystemConfigs:
-          - Arn: 'arn:aws:elasticfilesystem:${self:provider.region}:${self:custom.awsAccountId}:access-point/${self:custom.efsAccessPoint}'
-            LocalMountPath: '${self:custom.localMountPath}'

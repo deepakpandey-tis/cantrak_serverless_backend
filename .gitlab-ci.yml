@@ -5,7 +5,7 @@ stages:
   - migrate
 
 cache:
-  key: "17072021"
+  key: "11082021"
   paths:
     - node_modules/
 
@@ -19,54 +19,21 @@ deploy_master:
     - rm ./package-lock.json
     - npm install -g serverless
     - npm install
-    - sls config credentials --profile servicemind-production --provider aws --key $MASTER_AWS_KEY --secret $MASTER_AWS_SECRET
-    - NODE_ENV=production sls deploy --stage production --aws-profile servicemind-production --config serverless.prod.yml
+    - sls config credentials --profile pg888-production --provider aws --key $MASTER_AWS_KEY --secret $MASTER_AWS_SECRET
+    - NODE_ENV=production sls deploy --stage production --aws-profile pg888-production --config serverless.prod.yml
     - echo 'Success'
 
 
 
-migrate_master:
-  image: curlimages/curl:7.77.0
-  stage: migrate
-  only:
-    - master
-  needs: [
-    deploy_master
-  ]  
-  script:
-    - curl -V
-    - curl -v https://f46f62eq43.execute-api.ap-southeast-1.amazonaws.com/production/db-migration/migrate-latest
-    - echo 'Success'
-
-
-
-
-
-
-#### Staging 
-deploy_stage:
-  stage: deploy
-  only:
-    - stage
-  script:
-    - node -v
-    - rm ./package-lock.json
-    - npm install -g serverless
-    - npm install
-    - sls config credentials --profile servicemind-stage --provider aws --key ${STAGE_AWS_KEY} --secret ${STAGE_AWS_SECRET}
-    - SLS_DEBUG=* NODE_ENV=stage sls deploy --stage stage --aws-profile servicemind-stage --config serverless.stage.yml
-    - echo 'Success'
-
-
-migrate_stage:
-  image: curlimages/curl:7.77.0
-  stage: migrate
-  only:
-    - stage
-  needs: [
-    deploy_stage
-  ]    
-  script:
-    - curl -V
-    - curl -v https://6w6qx81hqb.execute-api.ap-southeast-1.amazonaws.com/stage/db-migration/migrate-latest
-    - echo 'Success'
+# migrate_master:
+#   image: curlimages/curl:7.77.0
+#   stage: migrate
+#   only:
+#     - master
+#   needs: [
+#     deploy_master
+#   ]  
+#   script:
+#     - curl -V
+#     - curl -v https://f46f62eq43.execute-api.ap-southeast-1.amazonaws.com/production/db-migration/migrate-latest
+#     - echo 'Success'
