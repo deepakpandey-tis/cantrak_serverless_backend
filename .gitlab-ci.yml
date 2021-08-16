@@ -25,15 +25,15 @@ deploy_master:
 
 
 
-# migrate_master:
-#   image: curlimages/curl:7.77.0
-#   stage: migrate
-#   only:
-#     - master
-#   needs: [
-#     deploy_master
-#   ]  
-#   script:
-#     - curl -V
-#     - curl -v https://f46f62eq43.execute-api.ap-southeast-1.amazonaws.com/production/db-migration/migrate-latest
-#     - echo 'Success'
+migrate_master:
+  image: curlimages/curl:7.77.0
+  stage: migrate
+  only:
+    - master
+  needs: [
+    deploy_master
+  ]  
+  script:
+    - curl -V
+    - curl -v https://5dec4xg2n8.execute-api.ap-southeast-1.amazonaws.com/production/db-migration/migrate-latest
+    - echo 'Success'
