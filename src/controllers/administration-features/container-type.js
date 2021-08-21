@@ -9,8 +9,8 @@ const fs = require('fs');
 const path = require('path');
 
 
-const propertyUnitTypeController = {
-  addPropertyUnitType: async (req, res) => {
+const containerTypeController = {
+  addContainerType: async (req, res) => {
 
     try {
       let orgId = req.orgId;
@@ -50,7 +50,7 @@ const propertyUnitTypeController = {
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: "Property Unit type code already exist!!" }
+              { code: "VALIDATION_ERROR", message: "Container Type code already exist!!" }
             ]
           });
         }
@@ -81,7 +81,7 @@ const propertyUnitTypeController = {
         data: {
           propertyType: propertyType
         },
-        message: "Property Unit Type added successfully."
+        message: "Container Type added successfully."
       });
     } catch (err) {
       console.log(
@@ -94,7 +94,7 @@ const propertyUnitTypeController = {
       });
     }
   },
-  updatePropertyUnitType: async (req, res) => {
+  updateContainerType: async (req, res) => {
     try {
       let PropertyType = null;
       let userId = req.me.id;
@@ -137,7 +137,7 @@ const propertyUnitTypeController = {
           } else {
             return res.status(400).json({
               errors: [
-                { code: "VALIDATION_ERROR", message: "Property unit type code Already exist!!" }
+                { code: "VALIDATION_ERROR", message: "Container Type code Already exist!!" }
               ]
             });
           }
@@ -161,7 +161,7 @@ const propertyUnitTypeController = {
         data: {
           PropertyType: PropertyType
         },
-        message: "Property Unit Type details updated successfully."
+        message: "Container Type details updated successfully."
       });
     } catch (err) {
       console.log(
@@ -174,7 +174,7 @@ const propertyUnitTypeController = {
       });
     }
   },
-  togglePropertyUnitType: async (req, res) => {
+  toggleContainerType: async (req, res) => {
     try {
       let propertyType = null;
       let orgId = req.orgId;
@@ -207,7 +207,7 @@ const propertyUnitTypeController = {
               .transacting(trx)
               .into("property_unit_type_master");
 
-            message = "Property Unit Type Inactive Successfully!"
+            message = "Container Type Inactive Successfully!"
 
           } else {
             propertyTypeResult = await knex
@@ -216,7 +216,7 @@ const propertyUnitTypeController = {
               .returning(["*"])
               .transacting(trx)
               .into("property_unit_type_master");
-            message = "Property Unit Type Active Successfully!"
+            message = "Container Type Active Successfully!"
           }
 
         }
@@ -241,7 +241,7 @@ const propertyUnitTypeController = {
       });
     }
   },
-  getPropertyUnitTypeList: async (req, res) => {
+  getContainerTypeList: async (req, res) => {
     try {
 
       let sortPayload = req.body;
@@ -310,7 +310,7 @@ const propertyUnitTypeController = {
         data: {
           propertyUnitType: pagination
         },
-        message: "Property Unit Type List!"
+        message: "Container Type List!"
       });
     } catch (err) {
       console.log(
@@ -324,7 +324,7 @@ const propertyUnitTypeController = {
     }
 
   },
-  getAllPropertyUnitTypeList: async (req, res) => {
+  getAllContainerTypeList: async (req, res) => {
     try {
      
       let orgId = req.orgId;
@@ -334,7 +334,7 @@ const propertyUnitTypeController = {
       return res.status(200).json({
         data:{
           result:result        } ,
-        message: "Property Unit Type List!"
+        message: "Container Type List!"
       });
     } catch (err) {
       console.log("[controllers][generalsetup][] :  Error", err);
@@ -344,7 +344,7 @@ const propertyUnitTypeController = {
       });
     }
   },
-  getPropertyUnitTypeDetail: async (req, res) => {
+  getContainerTypeDetail: async (req, res) => {
 
 
     let id = req.query.id;
@@ -354,10 +354,10 @@ const propertyUnitTypeController = {
       data: {
         details: details
       },
-      message: "Property unit type details!"
+      message: "Container Type detail!"
     });
   }
 
 };
 
-module.exports = propertyUnitTypeController;
+module.exports = containerTypeController;

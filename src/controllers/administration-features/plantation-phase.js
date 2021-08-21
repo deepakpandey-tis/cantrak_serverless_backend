@@ -15,8 +15,8 @@ const request = require("request");
 const { whereIn } = require("../../db/knex");
 const { join } = require("path");
 
-const buildingPhaseController = {
-    addBuildingPhase: async (req, res) => {
+const plantationPhaseController = {
+    addPlantationPhase: async (req, res) => {
         try {
             let buildingPhase = null;
             let userId = req.me.id;
@@ -76,7 +76,7 @@ const buildingPhaseController = {
                 if (existValue && existValue.length) {
                     return res.status(400).json({
                         errors: [
-                            { code: "VALIDATION_ERROR", message: "Building Phase code already exist!!" }
+                            { code: "VALIDATION_ERROR", message: "Plantation Phase code already exist!!" }
                         ]
                     });
                 }
@@ -107,7 +107,7 @@ const buildingPhaseController = {
                 data: {
                     buildingPhase: buildingPhase
                 },
-                message: "Building Phase added successfully."
+                message: "Plantation Phase added successfully."
             });
         } catch (err) {
             console.log(
@@ -120,7 +120,7 @@ const buildingPhaseController = {
             });
         }
     },
-    addBuildingInfo: async (req, res) => {
+    addPlantationInfo: async (req, res) => {
         try {
             let addedDescription = []
 
@@ -179,7 +179,7 @@ const buildingPhaseController = {
                 data: {
                     buildingInfo: addedDescription
                 },
-                message: "Building Info added successfully."
+                message: "Plantation Phase Info added successfully."
             });
 
         } catch (err) {
@@ -191,7 +191,7 @@ const buildingPhaseController = {
 
         }
     },
-    getBuildingInfoByBuildingId: async (req, res) => {
+    getPlantationInfoByPlantationId: async (req, res) => {
         try {
 
             console.log("get bulding info", req.body)
@@ -341,7 +341,7 @@ const buildingPhaseController = {
             );
         }
     },
-    updateBuildingPhase: async (req, res) => {
+    updatePlantationPhase: async (req, res) => {
         try {
             let userId = req.me.id;
             let orgId = req.orgId;
@@ -386,7 +386,7 @@ const buildingPhaseController = {
                     } else {
                         return res.status(400).json({
                             errors: [
-                                { code: "VALIDATION_ERROR", message: "Building Phase code already exist!!" }
+                                { code: "VALIDATION_ERROR", message: "Plantation Phase code already exist!!" }
                             ]
                         });
                     }
@@ -410,7 +410,7 @@ const buildingPhaseController = {
                 data: {
                     buildingPhase: buildingPhase
                 },
-                message: "Building Phase details updated successfully."
+                message: "Plantation Phase details updated successfully."
             });
         } catch (err) {
             console.log(
@@ -423,7 +423,7 @@ const buildingPhaseController = {
             });
         }
     },
-    generateBuildingId: async (req, res) => {
+    generatePlantationId: async (req, res) => {
         try {
             const generatedId = await knex("buildings_and_phases")
                 .insert({ createdAt: new Date().getTime() })
@@ -440,7 +440,7 @@ const buildingPhaseController = {
             });
         }
     },
-    viewBuildingPhase: async (req, res) => {
+    viewPlantationPhase: async (req, res) => {
         try {
             let buildingPhase = null;
             await knex.transaction(async trx => {
@@ -502,7 +502,7 @@ const buildingPhaseController = {
                 data: {
                     buildingPhase: buildingPhase
                 },
-                message: "Building Phase details"
+                message: "Plantation Phase details"
             });
         } catch (err) {
             console.log(
@@ -515,7 +515,7 @@ const buildingPhaseController = {
             });
         }
     },
-    deleteBuildingPhase: async (req, res) => {
+    deletePlantationPhase: async (req, res) => {
         try {
             let buildingPhase = null;
             let message;
@@ -549,7 +549,7 @@ const buildingPhaseController = {
                             .transacting(trx)
                             .into("buildings_and_phases");
                         buildingPhase = buildingPhaseResult[0];
-                        message = "Building Phase deactivate successfully!"
+                        message = "Plantation Phase deactivate successfully!"
 
                     } else {
 
@@ -560,7 +560,7 @@ const buildingPhaseController = {
                             .transacting(trx)
                             .into("buildings_and_phases");
                         buildingPhase = buildingPhaseResult[0];
-                        message = "Building Phase activate successfully!"
+                        message = "Plantation Phase activate successfully!"
                     }
                 }
                 trx.commit;
@@ -583,7 +583,7 @@ const buildingPhaseController = {
             });
         }
     },
-    getBuildingPhaseList: async (req, res) => {
+    getPlantationPhaseList: async (req, res) => {
         try {
 
             let resourceProject = req.userProjectResources[0].projects;
@@ -829,7 +829,7 @@ const buildingPhaseController = {
                 data: {
                     buildingPhases: pagination
                 },
-                message: "Building Phases List!"
+                message: "Plantation Phases List!"
             });
         } catch (err) {
             console.log(
@@ -841,9 +841,9 @@ const buildingPhaseController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
-        // Export Building Phase Data
+        // Export Plantation Phase Data
     },
-    exportBuildingPhase: async (req, res) => {
+    exportPlantationPhase: async (req, res) => {
         try {
             let orgId = req.orgId;
             let companyId = req.query.companyId;
@@ -976,7 +976,7 @@ const buildingPhaseController = {
                             data: {
                                 buildingPhases: rows
                             },
-                            message: "Building Phases Data Export Successfully!",
+                            message: "Plantation Phases Data Export Successfully!",
                             url: url
                         });
                     }
@@ -993,7 +993,7 @@ const buildingPhaseController = {
             });
         }
     },
-    getBuildingPhaseAllList: async (req, res) => {
+    getPlantationPhaseAllList: async (req, res) => {
         try {
             let projectId = req.query.projectId;
             let orgId = req.orgId;
@@ -1034,7 +1034,7 @@ const buildingPhaseController = {
                 data: {
                     buildingPhases: buildingData
                 },
-                message: "Building Phases List!"
+                message: "Plantation Phases List!"
             });
         } catch (err) {
             console.log(
@@ -1047,7 +1047,7 @@ const buildingPhaseController = {
             });
         }
     },
-    getBuildingPhase: async (req, res) => {
+    getPlantationPhase: async (req, res) => {
         try {
 
             let orgId = req.orgId
@@ -1070,7 +1070,7 @@ const buildingPhaseController = {
             });
         }
     },
-    getBuildingPhaseListByProjectId: async (req, res) => {
+    getPlantationPhaseListByProjectId: async (req, res) => {
         try {
             const { projectId } = req.body;
             let orgId = req.orgId;
@@ -1105,7 +1105,7 @@ const buildingPhaseController = {
             });
         }
     },
-    getBuildingPhaseListByMultipleProjectId: async (req, res) => {
+    getPlantationPhaseListByMultipleProjectId: async (req, res) => {
         try {
             let projectId = req.body;
             let orgId = req.orgId;
@@ -1139,7 +1139,7 @@ const buildingPhaseController = {
 
         }
     },
-    importBuildingData: async (req, res) => {
+    importPlantationData: async (req, res) => {
         try {
 
             let result = null;
@@ -1204,7 +1204,7 @@ const buildingPhaseController = {
 
                             if (!buildingData.F) {
                                 let values = _.values(buildingData)
-                                values.unshift('Building phase Code can not empty!')
+                                values.unshift('Plantation phase Code can not empty!')
                                 errors.push(values);
                                 fail++;
                                 continue;
@@ -1361,7 +1361,7 @@ const buildingPhaseController = {
             });
         }
     },
-    getBuildingPhaseAllListHavingPropertyUnits: async (req, res) => {
+    getPlantationPhaseAllListHavingPropertyUnits: async (req, res) => {
         try {
             let projectId = req.query.projectId;
             let orgId = req.orgId;
@@ -1536,7 +1536,7 @@ const buildingPhaseController = {
                 data: {
                     buildingPhases: buildingData
                 },
-                message: "Building Phases List!"
+                message: "Plantation Phases List!"
             });
         } catch (err) {
             console.log(
@@ -1549,7 +1549,7 @@ const buildingPhaseController = {
             });
         }
     },
-    getBuildingPhaseAllListHavingPropertyUnitsAndWithoutUnits: async (req, res) => {
+    getPlantationPhaseAllListHavingPropertyUnitsAndWithoutUnits: async (req, res) => {
         try {
             let projectId = req.query.projectId;
             let orgId = req.orgId;
@@ -1724,7 +1724,7 @@ const buildingPhaseController = {
                 data: {
                     buildingPhases: buildingData
                 },
-                message: "Building Phases List!"
+                message: "Plantation Phases List!"
             });
         } catch (err) {
             console.log(
@@ -1738,7 +1738,7 @@ const buildingPhaseController = {
         }
     },
     
-    getBuildingPhaseById: async (req, res) => {
+    getPlantationPhaseById: async (req, res) => {
         try {
             let id = req.body.id
             let orgId = req.orgId
@@ -1755,7 +1755,7 @@ const buildingPhaseController = {
                 data: {
                     buildingPhases: buildingPhaseResult
                 },
-                message: "Building Phases List!"
+                message: "Plantation Phases List!"
             });
 
         } catch (err) {
@@ -1771,7 +1771,7 @@ const buildingPhaseController = {
     }
 
     ,
-    getUnitListByBuildingId: async (req, res) => {
+    getUnitListByPlantationId: async (req, res) => {
 
         try {
 
@@ -1808,7 +1808,7 @@ const buildingPhaseController = {
 
             return res.status(200).json({
                 data: rows,
-                message: "Building Phases List!"
+                message: "Plantation Phases List!"
             });
 
         } catch (err) {
@@ -1822,4 +1822,4 @@ const buildingPhaseController = {
 
 };
 
-module.exports = buildingPhaseController;
+module.exports = plantationPhaseController;

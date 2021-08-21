@@ -13,8 +13,8 @@ const fs = require('fs');
 const path = require('path');
 
 
-const propertyTypeController = {
-  addPropertyType: async (req, res) => {
+const plantationTypeController = {
+  addPlantationType: async (req, res) => {
     try {
       let orgId = req.orgId;
       let userId = req.me.id;
@@ -97,7 +97,7 @@ const propertyTypeController = {
       });
     }
   },
-  updatePropertyType: async (req, res) => {
+  updatePlantationType: async (req, res) => {
     try {
       let PropertyType = null;
       let userId = req.me.id;
@@ -176,7 +176,7 @@ const propertyTypeController = {
       });
     }
   },
-  deletePropertyType: async (req, res) => {
+  deletePlantationType: async (req, res) => {
     try {
       let propertyType = null;
       let orgId = req.orgId;
@@ -243,7 +243,7 @@ const propertyTypeController = {
       });
     }
   },
-  getPropertyTypeList: async (req, res) => {
+  getPlantationTypeList: async (req, res) => {
     try {
 
       let sortPayload = req.body;
@@ -366,7 +366,7 @@ const propertyTypeController = {
     }
     // Export Building Phase Data
   },
-  exportPropertyType: async (req, res) => {
+  exportPlantationType: async (req, res) => {
     try {
       let orgId = req.orgId;
 
@@ -465,7 +465,7 @@ const propertyTypeController = {
       });
     }
   },
-  getPropertyDetails: async (req, res) => {
+  getPlantationTypeDetails: async (req, res) => {
     try {
       let property = null;
       let orgId = req.orgId;
@@ -508,7 +508,7 @@ const propertyTypeController = {
       });
     }
   },
-  getAllPropertyTypeList: async (req, res) => {
+  getAllPlantationTypeList: async (req, res) => {
     try {
       let pagination = {};
       let orgId = req.orgId;
@@ -531,7 +531,7 @@ const propertyTypeController = {
     }
   },
   /**IMPORT PROPERTY TYPE DATA */
-  importPropertyTypeData: async (req, res) => {
+  importPlantationTypeData: async (req, res) => {
     try {
       // if (req.file) {
       // console.log(req.file)
@@ -662,4 +662,4 @@ const propertyTypeController = {
   }
 };
 
-module.exports = propertyTypeController;
+module.exports = plantationTypeController;
