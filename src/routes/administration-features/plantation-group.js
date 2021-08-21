@@ -2,73 +2,73 @@ const { Router } = require("express");
 
 const router = Router();
 const authMiddleware = require("../../middlewares/auth");
-const floorZoneController = require("../../controllers/administration-features/floor-zone");
+const plantationGroupController = require("../../controllers/administration-features/plantation-group");
 const roleMiddleware = require("../../middlewares/role");
 const resourceAccessMiddleware = require("../../middlewares/resourceAccessMiddleware");
 
 router.post(
-  "/add-floor-zone",
+  "/add-plantation-group",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  floorZoneController.addFloorZone
+  plantationGroupController.addPlantationGroup
 );
 
 router.post(
-  "/update-floor-zone",
+  "/update-plantation-group",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  floorZoneController.updateFloorZone
+  plantationGroupController.updatePlantationGroup
 );
 
 router.post(
-  "/view-floor-zone",
+  "/view-plantation-group",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  floorZoneController.viewFloorZone
+  plantationGroupController.viewPlantationGroup
 );
 
 router.post(
-  "/delete-floor-zone",
+  "/delete-plantation-group",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  floorZoneController.deleteFloorZone
+  plantationGroupController.deletePlantationGroup
 );
 
 router.post(
-  "/get-floor-zone-list-by-building-id",
+  "/get-plantation-group-list-by-phase-id",
   authMiddleware.isAuthenticated,
-  floorZoneController.getFloorZoneListByBuildingId
+  plantationGroupController.getPlantationGroupListByPhaseId
 );
 
 router.post(
-  "/get-floor-zone-list",
+  "/get-plantation-group-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  floorZoneController.getFloorZoneList
-);
-// Export Floor Zone Data
-router.get(
-  "/export-floor-zone",
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
-  floorZoneController.exportFloorZone
+  plantationGroupController.getPlantationGroupList
 );
 
 router.get(
-  "/get-floor-zone-all-list",
+  "/export-plantation-group",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  floorZoneController.getFloorZoneAllList
+  plantationGroupController.exportPlantationGroup
 );
 
-/**IMPORT FLOOR/ZONE DATA */
+router.get(
+  "/get-plantation-group-all-list",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPropertySetupAccessible,
+  plantationGroupController.getPlantationGroupAllList
+);
+
+/**IMPORT DATA */
 const path = require("path");
 let tempraryDirectory = null;
 if (process.env.IS_OFFLINE) {
@@ -83,7 +83,7 @@ var storage = multer.diskStorage({
     let ext = path.extname(file.originalname);
     if (ext == ".csv") {
       time = Date.now();
-      cb(null, "floorZoneData-" + time + ext);
+      cb(null, "PlantationGroupData-" + time + ext);
     } else {
       return false;
     }
@@ -91,33 +91,33 @@ var storage = multer.diskStorage({
 });
 var upload = multer({ storage: storage });
 router.post(
-  "/import-floor-zone-data",
+  "/import-plantation-group-data",
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  floorZoneController.importFloorZoneData
+  plantationGroupController.importPlantationGroupData
 );
 
 router.post(
-  "/get-floor-zone-list-by-building-id-having-property-units",
+  "/get-plantation-group-list-by-phase-id-having-property-units",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  floorZoneController.getFloorZoneListByBuildingIdHavingPropertyUnits
+  plantationGroupController.getPlantationGroupListByPhaseIdHavingPropertyUnits
 );
 
 
 router.post(
-  "/get-floor-zone-list-by-building-id-having-property-units-and-without-units",
+  "/get-plantation-group-list-by-phase-id-having-property-units-and-without-units",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  floorZoneController.getFloorZoneListByBuildingIdHavingPropertyUnitsAndWithoutUnits
+  plantationGroupController.getPlantationGroupListByPhaseIdHavingPropertyUnitsAndWithoutUnits
 );
 
 router.post(
-  "/get-floor-zone-by-multiple-building",
+  "/get-plantation-group-by-multiple-phase",
   authMiddleware.isAuthenticated,
-  floorZoneController.getFloorZoneByMultipleBuildingId
+  plantationGroupController.getPlantationGroupByMultiplePhaseId
 );
 
 module.exports = router;

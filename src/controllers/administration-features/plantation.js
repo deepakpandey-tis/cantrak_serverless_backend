@@ -13,8 +13,8 @@ const fs = require('fs');
 const path = require('path')
 
 
-const ProjectController = {
-  addProject: async (req, res) => {
+const PlantationController = {
+  addPlantation: async (req, res) => {
     try {
       let Project = null;
       let userId = req.me.id;
@@ -104,7 +104,7 @@ const ProjectController = {
         data: {
           project: Project
         },
-        message: "Project added successfully."
+        message: "Plantation added successfully."
       });
     } catch (err) {
       console.log("[controllers][generalsetup][addProject] :  Error", err);
@@ -114,7 +114,7 @@ const ProjectController = {
       });
     }
   },
-  updateProject: async (req, res) => {
+  updatePlantation: async (req, res) => {
     try {
       let Project = null;
       await knex.transaction(async trx => {
@@ -199,7 +199,7 @@ const ProjectController = {
         data: {
           Project: Project
         },
-        message: "Project details updated successfully."
+        message: "Plantation details updated successfully."
       });
     } catch (err) {
       console.log("[controllers][generalsetup][updateProject] :  Error", err);
@@ -209,7 +209,7 @@ const ProjectController = {
       });
     }
   },
-  viewProject: async (req, res) => {
+  viewPlantation: async (req, res) => {
     try {
       let Project = null;
       await knex.transaction(async trx => {
@@ -266,7 +266,7 @@ const ProjectController = {
         data: {
           Project: Project
         },
-        message: "Project details"
+        message: "Plantation details"
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewProject] :  Error", err);
@@ -276,7 +276,7 @@ const ProjectController = {
       });
     }
   },
-  deleteProject: async (req, res) => {
+  deletePlantation: async (req, res) => {
     try {
       let Project = null;
       let message;
@@ -307,7 +307,7 @@ const ProjectController = {
               .transacting(trx)
               .into("projects");
             Project = ProjectResult[0];
-            message = "Project Inactive Successfully!"
+            message = "Plantation Inactive Successfully!"
 
           } else {
             ProjectResult = await knex
@@ -317,7 +317,7 @@ const ProjectController = {
               .transacting(trx)
               .into("projects");
             Project = ProjectResult[0];
-            message = "Project Active Successfully!"
+            message = "Plantation Active Successfully!"
           }
         }
         trx.commit;
@@ -336,7 +336,7 @@ const ProjectController = {
       });
     }
   },
-  getProjectList: async (req, res) => {
+  getPlantationList: async (req, res) => {
     try {
 
       let sortPayload = req.body;
@@ -474,7 +474,7 @@ const ProjectController = {
         data: {
           projects: pagination
         },
-        message: "projects List!"
+        message: "Plantation List!"
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewProject] :  Error", err);
@@ -484,7 +484,7 @@ const ProjectController = {
       });
     }
   },
-  exportProject: async (req, res) => {
+  exportPlantation: async (req, res) => {
     try {
       let companyId = req.query.companyId;
       let reqData = req.query;
@@ -597,7 +597,7 @@ const ProjectController = {
             // let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Project/" + filename;
             return res.status(200).json({
               data: rows,
-              message: "Project Data Export Successfully!",
+              message: "Plantation Data Export Successfully!",
               url: url
             });
           }
@@ -612,7 +612,7 @@ const ProjectController = {
       });
     }
   },
-  getProjectByCompany: async (req, res) => {
+  getPlantationByCompany: async (req, res) => {
     try {
       let companyId = req.query.companyId;
       let projects = _.flatten(
@@ -646,7 +646,7 @@ const ProjectController = {
         data: {
           projects: pagination
         },
-        message: "projects List!"
+        message: "Plantation List!"
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewProject] :  Error", err);
@@ -656,7 +656,7 @@ const ProjectController = {
       });
     }
   },
-  getProjectByMultipleCompany: async (req, res) => {
+  getPlantationByMultipleCompany: async (req, res) => {
     try {
       console.log("conpany id in req", req.body);
       let companyId = [];
@@ -680,7 +680,7 @@ const ProjectController = {
         data: {
           projects: rows
         },
-        message: "projects List!"
+        message: "Plantation List!"
       });
 
     } catch (err) {
@@ -691,7 +691,7 @@ const ProjectController = {
       });
     }
   },
-  getProjectAllList: async (req, res) => {
+  getPlantationAllList: async (req, res) => {
     try {
 
       let orgId = req.orgId
@@ -707,7 +707,7 @@ const ProjectController = {
         data: {
           projects: rows
         },
-        message: "Projects all List!"
+        message: "Plantation all List!"
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewProject] :  Error", err);
@@ -718,7 +718,7 @@ const ProjectController = {
     }
   },
   /**IMPORT PROJECT DATA */
-  importProjectData: async (req, res) => {
+  importPlantationData: async (req, res) => {
     try {
 
       // if (req.file) {
@@ -889,7 +889,7 @@ const ProjectController = {
       });
     }
   },
-  getUserProjectByCompany: async (req, res) => {
+  getUserPlantationByCompany: async (req, res) => {
     try {
       let companyId = req.query.companyId;
 
@@ -917,7 +917,7 @@ const ProjectController = {
         data: {
           projects: pagination
         },
-        message: "projects List!"
+        message: "Plantation List!"
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewProject] :  Error", err);
@@ -927,7 +927,7 @@ const ProjectController = {
       });
     }
   },
-  getProjectListHavingPropertyUnits: async (req, res) => {
+  getPlantationListHavingPropertyUnits: async (req, res) => {
     try {
       let companyId = req.query.companyId;
       let projects = _.flatten(
@@ -1046,7 +1046,7 @@ const ProjectController = {
         data: {
           projects: pagination
         },
-        message: "projects List!"
+        message: "Plantation List!"
       });
     } catch (err) {
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
@@ -1056,7 +1056,7 @@ const ProjectController = {
       });
     }
   },
-  getProjectById: async (req, res) => {
+  getPlantationById: async (req, res) => {
     try {
       let projectId = req.body.id
       let orgId = req.orgId
@@ -1073,7 +1073,7 @@ const ProjectController = {
         data: {
           projects: projectResult
         },
-        message: "projects List!"
+        message: "Plantation Record!"
       });
     } catch (err) {
       console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
@@ -1086,4 +1086,4 @@ const ProjectController = {
 
 };
 
-module.exports = ProjectController;
+module.exports = PlantationController;

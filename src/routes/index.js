@@ -23,14 +23,14 @@ const chargeRouter = require("./charge");
 const commonAreaRouter = require("./administration-features/common-area");
 const statusRouter = require("./administration-features/status");
 const companyRouter = require("./administration-features/company");
-const projectRouter = require("./administration-features/project");
-const buildingPhaseRouter = require("./administration-features/building-phase");
-const floorZoneRouter = require("./administration-features/floor-zone");
+const plantationRouter = require("./administration-features/plantation");
+const plantationPhaseRouter = require("./administration-features/plantation-phase");
+const plantationGroupRouter = require("./administration-features/plantation-group");
 const propertyUnitRouter = require("./administration-features/property-unit");
 const satisfactionRouter = require("./administration-features/satisfaction");
 const taxesRouter = require("./administration-features/taxes");
 const problemRouter = require("./administration-features/problem");
-const propertyTypeRouter = require("./administration-features/property-type");
+const plantationTypeRouter = require("./administration-features/plantation-type");
 const sourceofRequestRouter = require("./administration-features/source-of-request");
 const administractionUsersRouter = require("./administration-features/administraction-users");
 const dashboardRouter = require("./dashboard");
@@ -64,12 +64,12 @@ const userDashboardRouter = require("./users/dashboard");
 const allUsersRouter = require("./administration-features/all-users");
 const remarksRouter = require("./remarks");
 const userFacilityRouter = require("./users/facility");
-const propertyUnitTypeRouter = require("./administration-features/property-unit-type");
+const containerTypeRouter = require("./administration-features/container-type");
 const courierRouter = require("./administration-features/courier-storage");
 const storageRouter = require("./administration-features/storage");
 const parcelManagementRouter = require("./parcel-management");
 const facilityDashboardRouter = require("./facility_dashboard");
-const facilityTypeMaster = require("./administration-features/facility-type");
+const facilityTypeMaster = require("./administration-features/plantation-group");
 const notificationRouter = require("./notifications");
 const parcelNotificationRouter = require("./parcel-notification");
 const serviceRequestNotificationRouter = require("./service-request-notification");
@@ -120,20 +120,20 @@ router.use(
   companyRouter
 );
 router.use(
-  "/administration-features/project",
-  projectRouter
+  "/administration-features/plantation",
+  plantationRouter
 );
 router.use(
-  "/administration-features/building-phase",
-  buildingPhaseRouter
+  "/administration-features/plantation-phase",
+  plantationPhaseRouter
 );
 router.use(
   "/administration-features/property-unit",
   propertyUnitRouter
 );
 router.use(
-  "/administration-features/property-type",
-  propertyTypeRouter
+  "/administration-features/plantation-type",
+  plantationTypeRouter
 );
 router.use(
   "/administration-features/source-of-request",
@@ -163,8 +163,8 @@ router.use(
 );
 router.use("/administration-features/status", statusRouter);
 router.use(
-  "/administration-features/floor-zone",
-  floorZoneRouter
+  "/administration-features/plantation-group",
+  plantationGroupRouter
 );
 router.use(
   "/administration-features/satisfaction",
@@ -233,8 +233,8 @@ router.use("/users/dashboard", userDashboardRouter);
 router.use("/remarks", remarksRouter);
 router.use("/users/facility", userFacilityRouter);
 router.use(
-  "/administration-features/property-unit-type",
-  propertyUnitTypeRouter
+  "/administration-features/container-type",
+  containerTypeRouter
 );
 router.use(
   "/administration-features/courier-storage",

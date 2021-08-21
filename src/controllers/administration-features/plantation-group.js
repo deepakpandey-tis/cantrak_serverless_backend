@@ -13,8 +13,8 @@ const fs = require("fs");
 const path = require("path");
 
 
-const floorZoneController = {
-  addFloorZone: async (req, res) => {
+const plantationGroupController = {
+  addPlantationGroup: async (req, res) => {
     try {
 
       let floorZone = null;
@@ -84,7 +84,7 @@ const floorZoneController = {
         data: {
           floorZone: floorZone
         },
-        message: "Floor/Zone added successfully."
+        message: "Plantation Group added successfully."
       });
     } catch (err) {
       console.log("[controllers][generalsetup][addfloorZone] :  Error", err);
@@ -94,7 +94,7 @@ const floorZoneController = {
       });
     }
   },
-  updateFloorZone: async (req, res) => {
+  updatePlantationGroup: async (req, res) => {
     try {
       let floorZone = null;
       let userId = req.me.id;
@@ -168,7 +168,7 @@ const floorZoneController = {
         data: {
           floorZone: floorZone
         },
-        message: "Floor/Zone details updated successfully."
+        message: "Plantation Group details updated successfully."
       });
     } catch (err) {
       console.log("[controllers][generalsetup][updatefloorZone] :  Error", err);
@@ -178,7 +178,7 @@ const floorZoneController = {
       });
     }
   },
-  viewFloorZone: async (req, res) => {
+  viewPlantationGroup: async (req, res) => {
     try {
       let floorZone = null;
       let payload = req.body;
@@ -238,7 +238,7 @@ const floorZoneController = {
         data: {
           floorZone: floorZone
         },
-        message: "Floor/Zone details"
+        message: "Plantation Group details"
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewfloorZone] :  Error", err);
@@ -247,7 +247,7 @@ const floorZoneController = {
       });
     }
   },
-  deleteFloorZone: async (req, res) => {
+  deletePlantationGroup: async (req, res) => {
     try {
       let floorZone = null;
       let orgId = req.orgId;
@@ -308,7 +308,7 @@ const floorZoneController = {
       });
     }
   },
-  getFloorZoneList: async (req, res) => {
+  getPlantationGroupList: async (req, res) => {
     try {
 
       let resourceProject = req.userProjectResources[0].projects;
@@ -493,7 +493,7 @@ const floorZoneController = {
         data: {
           floorZones: pagination
         },
-        message: "Floor/Zones List!"
+        message: "Plantation Group List!"
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewfloorZone] :  Error", err);
@@ -503,7 +503,7 @@ const floorZoneController = {
       });
     }
   },
-  exportFloorZone: async (req, res) => {
+  exportPlantationGroup: async (req, res) => {
     try {
       let orgId = req.orgId;
       let reqData = req.query;
@@ -642,7 +642,7 @@ const floorZoneController = {
 
             return res.status(200).json({
               data: rows,
-              message: "Floor/Zones Data Export Successfully!",
+              message: "Plantation Group Data Export Successfully!",
               url: url
             });
           }
@@ -656,7 +656,7 @@ const floorZoneController = {
       });
     }
   },
-  getFloorZoneAllList: async (req, res) => {
+  getPlantationGroupAllList: async (req, res) => {
     try {
       let orgId = req.orgId;
       let buildingPhaseId = req.query.buildingPhaseId;
@@ -688,7 +688,7 @@ const floorZoneController = {
         data: {
           floorZones: pagination
         },
-        message: "Floor/Zones All List!"
+        message: "Plantation Group All List!"
       });
     } catch (err) {
       console.log("[controllers][generalsetup][viewfloorZone] :  Error", err);
@@ -698,7 +698,7 @@ const floorZoneController = {
       });
     }
   },
-  getFloorZoneListByBuildingId: async (req, res) => {
+  getPlantationGroupListByPhaseId: async (req, res) => {
     try {
       let orgId = req.orgId;
 
@@ -734,7 +734,7 @@ const floorZoneController = {
       });
     }
   },
-  getFloorZoneByMultipleBuildingId:async(req,res)=>{
+  getPlantationGroupByMultiplePhaseId:async(req,res)=>{
     try {
       let orgId = req.orgId;
 
@@ -768,8 +768,8 @@ const floorZoneController = {
       
     }
   },
-  /**IMPORT FLOOR ZONE DATA */
-  importFloorZoneData: async (req, res) => {
+  /**IMPORT DATA */
+  importPlantationGroupData: async (req, res) => {
     try {
      // if (req.file) {
         // let tempraryDirectory = null;
@@ -985,7 +985,7 @@ const floorZoneController = {
                 } else {
                   fail++;
                   let values = _.values(floorData)
-                  values.unshift('Floor/Zone ID already exist')
+                  values.unshift('Plantation Group ID already exist')
 
                   //errors.push(header);
                   errors.push(values);
@@ -1040,7 +1040,7 @@ const floorZoneController = {
       });
     }
   },
-  getFloorZoneListByBuildingIdHavingPropertyUnits:async(req,res) => {
+  getPlantationGroupListByPhaseIdHavingPropertyUnits:async(req,res) => {
     try {
       let orgId = req.orgId;
 
@@ -1106,7 +1106,7 @@ const floorZoneController = {
       });
     }
   },
-  getFloorZoneListByBuildingIdHavingPropertyUnitsAndWithoutUnits:async(req,res) => {
+  getPlantationGroupListByPhaseIdHavingPropertyUnitsAndWithoutUnits:async(req,res) => {
     try {
       let orgId = req.orgId;
 
@@ -1176,4 +1176,4 @@ const floorZoneController = {
   }
 };
 
-module.exports = floorZoneController;
+module.exports = plantationGroupController;

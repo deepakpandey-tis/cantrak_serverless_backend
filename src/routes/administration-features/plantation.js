@@ -4,57 +4,57 @@ const router = Router();
 const authMiddleware = require("../../middlewares/auth");
 const roleMiddleware = require("../../middlewares/role");
 // const resourceAcessMiddleware = require('../../middlewares/resourceAccessMiddleware')
-const projectController = require("../../controllers/administration-features/project");
+const plantationController = require("../../controllers/administration-features/plantation");
 
 router.post(
-  "/add-project",
+  "/add-plantation",
   authMiddleware.isAuthenticated,
-  projectController.addProject
+  plantationController.addPlantation
 );
 router.post(
-  "/update-project",
+  "/update-plantation",
   authMiddleware.isAuthenticated,
-  projectController.updateProject
+  plantationController.updatePlantation
 );
 router.post(
-  "/view-project",
+  "/view-plantation",
   authMiddleware.isAuthenticated,
-  projectController.viewProject
+  plantationController.viewPlantation
 );
 router.post(
-  "/delete-project",
+  "/delete-plantation",
   authMiddleware.isAuthenticated,
-  projectController.deleteProject
+  plantationController.deletePlantation
 );
 router.post(
-  "/get-project-list",
+  "/get-plantation-list",
   authMiddleware.isAuthenticated,
-  projectController.getProjectList
+  plantationController.getPlantationList
 );
-/// Export Project Data
+/// Export Plantation Data
 router.get(
-  "/export-project",
+  "/export-plantation",
   authMiddleware.isAuthenticated,
-  projectController.exportProject
+  plantationController.exportPlantation
 );
 router.get(
-  "/get-project-by-companies",
+  "/get-plantation-by-companies",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  projectController.getProjectByCompany
+  plantationController.getPlantationByCompany
 );
 router.post(
-  "/get-project-by-multiple-companies",
+  "/get-plantation-by-multiple-companies",
   authMiddleware.isAuthenticated,
-  projectController.getProjectByMultipleCompany
+  plantationController.getPlantationByMultipleCompany
 );
 router.get(
-  "/get-project-all-list",
+  "/get-plantation-all-list",
   authMiddleware.isAuthenticated,
-  projectController.getProjectAllList
+  plantationController.getPlantationAllList
 );
 
-/**IMPORT PROJECT DATA */
+/**IMPORT Plantation DATA */
 const path = require("path");
 let tempraryDirectory = null;
 if (process.env.IS_OFFLINE) {
@@ -69,7 +69,7 @@ var storage = multer.diskStorage({
     let ext = path.extname(file.originalname);
     if (ext == ".csv") {
       time = Date.now();
-      cb(null, "ProjectData-" + time + ext);
+      cb(null, "PlantationData-" + time + ext);
     } else {
       return false;
     }
@@ -77,28 +77,28 @@ var storage = multer.diskStorage({
 });
 var upload = multer({ storage: storage });
 router.post(
-  "/import-project-data",
+  "/import-plantation-data",
   upload.single("file"),
   authMiddleware.isAuthenticated,
-  projectController.importProjectData
+  plantationController.importPlantationData
 );
 router.get(
-  "/get-user-project-by-companies",
+  "/get-user-plantation-by-companies",
   authMiddleware.isAuthenticated,
-  projectController.getUserProjectByCompany
+  plantationController.getUserPlantationByCompany
 );
 
 router.get(
-  "/project-lists-having-property-units",
+  "/plantation-lists-having-property-units",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  projectController.getProjectListHavingPropertyUnits
+  plantationController.getPlantationListHavingPropertyUnits
 );
 
 router.post(
-  "/get-project-by-Id",
+  "/get-plantation-by-Id",
   authMiddleware.isAuthenticated,
-  projectController.getProjectById
+  plantationController.getPlantationById
 );
 
 module.exports = router;
