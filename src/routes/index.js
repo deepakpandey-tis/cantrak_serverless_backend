@@ -26,7 +26,7 @@ const companyRouter = require("./administration-features/company");
 const plantationRouter = require("./administration-features/plantation");
 const plantationPhaseRouter = require("./administration-features/plantation-phase");
 const plantationGroupRouter = require("./administration-features/plantation-group");
-const propertyUnitRouter = require("./administration-features/property-unit");
+const plantContainerRouter = require("./administration-features/plant-container");
 const satisfactionRouter = require("./administration-features/satisfaction");
 const taxesRouter = require("./administration-features/taxes");
 const problemRouter = require("./administration-features/problem");
@@ -128,8 +128,8 @@ router.use(
   plantationPhaseRouter
 );
 router.use(
-  "/administration-features/property-unit",
-  propertyUnitRouter
+  "/administration-features/plant-container",
+  plantContainerRouter
 );
 router.use(
   "/administration-features/plantation-type",
