@@ -14,8 +14,8 @@ const path = require("path");
 
 
 
-const propertyUnitController = {
-  addPropertyUnit: async (req, res) => {
+const plantContainerController = {
+  addPlantContainer: async (req, res) => {
     try {
       let orgId = req.orgId;
       let userId = req.me.id;
@@ -65,7 +65,7 @@ const propertyUnitController = {
         if (existValue && existValue.length) {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: "Unit Number already exist!!" }
+              { code: "VALIDATION_ERROR", message: "Plant Container Number already exist!!" }
             ]
           });
         }
@@ -102,7 +102,7 @@ const propertyUnitController = {
         data: {
           propertyUnit: propertyUnit
         },
-        message: "Property Unit added successfully."
+        message: "Plant Container added successfully."
       });
     } catch (err) {
       console.log("[controllers][generalsetup][addpropertyUnit] :  Error", err);
@@ -112,7 +112,7 @@ const propertyUnitController = {
       });
     }
   },
-  updatePropertyUnit: async (req, res) => {
+  updatePlantContainer: async (req, res) => {
     try {
       let propertyUnit = null;
       let orgId = req.orgId;
@@ -167,7 +167,7 @@ const propertyUnitController = {
           } else {
             return res.status(400).json({
               errors: [
-                { code: "VALIDATION_ERROR", message: "Unit Number  already exist!!" }
+                { code: "VALIDATION_ERROR", message: "Plant Container Number  already exist!!" }
               ]
             });
           }
@@ -205,7 +205,7 @@ const propertyUnitController = {
         data: {
           propertyUnit: propertyUnit
         },
-        message: "Property Unit details updated successfully."
+        message: "Plant Container detail updated successfully."
       });
     } catch (err) {
       console.log(
@@ -218,7 +218,7 @@ const propertyUnitController = {
       });
     }
   },
-  viewPropertyUnit: async (req, res) => {
+  viewPlantContainer: async (req, res) => {
     try {
       let propertyUnit = null;
       let orgId = req.orgId;
@@ -255,7 +255,7 @@ const propertyUnitController = {
           data: {
             propertyUnit: propertyUnit
           },
-          message: "propertyUnit details"
+          message: "Plant Container details"
         });
       });
     } catch (err) {
@@ -269,7 +269,7 @@ const propertyUnitController = {
       });
     }
   },
-  deletePropertyUnit: async (req, res) => {
+  deletePlantContainer: async (req, res) => {
     try {
       let propertyUnit = null;
       let orgId = req.orgId;
@@ -301,7 +301,7 @@ const propertyUnitController = {
               .transacting(trx)
               .into("property_units");
             propertyUnit = propertyUnitResult[0];
-            message = "Property Unit Deactivate successfully!"
+            message = "Plant Container Deactivate successfully!"
 
           } else {
 
@@ -312,7 +312,7 @@ const propertyUnitController = {
               .transacting(trx)
               .into("property_units");
             propertyUnit = propertyUnitResult[0];
-            message = "Property Unit Activate successfully!"
+            message = "Plant Container Activate successfully!"
 
           }
         }
@@ -336,7 +336,8 @@ const propertyUnitController = {
       });
     }
   },
-  getPropertyUnitList: async (req, res) => {
+  getPlantContainerList: async (req, res) => {
+
     try {
 
 
@@ -517,7 +518,7 @@ const propertyUnitController = {
         data: {
           propertyUnits: pagination
         },
-        message: "Property Units List!"
+        message: "Plant Container List!"
       });
     } catch (err) {
       console.log(
@@ -530,7 +531,7 @@ const propertyUnitController = {
       });
     }
   },
-  exportPropertyUnit: async (req, res) => {
+  exportPlantContainer: async (req, res) => {
     try {
       let orgId = req.orgId;
 
@@ -694,7 +695,7 @@ const propertyUnitController = {
 
             return res.status(200).json({
               data: rows,
-              message: "Property Units Data Export Successfully!",
+              message: "Plant Container Data Export Successfully!",
               url: url
             });
           }
@@ -721,8 +722,8 @@ const propertyUnitController = {
       });
     }
   },
-  // PROPERTY UNIT DETAILS
-  getPropertyUnitDetails: async (req, res) => {
+
+  getPlantContainerDetail: async (req, res) => {
     try {
       let orgId = req.orgId;
 
@@ -781,7 +782,7 @@ const propertyUnitController = {
         data: {
           propertyUnitDetails: resultData[0]
         },
-        message: "Property Unit Details!"
+        message: "Plant Container Detail!"
       });
     } catch (err) {
       console.log(
@@ -794,7 +795,7 @@ const propertyUnitController = {
       });
     }
   },
-  getPropertyUnitListByFloor: async (req, res) => {
+  getPlantContainerListByGroup: async (req, res) => {
     try {
       let orgId = req.orgId;
 
@@ -806,7 +807,7 @@ const propertyUnitController = {
         data: {
           unit
         },
-        message: "Unit list"
+        message: "Plant Container list"
       });
     } catch (err) {
       console.log(
@@ -819,8 +820,7 @@ const propertyUnitController = {
       });
     }
   },
-  // PROPERTY UNIT NO LIST FOR DROPDOWN
-  getPropertyUnitAllList: async (req, res) => {
+  getPlantContainerAllList: async (req, res) => {
     try {
       let orgId = req.orgId;
 
@@ -833,7 +833,7 @@ const propertyUnitController = {
         data: {
           unitData: result
         },
-        message: "Property Unit List"
+        message: "Plant Container List"
       });
     } catch (err) {
       res.status(500).json({
@@ -842,6 +842,7 @@ const propertyUnitController = {
     }
   },
 
+  /* pg888: not required
   checkHouseId: async (req, res) => {
     try {
       const id = req.body.id;
@@ -866,7 +867,8 @@ const propertyUnitController = {
       });
     }
   },
-  importPropertyUnitData: async (req, res) => {
+  */
+  importPlantContainerData: async (req, res) => {
     try {
       let data = req.body;
       let result = null;
@@ -1208,8 +1210,7 @@ const propertyUnitController = {
       });
     }
   },
-  /*GET ALL PROPERTY UNIT LIST FOR DROP DOWN */
-  getAllPropertyUnit: async (req, res) => {
+  getAllPlantContainer: async (req, res) => {
     try {
 
       let orgId = req.orgId;
@@ -1218,7 +1219,7 @@ const propertyUnitController = {
         .where({ orgId })
       return res.status(200).json({
         data: result,
-        message: "All property unit list"
+        message: "All Plant Container list"
       });
 
     } catch (err) {
@@ -1247,7 +1248,7 @@ const propertyUnitController = {
       });
     }
   },
-  getPropertyUnitsByMultipleFloor: async (req, res) => {
+  getPlantContainersByMultipleGroup: async (req, res) => {
     try {
       let floorZoneId = req.body
       let orgId = req.orgId
@@ -1263,7 +1264,7 @@ const propertyUnitController = {
         data: {
           propertyUnit
         },
-        message: "Property unit list"
+        message: "Plant Container list"
       });
 
     } catch (err) {
@@ -1277,8 +1278,7 @@ const propertyUnitController = {
   }
 
   ,
-  /*GET UNIT & COMMON AREA BY FLOOR ID */
-  getUnitCommonByFloor: async (req, res) => {
+  getPlantContainerCommonAreaByGroup: async (req, res) => {
     try {
       let orgId = req.orgId;
 
@@ -1291,7 +1291,7 @@ const propertyUnitController = {
         data: {
           unit
         },
-        message: "Unit list"
+        message: "Plant Container list"
       });
     } catch (err) {
       console.log(
@@ -1340,4 +1340,4 @@ const propertyUnitController = {
   }
 };
 
-module.exports = propertyUnitController;
+module.exports = plantContainerController;

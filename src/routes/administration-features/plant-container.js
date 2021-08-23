@@ -4,72 +4,72 @@ const path = require("path");
 
 const router = Router()
 const authMiddleware = require('../../middlewares/auth')
-const propertyUnitController = require('../../controllers/administration-features/property-unit')
+const plantContainerController = require('../../controllers/administration-features/plant-container')
 const roleMiddleware = require('../../middlewares/role')
 const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddleware')
 
-router.post('/add-property-unit',
+router.post('/add-plant-container',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  propertyUnitController.addPropertyUnit)
+  plantContainerController.addPlantContainer)
 
-router.post('/update-property-unit',
+router.post('/update-plant-container',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  propertyUnitController.updatePropertyUnit)
+  plantContainerController.updatePlantContainer)
 
-router.post('/view-property-unit',
+router.post('/view-plant-container',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  propertyUnitController.viewPropertyUnit)
+  plantContainerController.viewPlantContainer)
 
-router.post('/delete-property-unit',
+router.post('/delete-plant-container',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  propertyUnitController.deletePropertyUnit)
+  plantContainerController.deletePlantContainer)
 
-router.post('/get-unit-by-floor',
+router.post('/get-plant-container-list-by-group',
   authMiddleware.isAuthenticated,
-  propertyUnitController.getPropertyUnitListByFloor)
+  plantContainerController.getPlantContainerListByGroup)
 
-router.post('/get-property-unit-list',
+router.post('/get-plant-container-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  propertyUnitController.getPropertyUnitList)
+  plantContainerController.getPlantContainerList)
 
-//PROPERTY UNIT LIST DROPDOWN
-router.get('/get-propert-unit-all-list',
-  propertyUnitController.getPropertyUnitAllList)
+router.get('/get-plant-container-all-list',
+  plantContainerController.getPlantContainerAllList)
 
-// router.get('get-property-unit-list-report',authMiddleware.isAuthenticated,propertyUnitController.getPropertyUnitListForReport)
+// router.get('get-plant-container-list-report',authMiddleware.isAuthenticated,plantContainerController.getPlantContainerListForReport)
 //  Export Property Unit Data
 
-router.get('/export-property-unit',
+router.get('/export-plant-container',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  propertyUnitController.exportPropertyUnit)
+  plantContainerController.exportPlantContainer)
 
-// PROPERTY UNIT DETAILS
-router.post('/get-property-unit-details',
+router.post('/get-plant-container-detail',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  propertyUnitController.getPropertyUnitDetails)
+  plantContainerController.getPlantContainerDetail)
 
+  /* pg888: not required
 router.post("/check-house-id",
   authMiddleware.isAuthenticated,
-  propertyUnitController.checkHouseId);
+  plantContainerController.checkHouseId);
+  */
 
-router.post("/get-building-and-unit",authMiddleware.isAuthenticated,propertyUnitController.getUnitAndBuildingByUserId)
+router.post("/get-building-and-unit",authMiddleware.isAuthenticated,plantContainerController.getUnitAndBuildingByUserId)
 
 
-/**IMPORT property unit DATA */
+/**IMPORT DATA */
 let tempraryDirectory = null;
 if (process.env.IS_OFFLINE) {
   tempraryDirectory = 'tmp/';
@@ -83,7 +83,7 @@ var storage = multer.diskStorage({
     let ext = path.extname(file.originalname)
     if (ext == '.csv') {
       time = Date.now();
-      cb(null, 'propertyUnitData-' + time + ext);
+      cb(null, 'plantContainerData-' + time + ext);
     } else {
       return false
     }
@@ -91,29 +91,27 @@ var storage = multer.diskStorage({
 });
 var upload = multer({ storage: storage });
 router.post(
-  "/import-property-unit-data",
+  "/import-plant-container-data",
   upload.single("file"),
   authMiddleware.isAuthenticated,
-  propertyUnitController.importPropertyUnitData
+  plantContainerController.importPlantContainerData
 );
 
-/*GET ALL PROPERTY UNIT LIST FOR DROP DOWN */
-router.get("/get-all-property-unit",
+router.get("/get-all-plant-container",
   authMiddleware.isAuthenticated,
-  propertyUnitController.getAllPropertyUnit);
+  plantContainerController.getAllPlantContainer);
 
 router.post('/toggle-status',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  propertyUnitController.toggleStatus);
+  plantContainerController.toggleStatus);
 
-router.post('/get-property-unit-by-multiple-floor', authMiddleware.isAuthenticated, propertyUnitController.getPropertyUnitsByMultipleFloor);
+router.post('/get-plant-container-by-multiple-group', authMiddleware.isAuthenticated, plantContainerController.getPlantContainersByMultipleGroup);
 
-/*GET UNIT & COMMON AREA BY FLOOR ID */
-router.post('/get-unit-common-area-by-floor',
+router.post('/get-plant-container-common-area-by-group',
   authMiddleware.isAuthenticated,
-  propertyUnitController.getUnitCommonByFloor)
+  plantContainerController.getPlantContainerCommonAreaByGroup)
 
 module.exports = router
 
