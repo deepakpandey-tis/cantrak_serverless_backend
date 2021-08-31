@@ -89,10 +89,10 @@ router.get(
 );
 
 router.get(
-  "/plantation-lists-having-property-units",
+  "/plantation-lists-having-plant-containers",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  plantationController.getPlantationListHavingPropertyUnits
+  plantationController.getPlantationListHavingPlantContainers
 );
 
 router.post(

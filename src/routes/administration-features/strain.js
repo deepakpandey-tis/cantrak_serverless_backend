@@ -4,49 +4,49 @@ const router = Router()
 const authMiddleware = require('../../middlewares/auth')
 const roleMiddleware = require('../../middlewares/role')
 const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddleware')
-const assetCategoryController = require('../../controllers/administration-features/asset-category')
+const strainController = require('../../controllers/administration-features/strain')
 
-router.post('/add-asset-category',
+router.post('/add-strain',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  assetCategoryController.addAssetCategory)
+  strainController.addStrain)
 
-router.post('/update-asset-category',
+router.post('/update-strain',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  assetCategoryController.updateAssetCategory)
+  strainController.updateStrain)
 
-router.post('/asset-category-details',
+router.post('/strain-detail',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  assetCategoryController.viewAssetCategory)
+  strainController.viewStrain)
 
-router.post('/delete-asset-category',
+router.post('/delete-strain',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  assetCategoryController.deleteAssetCategory)
-/// Export Asset Category Data 
-router.get('/export-asset-category',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
-  assetCategoryController.exportAssetCategory)
+  strainController.deleteStrain)
 
-router.post('/get-asset-category-list',
+router.get('/export-strain',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  assetCategoryController.getAssetCategoryList)
+  strainController.exportStrain)
+
+router.post('/get-strain-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  strainController.getStrainList)
 
 router.post('/get-asset-list-for-filter',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  assetCategoryController.getAssetListForWorkOrderFilter)
+  strainController.getAssetListForWorkOrderFilter)
 
 router.get(
   '/get-asset-list-for-work-order',
@@ -54,12 +54,12 @@ router.get(
   roleMiddleware.parseUserPermission,
   // resourceAccessMiddleware.isAssetAccessible,
   resourceAccessMiddleware.isPMAccessible,
-  assetCategoryController.getAssetListForWorkOrderList
+  strainController.getAssetListForWorkOrderList
 )
 
 
 
-/**IMPORT Building DATA */
+/**IMPORT DATA */
 let tempraryDirectory = null;
 if (process.env.IS_OFFLINE) {
   tempraryDirectory = 'tmp/';
@@ -73,7 +73,7 @@ var storage = multer.diskStorage({
     let ext = path.extname(file.originalname)
     if (ext == '.csv') {
       time = Date.now();
-      cb(null, 'assetCategoryData-' + time + ext);
+      cb(null, 'StrainData-' + time + ext);
     } else {
       return false
     }
@@ -81,12 +81,12 @@ var storage = multer.diskStorage({
 });
 var upload = multer({ storage: storage });
 router.post(
-  "/import-asset-category-data",
+  "/import-strain-data",
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  assetCategoryController.importAssetCategoryData
+  strainController.importStrainData
 );
 
 module.exports = router

@@ -41,9 +41,9 @@ router.post(
 );
 
 router.post(
-  "/get-plantation-phase-by-project-id",
+  "/get-plantation-phase-by-plantation-id",
   authMiddleware.isAuthenticated,
-  plantationPhaseController.getPlantationPhaseListByProjectId
+  plantationPhaseController.getPlantationPhaseListByPlantationId
 );
 
 router.post(

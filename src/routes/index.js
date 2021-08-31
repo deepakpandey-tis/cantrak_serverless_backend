@@ -48,7 +48,7 @@ const resourceRouter = require("./resource");
 const signupRouter = require("./signup");
 
 const problemTypeRouter = require("./administration-features/problem-type");
-const assetCategoryRouter = require("./administration-features/asset-category");
+const strainRouter = require("./administration-features/strain");
 const partCategoryRouter = require("./administration-features/part-category");
 const whtRouter = require("./administration-features/wht");
 const customerRouter = require("./administration-features/customers");
@@ -199,8 +199,8 @@ router.use(
   problemTypeRouter
 );
 router.use(
-  "/administration-features/asset-category",
-  assetCategoryRouter
+  "/administration-features/strain",
+  strainRouter
 );
 router.use(
   "/administration-features/part-category",

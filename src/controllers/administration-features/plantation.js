@@ -6,6 +6,7 @@ const _ = require("lodash");
 const XLSX = require("xlsx");
 
 const knex = require("../../db/knex");
+const knexReader = require("../../db/knex-reader");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
@@ -16,332 +17,298 @@ const path = require('path')
 const PlantationController = {
   addPlantation: async (req, res) => {
     try {
-      let Project = null;
+      let plantation = null;
       let userId = req.me.id;
-      await knex.transaction(async trx => {
-        const payload = req.body;
-        let orgId;
-        if (payload.orgId) {
-          orgId = payload.orgId;
-        } else {
-          orgId = req.orgId;
-        }
+
+      const payload = req.body;
+      let orgId;
+      if (payload.orgId) {
+        orgId = payload.orgId;
+      } else {
+        orgId = req.orgId;
+      }
 
 
-        const schema = Joi.object().keys({
-          companyId: Joi.string().required(),
-          project: Joi.string().required(),
-          projectName: Joi.string().required(),
-          projectLocationThai: Joi.string().allow('').allow(null).optional(),
-          projectLocationEng: Joi.string().allow('').allow(null).optional(),
-          currency: Joi.string().allow('').allow(null).optional(),
-          orgId: Joi.string().allow('').allow(null).optional()
-          // projectStartDate: Joi.string().allow('').optional(),
-          // projectEndDate: Joi.string().allow('').optional(),
-          // branchId: Joi.string().allow('').optional(),
-          // ownerCode: Joi.string().allow('').optional(),
-          // customerCode: Joi.string().allow('').optional(),
-          // ventureType: Joi.string().allow('').optional(),
-          // locationFlag: Joi.string().allow('').optional(),
-          // projectType: Joi.string().allow('').optional(),
-          // biddingDate: Joi.string().allow('').optional(),
-          // projectPeriod: Joi.string().allow('').optional(),
-          // budgetValue: Joi.string().allow('').optional(),
-          // secondCurrency: Joi.string().allow('').optional(),
-          // addressFlag: Joi.string().allow('').optional()
-        });
-
-        const result = Joi.validate(payload, schema);
-        console.log(
-          "[controllers][administrationFeatures][addProject]: JOi Result",
-          result
-        );
-
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
-
-
-        /*CHECK DUPLICATE VALUES OPEN */
-        let existValue = await knex('projects')
-          .where({ project: payload.project.toUpperCase(), companyId: payload.companyId, orgId: orgId });
-        if (existValue && existValue.length) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Project Code already exist!!" }
-            ]
-          });
-        }
-        /*CHECK DUPLICATE VALUES CLOSE */
-
-        let currentTime = new Date().getTime();
-        let insertData = {
-          ...payload,
-          project: payload.project.toUpperCase(),
-          createdBy: userId,
-          createdAt: currentTime,
-          updatedAt: currentTime,
-          orgId: orgId
-        };
-
-        console.log('Project Payload: ', insertData)
-
-        let insertResult = await knex
-          .insert(insertData)
-          .returning(["*"])
-          .transacting(trx)
-          .into("projects");
-        Project = insertResult[0];
-
-        trx.commit;
+      const schema = Joi.object().keys({
+        companyId: Joi.string().required(),
+        code: Joi.string().required(),
+        name: Joi.string().required(),
+        locationThai: Joi.string().allow('').allow(null).optional(),
+        locationEng: Joi.string().allow('').allow(null).optional(),
+        currency: Joi.string().allow('').allow(null).optional(),
+        orgId: Joi.string().allow('').allow(null).optional()
       });
+
+      const result = Joi.validate(payload, schema);
+      console.log(
+        "[controllers][administrationFeatures][addPlantation]: Joi Result",
+        result
+      );
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
+        });
+      }
+
+      /*CHECK DUPLICATE VALUES OPEN */
+      let existValue = await knex('plantations')
+        .where({ code: payload.code.toUpperCase(), companyId: payload.companyId, orgId: orgId });
+      if (existValue && existValue.length) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Plantation Code already exist!" }
+          ]
+        });
+      }
+      console.log("===============NOT A DUPLICATE===================");
+      /*CHECK DUPLICATE VALUES CLOSE */
+
+      let currentTime = new Date().getTime();
+      let insertData = {
+        ...payload,
+        code: payload.code.toUpperCase(),
+        createdBy: userId,
+        createdAt: currentTime,
+        updatedBy: userId,
+        updatedAt: currentTime,
+        orgId: orgId
+      };
+
+      console.log('Plantation Payload: ', insertData)
+
+      let insertResult = await knex
+        .insert(insertData)
+        .returning(["*"])
+        .into("plantations");
+      plantation = insertResult[0];
 
       return res.status(200).json({
         data: {
-          project: Project
+          plantation: plantation
         },
         message: "Plantation added successfully."
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][addProject] :  Error", err);
+      console.log("===============INSIDE CATCH===================");
+      console.log("[controllers][administrationFeatures][addPlantation] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   updatePlantation: async (req, res) => {
     try {
-      let Project = null;
-      await knex.transaction(async trx => {
-        const payload = req.body;
-        let orgId;
-        if (payload.orgId) {
-          orgId = payload.orgId;
-        } else {
-          orgId = req.orgId;
-        }
+      let plantation = null;
+      let userId = req.me.id;
 
-        const schema = Joi.object().keys({
-          id: Joi.string().required(),
-          companyId: Joi.string().required(),
-          project: Joi.string().required(),
-          projectName: Joi.string().required(),
-          projectLocationThai: Joi.string().allow('').allow(null).optional(),
-          projectLocationEng: Joi.string().allow('').allow(null).optional(),
-          currency: Joi.string().allow('').allow(null).optional(),
-          orgId: Joi.string().allow('').allow(null).optional()
-          // projectStartDate: Joi.string().allow('').optional(),
-          // projectEndDate: Joi.string().allow('').optional(),
-          // branchId: Joi.string().allow('').optional(),
-          // ownerCode: Joi.string().allow('').optional(),
-          // customerCode: Joi.string().allow('').optional(),
-          // ventureType: Joi.string().allow('').optional(),
-          // locationFlag: Joi.string().allow('').optional(),
-          // projectType: Joi.string().allow('').optional(),
-          // biddingDate: Joi.string().allow('').optional(),
-          // projectPeriod: Joi.string().allow('').optional(),
-          // budgetValue: Joi.string().allow('').optional(),
-          // secondCurrency: Joi.string().allow('').optional(),
-          // addressFlag: Joi.string().allow('').optional()
+      const payload = req.body;
+      let orgId;
+      if (payload.orgId) {
+        orgId = payload.orgId;
+      } else {
+        orgId = req.orgId;
+      }
+
+      const schema = Joi.object().keys({
+        id: Joi.string().required(),
+        companyId: Joi.string().required(),
+        code: Joi.string().required(),
+        name: Joi.string().required(),
+        locationThai: Joi.string().allow('').allow(null).optional(),
+        locationEng: Joi.string().allow('').allow(null).optional(),
+        currency: Joi.string().allow('').allow(null).optional(),
+        orgId: Joi.string().allow('').allow(null).optional()
+      });
+
+      const result = Joi.validate(payload, schema);
+      console.log(
+        "[controllers][administrationFeatures][updatePlantation]: JOi Result",
+        result
+      );
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
         });
+      }
 
-        const result = Joi.validate(payload, schema);
-        console.log(
-          "[controllers][administrationFeatures][updateProject]: JOi Result",
-          result
-        );
+      /*CHECK DUPLICATE VALUES OPEN */
+      let existValue = await knex('plantations')
+        .where({ code: payload.code.toUpperCase(), companyId: payload.companyId, orgId: orgId });
+      if (existValue && existValue.length) {
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (existValue[0].id === payload.id) {
+
+        } else {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
+              { code: "VALIDATION_ERROR", message: "Plantation Code already exist!" }
             ]
           });
         }
-
-        /*CHECK DUPLICATE VALUES OPEN */
-        let existValue = await knex('projects')
-          .where({ project: payload.project.toUpperCase(), companyId: payload.companyId, orgId: orgId });
-        if (existValue && existValue.length) {
-
-          if (existValue[0].id === payload.id) {
-
-          } else {
-            return res.status(400).json({
-              errors: [
-                { code: "VALIDATION_ERROR", message: "Project Code already exist!!" }
-              ]
-            });
-          }
-        }
-        /*CHECK DUPLICATE VALUES CLOSE */
+      }
+      /*CHECK DUPLICATE VALUES CLOSE */
 
 
-        let currentTime = new Date().getTime();
-        let insertData = { ...payload, project: payload.project.toUpperCase(), orgId: orgId, updatedAt: currentTime };
-        let insertResult = await knex
-          .update(insertData)
-          .where({ id: payload.id })
-          .returning(["*"])
-          .transacting(trx)
-          .into("projects");
-        Project = insertResult[0];
+      let currentTime = new Date().getTime();
+      let insertData = { ...payload, code: payload.code.toUpperCase(), orgId: orgId, updatedBy: userId, updatedAt: currentTime };
+      let insertResult = await knex
+        .update(insertData)
+        .where({ id: payload.id })
+        .returning(["*"])
+        .into("plantations");
 
-        trx.commit;
-      });
+      plantation = insertResult[0];
 
       return res.status(200).json({
         data: {
-          Project: Project
+          plantation: plantation
         },
-        message: "Plantation details updated successfully."
+        message: "Plantation detail updated successfully."
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][updateProject] :  Error", err);
+      console.log("[controllers][administrationFeatures][updatePlantation] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   viewPlantation: async (req, res) => {
     try {
-      let Project = null;
-      await knex.transaction(async trx => {
-        let payload = req.body;
-        const schema = Joi.object().keys({
-          id: Joi.string().required()
-        });
-        const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
-        let current = new Date().getTime();
+      let plantation = null;
 
-
-        let role = req.me.roles[0];
-        let name = req.me.name;
-        let ProjectResult
-        if (role === "superAdmin" && name === "superAdmin") {
-
-          ProjectResult = await knex("projects")
-            .leftJoin("companies", "projects.companyId", "companies.id")
-            .select("projects.*", "companies.companyId as compId", "companies.companyName")
-            .where({ "projects.id": payload.id })
-
-          Project = _.omit(ProjectResult[0], [
-            "createdAt",
-            "updatedAt"
-          ]);
-
-        } else {
-
-          ProjectResult = await knex("projects")
-            .leftJoin("companies", "projects.companyId", "companies.id")
-            .select("projects.*", "companies.companyId as compId", "companies.companyName")
-            .where({ "projects.id": payload.id, 'projects.orgId': req.orgId })
-
-          Project = _.omit(ProjectResult[0], [
-            "createdAt",
-            "updatedAt"
-          ]);
-
-        }
-
-
-        trx.commit;
+      let payload = req.body;
+      const schema = Joi.object().keys({
+        id: Joi.string().required()
       });
+      const validationResult = Joi.validate(payload, schema);
+      if (validationResult && validationResult.hasOwnProperty("error") && validationResult.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: validationResult.error.message }
+          ]
+        });
+      }
+      let current = new Date().getTime();
 
+      let role = req.me.roles[0];
+      let name = req.me.name;
+      let result
+      if (role === "superAdmin" && name === "superAdmin") {
+
+        result = await knexReader("plantations")
+          .leftJoin("companies", "plantations.companyId", "companies.id")
+          .select("plantations.*", "companies.companyId as compId", "companies.companyName")
+          .where({ "plantations.id": payload.id })
+
+        plantation = _.omit(result[0], [
+          "createdAt",
+          "updatedAt"
+        ]);
+
+      } else {
+
+        result = await knexReader("plantations")
+          .leftJoin("companies", "plantations.companyId", "companies.id")
+          .select("plantations.*", "companies.companyId as compId", "companies.companyName")
+          .where({ "plantations.id": payload.id, 'plantations.orgId': req.orgId })
+
+        plantation = _.omit(result[0], [
+          "createdAt",
+          "updatedAt"
+        ]);
+
+      }
 
       return res.status(200).json({
         data: {
-          Project: Project
+          plantation: plantation
         },
         message: "Plantation details"
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      console.log("[controllers][administrationFeatures][viewPlantation] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   deletePlantation: async (req, res) => {
     try {
-      let Project = null;
+      let userId = req.me.id;
+      let plantation = null;
       let message;
-      await knex.transaction(async trx => {
-        let payload = req.body;
-        const schema = Joi.object().keys({
-          id: Joi.string().required()
-        });
-        const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
-        let ProjectResult;
-        let checkStatus = await knex.from('projects').where({ id: payload.id }).returning(['*']);
 
-        if (checkStatus.length) {
-
-          if (checkStatus[0].isActive == true) {
-
-            ProjectResult = await knex
-              .update({ isActive: false })
-              .where({ id: payload.id })
-              .returning(["*"])
-              .transacting(trx)
-              .into("projects");
-            Project = ProjectResult[0];
-            message = "Plantation Inactive Successfully!"
-
-          } else {
-            ProjectResult = await knex
-              .update({ isActive: true })
-              .where({ id: payload.id })
-              .returning(["*"])
-              .transacting(trx)
-              .into("projects");
-            Project = ProjectResult[0];
-            message = "Plantation Active Successfully!"
-          }
-        }
-        trx.commit;
+      let payload = req.body;
+      const schema = Joi.object().keys({
+        id: Joi.string().required()
       });
+      const ValidationResult = Joi.validate(payload, schema);
+      if (ValidationResult && ValidationResult.hasOwnProperty("error") && ValidationResult.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: ValidationResult.error.message }
+          ]
+        });
+      }
+      let result;
+      let currentTime = new Date().getTime();
+      let checkStatus = await knex.from('plantations').where({ id: payload.id }).returning(['*']);
+
+      if (checkStatus.length) {
+
+        if (checkStatus[0].isActive == true) {
+
+          result = await knex
+            .update({ isActive: false, updatedBy: userId, updatedAt: currentTime })
+            .where({ id: payload.id })
+            .returning(["*"])
+            .into("plantations");
+          plantation = result[0];
+          message = "Plantation Inactive Successfully!"
+
+        } else {
+          result = await knex
+            .update({ isActive: true, updatedBy: userId, updatedAt: currentTime })
+            .where({ id: payload.id })
+            .returning(["*"])
+            .into("plantations");
+          plantations = result[0];
+          message = "Plantation Active Successfully!"
+        }
+      }
       return res.status(200).json({
         data: {
-          Project: Project
+          plantation: plantation
         },
         message: message
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      console.log("[controllers][administrationFeatures][deletePlantation] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   getPlantationList: async (req, res) => {
     try {
 
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
-        sortPayload.sortBy = "projects.projectName";
+        sortPayload.sortBy = "plantations.name";
         sortPayload.orderBy = "asc"
       }
       let companyId = req.query.companyId;
@@ -352,53 +319,53 @@ const PlantationController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
       let total, rows
-      let { organisation, company, project } = req.body;
+      let { organisation, company, name } = req.body;
       let role = req.me.roles[0];
-      let name = req.me.name;
+      let userName = req.me.name;
 
-      if (role === "superAdmin" && name === "superAdmin") {
+      if (role === "superAdmin" && userName === "superAdmin") {
         [total, rows] = await Promise.all([
-          knex
+          knexReader
             .count("* as count")
-            .from("projects")
-            .leftJoin("companies", "projects.companyId", "companies.id")
-            .leftJoin("users", "users.id", "projects.createdBy")
+            .from("plantations")
+            .leftJoin("companies", "plantations.companyId", "companies.id")
+            .leftJoin("users", "users.id", "plantations.createdBy")
             .where('companies.isActive', true)
             .where(qb => {
               if (organisation) {
-                qb.where('projects.orgId', organisation)
+                qb.where('plantations.orgId', organisation)
               }
               if (company) {
-                qb.where('projects.companyId', company)
+                qb.where('plantations.companyId', company)
               }
-              if (project) {
-                qb.where('projects.projectName', 'iLIKE', `%${project}%`)
+              if (name) {
+                qb.where('plantations.name', 'iLIKE', `%${name}%`)
               }
             })
             .first(),
-          knex("projects")
-            .leftJoin("companies", "projects.companyId", "companies.id")
-            .leftJoin("users", "users.id", "projects.createdBy")
+          knexReader("plantations")
+            .leftJoin("companies", "plantations.companyId", "companies.id")
+            .leftJoin("users", "users.id", "plantations.createdBy")
             .where('companies.isActive', true)
             .where(qb => {
               if (organisation) {
-                qb.where('projects.orgId', organisation)
+                qb.where('plantations.orgId', organisation)
               }
               if (company) {
-                qb.where('projects.companyId', company)
+                qb.where('plantations.companyId', company)
               }
-              if (project) {
-                qb.where('projects.projectName', 'iLIKE', `%${project}%`)
+              if (name) {
+                qb.where('plantations.name', 'iLIKE', `%${name}%`)
               }
             })
             .select([
-              "projects.id as id",
-              "projects.projectName as Project Name",
+              "plantations.id as id",
+              "plantations.name as Plantation Name",
               "companies.companyName as Company Name",
-              "projects.isActive as Status",
+              "plantations.isActive as Status",
               "users.name as Created By",
-              "projects.createdAt as Date Created",
-              "projects.project as projectId",
+              "plantations.createdAt as Date Created",
+              "plantations.code as code",
               "companies.companyId"
             ])
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
@@ -409,49 +376,49 @@ const PlantationController = {
       } else {
 
         [total, rows] = await Promise.all([
-          knex
+          knexReader
             .count("* as count")
-            .from("projects")
-            .leftJoin("companies", "projects.companyId", "companies.id")
-            .leftJoin("users", "users.id", "projects.createdBy")
-            .where({ "projects.orgId": req.orgId })
+            .from("plantations")
+            .leftJoin("companies", "plantations.companyId", "companies.id")
+            .leftJoin("users", "users.id", "plantations.createdBy")
+            .where({ "plantations.orgId": req.orgId })
             .where('companies.isActive', true)
             .where(qb => {
               if (organisation) {
-                qb.where('projects.orgId', organisation)
+                qb.where('plantations.orgId', organisation)
               }
               if (company) {
-                qb.where('projects.companyId', company)
+                qb.where('plantations.companyId', company)
               }
-              if (project) {
-                qb.where('projects.projectName', 'iLIKE', `%${project}%`)
+              if (name) {
+                qb.where('plantations.name', 'iLIKE', `%${name}%`)
               }
             })
             .first(),
-          knex("projects")
-            .leftJoin("companies", "projects.companyId", "companies.id")
-            .leftJoin("users", "users.id", "projects.createdBy")
+          knexReader("plantations")
+            .leftJoin("companies", "plantations.companyId", "companies.id")
+            .leftJoin("users", "users.id", "plantations.createdBy")
             .where('companies.isActive', true)
-            .where({ "projects.orgId": req.orgId })
+            .where({ "plantations.orgId": req.orgId })
             .where(qb => {
               if (organisation) {
-                qb.where('projects.orgId', organisation)
+                qb.where('plantations.orgId', organisation)
               }
               if (company) {
-                qb.where('projects.companyId', company)
+                qb.where('plantations.companyId', company)
               }
-              if (project) {
-                qb.where('projects.projectName', 'iLIKE', `%${project}%`)
+              if (name) {
+                qb.where('plantations.name', 'iLIKE', `%${name}%`)
               }
             })
             .select([
-              "projects.id as id",
-              "projects.projectName as Project Name",
+              "plantations.id as id",
+              "plantations.name as Plantation Name",
               "companies.companyName as Company Name",
-              "projects.isActive as Status",
+              "plantations.isActive as Status",
               "users.name as Created By",
-              "projects.createdAt as Date Created",
-              "projects.project as projectId",
+              "plantations.createdAt as Date Created",
+              "plantations.code as code",
               "companies.companyId"
             ])
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
@@ -472,18 +439,19 @@ const PlantationController = {
 
       return res.status(200).json({
         data: {
-          projects: pagination
+          plantations: pagination
         },
         message: "Plantation List!"
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      console.log("[controllers][administrationFeatures][getPlantationList] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   exportPlantation: async (req, res) => {
     try {
       let companyId = req.query.companyId;
@@ -495,47 +463,47 @@ const PlantationController = {
 
         [rows] = await Promise.all([
 
-          knex("projects")
-            .leftJoin("companies", "projects.companyId", "companies.id")
-            .leftJoin("users", "users.id", "projects.createdBy")
+          knexReader("plantations")
+            .leftJoin("companies", "plantations.companyId", "companies.id")
+            .leftJoin("users", "users.id", "plantations.createdBy")
             .where('companies.isActive', true)
-            .where({ "projects.orgId": orgId })
+            .where({ "plantations.orgId": orgId })
             .select([
-              // "projects.orgId as ORGANIZATION_ID",
-              "projects.project as PROJECT",
-              "projects.projectName as PROJECT_NAME",
+              // "plantations.orgId as ORGANIZATION_ID",
+              "plantations.code as CODE",
+              "plantations.name as NAME",
               "companies.companyId as COMPANY",
               "companies.companyName as COMPANY_NAME",
-              "projects.projectLocationEng as PROJECT_LOCATION",
-              "projects.projectLocationThai as PROJECT_LOCATION_ALTERNATE_LANGUAGE",
-              "projects.currency as CURRENCY"
+              "plantations.locationEng as LOCATION",
+              "plantations.locationThai as LOCATION_ALTERNATE_LANGUAGE",
+              "plantations.currency as CURRENCY"
               // "users.name as CREATED BY",
-              // "projects.createdBy as CREATED BY ID",
-              // "projects.createdAt as DATE CREATED"
+              // "plantations.createdBy as CREATED BY ID",
+              // "plantations.createdAt as DATE CREATED"
             ])
         ]);
 
       } else {
 
         [rows] = await Promise.all([
-          knex
-            .from("projects")
-            .leftJoin("companies", "projects.companyId", "companies.id")
-            .leftJoin("users", "users.id", "projects.createdBy")
+          knexReader
+            .from("plantations")
+            .leftJoin("companies", "plantations.companyId", "companies.id")
+            .leftJoin("users", "users.id", "plantations.createdBy")
             .where('companies.isActive', true)
-            .where({ "projects.companyId": companyId, "projects.orgId": orgId })
+            .where({ "plantations.companyId": companyId, "plantations.orgId": orgId })
             .select([
-              // "projects.orgId as ORGANIZATION_ID",
-              "projects.project as PROJECT",
-              "projects.projectName as PROJECT_NAME",
+              // "plantations.orgId as ORGANIZATION_ID",
+              "plantations.code as CODE",
+              "plantations.name as NAME",
               "companies.companyId as COMPANY",
               "companies.companyName as COMPANY_NAME",
-              "projects.projectLocationEng as PROJECT_LOCATION",
-              "projects.projectLocationThai as PROJECT_LOCATION_ALTERNATE_LANGUAGE",
-              "projects.currency as CURRENCY"
+              "plantations.locationEng as LOCATION",
+              "plantations.locationThai as LOCATION_ALTERNATE_LANGUAGE",
+              "plantations.currency as CURRENCY"
               // "users.name as CREATED BY",
-              // "projects.createdBy as CREATED BY ID",
-              // "projects.createdAt as DATE CREATED"
+              // "plantations.createdBy as CREATED BY ID",
+              // "plantations.createdAt as DATE CREATED"
             ])
         ]);
       }
@@ -556,12 +524,12 @@ const PlantationController = {
       } else {
         ws = XLSX.utils.json_to_sheet([
           {
-            PROJECT: "",
-            PROJECT_NAME: "",
+            CODE: "",
+            NAME: "",
             COMPANY: "",
             COMPANY_NAME: "",
-            PROJECT_LOCATION: "",
-            PROJECT_LOCATION_ALTERNATE_LANGUAGE: "",
+            LOCATION: "",
+            LOCATION_ALTERNATE_LANGUAGE: "",
             CURRENCY: ""
           }
         ]);
@@ -569,7 +537,7 @@ const PlantationController = {
       //var ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "ProjectData-" + Date.now() + ".csv";
+      let filename = "PlantationData-" + moment(Date.now()).format("YYYYMMDD") + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require('aws-sdk');
@@ -577,7 +545,7 @@ const PlantationController = {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
-          Key: "Export/Project/" + filename,
+          Key: "Export/Plantation/" + filename,
           Body: file_buffer,
           ACL: 'public-read'
         }
@@ -592,9 +560,9 @@ const PlantationController = {
             console.log("File uploaded Successfully");
             //next(null, filePath);
             let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = process.env.S3_BUCKET_URL + "/Export/Project/" +
+            let url = process.env.S3_BUCKET_URL + "/Export/Plantation/" +
               filename;
-            // let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Project/" + filename;
+            // let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/Plantation/" + filename;
             return res.status(200).json({
               data: rows,
               message: "Plantation Data Export Successfully!",
@@ -605,38 +573,39 @@ const PlantationController = {
       })
 
     } catch (err) {
-      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      console.log("[controllers][administrationFeatures][exportPlantation] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   getPlantationByCompany: async (req, res) => {
     try {
       let companyId = req.query.companyId;
-      let projects = _.flatten(
-        req.userProjectResources.map(v => v.projects)
+      let plantations = _.flatten(
+        req.userPlantationResources.map(v => v.plantations)
       ).map(v => Number(v));
 
-      console.log("==========", projects, "==========")
+      console.log("==========", plantations, "==========")
 
       let pagination = {}
       console.log("companyId", companyId);
 
-      let rows = await knex("projects")
-        .innerJoin("companies", "projects.companyId", "companies.id")
-        .where({ "projects.companyId": companyId, "projects.isActive": true })
-        .whereIn('projects.id', projects)
+      let rows = await knexReader("plantations")
+        .innerJoin("companies", "plantations.companyId", "companies.id")
+        .where({ "plantations.companyId": companyId, "plantations.isActive": true })
+        .whereIn('plantations.id', plantations)
         .select([
-          "projects.id as id",
-          "projects.projectName",
+          "plantations.id as id",
+          "plantations.name",
           "companies.companyName",
           "companies.id as cid",
           "companies.companyId",
-          "projects.project as projectId"
+          "plantations.code as code"
         ])
-        .orderBy('projects.projectName', 'asc')
+        .orderBy('plantations.name', 'asc')
 
       console.log("rows", rows);
 
@@ -644,18 +613,19 @@ const PlantationController = {
 
       return res.status(200).json({
         data: {
-          projects: pagination
+          plantations: pagination
         },
         message: "Plantation List!"
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      console.log("[controllers][administrationFeatures][getPlantationByCompany] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   getPlantationByMultipleCompany: async (req, res) => {
     try {
       console.log("conpany id in req", req.body);
@@ -666,58 +636,60 @@ const PlantationController = {
       // if(index !== -1){
       //     companyId.splice(index,1)
       // }
-      let rows = await knex("projects")
-        .where({ "projects.isActive": true })
-        .whereIn("projects.companyId", companyId)
+      let rows = await knexReader("plantations")
+        .where({ "plantations.isActive": true })
+        .whereIn("plantations.companyId", companyId)
         .select([
-          "projects.id as id",
-          "projects.projectName",
-          "projects.project as projectId"
+          "plantations.id as id",
+          "plantations.name",
+          "plantations.code as code"
         ])
-        .orderBy('projects.projectName', 'asc')
+        .orderBy('plantations.name', 'asc')
 
       return res.status(200).json({
         data: {
-          projects: rows
+          plantations: rows
         },
         message: "Plantation List!"
       });
 
     } catch (err) {
-      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      console.log("[controllers][administrationFeatures][getPlantationByMultipleCompany] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   getPlantationAllList: async (req, res) => {
     try {
 
       let orgId = req.orgId
 
-      let rows = await knex("projects")
+      let rows = await knexReader("plantations")
         .select([
-          "projects.id as id",
-          "projects.projectName",
-          "projects.project as projectId",
+          "plantations.id as id",
+          "plantations.name",
+          "plantations.code as code",
         ]).where({ orgId: req.orgId, isActive: true })
 
       return res.status(200).json({
         data: {
-          projects: rows
+          plantations: rows
         },
         message: "Plantation all List!"
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      console.log("[controllers][administrationFeatures][getPlantationAllList] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  /**IMPORT PROJECT DATA */
+
+  /**IMPORT DATA */
   importPlantationData: async (req, res) => {
     try {
 
@@ -745,48 +717,48 @@ const PlantationController = {
       errors.push(header)
 
 
-      if (data[0].B == "PROJECT_NAME" &&
+      if (data[0].B == "NAME" &&
         data[0].C == "COMPANY" &&
         data[0].D == "COMPANY_NAME" &&
-        data[0].E == "PROJECT_LOCATION" &&
-        data[0].F == "PROJECT_LOCATION_ALTERNATE_LANGUAGE" &&
+        data[0].E == "LOCATION" &&
+        data[0].F == "LOCATION_ALTERNATE_LANGUAGE" &&
         data[0].G == "CURRENCY" &&
-        data[0].A == "PROJECT" || data[0].A == "Ã¯Â»Â¿PROJECT"
+        data[0].A == "CODE" || data[0].A == "Ã¯Â»Â¿CODE"
       ) {
         if (data.length > 0) {
           let i = 0;
-          for (let projectData of data) {
+          for (let plantationData of data) {
             i++;
 
             if (i > 1) {
 
-              if (!projectData.A) {
-                let values = _.values(projectData)
-                values.unshift('Project Code can not empty!')
+              if (!plantationData.A) {
+                let values = _.values(plantationData)
+                values.unshift('Plantation Code can not empty!')
                 errors.push(values);
                 fail++;
                 continue;
               }
 
-              if (!projectData.B) {
-                let values = _.values(projectData)
-                values.unshift('Project name can not empty!')
+              if (!plantationData.B) {
+                let values = _.values(plantationData)
+                values.unshift('Plantation name can not empty!')
                 errors.push(values);
                 fail++;
                 continue;
               }
 
-              if (!projectData.C) {
-                let values = _.values(projectData)
+              if (!plantationData.C) {
+                let values = _.values(plantationData)
                 values.unshift('Company Id can not empty!')
                 errors.push(values);
                 fail++;
                 continue;
               }
 
-              if (!projectData.E) {
-                let values = _.values(projectData)
-                values.unshift('Project location can not empty!')
+              if (!plantationData.E) {
+                let values = _.values(plantationData)
+                values.unshift('Plantation location can not empty!')
                 errors.push(values);
                 fail++;
                 continue;
@@ -794,10 +766,10 @@ const PlantationController = {
 
               let companyData = await knex("companies")
                 .select("id")
-                .where({ companyId: projectData.C.toUpperCase(), orgId: req.orgId });
+                .where({ companyId: plantationData.C.toUpperCase(), orgId: req.orgId });
               let companyId = null;
               if (!companyData.length) {
-                let values = _.values(projectData)
+                let values = _.values(plantationData)
                 values.unshift('Company ID does not exists')
                 errors.push(values);
                 fail++;
@@ -807,36 +779,37 @@ const PlantationController = {
                 companyId = companyData[0].id;
               }
 
-              let checkExist = await knex("projects")
-                .select("projectName")
-                .where({ project: projectData.A.toUpperCase(), companyId: companyId, orgId: req.orgId });
+              let checkExist = await knex("plantations")
+                .select("name")
+                .where({ code: plantationData.A.toUpperCase(), companyId: companyId, orgId: req.orgId });
               if (checkExist.length < 1) {
                 let currentTime = new Date().getTime();
                 let insertData = {
                   orgId: req.orgId,
                   companyId: companyId,
-                  projectName: projectData.B,
-                  project: projectData.A.toUpperCase(),
-                  projectLocationEng: projectData.E,
-                  projectLocationThai: projectData.F,
-                  currency: projectData.G,
+                  name: plantationData.B,
+                  code: plantationData.A.toUpperCase(),
+                  locationEng: plantationData.E,
+                  locationThai: plantationData.F,
+                  currency: plantationData.G,
                   isActive: true,
                   createdBy: req.me.id,
                   createdAt: currentTime,
+                  updatedBy: req.me.id,
                   updatedAt: currentTime
                 };
 
                 resultData = await knex
                   .insert(insertData)
                   .returning(["*"])
-                  .into("projects");
+                  .into("plantations");
                 if (resultData && resultData.length) {
                   success++;
                 }
               } else {
                 fail++;
-                let values = _.values(projectData)
-                values.unshift('Project Code already exists')
+                let values = _.values(plantationData)
+                values.unshift('Plantation Code already exists')
                 errors.push(values);
               }
             }
@@ -882,13 +855,14 @@ const PlantationController = {
       // }
 
     } catch (err) {
-      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      console.log("[controllers][administrationFeatures][importPlantationData] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   getUserPlantationByCompany: async (req, res) => {
     try {
       let companyId = req.query.companyId;
@@ -897,16 +871,16 @@ const PlantationController = {
       let pagination = {}
       console.log("companyId", companyId);
 
-      let rows = await knex("projects")
-        .innerJoin("companies", "projects.companyId", "companies.id")
-        .where({ "projects.companyId": companyId, "projects.isActive": 'true' })
+      let rows = await knexReader("plantations")
+        .innerJoin("companies", "plantations.companyId", "companies.id")
+        .where({ "plantations.companyId": companyId, "plantations.isActive": 'true' })
         .select([
-          "projects.id as id",
-          "projects.projectName",
+          "plantations.id as id",
+          "plantations.name",
           "companies.companyName",
           "companies.id as cid",
           "companies.companyId",
-          "projects.project as projectId"
+          "plantations.code as code"
         ])
 
       console.log("rows", rows);
@@ -915,127 +889,128 @@ const PlantationController = {
 
       return res.status(200).json({
         data: {
-          projects: pagination
+          plantations: pagination
         },
         message: "Plantation List!"
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      console.log("[controllers][administrationFeatures][getUserPlantationByCompany] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  getPlantationListHavingPropertyUnits: async (req, res) => {
+
+  getPlantationListHavingPlantContainers: async (req, res) => {
     try {
       let companyId = req.query.companyId;
-      let projects = _.flatten(
-        req.userProjectResources.map(v => v.projects)
+      let plantations = _.flatten(
+        req.userPlantationResources.map(v => v.plantations)
       ).map(v => Number(v));
 
-      console.log("==========", projects, "==========")
+      console.log("==========", plantations, "==========")
 
       let pagination = {}
       console.log("companyId", companyId);
-      let companyHavingProjects = []
+      let companyHavingPlantations = []
       let companyArr1 = []
       let rows = []
 
       if (req.query.areaName === 'common') {
 
-        companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-        companyArr1 = companyHavingProjects.map(v => v.companyId)
-        rows = await knex("projects")
-          .innerJoin('companies', 'projects.companyId', 'companies.id')
-          .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 2 })
-          .whereIn('projects.id', projects)
-          .whereIn('projects.companyId', companyArr1)
+        companyHavingPlantations = await knex('plantations').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingPlantations.map(v => v.companyId)
+        rows = await knexReader("plantations")
+          .innerJoin('companies', 'plantations.companyId', 'companies.id')
+          .innerJoin('plant_containers', 'plantations.id', 'plant_containers.plantationId')
+          .where({ "plantations.companyId": companyId, "plantations.isActive": true })
+          .whereIn('plantations.id', plantations)
+          .whereIn('plantations.companyId', companyArr1)
           .select([
-            "projects.id as id",
-            "projects.projectName",
+            "plantations.id as id",
+            "plantations.name",
             "companies.companyName",
             "companies.id as cid",
             "companies.companyId",
-            "projects.project as projectId"
-          ]).groupBy(["projects.id",
-            "projects.projectName",
+            "plantations.code as code"
+          ]).groupBy(["plantations.id",
+            "plantations.name",
             "companies.companyName",
             "companies.id",
             "companies.companyId",
-            "projects.project"])
-          .orderBy('projects.projectName', 'asc')
+            "plantations.code"])
+          .orderBy('plantations.name', 'asc')
       } else if (req.query.areaName === 'all' && companyId === '') {
-        companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-        companyArr1 = companyHavingProjects.map(v => v.companyId)
-        rows = await knex("projects")
-          .innerJoin('companies', 'projects.companyId', 'companies.id')
-          .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.isActive": true })
-          .whereIn('projects.id', projects)
-          .whereIn('projects.companyId', companyArr1)
+        companyHavingPlantations = await knexReader('plantations').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingPlantations.map(v => v.companyId)
+        rows = await knexReader("plantations")
+          .innerJoin('companies', 'plantations.companyId', 'companies.id')
+          .innerJoin('plant_containers', 'plantations.id', 'plant_containers.plantationId')
+          .where({ "plantations.isActive": true })
+          .whereIn('plantations.id', plantations)
+          .whereIn('plantations.companyId', companyArr1)
           .select([
-            "projects.id as id",
-            "projects.projectName",
+            "plantations.id as id",
+            "plantations.name",
             "companies.companyName",
             "companies.id as cid",
             "companies.companyId",
-            "projects.project as projectId"
-          ]).groupBy(["projects.id",
-            "projects.projectName",
+            "plantations.code as code"
+          ]).groupBy(["plantations.id",
+            "plantations.name",
             "companies.companyName",
             "companies.id",
             "companies.companyId",
-            "projects.project"])
-          .orderBy('projects.projectName', 'asc')
+            "plantations.code"])
+          .orderBy('plantations.name', 'asc')
       } else if (req.query.areaName === 'all') {
-        companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-        companyArr1 = companyHavingProjects.map(v => v.companyId)
-        rows = await knex("projects")
-          .innerJoin('companies', 'projects.companyId', 'companies.id')
-          .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.companyId": companyId, "projects.isActive": true, })
-          .whereIn('projects.id', projects)
-          .whereIn('projects.companyId', companyArr1)
+        companyHavingPlantations = await knexReader('plantations').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingPlantations.map(v => v.companyId)
+        rows = await knexReader("plantations")
+          .innerJoin('companies', 'plantations.companyId', 'companies.id')
+          .innerJoin('plant_containers', 'plantations.id', 'plant_containers.plantationId')
+          .where({ "plantations.companyId": companyId, "plantations.isActive": true, })
+          .whereIn('plantations.id', plantations)
+          .whereIn('plantations.companyId', companyArr1)
           .select([
-            "projects.id as id",
-            "projects.projectName",
+            "plantations.id as id",
+            "plantations.name",
             "companies.companyName",
             "companies.id as cid",
             "companies.companyId",
-            "projects.project as projectId"
-          ]).groupBy(["projects.id",
-            "projects.projectName",
+            "plantations.code as code"
+          ]).groupBy(["plantations.id",
+            "plantations.name",
             "companies.companyName",
             "companies.id",
             "companies.companyId",
-            "projects.project"])
-          .orderBy('projects.projectName', 'asc')
+            "plantations.code"])
+          .orderBy('plantations.name', 'asc')
       } else {
 
-        companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-        companyArr1 = companyHavingProjects.map(v => v.companyId)
-        rows = await knex("projects")
-          .innerJoin('companies', 'projects.companyId', 'companies.id')
-          .innerJoin('property_units', 'projects.id', 'property_units.projectId')
-          .where({ "projects.companyId": companyId, "projects.isActive": true, 'property_units.type': 1 })
-          .whereIn('projects.id', projects)
-          .whereIn('projects.companyId', companyArr1)
+        companyHavingPlantations = await knexReader('plantations').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+        companyArr1 = companyHavingPlantations.map(v => v.companyId)
+        rows = await knexReader("plantations")
+          .innerJoin('companies', 'plantations.companyId', 'companies.id')
+          .innerJoin('plant_containers', 'plantations.id', 'plant_containers.plantationId')
+          .where({ "plantations.companyId": companyId, "plantations.isActive": true })
+          .whereIn('plantations.id', plantations)
+          .whereIn('plantations.companyId', companyArr1)
           .select([
-            "projects.id as id",
-            "projects.projectName",
+            "plantations.id as id",
+            "plantations.name",
             "companies.companyName",
             "companies.id as cid",
             "companies.companyId",
-            "projects.project as projectId"
-          ]).groupBy(["projects.id",
-            "projects.projectName",
+            "plantations.code as code"
+          ]).groupBy(["plantations.id",
+            "plantations.name",
             "companies.companyName",
             "companies.id",
             "companies.companyId",
-            "projects.project"])
-          .orderBy('projects.projectName', 'asc')
+            "plantations.code"])
+          .orderBy('plantations.name', 'asc')
       }
 
       console.log("rows", rows);
@@ -1044,39 +1019,40 @@ const PlantationController = {
 
       return res.status(200).json({
         data: {
-          projects: pagination
+          plantations: pagination
         },
         message: "Plantation List!"
       });
     } catch (err) {
-      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      console.log("[controllers][administrationFeatures][getPlantationListHavingPlantContainers] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   getPlantationById: async (req, res) => {
     try {
-      let projectId = req.body.id
+      let plantationId = req.body.id
       let orgId = req.orgId
 
-      let projectResult = await knex("projects")
+      let result = await knexReader("plantations")
         .select([
-          "projects.id",
-          "projects.projectName"
+          "plantations.id",
+          "plantations.name"
         ])
-        .where("projects.id", projectId)
-        .where("projects.orgId", orgId)
+        .where("plantations.id", plantationId)
+        .where("plantations.orgId", orgId)
 
       return res.status(200).json({
         data: {
-          projects: projectResult
+          plantations: result
         },
         message: "Plantation Record!"
       });
     } catch (err) {
-      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      console.log("[controllers][administrationFeatures][getPlantationById] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

@@ -261,7 +261,7 @@ const serviceOrderController = {
 
             let reqData = req.query;
             let total, rows
-            const accessibleProjects = req.userProjectResources[0].projects;
+            const accessibleProjects = req.userPlantationResources[0].plantations;
 
             let projectIds = req.accessibleProjects;
 
@@ -2809,7 +2809,7 @@ const serviceOrderController = {
     getServiceOrderForReport: async (req, res) => {
         try {
             const payload = req.body;
-            const accessibleProjects = req.userProjectResources[0].projects
+            const accessibleProjects = req.userPlantationResources[0].plantations
             let sr = await knex.from("service_orders")
                 .leftJoin("service_requests", "service_orders.serviceRequestId", "service_requests.id")
 
@@ -3777,7 +3777,7 @@ const serviceOrderController = {
     getSoCostReport: async (req, res) => {
 
 
-        const accessibleProjects = req.userProjectResources[0].projects;
+        const accessibleProjects = req.userPlantationResources[0].plantations;
         let payload = req.body;
 
         let month;

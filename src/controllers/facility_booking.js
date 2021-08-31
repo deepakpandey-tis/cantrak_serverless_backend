@@ -1113,7 +1113,7 @@ const facilityBookingController = {
         try {
 
             let projectIds = [];
-            let projectsForFacilities = req.userProjectResources
+            let projectsForFacilities = req.userPlantationResources
             projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 9)
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;
@@ -1124,7 +1124,7 @@ const facilityBookingController = {
             let reqData = req.query;
             //let filters = req.body;
             let total, rows;
-            // const accessibleProjects = req.userProjectResources[0].projects
+            // const accessibleProjects = req.userPlantationResources[0].plantations
 
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -1527,7 +1527,7 @@ const facilityBookingController = {
             let propertUnitresult = null;
             let userHouseResult = null;
             let propertyUnitFinalResult = null;
-            let resourceProject = req.userProjectResources[0].projects;
+            let resourceProject = req.userPlantationResources[0].plantations;
             let { startDateTime, endDateTime, projectId, buildingId } = req.body;
             let resultData;
 
@@ -3147,7 +3147,7 @@ const facilityBookingController = {
         try {
 
             let projectIds = [];
-            let projectsForFacilities = req.userProjectResources
+            let projectsForFacilities = req.userPlantationResources
             projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 9)
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;
@@ -5305,7 +5305,7 @@ const facilityBookingController = {
         try {
 
             let projectIds = [];
-            let projectsForFacilities = req.userProjectResources
+            let projectsForFacilities = req.userPlantationResources
             projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 9)
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;
@@ -5359,7 +5359,7 @@ const facilityBookingController = {
         try {
 
             let projectIds = [];
-            let projectsForFacilities = req.userProjectResources
+            let projectsForFacilities = req.userPlantationResources
             projectsForFacilities = projectsForFacilities.find(pfp => pfp.id == 9)
             console.log('Project For Facilities:', projectsForFacilities);
             let accessibleProjects = projectsForFacilities.projects;

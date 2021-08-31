@@ -1778,7 +1778,7 @@ const pmController = {
       const reqData = req.body;
 
       let projectId = req.body.projectId
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       let currentStartTime = moment(reqData.startDate).format("YYYY-MM-DD")
       let currentEndTime = moment(reqData.endDate).format("YYYY-MM-DD")
@@ -1900,7 +1900,7 @@ const pmController = {
       const reqData = req.body;
 
       let projectId = req.body.projectId
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       let final = [];
       [workOrderOpen, workOrderOpenOverdue] = await Promise.all([
@@ -1986,7 +1986,7 @@ const pmController = {
       let currentStartTime = moment(payload.startDate).format("YYYY-MM-DD")
       let currentEndTime = moment(payload.endDate).format("YYYY-MM-DD")
 
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       if (currentEndTime && currentStartTime) {
 
@@ -2143,7 +2143,7 @@ const pmController = {
       let currentStartTime = moment(payload.startDate).format("YYYY-MM-DD")
       let currentEndTime = moment(payload.endDate).format("YYYY-MM-DD")
 
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       const [openWorkOrder, openOverdueWorkOrder, completedOnSchedule, completedOverdue] = await Promise.all([
         knex
@@ -2287,7 +2287,7 @@ const pmController = {
     try {
 
 
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       let rows = await knex("projects")
         .select([

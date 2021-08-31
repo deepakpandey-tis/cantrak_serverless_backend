@@ -5,6 +5,7 @@ var jwt = require("jsonwebtoken");
 const _ = require("lodash");
 const XLSX = require("xlsx");
 const knex = require("../../db/knex");
+const knexReader = require("../../db/knex-reader");
 const fs = require('fs');
 const path = require('path');
 
@@ -15,77 +16,73 @@ const containerTypeController = {
     try {
       let orgId = req.orgId;
       let userId = req.me.id;
-      let propertyType = null;
-      await knex.transaction(async trx => {
-        const payload = req.body;
+      let containerType = null;
 
-        const schema = Joi.object().keys({
-          propertyUnitTypeCode: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string()
-            .optional()
-            .allow("")
-            .allow(null)
-        });
+      const payload = req.body;
 
-        const result = Joi.validate(payload, schema);
-        console.log(
-          "[controllers][administrationFeatures][addbuildingPhase]: JOi Result",
-          result
-        );
-
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
-
-
-
-        /*CHECK DUPLICATE VALUES OPEN */
-        let existValue = await knex('property_unit_type_master')
-          .where({ propertyUnitTypeCode: payload.propertyUnitTypeCode.toUpperCase(), orgId: orgId });
-        if (existValue && existValue.length) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Container Type code already exist!!" }
-            ]
-          });
-        }
-        /*CHECK DUPLICATE VALUES CLOSE */
-
-
-        let currentTime = new Date().getTime();
-        let insertData = {
-          ...payload,
-          propertyUnitTypeCode: payload.propertyUnitTypeCode.toUpperCase(),
-          orgId: orgId,
-          createdBy: userId,
-          createdAt: currentTime,
-          updatedAt: currentTime
-        };
-        //insertData     = _.omit(insertData[0], ['descriptionEng'])
-        let insertResult = await knex
-          .insert(insertData)
-          .returning(["*"])
-          .transacting(trx)
-          .into("property_unit_type_master");
-        propertyType = insertResult[0];
-
-        trx.commit;
+      const schema = Joi.object().keys({
+        code: Joi.string().required(),
+        descriptionEng: Joi.string().required(),
+        descriptionThai: Joi.string()
+          .optional()
+          .allow("")
+          .allow(null)
       });
+
+      const result = Joi.validate(payload, schema);
+      console.log(
+        "[controllers][administrationFeatures][addContainerType]: JOi Result",
+        result
+      );
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
+        });
+      }
+
+      /*CHECK DUPLICATE VALUES OPEN */
+      let existValue = await knex('container_types')
+        .where({ code: payload.code.toUpperCase(), orgId: orgId });
+      if (existValue && existValue.length) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Container Type code already exist!!" }
+          ]
+        });
+      }
+      /*CHECK DUPLICATE VALUES CLOSE */
+
+
+      let currentTime = new Date().getTime();
+      let insertData = {
+        ...payload,
+        code: payload.code.toUpperCase(),
+        orgId: orgId,
+        createdBy: userId,
+        createdAt: currentTime,
+        updatedBy: userId,
+        updatedAt: currentTime
+      };
+      //insertData     = _.omit(insertData[0], ['descriptionEng'])
+      let insertResult = await knex
+        .insert(insertData)
+        .returning(["*"])
+        .into("container_types");
+      containerType = insertResult[0];
+
 
       return res.status(200).json({
         data: {
-          propertyType: propertyType
+          containerType: containerType
         },
         message: "Container Type added successfully."
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][addbuildingPhase] :  Error",
+        "[controllers][administrationFeatures][addContainerType] :  Error",
         err
       );
       //trx.rollback
@@ -94,78 +91,74 @@ const containerTypeController = {
       });
     }
   },
+
   updateContainerType: async (req, res) => {
     try {
-      let PropertyType = null;
+      let containerType = null;
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
-        const payload = req.body;
+      const payload = req.body;
 
-        const schema = Joi.object().keys({
-          id: Joi.string().required(),
-          propertyUnitTypeCode: Joi.string().required(),
-          descriptionEng: Joi.string().required(),
-          descriptionThai: Joi.string()
-            .optional()
-            .allow("")
-            .allow(null)
+      const schema = Joi.object().keys({
+        id: Joi.string().required(),
+        code: Joi.string().required(),
+        descriptionEng: Joi.string().required(),
+        descriptionThai: Joi.string()
+          .optional()
+          .allow("")
+          .allow(null)
+      });
+
+      const result = Joi.validate(payload, schema);
+      console.log(
+        "[controllers][administrationFeatures][updateContainerType]: JOi Result",
+        result
+      );
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
         });
+      }
 
-        const result = Joi.validate(payload, schema);
-        console.log(
-          "[controllers][administrationFeatures][updatebuildingPhase]: JOi Result",
-          result
-        );
+      /*CHECK DUPLICATE VALUES OPEN */
+      let existValue = await knex('container_types')
+        .where({ code: payload.code.toUpperCase(), orgId: orgId });
+      if (existValue && existValue.length) {
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (existValue[0].id === payload.id) {
+
+        } else {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
+              { code: "VALIDATION_ERROR", message: "Container Type code Already exist!!" }
             ]
           });
         }
+      }
+      /*CHECK DUPLICATE VALUES CLOSE */
 
-        /*CHECK DUPLICATE VALUES OPEN */
-        let existValue = await knex('property_unit_type_master')
-          .where({ propertyUnitTypeCode: payload.propertyUnitTypeCode.toUpperCase(), orgId: orgId });
-        if (existValue && existValue.length) {
-
-          if (existValue[0].id === payload.id) {
-
-          } else {
-            return res.status(400).json({
-              errors: [
-                { code: "VALIDATION_ERROR", message: "Container Type code Already exist!!" }
-              ]
-            });
-          }
-        }
-        /*CHECK DUPLICATE VALUES CLOSE */
-
-        let currentTime = new Date().getTime();
-        let insertData = { ...payload, propertyUnitTypeCode: payload.propertyUnitTypeCode.toUpperCase(), createdBy: userId, updatedAt: currentTime };
-        let insertResult = await knex
-          .update(insertData)
-          .where({ id: payload.id, orgId: orgId })
-          .returning(["*"])
-          .transacting(trx)
-          .into("property_unit_type_master");
-        PropertyType = insertResult[0];
-
-        trx.commit;
-      });
+      let currentTime = new Date().getTime();
+      let insertData = { ...payload, code: payload.code.toUpperCase(), updatedBy: userId, updatedAt: currentTime };
+      let insertResult = await knex
+        .update(insertData)
+        .where({ id: payload.id, orgId: orgId })
+        .returning(["*"])
+        .into("container_types");
+      containerType = insertResult[0];
 
       return res.status(200).json({
         data: {
-          PropertyType: PropertyType
+          containerType: containerType
         },
-        message: "Container Type details updated successfully."
+        message: "Container Type detail updated successfully."
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][updatePropertyType] :  Error",
+        "[controllers][administrationFeatures][updateContainerType] :  Error",
         err
       );
       //trx.rollback
@@ -174,65 +167,65 @@ const containerTypeController = {
       });
     }
   },
+
   toggleContainerType: async (req, res) => {
     try {
-      let propertyType = null;
+      let containerType = null;
+      let userId = req.me.id;
       let orgId = req.orgId;
       let message;
-      await knex.transaction(async trx => {
-        let payload = req.body;
-        const schema = Joi.object().keys({
-          id: Joi.string().required()
-        });
-        const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
 
-        let propertyTypeResult;
-        let checkStatus = await knex.from('property_unit_type_master').where({ id: payload.id }).returning(['*'])
-        // res.json({message:checkStatus[0]})
-        if (checkStatus && checkStatus.length) {
-
-          if (checkStatus[0].isActive === true) {
-
-            propertyTypeResult = await knex
-              .update({ isActive: false })
-              .where({ id: payload.id })
-              .returning(["*"])
-              .transacting(trx)
-              .into("property_unit_type_master");
-
-            message = "Container Type Inactive Successfully!"
-
-          } else {
-            propertyTypeResult = await knex
-              .update({ isActive: true })
-              .where({ id: payload.id })
-              .returning(["*"])
-              .transacting(trx)
-              .into("property_unit_type_master");
-            message = "Container Type Active Successfully!"
-          }
-
-        }
-
-        propertyType = propertyTypeResult[0];
-        trx.commit;
+      let payload = req.body;
+      const schema = Joi.object().keys({
+        id: Joi.string().required()
       });
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
+        });
+      }
+
+      let containerTypeResult;
+      let currentTime = new Date().getTime();
+      let checkStatus = await knex.from('container_types').where({ id: payload.id }).returning(['*'])
+      // res.json({message:checkStatus[0]})
+      if (checkStatus && checkStatus.length) {
+
+        if (checkStatus[0].isActive === true) {
+
+          containerTypeResult = await knex
+            .update({ isActive: false, updatedBy: userId, updatedAt: currentTime })
+            .where({ id: payload.id })
+            .returning(["*"])
+            .into("container_types");
+
+          message = "Container Type Inactive Successfully!"
+
+        } else {
+          containerTypeResult = await knex
+            .update({ isActive: true, updatedBy: userId, updatedAt: currentTime })
+            .where({ id: payload.id })
+            .returning(["*"])
+            .into("container_types");
+          message = "Container Type Active Successfully!"
+        }
+
+      }
+
+      containerType = containerTypeResult[0];
+
       return res.status(200).json({
         data: {
-          PropertyType: propertyType
+          containerType: containerType
         },
         message: message
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][viewbuildingPhase] :  Error",
+        "[controllers][administrationFeatures][toggleContainerType] :  Error",
         err
       );
       //trx.rollback
@@ -241,12 +234,13 @@ const containerTypeController = {
       });
     }
   },
+
   getContainerTypeList: async (req, res) => {
     try {
 
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
-        sortPayload.sortBy = "property_unit_type_master.propertyUnitTypeCode";
+        sortPayload.sortBy = "container_types.code";
         sortPayload.orderBy = "asc"
       }
       let reqData = req.query;
@@ -264,33 +258,33 @@ const containerTypeController = {
       let total, rows;
 
       [total, rows] = await Promise.all([
-        knex
+        knexReader
           .count("* as count")
-          .from("property_unit_type_master")
-          .leftJoin("users", "property_unit_type_master.createdBy", "users.id")
+          .from("container_types")
+          .leftJoin("users", "container_types.createdBy", "users.id")
           .where(qb => {
             if (searchValue) {
-              qb.where('property_unit_type_master.propertyUnitTypeCode', 'iLIKE', `%${searchValue}%`)
-              qb.orWhere('property_unit_type_master.descriptionEng', 'iLIKE', `%${searchValue}%`)
-              qb.orWhere('property_unit_type_master.descriptionThai', 'iLIKE', `%${searchValue}%`)
+              qb.where('container_types.code', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('container_types.descriptionEng', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('container_types.descriptionThai', 'iLIKE', `%${searchValue}%`)
             }
           })
-          .where({ "property_unit_type_master.orgId": orgId })
+          .where({ "container_types.orgId": orgId })
           .first(),
-        knex("property_unit_type_master")
-          .leftJoin("users", "property_unit_type_master.createdBy", "users.id")
+        knexReader("container_types")
+          .leftJoin("users", "container_types.createdBy", "users.id")
           .select([
-            "property_unit_type_master.*",
+            "container_types.*",
             "users.name as Created By",
           ])
           .where(qb => {
             if (searchValue) {
-              qb.where('property_unit_type_master.propertyUnitTypeCode', 'iLIKE', `%${searchValue}%`)
-              qb.orWhere('property_unit_type_master.descriptionEng', 'iLIKE', `%${searchValue}%`)
-              qb.orWhere('property_unit_type_master.descriptionThai', 'iLIKE', `%${searchValue}%`)
+              qb.where('container_types.code', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('container_types.descriptionEng', 'iLIKE', `%${searchValue}%`)
+              qb.orWhere('container_types.descriptionThai', 'iLIKE', `%${searchValue}%`)
             }
           })
-          .where({ "property_unit_type_master.orgId": orgId })
+          .where({ "container_types.orgId": orgId })
           .orderBy(sortPayload.sortBy, sortPayload.orderBy)
           .offset(offset)
           .limit(per_page)
@@ -308,13 +302,13 @@ const containerTypeController = {
 
       return res.status(200).json({
         data: {
-          propertyUnitType: pagination
+          containerTypes: pagination
         },
         message: "Container Type List!"
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][get-property-type-list] :  Error",
+        "[controllers][administrationFeatures][getContainerTypeList] :  Error",
         err
       );
       //trx.rollback
@@ -324,35 +318,38 @@ const containerTypeController = {
     }
 
   },
+
   getAllContainerTypeList: async (req, res) => {
     try {
-     
+
       let orgId = req.orgId;
       let result = await Promise.all([
-        knex("property_unit_type_master").select('*').where({ isActive: true, orgId: orgId }).orderBy('propertyUnitTypeCode','asc')
+        knexReader("container_types").select('*').where({ isActive: true, orgId: orgId }).orderBy('code', 'asc')
       ]);
       return res.status(200).json({
-        data:{
-          result:result        } ,
+        data: {
+          containerTypes: result
+        },
         message: "Container Type List!"
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][] :  Error", err);
+      console.log("[controllers][administrationFeatures][getAllContainerTypeList] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   getContainerTypeDetail: async (req, res) => {
 
 
     let id = req.query.id;
-    let details = await knex('property_unit_type_master').where({ id }).first();
+    let details = await knexReader('container_types').where({ id }).first();
 
     return res.status(200).json({
       data: {
-        details: details
+        containerType: details
       },
       message: "Container Type detail!"
     });

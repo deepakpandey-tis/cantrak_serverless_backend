@@ -19,7 +19,7 @@ const getVisitorList = async (req, res) => {
 
         // Get logged-in user authorised / accessible projects
         let authorisedProjectIds = [];
-        let authorisedProjects = req.userProjectResources.find(rec => rec.id == visitorModule)
+        let authorisedProjects = req.userPlantationResources.find(rec => rec.id == visitorModule)
         authorisedProjectIds = authorisedProjects.projects;
         //console.log('Authorised Project IDs:', authorisedProjectIds);
 

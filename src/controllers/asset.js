@@ -3406,7 +3406,7 @@ const assetController = {
   exportAssetData: async (req, res) => {
     try {
       // let projectIds = [];
-      // const accessibleProjects = req.userProjectResources;
+      // const accessibleProjects = req.userPlantationResources;
 
       // if (accessibleProjects.length) {
       //     for (let pro of accessibleProjects) {
@@ -3425,7 +3425,7 @@ const assetController = {
       // projectIds = _.uniqBy(projectIds);
 
       let projectIds = [];
-      let projectsForAssets = req.userProjectResources;
+      let projectsForAssets = req.userPlantationResources;
       projectsForAssets = projectsForAssets.find(
         (pfp) => pfp.id == 4
       ); // 3 means assets ...
@@ -4720,7 +4720,7 @@ const assetController = {
   getUnitDetailsByUnitNumber: async (req, res) => {
     try {
       //   let projectIds = [];
-      //   let projectsForPracel = req.userProjectResources
+      //   let projectsForPracel = req.userPlantationResources
       //   projectsForPracel = projectsForPracel.find(pfp => pfp.id == 10)
       //   console.log('Project For Parcel:', projectsForPracel);
       //   let accessibleProjects = projectsForPracel.projects;

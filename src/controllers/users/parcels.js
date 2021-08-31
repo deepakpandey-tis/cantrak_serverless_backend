@@ -16,7 +16,7 @@ const parcelsController = {
         try {
             let id = req.me.id;
             let propertyUnitFinalResult = null;
-            //let resourceProject = req.userProjectResources[0].projects;
+            //let resourceProject = req.userPlantationResources[0].plantations;
             let { listType } = req.body;
             let resultData;
             console.log("listType", listType);

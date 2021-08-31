@@ -4482,7 +4482,7 @@ const partsController = {
 
 
             let projectIds = [];
-            const accessibleProjects = req.userProjectResources;
+            const accessibleProjects = req.userPlantationResources;
 
             if (accessibleProjects.length) {
                 for (let pro of accessibleProjects) {
