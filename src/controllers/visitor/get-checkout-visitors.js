@@ -15,7 +15,7 @@ const getCheckoutVisitors = async (req, res) => {
 
         // Get logged-in user authorised / accessible projects
         let authorisedProjectIds = [];
-        let authorisedProjects = req.userProjectResources.find(rec => rec.id == visitorModule)
+        let authorisedProjects = req.userPlantationResources.find(rec => rec.id == visitorModule)
         authorisedProjectIds = authorisedProjects.projects;
 
         sqlSelect = `SELECT vi.id, vi."orgId", vi."userHouseAllocationId", vi."name", vi."mobileNo", vi."arrivalDate", vi."departureDate", vi."vehicleNo", vi."actualArrivalDate", vi."actualDepartureDate"

@@ -242,7 +242,7 @@ const commonAreaController = {
   getCommonAreaList: async (req, res) => {
     try {
 
-      let resourceProject = req.userProjectResources[0].projects;
+      let resourceProject = req.userPlantationResources[0].plantations;
 
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
@@ -672,7 +672,7 @@ const commonAreaController = {
   },
   exportCommonArea: async (req, res) => {
     try {
-      let resourceProject = req.userProjectResources[0].projects;
+      let resourceProject = req.userPlantationResources[0].plantations;
       let reqData = req.query;
       let rows = null;
       let companyId = req.query.companyId;

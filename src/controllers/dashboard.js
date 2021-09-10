@@ -15,7 +15,7 @@ const dashboardController = {
   getDashboardData: async (req, res) => {
     try {
       let orgId = req.orgId;
-      let accessibleProjects = req.userProjectResources[0].projects;
+      let accessibleProjects = req.userPlantationResources[0].plantations;
       let payload = req.body;
       let projectResult = [];
       let projectIds = [];
@@ -770,7 +770,7 @@ const dashboardController = {
       let today = moment("").format("YYYY-MM-DD");
       // let startDate = moment(reqData.startDate).isValid() ? moment(reqData.startDate).format('YYYY-MM-DD') : competitionStartDate;
       // let endDate = moment(reqData.endDate).isValid() ? moment(reqData.endDate).format('YYYY-MM-DD') : today;
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       var getDaysArray = function (start, end) {
         let dt = start;
@@ -1575,33 +1575,33 @@ const dashboardController = {
   /* GET ALL ALLOW COMPANY LIST */
   getAllowAllCompanyList: async (req, res) => {
     try {
-      let projectIds = [];
+      let plantationsIds = [];
       let userId = req.me.id;
 
-      const accessibleProjects = req.userProjectResources;
+      const accessiblePlantations = req.userPlantationResources;
 
-      if (accessibleProjects.length) {
-        for (let pro of accessibleProjects) {
-          if (pro.projects.length) {
-            for (let projectId of pro.projects) {
+      if (accessiblePlantations.length) {
+        for (let pro of accessiblePlantations) {
+          if (pro.plantations.length) {
+            for (let plantationId of pro.plantations) {
               console.log(
-                "project=========",
-                pro.projects,
+                "plantation=========",
+                pro.plantations,
                 "==========================================="
               );
 
-              projectIds.push(projectId);
+              plantationsIds.push(plantationId);
             }
           }
         }
       }
 
-      projectIds = _.uniqBy(projectIds);
+      plantationsIds = _.uniqBy(plantationsIds);
 
       let companyResult = await knex
-        .from("projects")
-        .select(["companyId", "projectName", "project as projectCode"])
-        .whereIn("projects.id", projectIds)
+        .from("plantations")
+        .select(["companyId", "name as projectName", "code as projectCode"])
+        .whereIn("plantations.id", plantationsIds)
         .where({ orgId: req.orgId });
 
       let companyIds = companyResult.map((v) => v.companyId);
@@ -1628,7 +1628,7 @@ const dashboardController = {
         message: "Company List Successfully!",
       });
     } catch (err) {
-      console.log("[controllers][dashboard][getAssesList] : Error", err);
+      console.log("[controllers][dashboard][getAllowAllCompanyList] : Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });
@@ -2327,7 +2327,7 @@ const dashboardController = {
   getCmDashboardData: async (req, res) => {
     try {
       let orgId = req.orgId;
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
       let payload = req.body;
 
       let startNewDate = moment(payload.startDate).startOf("date").format();
@@ -2457,7 +2457,7 @@ const dashboardController = {
       let currentStartTime = new Date(startNewDate).getTime();
       let currentEndTime = new Date(endNewDate).getTime();
 
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       let assignedTechnician = await knex
         .from("assigned_service_team")
@@ -2595,7 +2595,7 @@ const dashboardController = {
   getServiceRequestServiceOrderChartData: async (req, res) => {
     try {
       const reqData = req.body;
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       var getDaysArray = function (start, end) {
         let dt = start;
@@ -2743,7 +2743,7 @@ const dashboardController = {
 
 
 
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       // if (currentEndTime && currentStartTime) {
 
@@ -3195,7 +3195,7 @@ const dashboardController = {
       let final = [];
       // for (let d of dates) {
 
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
       problems = await knex
         .from("service_requests")
         .leftJoin(

@@ -33,10 +33,10 @@ const roleMiddleware = {
         console.log('[middleware][role]: parseUserPermission:', userId, orgId);
 
 
-        const projectsKey = `user_role_parse_permission-projects-${userId}`;
+        const plantationsKey = `user_role_parse_permission-plantations-${userId}`;
         const companieskey = `user_role_parse_permission-companies-${userId}`;
 
-        let userProjectResources = await redisHelper.getValue(projectsKey);
+        let userProjectResources = await redisHelper.getValue(plantationsKey);
         let userCompanyResources = await redisHelper.getValue(companieskey);
 
         if (req.orgAdmin) {
@@ -44,8 +44,8 @@ const roleMiddleware = {
           console.log('[middleware][role]: parseUserPermission:', "User is orgAdmin");
 
           if (!userProjectResources || !userCompanyResources) {
-            // get all the projects of this admin
-            const projects = await knexReader("projects")
+            // get all the plantations of this admin
+            const plantations = await knexReader("plantations")
               .select("id")
               .where({ orgId: req.orgId });
 
@@ -59,7 +59,7 @@ const roleMiddleware = {
 
             userProjectResources = _.uniqBy(resources, "id").map(v => ({
               id: v.id,
-              projects: projects.map(v => v.id)
+              plantations: plantations.map(v => v.id)
             }));
 
             userCompanyResources = _.uniqBy(resources, "id").map(v => ({
@@ -69,7 +69,7 @@ const roleMiddleware = {
 
             console.log('[middleware][role]: parseUserPermission: userCompanyResources (From DB) :: ', userCompanyResources);
             console.log('[middleware][role]: parseUserPermission: userProjectResources (From DB) :: ', userProjectResources);
-            await redisHelper.setValueWithExpiry(projectsKey, userProjectResources, 180);
+            await redisHelper.setValueWithExpiry(plantationsKey, userProjectResources, 180);
             await redisHelper.setValueWithExpiry(companieskey, userCompanyResources, 180);
           }
 
@@ -78,7 +78,7 @@ const roleMiddleware = {
           }
 
           req.userCompanyResources = userCompanyResources;
-          req.userProjectResources = userProjectResources;
+          req.userPlantationResources = userProjectResources;
         }
 
         if (req.orgUser) {
@@ -107,18 +107,18 @@ const roleMiddleware = {
             //   result
             // );
 
-            userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, projects: value.map(a => a.projectId) })).value();
+            userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, plantations: value.map(a => a.projectId) })).value();
 
             console.log('[middleware][role]: parseUserPermission: userProjectResources (From DB) :: ', userProjectResources);
 
-            await redisHelper.setValueWithExpiry(projectsKey, userProjectResources, 180);
+            await redisHelper.setValueWithExpiry(plantationsKey, userProjectResources, 180);
           }
 
           if (userProjectResources.length === 0) {
             return next(createError(403))
           }
 
-          req.userProjectResources = userProjectResources;
+          req.userPlantationResources = userProjectResources;
         }
 
         // console.log('[middleware][role]: parseUserPermission: userCompanyResources (From REDIS) :: ', userCompanyResources);

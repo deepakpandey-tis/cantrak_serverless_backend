@@ -720,7 +720,7 @@ const taskGroupController = {
       //   filters['asset_category_master.id'] = assetCategoryId;
       // }
 
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       startDate = startDate
         ? moment(startDate).startOf("date").format("YYYY-MM-DD HH:mm:ss")
@@ -738,15 +738,15 @@ const taskGroupController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
       let projects = _.flatten(
-        req.userProjectResources.map((v) => v.projects)
+        req.userPlantationResources.map((v) => v.projects)
       ).map((v) => Number(v));
 
       projects = _.uniq(projects);
       console.log("Projects Resources: ", projects);
 
       //console.log('Projects: ',projects)
-      //console.log('pppppppppppppppppp',req.userProjectResources)
-      // let projects = _.flatten(req.userProjectResources.map(v => v.projects))
+      //console.log('pppppppppppppppppp',req.userPlantationResources)
+      // let projects = _.flatten(req.userPlantationResources.map(v => v.projects))
       [total, rows] = await Promise.all([
         knex
           .count("* as count")
@@ -1775,7 +1775,7 @@ const taskGroupController = {
       // console.log("data in payload===>>>>>", payload);
       let workOrderDate = moment(payload.workOrderDate).format("YYYY-MM-DD");
 
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       const schema = Joi.object().keys({
         pmId: Joi.string().allow("").allow(null).optional(),
@@ -1944,7 +1944,7 @@ const taskGroupController = {
         "overdue",
       ]);
 
-      const accessibleProjects = req.userProjectResources[0].projects;
+      const accessibleProjects = req.userPlantationResources[0].plantations;
 
       const schema = Joi.object().keys({
         category: Joi.string().allow("").allow(null).optional(),

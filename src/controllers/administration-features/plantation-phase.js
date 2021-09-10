@@ -6,6 +6,7 @@ const _ = require("lodash");
 const XLSX = require("xlsx");
 
 const knex = require("../../db/knex");
+const knexReader = require("../../db/knex-reader");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
@@ -18,39 +19,52 @@ const { join } = require("path");
 const plantationPhaseController = {
     addPlantationPhase: async (req, res) => {
         try {
-            let buildingPhase = null;
+            let plantationPhase = null;
             let userId = req.me.id;
             let orgId = req.orgId;
 
-            await knex.transaction(async trx => {
-                const payload = req.body;
+            const payload = req.body;
 
-                const schema = Joi.object().keys({
-                    id: Joi.string().required(),
-                    companyId: Joi.string().required(),
-                    projectId: Joi.string().required(),
-                    propertyTypeId: Joi.string().required(),
-                    buildingPhaseCode: Joi.string().required(),
-                    description: Joi.string().allow("").optional(),
-                    buildingAddressEng: Joi.string().allow("").optional(),
-                    buildingAddressThai: Joi.string().allow("").optional(),
+            const schema = Joi.object().keys({
+                // id: Joi.string().required(),
+                companyId: Joi.string().required(),
+                plantationId: Joi.string().required(),
+                plantationTypeId: Joi.string().required(),
+                code: Joi.string().required(),
+                description: Joi.string().allow("").optional(),
+                addressEng: Joi.string().allow("").optional(),
+                addressThai: Joi.string().allow("").optional(),
+            });
+
+            const result = Joi.validate(payload, schema);
+            console.log(
+                "[controllers][administrationFeatures][addPlantationPhase]: JOi Result",
+                result
+            );
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
                 });
+            }
 
-                const result = Joi.validate(payload, schema);
-                console.log(
-                    "[controllers][administrationFeatures][addbuildingPhase]: JOi Result",
-                    result
-                );
+            /*CHECK DUPLICATE VALUES OPEN */
+            let existValue = await knex('plantation_phases')
+                .where({ code: payload.code.toUpperCase(), plantationId: payload.plantationId, orgId: orgId });
+            if (existValue && existValue.length) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: "Plantation Phase code already exist!!" }
+                    ]
+                });
+            }
+            /*CHECK DUPLICATE VALUES CLOSE */
 
-                if (result && result.hasOwnProperty("error") && result.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: "VALIDATION_ERROR", message: result.error.message }
-                        ]
-                    });
-                }
+            await knex.transaction(async trx => {
 
-                let checkBuildInfoUpdate = await knex("building_info")
+/*                 let checkBuildInfoUpdate = await knex("building_info")
                     .where({ buildingId: payload.id })
                     .first()
 
@@ -70,48 +84,38 @@ const plantationPhaseController = {
                         .where({ buildingId: payload.id, orgId: req.orgId })
                         .returning(['*'])
                 }
-                /*CHECK DUPLICATE VALUES OPEN */
-                let existValue = await knex('buildings_and_phases')
-                    .where({ buildingPhaseCode: payload.buildingPhaseCode.toUpperCase(), projectId: payload.projectId, orgId: orgId });
-                if (existValue && existValue.length) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: "VALIDATION_ERROR", message: "Plantation Phase code already exist!!" }
-                        ]
-                    });
-                }
-                /*CHECK DUPLICATE VALUES CLOSE */
-
-
+ */
                 let currentTime = new Date().getTime();
                 let insertData = {
                     ...payload,
-                    buildingPhaseCode: payload.buildingPhaseCode.toUpperCase(),
+                    code: payload.code.toUpperCase(),
                     orgId: orgId,
                     createdBy: userId,
                     createdAt: currentTime,
+                    updatedBy: userId,
                     updatedAt: currentTime
                 };
 
                 let insertResult = await knex
-                    .update(insertData)
-                    .where({ id: payload.id })
+                    // .update(insertData)
+                    // .where({ id: payload.id })
+                    .insert(insertData)
                     .returning(["*"])
                     .transacting(trx)
-                    .into("buildings_and_phases");
-                buildingPhase = insertResult[0];
+                    .into("plantation_phases");
+                plantationPhase = insertResult[0];
                 trx.commit;
             });
 
             return res.status(200).json({
                 data: {
-                    buildingPhase: buildingPhase
+                    plantationPhase: plantationPhase
                 },
                 message: "Plantation Phase added successfully."
             });
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][addbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][addPlantationPhase] :  Error",
                 err
             );
             //trx.rollback
@@ -120,41 +124,42 @@ const plantationPhaseController = {
             });
         }
     },
+
     addPlantationInfo: async (req, res) => {
         try {
             let addedDescription = []
 
+            const payload = _.omit(req.body, ['description'])
+
+            const schema = Joi.object().keys({
+                id: Joi.string().required(),
+                title: Joi.string().required(),
+                // description:Joi.string().allow('').optional()
+            })
+
+            const result = Joi.validate(payload, schema);
+
+            console.log(
+                "[controllers][administrationFeatures][addPlantationInfo]: JOi Result",
+                result
+            );
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
+                });
+            }
+
             await knex.transaction(async trx => {
                 // const payload = req.body
-
-                const payload = _.omit(req.body, ['description'])
-
-                const schema = Joi.object().keys({
-                    id: Joi.string().required(),
-                    title: Joi.string().required(),
-                    // description:Joi.string().allow('').optional()
-                })
-
-                const result = Joi.validate(payload, schema);
-
-                console.log(
-                    "[controllers][administrationFeatures][addbuildingPhase]: JOi Result",
-                    result
-                );
-
-                if (result && result.hasOwnProperty("error") && result.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: "VALIDATION_ERROR", message: result.error.message }
-                        ]
-                    });
-                }
 
                 let currentTime = new Date().getTime();
 
                 let descriptionPayload = req.body.description
 
-                let delBuildingInfo = await knex("building_info")
+                let delPlantationPhaseInfo = await knex("building_info")
                     .where({ buildingId: req.body.id, orgId: req.orgId })
                     .del()
 
@@ -168,7 +173,8 @@ const plantationPhaseController = {
                             updatedAt: currentTime,
                             createdAt: currentTime,
                             orgId: req.orgId,
-                            createdBy: req.me.id
+                            createdBy: req.me.id,
+                            updatedBy: req.me.id
                         })
                         .returning(["*"])
                     addedDescription.push(addedResult[0])
@@ -177,7 +183,7 @@ const plantationPhaseController = {
             })
             return res.status(200).json({
                 data: {
-                    buildingInfo: addedDescription
+                    plantationPhaseInfo: addedDescription
                 },
                 message: "Plantation Phase Info added successfully."
             });
@@ -185,16 +191,17 @@ const plantationPhaseController = {
         } catch (err) {
 
             console.log(
-                "[controllers][buildingInfo][building] :  Error",
+                "[controllers][administrationFeatures][addPlantationInfo] :  Error",
                 err
             );
 
         }
     },
+
     getPlantationInfoByPlantationId: async (req, res) => {
         try {
 
-            console.log("get bulding info", req.body)
+            console.log("get plantation phase info", req.body)
             let payload = req.body
 
             const schema = Joi.object().keys({
@@ -209,21 +216,18 @@ const plantationPhaseController = {
                 });
             }
 
-            let [buildingInfo, images] = await Promise.all([
-                knex.from("building_info")
+            let [plantationPhaseInfo, images] = await Promise.all([
+                knexReader.from("building_info")
                     .select('*')
                     .where({ "building_info.buildingId": payload.id, "building_info.orgId": req.orgId }),
-                knex
+                knexReader
                     .from('images')
                     .where({ entityId: payload.id, entityType: "building_info" })
             ])
-            // knex("building_info")
-            // .select('*')
-            // .where({buildingId:payload.id,orgId:req.orgId})
 
             return res.status(200).json({
                 data: {
-                    buildingInfo,
+                    plantationPhaseInfo,
                     images
                 }
             })
@@ -233,34 +237,35 @@ const plantationPhaseController = {
             });
         }
     },
+
     addContactInfo: async (req, res) => {
         try {
             let addedInfo = []
+            const payload = _.omit(req.body, ['contactInfo'])
+
+            const schema = Joi.object().keys({
+                id: Joi.string().required(),
+                // title:Joi.string().required(),
+                // description:Joi.string().allow('').optional()
+            })
+
+            const result = Joi.validate(payload, schema);
+
+            console.log(
+                "[controllers][administrationFeatures][addContactInfo]: JOi Result",
+                result
+            );
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
+                });
+            }
+
             await knex.transaction(async trx => {
                 // const payload = req.body
-                const payload = _.omit(req.body, ['contactInfo'])
-
-                const schema = Joi.object().keys({
-                    id: Joi.string().required(),
-                    // title:Joi.string().required(),
-                    // description:Joi.string().allow('').optional()
-                })
-
-                const result = Joi.validate(payload, schema);
-
-                console.log(
-                    "[controllers][administrationFeatures][addbuildingPhase]: JOi Result",
-                    result
-                );
-
-                if (result && result.hasOwnProperty("error") && result.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: "VALIDATION_ERROR", message: result.error.message }
-                        ]
-                    });
-                }
-
                 let currentTime = new Date().getTime();
                 let contactPayload = req.body.contactInfo
                 console.log("contact payload", contactPayload)
@@ -278,7 +283,8 @@ const plantationPhaseController = {
                             updatedAt: currentTime,
                             createdAt: currentTime,
                             orgId: req.orgId,
-                            createdBy: req.me.id
+                            createdBy: req.me.id,
+                            updatedBy: req.me.id
                         })
                         .returning(["*"])
                     addedInfo.push(addedResult[0])
@@ -293,12 +299,13 @@ const plantationPhaseController = {
             });
         } catch (err) {
             console.log(
-                "[controllers][buildingInfo][building] :  Error",
+                "[controllers][administrationFeatures][addContactInfo] :  Error",
                 err
             );
 
         }
     },
+
     getContactInfoById: async (req, res) => {
         try {
             let payload = req.body
@@ -315,15 +322,11 @@ const plantationPhaseController = {
                 });
             }
 
-            // let contactInfo = await knex("contact_info")
-            // .select('*')
-            // .where({buildingId:payload.id,orgId:req.orgId})
-
             let [contactInfo, images] = await Promise.all([
-                knex.from("contact_info")
+                knexReader.from("contact_info")
                     .select('*')
                     .where({ "contact_info.buildingId": payload.id, "contact_info.orgId": req.orgId }),
-                knex
+                knexReader
                     .from('images')
                     .where({ entityId: payload.id, entityType: "contact_info" })
             ])
@@ -336,85 +339,86 @@ const plantationPhaseController = {
             })
         } catch (err) {
             console.log(
-                "[controllers][buildingInfo][building] :  Error",
+                "[controllers][administrationFeatures][getContactInfoById] :  Error",
                 err
             );
         }
     },
+
     updatePlantationPhase: async (req, res) => {
         try {
             let userId = req.me.id;
             let orgId = req.orgId;
 
-            let buildingPhase = null;
-            await knex.transaction(async trx => {
-                const payload = req.body;
+            let plantationPhase = null;
+            const payload = req.body;
 
-                const schema = Joi.object().keys({
-                    id: Joi.string().required(),
-                    companyId: Joi.string().required(),
-                    projectId: Joi.string().required(),
-                    propertyTypeId: Joi.string().required(),
-                    buildingPhaseCode: Joi.string().required(),
-                    description: Joi.string().allow("").allow(null).optional(),
-                    buildingAddressEng: Joi.string().allow("").allow(null).optional(),
-                    buildingAddressThai: Joi.string().allow("").allow(null).optional(),
+            const schema = Joi.object().keys({
+                id: Joi.string().required(),
+                companyId: Joi.string().required(),
+                plantationId: Joi.string().required(),
+                plantationTypeId: Joi.string().required(),
+                code: Joi.string().required(),
+                description: Joi.string().allow("").allow(null).optional(),
+                addressEng: Joi.string().allow("").allow(null).optional(),
+                addressThai: Joi.string().allow("").allow(null).optional(),
+            });
+
+            const result = Joi.validate(payload, schema);
+            console.log(
+                "[controllers][administrationFeatures][updatePlantationPhase]: JOi Result",
+                result
+            );
+
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
                 });
+            }
 
-                const result = Joi.validate(payload, schema);
-                console.log(
-                    "[controllers][administrationFeatures][updatebuildingPhase]: JOi Result",
-                    result
-                );
+            /*CHECK DUPLICATE VALUES OPEN */
+            let existValue = await knex('plantation_phases')
+                .where({ code: payload.code.toUpperCase(), plantationId: payload.plantationId, orgId: orgId });
 
-                if (result && result.hasOwnProperty("error") && result.error) {
+            if (existValue && existValue.length) {
+
+                if (existValue[0].id === payload.id) {
+
+                } else {
                     return res.status(400).json({
                         errors: [
-                            { code: "VALIDATION_ERROR", message: result.error.message }
+                            { code: "VALIDATION_ERROR", message: "Plantation Phase code already exist!!" }
                         ]
                     });
                 }
+            }
+            /*CHECK DUPLICATE VALUES CLOSE */
 
-                /*CHECK DUPLICATE VALUES OPEN */
-                let existValue = await knex('buildings_and_phases')
-                    .where({ buildingPhaseCode: payload.buildingPhaseCode.toUpperCase(), projectId: payload.projectId, orgId: orgId });
-
-                if (existValue && existValue.length) {
-
-                    if (existValue[0].id === payload.id) {
-
-                    } else {
-                        return res.status(400).json({
-                            errors: [
-                                { code: "VALIDATION_ERROR", message: "Plantation Phase code already exist!!" }
-                            ]
-                        });
-                    }
-                }
-                /*CHECK DUPLICATE VALUES CLOSE */
-
+            await knex.transaction(async trx => {
                 let currentTime = new Date().getTime();
-                let insertData = { ...payload, buildingPhaseCode: payload.buildingPhaseCode.toUpperCase(), updatedAt: currentTime };
+                let insertData = { ...payload, code: payload.code.toUpperCase(), updatedBy: userId, updatedAt: currentTime };
                 let insertResult = await knex
                     .update(insertData)
                     .where({ id: payload.id, orgId: orgId, createdBy: userId })
                     .returning(["*"])
                     .transacting(trx)
-                    .into("buildings_and_phases");
-                buildingPhase = insertResult[0];
+                    .into("plantation_phases");
+                plantationPhase = insertResult[0];
 
                 trx.commit;
             });
 
             return res.status(200).json({
                 data: {
-                    buildingPhase: buildingPhase
+                    plantationPhase: plantationPhase
                 },
-                message: "Plantation Phase details updated successfully."
+                message: "Plantation Phase detail updated successfully."
             });
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][updatebuildingPhase] :  Error",
+                "[controllers][administrationFeatures][updatePlantationPhase] :  Error",
                 err
             );
             //trx.rollback
@@ -423,9 +427,10 @@ const plantationPhaseController = {
             });
         }
     },
+
     generatePlantationId: async (req, res) => {
         try {
-            const generatedId = await knex("buildings_and_phases")
+            const generatedId = await knex("plantation_phases")
                 .insert({ createdAt: new Date().getTime() })
                 .returning(["*"]);
             return res.status(200).json({
@@ -434,79 +439,76 @@ const plantationPhaseController = {
                 },
             });
         } catch (err) {
-            console.log("[controllers][building_and_phases][id] :  Error", err);
+            console.log("[controllers][administrationFeatures][generatePlantationId] :  Error", err);
             return res.status(500).json({
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
             });
         }
     },
+
     viewPlantationPhase: async (req, res) => {
         try {
-            let buildingPhase = null;
-            await knex.transaction(async trx => {
-                let payload = req.body;
-                let orgId = req.orgId;
+            let plantationPhase = null;
+            let payload = req.body;
+            let orgId = req.orgId;
 
-                const schema = Joi.object().keys({
-                    id: Joi.string().required()
-                });
-                const result = Joi.validate(payload, schema);
-                if (result && result.hasOwnProperty("error") && result.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: "VALIDATION_ERROR", message: result.error.message }
-                        ]
-                    });
-                }
-
-                let buildingPhaseResult = await knex("buildings_and_phases")
-                    .leftJoin(
-                        "companies",
-                        "buildings_and_phases.companyId",
-                        "companies.id"
-                    )
-                    .leftJoin(
-                        "projects",
-                        "buildings_and_phases.projectId",
-                        "projects.id"
-                    )
-                    .leftJoin(
-                        "property_types",
-                        "buildings_and_phases.propertyTypeId",
-                        "property_types.id"
-                    )
-                    .select(
-                        "buildings_and_phases.*",
-                        "companies.companyName as companyName",
-                        "companies.companyId as compId",
-                        "companies.id as companyId",
-                        "projects.projectName",
-                        "property_types.propertyTypeCode",
-                        "projects.project as projectCode",
-                        "property_types.propertyType",
-                    )
-                    .where({
-                        "buildings_and_phases.id": payload.id,
-                        "buildings_and_phases.orgId": orgId
-                    });
-
-                buildingPhase = _.omit(buildingPhaseResult[0], [
-                    "buildings_and_phases.createdAt",
-                    "buildings_and_phases.updatedAt"
-                ]);
-
-                trx.commit;
+            const schema = Joi.object().keys({
+                id: Joi.string().required()
             });
+            const result = Joi.validate(payload, schema);
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
+                });
+            }
+
+            let sqlResult = await knexReader("plantation_phases")
+                .leftJoin(
+                    "companies",
+                    "plantation_phases.companyId",
+                    "companies.id"
+                )
+                .leftJoin(
+                    "plantations",
+                    "plantation_phases.plantationId",
+                    "plantations.id"
+                )
+                .leftJoin(
+                    "plantation_types",
+                    "plantation_phases.plantationTypeId",
+                    "plantation_types.id"
+                )
+                .select(
+                    "plantation_phases.*",
+                    "companies.companyName as companyName",
+                    "companies.companyId as compId",
+                    "companies.id as companyId",
+                    "plantations.name",
+                    "plantation_types.code as plantationTypeCode",
+                    "plantations.code as plantationCode",
+                    "plantation_types.name as plantationTypeName",
+                )
+                .where({
+                    "plantation_phases.id": payload.id,
+                    "plantation_phases.orgId": orgId
+                });
+
+            plantationPhase = _.omit(sqlResult[0], [
+                "plantation_phases.createdAt",
+                "plantation_phases.updatedAt"
+            ]);
 
             return res.status(200).json({
                 data: {
-                    buildingPhase: buildingPhase
+                    plantationPhase: plantationPhase
                 },
-                message: "Plantation Phase details"
+                message: "Plantation Phase detail"
             });
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][viewPlantationPhase] :  Error",
                 err
             );
             //trx.rollback
@@ -515,51 +517,54 @@ const plantationPhaseController = {
             });
         }
     },
+
     deletePlantationPhase: async (req, res) => {
         try {
-            let buildingPhase = null;
+            let userId = req.me.id;
+            let plantationPhase = null;
             let message;
-            await knex.transaction(async trx => {
-                let payload = req.body;
-                let orgId = req.orgId;
+            let payload = req.body;
+            let orgId = req.orgId;
 
-                const schema = Joi.object().keys({
-                    id: Joi.string().required()
+            const schema = Joi.object().keys({
+                id: Joi.string().required()
+            });
+            const result = Joi.validate(payload, schema);
+            if (result && result.hasOwnProperty("error") && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: "VALIDATION_ERROR", message: result.error.message }
+                    ]
                 });
-                const result = Joi.validate(payload, schema);
-                if (result && result.hasOwnProperty("error") && result.error) {
-                    return res.status(400).json({
-                        errors: [
-                            { code: "VALIDATION_ERROR", message: result.error.message }
-                        ]
-                    });
-                }
+            }
 
+            await knex.transaction(async trx => {
 
-                let buildingPhaseResult;
-                let checkStatus = await knex.from('buildings_and_phases').where({ id: payload.id }).returning(['*'])
+                let sqlResult;
+                let currentTime = new Date().getTime();
+                let checkStatus = await knex.from('plantation_phases').where({ id: payload.id }).returning(['*'])
                 if (checkStatus && checkStatus.length) {
 
                     if (checkStatus[0].isActive == true) {
 
-                        buildingPhaseResult = await knex
-                            .update({ isActive: false })
+                        sqlResult = await knex
+                            .update({ isActive: false, updatedBy: userId, updatedAt: currentTime })
                             .where({ id: payload.id })
                             .returning(["*"])
                             .transacting(trx)
-                            .into("buildings_and_phases");
-                        buildingPhase = buildingPhaseResult[0];
+                            .into("plantation_phases");
+                        plantationPhase = sqlResult[0];
                         message = "Plantation Phase deactivate successfully!"
 
                     } else {
 
-                        buildingPhaseResult = await knex
-                            .update({ isActive: true })
+                        sqlResult = await knex
+                            .update({ isActive: true, updatedBy: userId, updatedAt: currentTime })
                             .where({ id: payload.id })
                             .returning(["*"])
                             .transacting(trx)
-                            .into("buildings_and_phases");
-                        buildingPhase = buildingPhaseResult[0];
+                            .into("plantation_phases");
+                        plantationPhase = sqlResult[0];
                         message = "Plantation Phase activate successfully!"
                     }
                 }
@@ -568,13 +573,13 @@ const plantationPhaseController = {
 
             return res.status(200).json({
                 data: {
-                    buildingPhase: buildingPhase
+                    plantationPhase: plantationPhase
                 },
                 message: message
             });
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][deletePlantationPhase] :  Error",
                 err
             );
             //trx.rollback
@@ -583,27 +588,28 @@ const plantationPhaseController = {
             });
         }
     },
+
     getPlantationPhaseList: async (req, res) => {
         try {
 
-            let resourceProject = req.userProjectResources[0].projects;
+            let plantations = req.userPlantationResources[0].plantations;
 
             let sortPayload = req.body;
             if (!sortPayload.sortBy && !sortPayload.orderBy) {
-                sortPayload.sortBy = "buildings_and_phases.buildingPhaseCode";
+                sortPayload.sortBy = "plantation_phases.code";
                 sortPayload.orderBy = "asc"
             }
             let orgId = req.orgId;
             let {
                 companyId,
-                projectId,
-                buildingPhaseCode,
-                propertyType
+                plantationId,
+                code,
+                plantationTypeId
             } = req.body;
             let reqData = req.query;
             let pagination = {};
 
-            if (companyId || projectId || buildingPhaseCode || propertyType) {
+            if (companyId || plantationId || code || plantationTypeId) {
 
 
                 let per_page = reqData.per_page || 10;
@@ -612,108 +618,108 @@ const plantationPhaseController = {
                 let offset = (page - 1) * per_page;
 
                 let [total, rows] = await Promise.all([
-                    knex
+                    knexReader
                         .count("* as count")
-                        .from("buildings_and_phases")
+                        .from("plantation_phases")
                         .leftJoin(
-                            "projects",
-                            "buildings_and_phases.projectId",
-                            "projects.id"
+                            "plantations",
+                            "plantation_phases.plantationId",
+                            "plantations.id"
                         )
                         .leftJoin(
                             "companies",
-                            "buildings_and_phases.companyId",
+                            "plantation_phases.companyId",
                             "companies.id"
                         )
                         .leftJoin(
                             "users",
-                            "buildings_and_phases.createdBy",
+                            "plantation_phases.createdBy",
                             "users.id"
                         )
                         .leftJoin(
-                            "property_types",
-                            "buildings_and_phases.propertyTypeId",
-                            "property_types.id"
+                            "plantation_types",
+                            "plantation_phases.plantationTypeId",
+                            "plantation_types.id"
                         )
                         .where({
-                            "projects.isActive": true,
-                            "buildings_and_phases.orgId": orgId
+                            "plantations.isActive": true,
+                            "plantation_phases.orgId": orgId
                         })
                         .where(qb => {
                             if (companyId) {
-                                qb.where('buildings_and_phases.companyId', companyId)
+                                qb.where('plantation_phases.companyId', companyId)
                             }
 
-                            if (projectId) {
-                                qb.where('buildings_and_phases.projectId', projectId)
+                            if (plantationId) {
+                                qb.where('plantation_phases.plantationId', plantationId)
                             }
-                            if (propertyType) {
-                                qb.where('buildings_and_phases.propertyTypeId', propertyType)
+                            if (plantationTypeId) {
+                                qb.where('plantation_phases.plantationTypeId', plantationTypeId)
                             }
 
-                            if (buildingPhaseCode) {
-                                qb.where('buildings_and_phases.buildingPhaseCode', 'iLIKE', `%${buildingPhaseCode}%`)
+                            if (code) {
+                                qb.where('plantation_phases.code', 'iLIKE', `%${code}%`)
                             }
 
                         })
-                        .whereIn('buildings_and_phases.projectId', resourceProject)
+                        .whereIn('plantation_phases.plantationId', plantations)
                         .first(),
-                    knex("buildings_and_phases")
+                    knexReader("plantation_phases")
                         .leftJoin(
-                            "projects",
-                            "buildings_and_phases.projectId",
-                            "projects.id"
+                            "plantations",
+                            "plantation_phases.plantationId",
+                            "plantations.id"
                         )
                         .leftJoin(
                             "companies",
-                            "buildings_and_phases.companyId",
+                            "plantation_phases.companyId",
                             "companies.id"
                         )
                         .leftJoin(
                             "users",
-                            "buildings_and_phases.createdBy",
+                            "plantation_phases.createdBy",
                             "users.id"
                         )
                         .leftJoin(
-                            "property_types",
-                            "buildings_and_phases.propertyTypeId",
-                            "property_types.id"
+                            "plantation_types",
+                            "plantation_phases.plantationTypeId",
+                            "plantation_types.id"
                         )
                         .where({
-                            "projects.isActive": true,
-                            "buildings_and_phases.orgId": orgId
+                            "plantations.isActive": true,
+                            "plantation_phases.orgId": orgId
                         })
                         .where(qb => {
                             if (companyId) {
-                                qb.where('buildings_and_phases.companyId', companyId)
+                                qb.where('plantation_phases.companyId', companyId)
                             }
 
-                            if (projectId) {
-                                qb.where('buildings_and_phases.projectId', projectId)
+                            if (plantationId) {
+                                qb.where('plantation_phases.plantationId', plantationId)
                             }
-                            if (propertyType) {
-                                qb.where('buildings_and_phases.propertyTypeId', propertyType)
+                            if (plantationTypeId) {
+                                qb.where('plantation_phases.plantationTypeId', plantationTypeId)
                             }
 
-                            if (buildingPhaseCode) {
-                                qb.where('buildings_and_phases.buildingPhaseCode', 'iLIKE', `%${buildingPhaseCode}%`)
+                            if (code) {
+                                qb.where('plantation_phases.code', 'iLIKE', `%${code}%`)
                             }
 
                         })
-                        .whereIn('buildings_and_phases.projectId', resourceProject)
+                        .whereIn('plantation_phases.plantationId', plantations)
                         .select([
-                            "buildings_and_phases.id as id",
-                            "buildings_and_phases.buildingPhaseCode as Building/Phase",
-                            "projects.projectName as Project Name",
+                            "plantation_phases.id as id",
+                            "plantation_phases.code as code",
+                            "plantations.name as Plantation Name",
                             "companies.companyName as Company Name",
-                            "buildings_and_phases.isActive as Status",
-                            "buildings_and_phases.description as Description",
+                            "plantation_phases.isActive as Status",
+                            "plantation_phases.description as Description",
                             "users.name as Created By",
-                            "buildings_and_phases.createdAt as Date Created",
-                            "property_types.propertyType",
+                            "plantation_phases.createdAt as Date Created",
+                            "plantation_types.name as plantationTypeName",
                             "companies.companyId",
-                            "projects.project as projectCode",
-                            "property_types.propertyTypeCode",
+                            "plantations.code as plantationCode",
+                            "plantation_types.code as plantationTypeCode",
                         ])
                         .orderBy(sortPayload.sortBy, sortPayload.orderBy)
                         .offset(offset)
@@ -738,75 +744,75 @@ const plantationPhaseController = {
                 let offset = (page - 1) * per_page;
 
                 let [total, rows] = await Promise.all([
-                    knex
+                    knexReader
                         .count("* as count")
-                        .from("buildings_and_phases")
+                        .from("plantation_phases")
                         .leftJoin(
-                            "projects",
-                            "buildings_and_phases.projectId",
-                            "projects.id"
+                            "plantations",
+                            "plantation_phases.plantationId",
+                            "plantations.id"
                         )
                         .leftJoin(
                             "companies",
-                            "buildings_and_phases.companyId",
+                            "plantation_phases.companyId",
                             "companies.id"
                         )
                         .leftJoin(
                             "users",
-                            "buildings_and_phases.createdBy",
+                            "plantation_phases.createdBy",
                             "users.id"
                         )
                         .leftJoin(
-                            "property_types",
-                            "buildings_and_phases.propertyTypeId",
-                            "property_types.id"
+                            "plantation_types",
+                            "plantation_phases.plantationTypeId",
+                            "plantation_types.id"
                         )
                         .where({
-                            "buildings_and_phases.orgId": orgId,
-                            "projects.isActive": true
+                            "plantation_phases.orgId": orgId,
+                            "plantations.isActive": true
                         })
-                        .whereIn('buildings_and_phases.projectId', resourceProject)
+                        .whereIn('plantation_phases.plantationId', plantations)
                         .first(),
 
-                    knex("buildings_and_phases")
+                    knexReader("plantation_phases")
                         .leftJoin(
-                            "projects",
-                            "buildings_and_phases.projectId",
-                            "projects.id"
+                            "plantations",
+                            "plantation_phases.plantationId",
+                            "plantations.id"
                         )
                         .leftJoin(
                             "companies",
-                            "buildings_and_phases.companyId",
+                            "plantation_phases.companyId",
                             "companies.id"
                         )
                         .leftJoin(
                             "users",
-                            "buildings_and_phases.createdBy",
+                            "plantation_phases.createdBy",
                             "users.id"
                         )
                         .leftJoin(
-                            "property_types",
-                            "buildings_and_phases.propertyTypeId",
-                            "property_types.id"
+                            "plantation_types",
+                            "plantation_phases.plantationTypeId",
+                            "plantation_types.id"
                         )
                         .where({
-                            "projects.isActive": true,
-                            "buildings_and_phases.orgId": orgId
+                            "plantations.isActive": true,
+                            "plantation_phases.orgId": orgId
                         })
-                        .whereIn('buildings_and_phases.projectId', resourceProject)
+                        .whereIn('plantation_phases.plantationId', plantations)
                         .select([
-                            "buildings_and_phases.id as id",
-                            "buildings_and_phases.buildingPhaseCode as Building/Phase",
-                            "projects.projectName as Project Name",
+                            "plantation_phases.id as id",
+                            "plantation_phases.code as code",
+                            "plantations.name as Plantation Name",
                             "companies.companyName as Company Name",
-                            "buildings_and_phases.isActive as Status",
-                            "buildings_and_phases.description as Description",
+                            "plantation_phases.isActive as Status",
+                            "plantation_phases.description as Description",
                             "users.name as Created By",
-                            "buildings_and_phases.createdAt as Date Created",
-                            "property_types.propertyType",
+                            "plantation_phases.createdAt as Date Created",
+                            "plantation_types.name as plantationTypeName",
                             "companies.companyId",
-                            "projects.project as projectCode",
-                            "property_types.propertyTypeCode",
+                            "plantations.code as plantationCode",
+                            "plantation_types.code as plantationTypeCode",
                         ])
                         .orderBy(sortPayload.sortBy, sortPayload.orderBy)
                         .offset(offset)
@@ -827,13 +833,13 @@ const plantationPhaseController = {
 
             return res.status(200).json({
                 data: {
-                    buildingPhases: pagination
+                    plantationPhases: pagination
                 },
                 message: "Plantation Phases List!"
             });
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][getPlantationPhaseList] :  Error",
                 err
             );
             //trx.rollback
@@ -843,6 +849,7 @@ const plantationPhaseController = {
         }
         // Export Plantation Phase Data
     },
+
     exportPlantationPhase: async (req, res) => {
         try {
             let orgId = req.orgId;
@@ -852,61 +859,63 @@ const plantationPhaseController = {
 
             if (!companyId) {
                 [rows] = await Promise.all([
-                    knex("buildings_and_phases")
+                    knexReader("plantation_phases")
                         .leftJoin(
-                            "projects",
-                            "buildings_and_phases.projectId",
-                            "projects.id"
+                            "plantations",
+                            "plantation_phases.plantationId",
+                            "plantations.id"
                         )
                         .leftJoin(
-                            "property_types",
-                            "buildings_and_phases.propertyTypeId",
-                            "property_types.id"
+                            "plantation_types",
+                            "plantation_phases.plantationTypeId",
+                            "plantation_types.id"
                         )
                         .leftJoin(
                             "companies",
-                            "buildings_and_phases.companyId",
+                            "plantation_phases.companyId",
                             "companies.id"
                         )
 
-                        .where({ "projects.isActive": true })
-                        .where({ "buildings_and_phases.orgId": orgId })
+                        .where({ "plantations.isActive": true })
+                        .where({ "plantation_phases.orgId": orgId })
                         .select([
                             "companies.companyId as COMPANY",
                             "companies.companyName as COMPANY_NAME",
-                            "projects.project as PROJECT",
-                            "projects.projectName as PROJECT_NAME",
-                            "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
-                            "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
-                            "buildings_and_phases.description as DESCRIPTION"
+                            "plantations.code as PLANTATION_CODE",
+                            "plantations.name as PLANTATION_NAME",
+                            "plantation_types.code as PLANTATION_TYPE_CODE",
+                            "plantation_phases.code as PLANTATION_PHASE_CODE",
+                            "plantation_phases.description as PLANTATION_PHASE_NAME",
+                            "plantation_phases.addressEng as DESCRIPTION",
+                            "plantation_phases.addressThai as DESCRIPTION_ALTERNATE_LANGUAGE"
                         ])
                 ]);
             } else {
                 [rows] = await Promise.all([
-                    knex("buildings_and_phases")
+                    knexReader("plantation_phases")
                         .leftJoin(
-                            "projects",
-                            "buildings_and_phases.projectId",
-                            "projects.id"
+                            "plantations",
+                            "plantation_phases.plantationId",
+                            "plantations.id"
                         )
                         .leftJoin(
                             "companies",
-                            "buildings_and_phases.companyId",
+                            "plantation_phases.companyId",
                             "companies.id"
                         )
-                        .where({ "projects.isActive": true })
+                        .where({ "plantations.isActive": true })
                         .where({
-                            "buildings_and_phases.companyId": companyId,
-                            "buildings_and_phases.orgId": orgId
+                            "plantation_phases.companyId": companyId,
+                            "plantation_phases.orgId": orgId
                         })
                         .select([
                             "companies.companyId as COMPANY",
                             "companies.companyName as COMPANY_NAME",
-                            "projects.project as PROJECT",
-                            "projects.projectName as PROJECT_NAME",
-                            "buildings_and_phases.propertyTypeId as PROPERTY_TYPE_CODE",
-                            "buildings_and_phases.buildingPhaseCode as BUILDING_PHASE_CODE",
-                            "buildings_and_phases.description as DESCRIPTION"
+                            "plantations.code as PLANTATION_CODE",
+                            "plantations.name as PLANTATION_NAME",
+                            "plantation_phases.plantationTypeId as PLANTATION_TYPE_CODE",
+                            "plantation_phases.code as PLANTATION_PHASE_CODE",
+                            "plantation_phases.description as DESCRIPTION"
                         ])
                 ]);
             }
@@ -930,17 +939,17 @@ const plantationPhaseController = {
                 ws = XLSX.utils.json_to_sheet([{
                     COMPANY: "",
                     "COMPANY_NAME": "",
-                    PROJECT: "",
-                    "PROJECT_NAME": "",
-                    PROPERTY_TYPE_CODE: "",
-                    BUILDING_PHASE_CODE: "",
+                    PLANTATION_CODE: "",
+                    "PLANTATION_NAME": "",
+                    PLANTATION_TYPE_CODE: "",
+                    PLANTATION_PHASE_CODE: "",
                     DESCRIPTION: ""
                 }]);
             }
 
             XLSX.utils.book_append_sheet(wb, ws, "pres");
             XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-            let filename = "BuildingPhaseData-" + Date.now() + ".csv";
+            let filename = "PlantationPhaseData-" + moment(Date.now()).format("YYYYMMDD") + ".csv";
             let filepath = tempraryDirectory + filename;
             let check = XLSX.writeFile(wb, filepath);
             const AWS = require("aws-sdk");
@@ -948,7 +957,7 @@ const plantationPhaseController = {
                 var s3 = new AWS.S3();
                 var params = {
                     Bucket: bucketName,
-                    Key: "Export/BuildingPhase/" + filename,
+                    Key: "Export/PlantationPhase/" + filename,
                     Body: file_buffer,
                     ACL: "public-read"
                 };
@@ -966,15 +975,15 @@ const plantationPhaseController = {
                         fs.unlink(filepath, err => {
                             console.log("File Deleting Error " + err);
                         });
-                        let url = process.env.S3_BUCKET_URL + "/Export/BuildingPhase/" +
+                        let url = process.env.S3_BUCKET_URL + "/Export/PlantationPhase/" +
                             filename;
                         // let url =
-                        //   "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/BuildingPhase/" +
+                        //   "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PlantationPhase/" +
                         //   filename;
 
                         return res.status(200).json({
                             data: {
-                                buildingPhases: rows
+                                plantationPhases: rows
                             },
                             message: "Plantation Phases Data Export Successfully!",
                             url: url
@@ -984,7 +993,7 @@ const plantationPhaseController = {
             });
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][exportPlantationPhase] :  Error",
                 err
             );
             //trx.rollback
@@ -993,52 +1002,55 @@ const plantationPhaseController = {
             });
         }
     },
+
     getPlantationPhaseAllList: async (req, res) => {
         try {
-            let projectId = req.query.projectId;
+            let plantationId = req.query.plantationId;
             let orgId = req.orgId;
 
-            let buildingData = {};
+            let plantationPhaseData = {};
             //console.log(orgId);
 
             let [rows] = await Promise.all([
-                knex("buildings_and_phases")
+                knexReader("plantation_phases")
                     .innerJoin(
-                        "projects",
-                        "buildings_and_phases.projectId",
-                        "projects.id"
+                        "plantations",
+                        "plantation_phases.plantationId",
+                        "plantations.id"
                     )
-                    .leftJoin(
-                        "property_types",
-                        "buildings_and_phases.propertyTypeId",
-                        "property_types.id"
+/*                     .leftJoin(
+                        "plantation_types",
+                        "plantation_phases.plantationTypeId",
+                        "plantation_types.id"
                     )
+ */                    
                     .where({
-                        "buildings_and_phases.isActive": true,
-                        "buildings_and_phases.projectId": projectId,
-                        "buildings_and_phases.orgId": orgId
+                        "plantation_phases.isActive": true,
+                        "plantation_phases.plantationId": plantationId,
+                        "plantation_phases.orgId": orgId
                     })
                     .select([
-                        "buildings_and_phases.id as id",
-                        "buildings_and_phases.buildingPhaseCode",
-                        "property_types.propertyType",
-                        "buildings_and_phases.description",
-                        "property_types.propertyTypeCode",
-                        "property_types.descriptionEng as propertyDescription"
+                        "plantation_phases.id as id",
+                        "plantation_phases.code",
+                        "plantation_phases.description",
+/*                         "plantation_types.name as plantationTypeName",
+                        "plantation_types.code as plantationTypeCode",
+                        "plantation_types.descriptionEng as plantationTypeDescription"
+ */                        
                     ])
             ]);
 
-            buildingData.data = rows;
+            plantationPhaseData.data = rows;
 
             return res.status(200).json({
                 data: {
-                    buildingPhases: buildingData
+                    plantationPhases: plantationPhaseData
                 },
                 message: "Plantation Phases List!"
             });
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][getPlantationPhaseAllList] :  Error",
                 err
             );
             //trx.rollback
@@ -1047,21 +1059,22 @@ const plantationPhaseController = {
             });
         }
     },
+
     getPlantationPhase: async (req, res) => {
         try {
 
             let orgId = req.orgId
-            let buildings = await knex("buildings_and_phases")
+            let plantationPhases = await knexReader("plantation_phases")
                 .select("*")
                 .where({ orgId: orgId, isActive: true })
-                .orderBy('buildings_and_phases.description', 'asc')
+                .orderBy('plantation_phases.description', 'asc')
 
             return res
                 .status(200)
-                .json({ data: { buildings }, message: "Buildings list" });
+                .json({ data: { plantationPhases }, message: "Plantation Phases list" });
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][getPlantationPhase] :  Error",
                 err
             );
             //trx.rollback
@@ -1070,33 +1083,34 @@ const plantationPhaseController = {
             });
         }
     },
-    getPlantationPhaseListByProjectId: async (req, res) => {
-        try {
-            const { projectId } = req.body;
-            let orgId = req.orgId;
-            
 
-            let buildings;
-            if (projectId) {
-                // console.log("projec id fpr building",projectId)
-                buildings = await knex("buildings_and_phases")
+    getPlantationPhaseListByPlantationId: async (req, res) => {
+        try {
+            const { plantationId } = req.body;
+            let orgId = req.orgId;
+
+
+            let plantationPhases;
+            if (plantationId) {
+                // console.log("plantation id for plantation phase: ", plantationId)
+                plantationPhases = await knexReader("plantation_phases")
                     .select("*")
-                    .where({ projectId:projectId, orgId: orgId, isActive: true })
-                    .orderBy('buildings_and_phases.description', 'asc');
+                    .where({ plantationId: plantationId, orgId: orgId, isActive: true })
+                    .orderBy('plantation_phases.description', 'asc');
 
 
             } else {
-                buildings = await knex("buildings_and_phases")
+                plantationPhases = await knexReader("plantation_phases")
                     .select("*")
                     .where({ orgId: orgId, isActive: true })
-                    .orderBy('buildings_and_phases.description', 'asc');
+                    .orderBy('plantation_phases.description', 'asc');
             }
             return res
                 .status(200)
-                .json({ data: { buildings }, message: "Buildings list" });
+                .json({ data: { plantationPhases }, message: "Plantation Phases list" });
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][getPlantationPhaseListByPlantationId] :  Error",
                 err
             );
             //trx.rollback
@@ -1105,31 +1119,32 @@ const plantationPhaseController = {
             });
         }
     },
+
     getPlantationPhaseListByMultipleProjectId: async (req, res) => {
         try {
-            let projectId = req.body;
+            let plantationId = req.body;
             let orgId = req.orgId;
-            console.log("projectId for buildings", projectId)
+            console.log("plantationId for plantation phases ", plantationId)
 
 
-            let buildings = await knex("buildings_and_phases")
-                .where({ "buildings_and_phases.orgId": orgId, "buildings_and_phases.isActive": true })
-                .whereIn("buildings_and_phases.projectId", projectId)
+            let plantationPhases = await knexReader("plantation_phases")
+                .where({ "plantation_phases.orgId": orgId, "plantation_phases.isActive": true })
+                .whereIn("plantation_phases.plantationId", plantationId)
                 .select("*")
-                .orderBy('buildings_and_phases.description', 'asc');
+                .orderBy('plantation_phases.description', 'asc');
 
             return res
                 .status(200)
                 .json({
                     data: {
-                        buildings
+                        plantationPhases
                     },
-                    message: "Buildings list"
+                    message: "Plantation Phases list"
                 });
 
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][getPlantationPhaseListByMultipleProjectId] :  Error",
                 err
             );
             //trx.rollback
@@ -1139,6 +1154,7 @@ const plantationPhaseController = {
 
         }
     },
+
     importPlantationData: async (req, res) => {
         try {
 
@@ -1155,10 +1171,10 @@ const plantationPhaseController = {
                 data[0].A == "Ã¯Â»Â¿COMPANY" ||
                 (data[0].A == "COMPANY" &&
                     data[0].B == "COMPANY_NAME" &&
-                    data[0].C == "PROJECT" &&
-                    data[0].D == "PROJECT_NAME" &&
-                    data[0].E == "PROPERTY_TYPE_CODE" &&
-                    data[0].F == "BUILDING_PHASE_CODE" &&
+                    data[0].C == "PLANTATION_CODE" &&
+                    data[0].D == "PLANTATION_NAME" &&
+                    data[0].E == "PLANTATION_TYPE_CODE" &&
+                    data[0].F == "PLANTATION_PHASE_CODE" &&
                     data[0].G == "DESCRIPTION")
 
             ) {
@@ -1169,7 +1185,7 @@ const plantationPhaseController = {
                     let totalData = data.length - 1;
                     let fail = 0;
 
-                    for (let buildingData of data) {
+                    for (let plantationPhaseData of data) {
 
                         i++;
 
@@ -1177,33 +1193,33 @@ const plantationPhaseController = {
 
 
 
-                            if (!buildingData.A) {
-                                let values = _.values(buildingData)
+                            if (!plantationPhaseData.A) {
+                                let values = _.values(plantationPhaseData)
                                 values.unshift('Company Id can not empty!')
                                 errors.push(values);
                                 fail++;
                                 continue;
                             }
 
-                            if (!buildingData.C) {
-                                let values = _.values(buildingData)
-                                values.unshift('Project Code can not empty!')
+                            if (!plantationPhaseData.C) {
+                                let values = _.values(plantationPhaseData)
+                                values.unshift('Plantation Code can not empty!')
                                 errors.push(values);
                                 fail++;
                                 continue;
                             }
 
-                            if (!buildingData.E) {
-                                let values = _.values(buildingData)
-                                values.unshift('Property type Code can not empty!')
+                            if (!plantationPhaseData.E) {
+                                let values = _.values(plantationPhaseData)
+                                values.unshift('Plantation type Code can not empty!')
                                 errors.push(values);
                                 fail++;
                                 continue;
                             }
 
 
-                            if (!buildingData.F) {
-                                let values = _.values(buildingData)
+                            if (!plantationPhaseData.F) {
+                                let values = _.values(plantationPhaseData)
                                 values.unshift('Plantation phase Code can not empty!')
                                 errors.push(values);
                                 fail++;
@@ -1213,85 +1229,86 @@ const plantationPhaseController = {
 
                             // Find Company primary key
                             let companyId = null;
-                            let projectId = null;
-                            let propertyTypeId = null;
+                            let plantationId = null;
+                            let plantationTypeId = null;
 
-                            let companyIdResult = await knex("companies")
+                            let companyIdResult = await knexReader("companies")
                                 .select("id")
-                                .where({ companyId: buildingData.A.toUpperCase(), orgId: req.orgId });
+                                .where({ companyId: plantationPhaseData.A.toUpperCase(), orgId: req.orgId });
 
                             if (companyIdResult && companyIdResult.length) {
                                 companyId = companyIdResult[0].id;
 
-                                let projectIdResult = await knex("projects")
+                                let plantationIdResult = await knexReader("plantations")
                                     .select("id")
-                                    .where({ project: buildingData.C.toUpperCase(), companyId: companyId, orgId: req.orgId });
+                                    .where({ code: plantationPhaseData.C.toUpperCase(), companyId: companyId, orgId: req.orgId });
 
-                                if (projectIdResult && projectIdResult.length) {
-                                    projectId = projectIdResult[0].id;
+                                if (plantationIdResult && plantationIdResult.length) {
+                                    plantationId = plantationIdResult[0].id;
                                 }
 
                             }
 
 
-                            let propertyTypeIdResult = await knex("property_types")
+                            let plantationTypeIdResult = await knexReader("plantation_types")
                                 .select("id")
-                                .where({ propertyTypeCode: buildingData.E.toUpperCase(), orgId: req.orgId });
+                                .where({ code: plantationPhaseData.E.toUpperCase(), orgId: req.orgId });
 
 
-                            if (propertyTypeIdResult && propertyTypeIdResult.length) {
-                                propertyTypeId = propertyTypeIdResult[0].id;
+                            if (plantationTypeIdResult && plantationTypeIdResult.length) {
+                                plantationTypeId = plantationTypeIdResult[0].id;
                             }
 
 
                             if (!companyId) {
                                 console.log("breaking due to: null companyId");
                                 fail++;
-                                let values = _.values(buildingData)
+                                let values = _.values(plantationPhaseData)
                                 values.unshift('Company ID does not exist')
 
                                 //errors.push(header);
                                 errors.push(values);
                                 continue;
                             }
-                            if (!projectId) {
+                            if (!plantationId) {
                                 fail++;
-                                let values = _.values(buildingData)
-                                values.unshift('Project ID does not exist')
+                                let values = _.values(plantationPhaseData)
+                                values.unshift('Plantation ID does not exist')
 
                                 //errors.push(header);
                                 errors.push(values);
-                                console.log("breaking due to: null projectId");
+                                console.log("breaking due to: null plantationId");
                                 continue;
                             }
-                            if (!propertyTypeId) {
+                            if (!plantationTypeId) {
                                 fail++;
-                                let values = _.values(buildingData)
-                                values.unshift('Property Type code does not exist')
+                                let values = _.values(plantationPhaseData)
+                                values.unshift('Plantation Type code does not exist')
 
                                 //errors.push(header);
                                 errors.push(values);
-                                console.log("breaking due to: null propertyTypeId");
+                                console.log("breaking due to: null plantationTypeId");
                                 continue;
                             }
 
                             console.log(
                                 "^&&&&&&&&&&&&&&&&&&&&&&&&&&&& IDS &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&^",
                                 companyId,
-                                projectId,
-                                propertyTypeId
+                                plantationId,
+                                plantationTypeId
                             );
 
-                            const checkExistance = await knex("buildings_and_phases").where({
+                            const checkExistance = await knex("plantation_phases").where({
                                 orgId: req.orgId,
-                                buildingPhaseCode: buildingData.F.toUpperCase(),
-                                // companyId:companyId,
-                                projectId: projectId
+                                companyId: companyId,
+                                plantationId: plantationId,
+                                plantationTypeId: plantationTypeId,
+                                code: plantationPhaseData.F.toUpperCase()
                             });
                             if (checkExistance.length) {
                                 fail++;
-                                let values = _.values(buildingData)
-                                values.unshift('Building/Phase Code already exist')
+                                let values = _.values(plantationPhaseData)
+                                values.unshift('Plantation Phase Code already exist')
                                 errors.push(values);
                                 continue;
                             }
@@ -1303,19 +1320,20 @@ const plantationPhaseController = {
                             let insertData = {
                                 orgId: req.orgId,
                                 companyId: companyId,
-                                projectId: projectId,
-                                buildingPhaseCode: buildingData.F.toUpperCase(),
-                                propertyTypeId: propertyTypeId,
-                                description: buildingData.G,
+                                plantationId: plantationId,
+                                code: plantationPhaseData.F.toUpperCase(),
+                                plantationTypeId: plantationTypeId,
+                                description: plantationPhaseData.G,
                                 createdBy: req.me.id,
                                 createdAt: currentTime,
-                                updatedAt: currentTime
+                                updatedAt: currentTime,
+                                updatedBy: req.me.id
                             };
 
                             resultData = await knex
                                 .insert(insertData)
                                 .returning(["*"])
-                                .into("buildings_and_phases");
+                                .into("plantation_phases");
 
                         }
                     }
@@ -1352,7 +1370,7 @@ const plantationPhaseController = {
 
         } catch (err) {
             console.log(
-                "[controllers][propertysetup][importbuildingData] :  Error",
+                "[controllers][administrationFeatures][importPlantationData] :  Error",
                 err
             );
             //trx.rollback
@@ -1361,186 +1379,187 @@ const plantationPhaseController = {
             });
         }
     },
+
     getPlantationPhaseAllListHavingPropertyUnits: async (req, res) => {
         try {
-            let projectId = req.query.projectId;
+            let plantationId = req.query.plantationId;
             let orgId = req.orgId;
-            console.log("projectId for building", projectId)
+            console.log("plantationId for plantation phase", plantationId)
 
-            let buildingData = {};
+            let plantationPhaseData = {};
             //console.log(orgId);
 
-            let companyHavingProjects = []
+            let companyIds = []
             let companyArr1 = []
             let rows = []
 
             if (req.query.areaName === 'common') {
-                companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-                companyArr1 = companyHavingProjects.map(v => v.companyId)
-                rows = await knex("buildings_and_phases")
+                companyIds = await knexReader('plantation_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                companyArr1 = companyIds.map(v => v.companyId)
+                rows = await knexReader("plantation_phases")
                     .innerJoin(
-                        "projects",
-                        "buildings_and_phases.projectId",
-                        "projects.id"
+                        "plantations",
+                        "plantation_phases.plantationId",
+                        "plantations.id"
                     )
                     .innerJoin(
-                        "property_types",
-                        "buildings_and_phases.propertyTypeId",
-                        "property_types.id"
+                        "plantation_types",
+                        "plantation_phases.plantationTypeId",
+                        "plantation_types.id"
                     )
-                    .innerJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                    .innerJoin('plant_containers', 'plantation_phases.id', 'plant_containers.plantationPhaseId')
                     .where({
-                        "buildings_and_phases.isActive": true,
-                        "buildings_and_phases.projectId": projectId,
-                        "buildings_and_phases.orgId": orgId,
-                        'property_units.type': 2
+                        "plantation_phases.isActive": true,
+                        "plantation_phases.plantationId": plantationId,
+                        "plantation_phases.orgId": orgId,
+                        //'plant_containers.type': 2
                     })
                     .select([
-                        "buildings_and_phases.id as id",
-                        "buildings_and_phases.buildingPhaseCode",
-                        "property_types.propertyType",
-                        "buildings_and_phases.description",
-                        "property_types.propertyTypeCode",
+                        "plantation_phases.id as id",
+                        "plantation_phases.code",
+                        "plantation_types.name as plantationTypeName",
+                        "plantation_phases.description",
+                        "plantation_types.code as plantationTypeCode",
                     ])
-                    .whereIn('projects.companyId', companyArr1)
-                    .groupBy(["buildings_and_phases.id",
-                        "buildings_and_phases.buildingPhaseCode",
-                        "property_types.propertyType",
-                        "buildings_and_phases.description",
-                        "property_types.propertyTypeCode",
+                    .whereIn('plantations.companyId', companyArr1)
+                    .groupBy(["plantation_phases.id",
+                        "plantation_phases.code",
+                        "plantation_types.name as plantationTypeName",
+                        "plantation_phases.description",
+                        "plantation_types.code as plantationTypeCode",
                     ])
 
 
             } else
-                if (req.query.areaName === 'all' && projectId === '') {
-                    companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-                    companyArr1 = companyHavingProjects.map(v => v.companyId)
-                    rows = await knex("buildings_and_phases")
+                if (req.query.areaName === 'all' && plantationId === '') {
+                    companyIds = await knexReader('plantation_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                    companyArr1 = companyIds.map(v => v.companyId)
+                    rows = await knexReader("plantation_phases")
                         .innerJoin(
-                            "projects",
-                            "buildings_and_phases.projectId",
-                            "projects.id"
+                            "plantations",
+                            "plantation_phases.plantationId",
+                            "plantations.id"
                         )
                         .innerJoin(
-                            "property_types",
-                            "buildings_and_phases.propertyTypeId",
-                            "property_types.id"
+                            "plantation_types",
+                            "plantation_phases.plantationTypeId",
+                            "plantation_types.id"
                         )
-                        .innerJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                        .innerJoin('plant_containers', 'plantation_phases.id', 'plant_containers.plantationPhaseId')
                         .where({
-                            "buildings_and_phases.isActive": true,
-                            "buildings_and_phases.orgId": orgId,
+                            "plantation_phases.isActive": true,
+                            "plantation_phases.orgId": orgId,
                         })
                         .select([
-                            "buildings_and_phases.id as id",
-                            "buildings_and_phases.buildingPhaseCode",
-                            "property_types.propertyType",
-                            "buildings_and_phases.description",
-                            "property_types.propertyTypeCode",
+                            "plantation_phases.id as id",
+                            "plantation_phases.code",
+                            "plantation_types.name as plantationTypeName",
+                            "plantation_phases.description",
+                            "plantation_types.code as plantationTypeCode",
                         ])
-                        .whereIn('projects.companyId', companyArr1)
-                        .groupBy(["buildings_and_phases.id",
-                            "buildings_and_phases.buildingPhaseCode",
-                            "property_types.propertyType",
-                            "buildings_and_phases.description",
-                            "property_types.propertyTypeCode",
+                        .whereIn('plantations.companyId', companyArr1)
+                        .groupBy(["plantation_phases.id",
+                            "plantation_phases.code",
+                            "plantation_types.name as plantationTypeName",
+                            "plantation_phases.description",
+                            "plantation_types.code as plantationTypeCode",
                         ])
                 } else
                     if (req.query.areaName === 'all') {
-                        companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-                        companyArr1 = companyHavingProjects.map(v => v.companyId)
-                        rows = await knex("buildings_and_phases")
+                        companyIds = await knexReader('plantation_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                        companyArr1 = companyIds.map(v => v.companyId)
+                        rows = await knexReader("plantation_phases")
                             .innerJoin(
-                                "projects",
-                                "buildings_and_phases.projectId",
-                                "projects.id"
+                                "plantations",
+                                "plantation_phases.plantationId",
+                                "plantations.id"
                             )
                             .innerJoin(
-                                "property_types",
-                                "buildings_and_phases.propertyTypeId",
-                                "property_types.id"
+                                "plantation_types",
+                                "plantation_phases.plantationTypeId",
+                                "plantation_types.id"
                             )
-                            .innerJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                            .innerJoin('plant_containers', 'plantation_phases.id', 'plant_containers.plantationPhaseId')
                             .where({
-                                "buildings_and_phases.isActive": true,
-                                //"buildings_and_phases.projectId": projectId,
-                                "buildings_and_phases.orgId": orgId,
+                                "plantation_phases.isActive": true,
+                                //"plantation_phases.plantationId": plantationId,
+                                "plantation_phases.orgId": orgId,
                             })
                             .where(qb => {
-                                if (projectId == 'undefined') {
+                                if (plantationId == 'undefined') {
 
                                 } else {
 
-                                    qb.where('buildings_and_phases.projectId', projectId)
+                                    qb.where('plantation_phases.plantationId', plantationId)
 
                                 }
                             })
                             .select([
-                                "buildings_and_phases.id as id",
-                                "buildings_and_phases.buildingPhaseCode",
-                                "property_types.propertyType",
-                                "buildings_and_phases.description",
-                                "property_types.propertyTypeCode",
+                                "plantation_phases.id as id",
+                                "plantation_phases.code",
+                                "plantation_types.name as plantationTypeName",
+                                "plantation_phases.description",
+                                "plantation_types.code as plantationTypeCode",
                             ])
-                            .whereIn('projects.companyId', companyArr1)
-                            .groupBy(["buildings_and_phases.id",
-                                "buildings_and_phases.buildingPhaseCode",
-                                "property_types.propertyType",
-                                "buildings_and_phases.description",
-                                "property_types.propertyTypeCode",
+                            .whereIn('plantations.companyId', companyArr1)
+                            .groupBy(["plantation_phases.id",
+                                "plantation_phases.code",
+                                "plantation_types.name as plantationTypeName",
+                                "plantation_phases.description",
+                                "plantation_types.code as plantationTypeCode",
                             ])
                     } else {
-                        companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-                        companyArr1 = companyHavingProjects.map(v => v.companyId)
-                        rows = await knex("buildings_and_phases")
+                        companyIds = await knexReader('plantations').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                        companyArr1 = companyIds.map(v => v.companyId)
+                        rows = await knexReader("plantation_phases")
                             .innerJoin(
-                                "projects",
-                                "buildings_and_phases.projectId",
-                                "projects.id"
+                                "plantations",
+                                "plantation_phases.plantationId",
+                                "plantations.id"
                             )
                             .innerJoin(
-                                "property_types",
-                                "buildings_and_phases.propertyTypeId",
-                                "property_types.id"
+                                "plantation_types",
+                                "plantation_phases.plantationTypeId",
+                                "plantation_types.id"
                             )
-                            .innerJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                            .innerJoin('plant_containers', 'plantation_phases.id', 'plant_containers.plantationPhaseId')
                             .where({
-                                "buildings_and_phases.isActive": true,
-                                "buildings_and_phases.projectId": projectId,
-                                "buildings_and_phases.orgId": orgId,
-                                'property_units.type': 1
+                                "plantation_phases.isActive": true,
+                                "plantation_phases.plantationId": plantationId,
+                                "plantation_phases.orgId": orgId,
+                                //'plant_containers.type': 1
                             })
                             .select([
-                                "buildings_and_phases.id as id",
-                                "buildings_and_phases.buildingPhaseCode",
-                                "property_types.propertyType",
-                                "buildings_and_phases.description",
-                                "property_types.propertyTypeCode",
+                                "plantation_phases.id as id",
+                                "plantation_phases.code",
+                                "plantation_types.name as plantationTypeName",
+                                "plantation_phases.description",
+                                "plantation_types.code as plantationTypeCode",
                             ])
-                            .whereIn('projects.companyId', companyArr1)
-                            .groupBy(["buildings_and_phases.id",
-                                "buildings_and_phases.buildingPhaseCode",
-                                "property_types.propertyType",
-                                "buildings_and_phases.description",
-                                "property_types.propertyTypeCode",
+                            .whereIn('plantations.companyId', companyArr1)
+                            .groupBy(["plantation_phases.id",
+                                "plantation_phases.code",
+                                "plantation_types.name as plantationTypeName",
+                                "plantation_phases.description",
+                                "plantation_types.code as plantationTypeCode",
                             ])
 
 
-                        console.log('BUILDING LIST:******************************************************************* ', rows)
+                        console.log('Plantation Phase LIST:********************************************************* ', rows)
                     }
 
 
-            buildingData.data = rows;
+            plantationPhaseData.data = rows;
 
             return res.status(200).json({
                 data: {
-                    buildingPhases: buildingData
+                    plantationPhases: plantationPhaseData
                 },
                 message: "Plantation Phases List!"
             });
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][getPlantationPhaseAllListHavingPropertyUnits] :  Error",
                 err
             );
             //trx.rollback
@@ -1549,186 +1568,187 @@ const plantationPhaseController = {
             });
         }
     },
+
     getPlantationPhaseAllListHavingPropertyUnitsAndWithoutUnits: async (req, res) => {
         try {
-            let projectId = req.query.projectId;
+            let plantationId = req.query.plantationId;
             let orgId = req.orgId;
-            console.log("projectId for building", projectId)
+            console.log("plantationId for plantation phase", plantationId)
 
-            let buildingData = {};
+            let plantationPhaseData = {};
             //console.log(orgId);
 
-            let companyHavingProjects = []
+            let companyIds = []
             let companyArr1 = []
             let rows = []
 
             if (req.query.areaName === 'common') {
-                companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-                companyArr1 = companyHavingProjects.map(v => v.companyId)
-                rows = await knex("buildings_and_phases")
+                companyIds = await knexReader('plantation_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                companyArr1 = companyIds.map(v => v.companyId)
+                rows = await knexReader("plantation_phases")
                     .innerJoin(
-                        "projects",
-                        "buildings_and_phases.projectId",
-                        "projects.id"
+                        "plantations",
+                        "plantation_phases.plantationId",
+                        "plantations.id"
                     )
                     .innerJoin(
-                        "property_types",
-                        "buildings_and_phases.propertyTypeId",
-                        "property_types.id"
+                        "plantation_types",
+                        "plantation_phases.plantationTypeId",
+                        "plantation_types.id"
                     )
-                    .leftJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                    .leftJoin('plant_containers', 'plantation_phases.id', 'plant_containers.plantationPhaseId')
                     .where({
-                        "buildings_and_phases.isActive": true,
-                        "buildings_and_phases.projectId": projectId,
-                        "buildings_and_phases.orgId": orgId,
-                       // 'property_units.type': 2
+                        "plantation_phases.isActive": true,
+                        "plantation_phases.plantationId": plantationId,
+                        "plantation_phases.orgId": orgId,
+                        // 'plant_containers.type': 2
                     })
                     .select([
-                        "buildings_and_phases.id as id",
-                        "buildings_and_phases.buildingPhaseCode",
-                        "property_types.propertyType",
-                        "buildings_and_phases.description",
-                        "property_types.propertyTypeCode",
+                        "plantation_phases.id as id",
+                        "plantation_phases.code",
+                        "plantation_types.name as plantationTypeName",
+                        "plantation_phases.description",
+                        "plantation_types.code as plantationTypeCode",
                     ])
-                    .whereIn('projects.companyId', companyArr1)
-                    .groupBy(["buildings_and_phases.id",
-                        "buildings_and_phases.buildingPhaseCode",
-                        "property_types.propertyType",
-                        "buildings_and_phases.description",
-                        "property_types.propertyTypeCode",
+                    .whereIn('plantations.companyId', companyArr1)
+                    .groupBy(["plantation_phases.id",
+                        "plantation_phases.code",
+                        "plantation_types.name as plantationTypeName",
+                        "plantation_phases.description",
+                        "plantation_types.code as plantationTypeCode",
                     ])
 
 
             } else
-                if (req.query.areaName === 'all' && projectId === '') {
-                    companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-                    companyArr1 = companyHavingProjects.map(v => v.companyId)
-                    rows = await knex("buildings_and_phases")
+                if (req.query.areaName === 'all' && plantationId === '') {
+                    companyIds = await knexReader('plantation_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                    companyArr1 = companyIds.map(v => v.companyId)
+                    rows = await knexReader("plantation_phases")
                         .innerJoin(
-                            "projects",
-                            "buildings_and_phases.projectId",
-                            "projects.id"
+                            "plantations",
+                            "plantation_phases.plantationId",
+                            "plantations.id"
                         )
                         .innerJoin(
-                            "property_types",
-                            "buildings_and_phases.propertyTypeId",
-                            "property_types.id"
+                            "plantation_types",
+                            "plantation_phases.plantationTypeId",
+                            "plantation_types.id"
                         )
-                        .leftJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                        .leftJoin('plant_containers', 'plantation_phases.id', 'plant_containers.plantationPhaseId')
                         .where({
-                            "buildings_and_phases.isActive": true,
-                            "buildings_and_phases.orgId": orgId,
+                            "plantation_phases.isActive": true,
+                            "plantation_phases.orgId": orgId,
                         })
                         .select([
-                            "buildings_and_phases.id as id",
-                            "buildings_and_phases.buildingPhaseCode",
-                            "property_types.propertyType",
-                            "buildings_and_phases.description",
-                            "property_types.propertyTypeCode",
+                            "plantation_phases.id as id",
+                            "plantation_phases.code",
+                            "plantation_types.name as plantationTypeName",
+                            "plantation_phases.description",
+                            "plantation_types.code as plantationTypeCode",
                         ])
-                        .whereIn('projects.companyId', companyArr1)
-                        .groupBy(["buildings_and_phases.id",
-                            "buildings_and_phases.buildingPhaseCode",
-                            "property_types.propertyType",
-                            "buildings_and_phases.description",
-                            "property_types.propertyTypeCode",
+                        .whereIn('plantations.companyId', companyArr1)
+                        .groupBy(["plantation_phases.id",
+                            "plantation_phases.code",
+                            "plantation_types.name as plantationTypeName",
+                            "plantation_phases.description",
+                            "plantation_types.code as plantationTypeCode",
                         ])
                 } else
                     if (req.query.areaName === 'all') {
-                        companyHavingProjects = await knex('buildings_and_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-                        companyArr1 = companyHavingProjects.map(v => v.companyId)
-                        rows = await knex("buildings_and_phases")
+                        companyIds = await knexReader('plantation_phases').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                        companyArr1 = companyIds.map(v => v.companyId)
+                        rows = await knexReader("plantation_phases")
                             .innerJoin(
-                                "projects",
-                                "buildings_and_phases.projectId",
-                                "projects.id"
+                                "plantations",
+                                "plantation_phases.plantationId",
+                                "plantations.id"
                             )
                             .innerJoin(
-                                "property_types",
-                                "buildings_and_phases.propertyTypeId",
-                                "property_types.id"
+                                "plantation_types",
+                                "plantation_phases.plantationTypeId",
+                                "plantation_types.id"
                             )
-                            .leftJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                            .leftJoin('plant_containers', 'plantation_phases.id', 'plant_containers.plantationPhaseId')
                             .where({
-                                "buildings_and_phases.isActive": true,
-                                //"buildings_and_phases.projectId": projectId,
-                                "buildings_and_phases.orgId": orgId,
+                                "plantation_phases.isActive": true,
+                                //"plantation_phases.plantationId": plantationId,
+                                "plantation_phases.orgId": orgId,
                             })
                             .where(qb => {
-                                if (projectId == 'undefined') {
+                                if (plantationId == 'undefined') {
 
                                 } else {
 
-                                    qb.where('buildings_and_phases.projectId', projectId)
+                                    qb.where('plantation_phases.plantationId', plantationId)
 
                                 }
                             })
                             .select([
-                                "buildings_and_phases.id as id",
-                                "buildings_and_phases.buildingPhaseCode",
-                                "property_types.propertyType",
-                                "buildings_and_phases.description",
-                                "property_types.propertyTypeCode",
+                                "plantation_phases.id as id",
+                                "plantation_phases.code",
+                                "plantation_types.name as plantationTypeName",
+                                "plantation_phases.description",
+                                "plantation_types.code as plantationTypeCode",
                             ])
-                            .whereIn('projects.companyId', companyArr1)
-                            .groupBy(["buildings_and_phases.id",
-                                "buildings_and_phases.buildingPhaseCode",
-                                "property_types.propertyType",
-                                "buildings_and_phases.description",
-                                "property_types.propertyTypeCode",
+                            .whereIn('plantations.companyId', companyArr1)
+                            .groupBy(["plantation_phases.id",
+                                "plantation_phases.code",
+                                "plantation_types.name as plantationTypeName",
+                                "plantation_phases.description",
+                                "plantation_types.code as plantationTypeCode",
                             ])
                     } else {
-                        companyHavingProjects = await knex('projects').select(['companyId']).where({ orgId: req.orgId, isActive: true })
-                        companyArr1 = companyHavingProjects.map(v => v.companyId)
-                        rows = await knex("buildings_and_phases")
+                        companyIds = await knexReader('plantations').select(['companyId']).where({ orgId: req.orgId, isActive: true })
+                        companyArr1 = companyIds.map(v => v.companyId)
+                        rows = await knexReader("plantation_phases")
                             .innerJoin(
-                                "projects",
-                                "buildings_and_phases.projectId",
-                                "projects.id"
+                                "plantations",
+                                "plantation_phases.plantationId",
+                                "plantations.id"
                             )
                             .innerJoin(
-                                "property_types",
-                                "buildings_and_phases.propertyTypeId",
-                                "property_types.id"
+                                "plantation_types",
+                                "plantation_phases.plantationTypeId",
+                                "plantation_types.id"
                             )
-                            .leftJoin('property_units', 'buildings_and_phases.id', 'property_units.buildingPhaseId')
+                            .leftJoin('plant_containers', 'plantation_phases.id', 'plant_containers.plantationPhaseId')
                             .where({
-                                "buildings_and_phases.isActive": true,
-                                "buildings_and_phases.projectId": projectId,
-                                "buildings_and_phases.orgId": orgId,
-                               // 'property_units.type': 1
+                                "plantation_phases.isActive": true,
+                                "plantation_phases.plantationId": plantationId,
+                                "plantation_phases.orgId": orgId,
+                                // 'plant_containers.type': 1
                             })
                             .select([
-                                "buildings_and_phases.id as id",
-                                "buildings_and_phases.buildingPhaseCode",
-                                "property_types.propertyType",
-                                "buildings_and_phases.description",
-                                "property_types.propertyTypeCode",
+                                "plantation_phases.id as id",
+                                "plantation_phases.code",
+                                "plantation_types.name as plantationTypeName",
+                                "plantation_phases.description",
+                                "plantation_types.code as plantationTypeCode",
                             ])
-                            .whereIn('projects.companyId', companyArr1)
-                            .groupBy(["buildings_and_phases.id",
-                                "buildings_and_phases.buildingPhaseCode",
-                                "property_types.propertyType",
-                                "buildings_and_phases.description",
-                                "property_types.propertyTypeCode",
+                            .whereIn('plantations.companyId', companyArr1)
+                            .groupBy(["plantation_phases.id",
+                                "plantation_phases.code",
+                                "plantation_types.name as plantationTypeName",
+                                "plantation_phases.description",
+                                "plantation_types.code as plantationTypeCode",
                             ])
 
 
-                        console.log('BUILDING LIST:******************************************************************* ', rows)
+                        console.log('Plantation Phase LIST:******************************************************** ', rows)
                     }
 
 
-            buildingData.data = rows;
+            plantationPhaseData.data = rows;
 
             return res.status(200).json({
                 data: {
-                    buildingPhases: buildingData
+                    plantationPhases: plantationPhaseData
                 },
                 message: "Plantation Phases List!"
             });
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][getPlantationPhaseAllListHavingPropertyUnitsAndWithoutUnits] :  Error",
                 err
             );
             //trx.rollback
@@ -1737,30 +1757,30 @@ const plantationPhaseController = {
             });
         }
     },
-    
+
     getPlantationPhaseById: async (req, res) => {
         try {
             let id = req.body.id
             let orgId = req.orgId
-            let buildingPhaseResult = await knex("buildings_and_phases")
+            let sqlResult = await knexReader("plantation_phases")
                 .select([
-                    "buildings_and_phases.id",
-                    "buildings_and_phases.description",
-                    "buildings_and_phases.buildingPhaseCode"
+                    "plantation_phases.id",
+                    "plantation_phases.description",
+                    "plantation_phases.code"
                 ])
-                .where("buildings_and_phases.id", id)
-                .where("buildings_and_phases.orgId", orgId)
+                .where("plantation_phases.id", id)
+                .where("plantation_phases.orgId", orgId)
 
             return res.status(200).json({
                 data: {
-                    buildingPhases: buildingPhaseResult
+                    plantationPhases: sqlResult
                 },
                 message: "Plantation Phases List!"
             });
 
         } catch (err) {
             console.log(
-                "[controllers][generalsetup][viewbuildingPhase] :  Error",
+                "[controllers][administrationFeatures][getPlantationPhaseById] :  Error",
                 err
             );
             //trx.rollback
@@ -1768,47 +1788,44 @@ const plantationPhaseController = {
                 errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
             });
         }
-    }
+    },
 
-    ,
     getUnitListByPlantationId: async (req, res) => {
 
         try {
 
             let rows;
-            let companyHavingProjects;
-            let companyArr1;
-            let buildingId = req.query.buildingId;
+            let plantationPhaseId = req.query.plantationPhaseId;
             let orgId = req.orgId;
 
-            if (req.query.buildingId == 'undefined' || req.query.buildingId == "all") {
+            if (req.query.plantationPhaseId == 'undefined' || req.query.plantationPhaseId == "all") {
 
-                rows = await knex("property_units")
+                rows = await knexReader("plant_containers")
                     .where({
-                        "property_units.isActive": true,
-                        //"property_units.buildingPhaseId": projectId,
-                        "property_units.orgId": orgId,
+                        "plant_containers.isActive": true,
+                        //"plant_containers.plantationPhaseId": plantationId,
+                        "plant_containers.orgId": orgId,
                         "type": 1
                     })
                     .select('*')
 
             } else {
 
-                rows = await knex("property_units")
+                rows = await knexReader("plant_containers")
                     .where({
-                        "property_units.isActive": true,
-                        "property_units.buildingPhaseId": buildingId,
-                        "property_units.orgId": orgId,
+                        "plant_containers.isActive": true,
+                        "plant_containers.plantationPhaseId": plantationPhaseId,
+                        "plant_containers.orgId": orgId,
                         "type": 1
                     })
                     .select('*')
 
-                console.log('BUILDING LIST:******************************************************************* ', rows)
+                console.log('Plant Containers LIST:*********************************************************** ', rows)
             }
 
             return res.status(200).json({
                 data: rows,
-                message: "Plantation Phases List!"
+                message: "Plant Containers List!"
             });
 
         } catch (err) {

@@ -34,7 +34,7 @@ const facilityBookingController = {
   getIncomingParcelList: async (req, res) => {
     try {
       let id = req.me.id;
-      //let resourceProject = req.userProjectResources[0].projects;
+      //let resourceProject = req.userPlantationResources[0].plantations;
       let { listType } = req.body;
       let resultData;
       let resultPickUp;
@@ -218,7 +218,7 @@ const facilityBookingController = {
   getOutgoingParcelList: async (req, res) => {
     try {
       let id = req.me.id;
-      //let resourceProject = req.userProjectResources[0].projects;
+      //let resourceProject = req.userPlantationResources[0].plantations;
       let { listType } = req.body;
       let resultData;
       let resultPickUp;
@@ -396,7 +396,7 @@ const facilityBookingController = {
   getPickedUpParcelList: async (req, res) => {
     try {
       let id = req.me.id;
-      //let resourceProject = req.userProjectResources[0].projects;
+      //let resourceProject = req.userPlantationResources[0].plantations;
       let { listType } = req.body;
       let resultPickUp;
       let totalNewParcel;
@@ -534,7 +534,7 @@ const facilityBookingController = {
   getDispatchedParcelList: async (req, res) => {
     try {
       let id = req.me.id;
-      //let resourceProject = req.userProjectResources[0].projects;
+      //let resourceProject = req.userPlantationResources[0].plantations;
       let { listType } = req.body;
       let resultPickUp;
       let totalNewParcel;
@@ -1062,7 +1062,7 @@ const facilityBookingController = {
       let propertUnitresult = null;
       let userHouseResult = null;
       let propertyUnitFinalResult = null;
-      //let resourceProject = req.userProjectResources[0].projects;
+      //let resourceProject = req.userPlantationResources[0].plantations;
       let {
         startDateTime,
         endDateTime,

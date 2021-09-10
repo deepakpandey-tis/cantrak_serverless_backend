@@ -11,7 +11,7 @@ const getAdminPropertyUnits = async (req, res) => {
 
         // Get logged-in user authorised / accessible projects
         let authorisedProjectIds = [];
-        let authorisedProjects = req.userProjectResources.find(rec => rec.id == visitorModule)
+        let authorisedProjects = req.userPlantationResources.find(rec => rec.id == visitorModule)
         authorisedProjectIds = authorisedProjects.projects;
 
         // Returns only active Units ie. user_house_allocation.status = 1 and property_units.isActive

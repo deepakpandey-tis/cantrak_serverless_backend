@@ -168,7 +168,7 @@ const customerController = {
   getInactiveCustomers: async (req, res) => {
     try {
       let projectIds = [];
-      let projectsForTenants = req.userProjectResources
+      let projectsForTenants = req.userPlantationResources
       projectsForTenants = projectsForTenants.find(pfp => pfp.id == 7)
       console.log('Project For Tenants:', projectsForTenants);
       let accessibleProjects = projectsForTenants.projects;
@@ -418,7 +418,7 @@ const customerController = {
 
       } else {
 
-        let resourceProject = req.userProjectResources[0].projects;
+        let resourceProject = req.userPlantationResources[0].plantations;
 
         [total, rows] = await Promise.all([
           knex("users")
@@ -983,7 +983,7 @@ const customerController = {
   exportTenantData: async (req, res) => {
     try {
       console.log("Req.orgId: ", req.orgId);
-      let resourceProject = req.userProjectResources[0].projects;
+      let resourceProject = req.userPlantationResources[0].plantations;
       let name = req.query.name;
 
       [rows] = await Promise.all([

@@ -6,6 +6,7 @@ const _ = require("lodash");
 const XLSX = require("xlsx");
 
 const knex = require("../../db/knex");
+const knexReader = require("../../db/knex-reader");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
@@ -19,76 +20,73 @@ const plantationTypeController = {
       let orgId = req.orgId;
       let userId = req.me.id;
 
-      let propertyType = null;
-      await knex.transaction(async trx => {
-        const payload = req.body;
+      let plantationType = null;
 
-        const schema = Joi.object().keys({
-          propertyType: Joi.string().required(),
-          propertyTypeCode: Joi.string().required(),
-          descriptionEng: Joi.string()
-            .optional()
-            .allow("")
-            .allow(null)
-        });
+      const payload = req.body;
 
-        const result = Joi.validate(payload, schema);
-        console.log(
-          "[controllers][administrationFeatures][addbuildingPhase]: JOi Result",
-          result
-        );
-
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
-
-
-        /*CHECK DUPLICATE VALUES OPEN */
-        let existValue = await knex('property_types')
-          .where({ propertyTypeCode: payload.propertyTypeCode.toUpperCase(), orgId: orgId });
-        if (existValue && existValue.length) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Property type code already exist!!" }
-            ]
-          });
-        }
-        /*CHECK DUPLICATE VALUES CLOSE */
-
-
-        let currentTime = new Date().getTime();
-        let insertData = {
-          ...payload,
-          propertyTypeCode: payload.propertyTypeCode.toUpperCase(),
-          orgId: orgId,
-          createdBy: userId,
-          createdAt: currentTime,
-          updatedAt: currentTime
-        };
-        //insertData     = _.omit(insertData[0], ['descriptionEng'])
-        let insertResult = await knex
-          .insert(insertData)
-          .returning(["*"])
-          .transacting(trx)
-          .into("property_types");
-        propertyType = insertResult[0];
-
-        trx.commit;
+      const schema = Joi.object().keys({
+        name: Joi.string().required(),
+        code: Joi.string().required(),
+        descriptionEng: Joi.string()
+          .optional()
+          .allow("")
+          .allow(null)
       });
+
+      const result = Joi.validate(payload, schema);
+      console.log(
+        "[controllers][administrationFeatures][addPlantationType]: JOi Result",
+        result
+      );
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
+        });
+      }
+
+
+      /*CHECK DUPLICATE VALUES OPEN */
+      let existValue = await knex('plantation_types')
+        .where({ code: payload.code.toUpperCase(), orgId: orgId });
+      if (existValue && existValue.length) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: "Plantation type code already exist!!" }
+          ]
+        });
+      }
+      /*CHECK DUPLICATE VALUES CLOSE */
+
+
+      let currentTime = new Date().getTime();
+      let insertData = {
+        ...payload,
+        code: payload.code.toUpperCase(),
+        orgId: orgId,
+        createdBy: userId,
+        createdAt: currentTime,
+        updatedBy: userId,
+        updatedAt: currentTime
+      };
+      //insertData     = _.omit(insertData[0], ['descriptionEng'])
+      let insertResult = await knex
+        .insert(insertData)
+        .returning(["*"])
+        .into("plantation_types");
+      plantationType = insertResult[0];
 
       return res.status(200).json({
         data: {
-          propertyType: propertyType
+          plantationType: plantationType
         },
-        message: "Property Type added successfully."
+        message: "Plantation Type added successfully."
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][addbuildingPhase] :  Error",
+        "[controllers][administrationFeatures][addPlantationType] :  Error",
         err
       );
       //trx.rollback
@@ -97,77 +95,73 @@ const plantationTypeController = {
       });
     }
   },
+
   updatePlantationType: async (req, res) => {
     try {
-      let PropertyType = null;
+      let plantationType = null;
       let userId = req.me.id;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
-        const payload = req.body;
+      const payload = req.body;
 
-        const schema = Joi.object().keys({
-          id: Joi.string().required(),
-          propertyType: Joi.string().required(),
-          propertyTypeCode: Joi.string().required(),
-          descriptionEng: Joi.string()
-            .optional()
-            .allow("").allow(null)
+      const schema = Joi.object().keys({
+        id: Joi.string().required(),
+        name: Joi.string().required(),
+        code: Joi.string().required(),
+        descriptionEng: Joi.string()
+          .optional()
+          .allow("").allow(null)
+      });
+
+      const result = Joi.validate(payload, schema);
+      console.log(
+        "[controllers][administrationFeatures][updatePlantationType]: JOi Result",
+        result
+      );
+
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
         });
+      }
 
-        const result = Joi.validate(payload, schema);
-        console.log(
-          "[controllers][administrationFeatures][updatebuildingPhase]: JOi Result",
-          result
-        );
+      /*CHECK DUPLICATE VALUES OPEN */
+      let existValue = await knex('plantation_types')
+        .where({ code: payload.code.toUpperCase(), orgId: orgId });
+      if (existValue && existValue.length) {
 
-        if (result && result.hasOwnProperty("error") && result.error) {
+        if (existValue[0].id === payload.id) {
+
+        } else {
           return res.status(400).json({
             errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
+              { code: "VALIDATION_ERROR", message: "Plantation type code Already exist!!" }
             ]
           });
         }
+      }
+      /*CHECK DUPLICATE VALUES CLOSE */
 
-        /*CHECK DUPLICATE VALUES OPEN */
-        let existValue = await knex('property_types')
-          .where({ propertyTypeCode: payload.propertyTypeCode.toUpperCase(), orgId: orgId });
-        if (existValue && existValue.length) {
-
-          if (existValue[0].id === payload.id) {
-
-          } else {
-            return res.status(400).json({
-              errors: [
-                { code: "VALIDATION_ERROR", message: "Property type code Already exist!!" }
-              ]
-            });
-          }
-        }
-        /*CHECK DUPLICATE VALUES CLOSE */
-
-        let currentTime = new Date().getTime();
-        let insertData = { ...payload,propertyTypeCode:payload.propertyTypeCode.toUpperCase(),createdBy: userId, updatedAt: currentTime };
-        let insertResult = await knex
-          .update(insertData)
-          .where({ id: payload.id, orgId: orgId })
-          .returning(["*"])
-          .transacting(trx)
-          .into("property_types");
-        PropertyType = insertResult[0];
-
-        trx.commit;
-      });
+      let currentTime = new Date().getTime();
+      let insertData = { ...payload, code: payload.code.toUpperCase(), updatedBy: userId, updatedAt: currentTime };
+      let insertResult = await knex
+        .update(insertData)
+        .where({ id: payload.id, orgId: orgId })
+        .returning(["*"])
+        .into("plantation_types");
+      plantationType = insertResult[0];
 
       return res.status(200).json({
         data: {
-          PropertyType: PropertyType
+          plantationType: plantationType
         },
-        message: "Property Type details updated successfully."
+        message: "Plantation Type details updated successfully."
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][updatePropertyType] :  Error",
+        "[controllers][administrationFeatures][updatePlantationType] :  Error",
         err
       );
       //trx.rollback
@@ -176,65 +170,64 @@ const plantationTypeController = {
       });
     }
   },
+
   deletePlantationType: async (req, res) => {
     try {
-      let propertyType = null;
+      let plantationType = null;
+      let userId = req.me.id;
       let orgId = req.orgId;
       let message;
-      await knex.transaction(async trx => {
-        let payload = req.body;
-        const schema = Joi.object().keys({
-          id: Joi.string().required()
-        });
-        const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
 
-        let propertyTypeResult;
-        let checkStatus = await knex.from('property_types').where({ id: payload.id }).returning(['*'])
-        // res.json({message:checkStatus[0]})
-        if (checkStatus && checkStatus.length) {
-
-          if (checkStatus[0].isActive === true) {
-
-            propertyTypeResult = await knex
-              .update({ isActive: false })
-              .where({ id: payload.id })
-              .returning(["*"])
-              .transacting(trx)
-              .into("property_types");
-
-            message = "Property Type Inactive Successfully!"
-
-          } else {
-            propertyTypeResult = await knex
-              .update({ isActive: true })
-              .where({ id: payload.id })
-              .returning(["*"])
-              .transacting(trx)
-              .into("property_types");
-            message = "Property Type Active Successfully!"
-          }
-
-        }
-
-        propertyType = propertyTypeResult[0];
-        trx.commit;
+      let payload = req.body;
+      const schema = Joi.object().keys({
+        id: Joi.string().required()
       });
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
+        });
+      }
+
+      let sqlResult;
+      let currentTime = new Date().getTime();
+      let checkStatus = await knex.from('plantation_types').where({ id: payload.id }).returning(['*'])
+      // res.json({message:checkStatus[0]})
+      if (checkStatus && checkStatus.length) {
+
+        if (checkStatus[0].isActive === true) {
+
+          sqlResult = await knex
+            .update({ isActive: false, updatedBy: userId, updatedAt: currentTime })
+            .where({ id: payload.id })
+            .returning(["*"])
+            .into("plantation_types");
+
+          message = "Plantation Type Inactive Successfully!"
+
+        } else {
+          sqlResult = await knex
+            .update({ isActive: true, updatedBy: userId, updatedAt: currentTime })
+            .where({ id: payload.id })
+            .returning(["*"])
+            .into("plantation_types");
+          message = "Plantation Type Active Successfully!"
+        }
+
+      }
+
+      plantationType = sqlResult[0];
       return res.status(200).json({
         data: {
-          PropertyType: propertyType
+          plantationType: plantationType
         },
         message: message
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][viewbuildingPhase] :  Error",
+        "[controllers][administrationFeatures][deletePlantationType] :  Error",
         err
       );
       //trx.rollback
@@ -243,12 +236,13 @@ const plantationTypeController = {
       });
     }
   },
+
   getPlantationTypeList: async (req, res) => {
     try {
 
       let sortPayload = req.body;
       if (!sortPayload.sortBy && !sortPayload.orderBy) {
-        sortPayload.sortBy = "property_types.propertyType";
+        sortPayload.sortBy = "plantation_types.name";
         sortPayload.orderBy = "asc"
       }
       let reqData = req.query;
@@ -261,48 +255,48 @@ const plantationTypeController = {
       if (page < 1) page = 1;
       let offset = (page - 1) * per_page;
 
-      let { propertyName,
-        propertyTypeCode
+      let { name,
+        code
       } = req.body;
 
       let total, rows;
 
-      if (propertyName || propertyTypeCode) {
+      if (name || code) {
 
         [total, rows] = await Promise.all([
-          knex
+          knexReader
             .count("* as count")
-            .from("property_types")
-            .leftJoin("users", "property_types.createdBy", "users.id")
-            .where({ "property_types.orgId": orgId })
+            .from("plantation_types")
+            .leftJoin("users", "plantation_types.createdBy", "users.id")
+            .where({ "plantation_types.orgId": orgId })
             .where(qb => {
-              if (propertyName) {
+              if (name) {
 
-                qb.where('property_types.propertyType', 'iLIKE', `%${propertyName}%`)
+                qb.where('plantation_types.name', 'iLIKE', `%${name}%`)
               }
-              if (propertyTypeCode) {
-                qb.where('property_types.propertyTypeCode', 'iLIKE', `%${propertyTypeCode}%`)
+              if (code) {
+                qb.where('plantation_types.code', 'iLIKE', `%${code}%`)
               }
             })
             .first(),
-          knex("property_types")
-            .leftJoin("users", "property_types.createdBy", "users.id")
+          knexReader("plantation_types")
+            .leftJoin("users", "plantation_types.createdBy", "users.id")
             .select([
-              "property_types.id",
-              "property_types.propertyType as Property Type",
-              "property_types.propertyTypeCode as Property Type Code",
-              "property_types.isActive as Status",
+              "plantation_types.id",
+              "plantation_types.name as Plantation Type",
+              "plantation_types.code as Code",
+              "plantation_types.isActive as Status",
               "users.name as Created By",
-              "property_types.createdAt as Date Created"
+              "plantation_types.createdAt as Date Created"
             ])
-            .where({ "property_types.orgId": orgId })
+            .where({ "plantation_types.orgId": orgId })
             .where(qb => {
-              if (propertyName) {
+              if (name) {
 
-                qb.where('property_types.propertyType', 'iLIKE', `%${propertyName}%`)
+                qb.where('plantation_types.name', 'iLIKE', `%${name}%`)
               }
-              if (propertyTypeCode) {
-                qb.where('property_types.propertyTypeCode', 'iLIKE', `%${propertyTypeCode}%`)
+              if (code) {
+                qb.where('plantation_types.code', 'iLIKE', `%${code}%`)
               }
             })
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
@@ -313,23 +307,23 @@ const plantationTypeController = {
       } else {
 
         [total, rows] = await Promise.all([
-          knex
+          knexReader
             .count("* as count")
-            .from("property_types")
-            .leftJoin("users", "property_types.createdBy", "users.id")
-            .where({ "property_types.orgId": orgId })
+            .from("plantation_types")
+            .leftJoin("users", "plantation_types.createdBy", "users.id")
+            .where({ "plantation_types.orgId": orgId })
             .first(),
-          knex("property_types")
-            .leftJoin("users", "property_types.createdBy", "users.id")
+          knexReader("plantation_types")
+            .leftJoin("users", "plantation_types.createdBy", "users.id")
             .select([
-              "property_types.id",
-              "property_types.propertyType as Property Type",
-              "property_types.propertyTypeCode as Property Type Code",
-              "property_types.isActive as Status",
+              "plantation_types.id",
+              "plantation_types.name as Plantation Type",
+              "plantation_types.code as Code",
+              "plantation_types.isActive as Status",
               "users.name as Created By",
-              "property_types.createdAt as Date Created"
+              "plantation_types.createdAt as Date Created"
             ])
-            .where({ "property_types.orgId": orgId })
+            .where({ "plantation_types.orgId": orgId })
             .orderBy(sortPayload.sortBy, sortPayload.orderBy)
             .offset(offset)
             .limit(per_page)
@@ -350,13 +344,13 @@ const plantationTypeController = {
 
       return res.status(200).json({
         data: {
-          propertyType: pagination
+          plantationType: pagination
         },
-        message: "Property Type List!"
+        message: "Plantation Type List!"
       });
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][get-property-type-list] :  Error",
+        "[controllers][administrationFeatures][getPlantationTypeList] :  Error",
         err
       );
       //trx.rollback
@@ -364,8 +358,8 @@ const plantationTypeController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-    // Export Building Phase Data
   },
+
   exportPlantationType: async (req, res) => {
     try {
       let orgId = req.orgId;
@@ -373,20 +367,20 @@ const plantationTypeController = {
       let reqData = req.query;
       let rows = null;
       [rows] = await Promise.all([
-        knex("property_types")
-          .leftJoin("users", "property_types.createdBy", "users.id")
+        knexReader("plantation_types")
+          .leftJoin("users", "plantation_types.createdBy", "users.id")
           .select([
-            //"property_types.orgId as ORGANIZATION_ID",
-            //"property_types.id as ID ",
-            "property_types.propertyTypeCode as PROPERTY_TYPE_CODE",
-            "property_types.propertyType as PROPERTY_TYPE",
-            "property_types.descriptionEng as DESCRIPTION",
-            // "property_types.isActive as STATUS",
+            //"plantation_types.orgId as ORGANIZATION_ID",
+            //"plantation_types.id as ID ",
+            "plantation_types.code as CODE",
+            "plantation_types.name as PLANTATION_TYPE",
+            "plantation_types.descriptionEng as DESCRIPTION",
+            // "plantation_types.isActive as STATUS",
             //"users.name as CREATED BY",
-            //"property_types.createdBy as CREATED BY ID",
-            //"property_types.createdAt as DATE CREATED"
+            //"plantation_types.createdBy as CREATED BY ID",
+            //"plantation_types.createdAt as DATE CREATED"
           ])
-          .where({ "property_types.orgId": orgId })
+          .where({ "plantation_types.orgId": orgId })
       ]);
 
       let tempraryDirectory = null;
@@ -411,15 +405,15 @@ const plantationTypeController = {
       } else {
         ws = XLSX.utils.json_to_sheet([
           {
-            PROPERTY_TYPE_CODE: "",
-            PROPERTY_TYPE: "",
+            CODE: "",
+            PLANTATION_TYPE: "",
             DESCRIPTION: "",
           }
         ]);
       }
       XLSX.utils.book_append_sheet(wb, ws, "pres");
       XLSX.write(wb, { bookType: "csv", bookSST: true, type: "base64" });
-      let filename = "PropertTypeData-" + Date.now() + ".csv";
+      let filename = "PlantationTypeData-" + moment(Date.now()).format("YYYYMMDD") + ".csv";
       let filepath = tempraryDirectory + filename;
       let check = XLSX.writeFile(wb, filepath);
       const AWS = require('aws-sdk');
@@ -427,7 +421,7 @@ const plantationTypeController = {
         var s3 = new AWS.S3();
         var params = {
           Bucket: bucketName,
-          Key: "Export/PropertyType/" + filename,
+          Key: "Export/PlantationType/" + filename,
           Body: file_buffer,
           ACL: 'public-read'
         }
@@ -442,12 +436,12 @@ const plantationTypeController = {
             console.log("File uploaded Successfully");
             //next(null, filePath);
             let deleteFile = fs.unlink(filepath, (err) => { console.log("File Deleting Error " + err) })
-            let url = process.env.S3_BUCKET_URL+"/Export/PropertyType/" +
-            filename;
-            //let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PropertyType/" + filename;
+            let url = process.env.S3_BUCKET_URL + "/Export/PlantationType/" +
+              filename;
+            //let url = "https://sls-app-resources-bucket.s3.us-east-2.amazonaws.com/Export/PlantationType/" + filename;
             return res.status(200).json({
-              propertyType: rows,
-              message: "Property Type Data Export Successfully!",
+              plantationType: rows,
+              message: "Plantation Type Data Export Successfully!",
               url: url
             });
           }
@@ -456,7 +450,7 @@ const plantationTypeController = {
 
     } catch (err) {
       console.log(
-        "[controllers][generalsetup][viewbuildingPhase] :  Error",
+        "[controllers][administrationFeatures][exportPlantationType] :  Error",
         err
       );
       //trx.rollback
@@ -465,72 +459,72 @@ const plantationTypeController = {
       });
     }
   },
+
   getPlantationTypeDetails: async (req, res) => {
     try {
-      let property = null;
+      let plantationType = null;
       let orgId = req.orgId;
 
-      await knex.transaction(async trx => {
-        let payload = req.body;
-        const schema = Joi.object().keys({
-          id: Joi.string().required()
-        });
-        const result = Joi.validate(payload, schema);
-        if (result && result.hasOwnProperty("error") && result.error) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: result.error.message }
-            ]
-          });
-        }
-        let propertyResult = await knex("property_types")
-          .select()
-          .where({ "id": payload.id, "orgId": orgId });
-
-        property = _.omit(propertyResult[0], [
-          "createdAt",
-          "updatedAt"
-        ]);
-        trx.commit;
+      let payload = req.body;
+      const schema = Joi.object().keys({
+        id: Joi.string().required()
       });
+      const result = Joi.validate(payload, schema);
+      if (result && result.hasOwnProperty("error") && result.error) {
+        return res.status(400).json({
+          errors: [
+            { code: "VALIDATION_ERROR", message: result.error.message }
+          ]
+        });
+      }
+      let sqlResult = await knexReader("plantation_types")
+        .select()
+        .where({ "id": payload.id, "orgId": orgId });
+
+      plantationType = _.omit(sqlResult[0], [
+        "createdAt",
+        "updatedAt"
+      ]);
 
       return res.status(200).json({
         data: {
-          property: property
+          plantationType: plantationType
         },
-        message: "property details"
+        message: "Plantation Type Detail!"
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewProject] :  Error", err);
+      console.log("[controllers][administrationFeatures][getPlantationTypeDetails] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
+
   getAllPlantationTypeList: async (req, res) => {
     try {
       let pagination = {};
       let orgId = req.orgId;
       let [result] = await Promise.all([
-        knex("property_types").select('id', 'propertyType', 'propertyTypeCode').where({ isActive: 'true', orgId: orgId })
+        knexReader("plantation_types").select('id', 'name', 'code').where({ isActive: 'true', orgId: orgId })
       ]);
       pagination.data = result;
       return res.status(200).json({
         data: {
-          propertytype: pagination
+          plantationType: pagination
         },
-        message: "Property List!"
+        message: "Plantation Type List!"
       });
     } catch (err) {
-      console.log("[controllers][generalsetup][viewCompany] :  Error", err);
+      console.log("[controllers][administrationFeatures][getAllPlantationTypeList] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },
-  /**IMPORT PROPERTY TYPE DATA */
+
+  /**IMPORT DATA */
   importPlantationTypeData: async (req, res) => {
     try {
       // if (req.file) {
@@ -558,8 +552,8 @@ const plantationTypeController = {
       errors.push(header)
 
 
-      if (data[0].A == "Ã¯Â»Â¿PROPERTY_TYPE_CODE" || data[0].A == "PROPERTY_TYPE_CODE" &&
-        data[0].B == "PROPERTY_TYPE" &&
+      if (data[0].A == "Ã¯Â»Â¿CODE" || data[0].A == "CODE" &&
+        data[0].B == "PLANTATION_TYPE" &&
         data[0].C == "DESCRIPTION"
         //&&
         //data[0].D == "STATUS"
@@ -568,23 +562,23 @@ const plantationTypeController = {
         if (data.length > 0) {
 
           let i = 0;
-          for (let propertyData of data) {
+          for (let ptData of data) {
             i++;
 
             if (i > 1) {
 
-              if (!propertyData.A) {
-                let values = _.values(propertyData)
-                values.unshift('Property Type Code can not empty')
+              if (!ptData.A) {
+                let values = _.values(ptData)
+                values.unshift('Plantation Type Code can not empty')
                 errors.push(values);
                 fail++;
                 continue;
 
               }
 
-              if (!propertyData.B) {
-                let values = _.values(propertyData)
-                values.unshift('Property Type  can not empty')
+              if (!ptData.B) {
+                let values = _.values(ptData)
+                values.unshift('Plantation Type can not empty')
                 errors.push(values);
                 fail++;
                 continue;
@@ -592,30 +586,31 @@ const plantationTypeController = {
               }
 
 
-              let checkExist = await knex('property_types').select('id')
-                .where({ propertyTypeCode: propertyData.A.toUpperCase(), orgId: req.orgId })
+              let checkExist = await knex('plantation_types').select('id')
+                .where({ code: ptData.A.toUpperCase(), orgId: req.orgId })
               if (checkExist.length < 1) {
 
                 let currentTime = new Date().getTime();
                 let insertData = {
                   orgId: req.orgId,
-                  propertyTypeCode: propertyData.A.toUpperCase(),
-                  propertyType: propertyData.B,
-                  descriptionEng: propertyData.C,
+                  code: ptData.A.toUpperCase(),
+                  name: ptData.B,
+                  descriptionEng: ptData.C,
                   isActive: true,
                   createdAt: currentTime,
                   updatedAt: currentTime,
-                  createdBy: req.me.id
+                  createdBy: req.me.id,
+                  updatedBy: userId,
                 }
 
-                resultData = await knex.insert(insertData).returning(['*']).into('property_types');
+                resultData = await knex.insert(insertData).returning(['*']).into('plantation_types');
 
                 if (resultData && resultData.length) {
                   success++;
                 }
               } else {
-                let values = _.values(propertyData)
-                values.unshift('Property Type Code already exists')
+                let values = _.values(ptData)
+                values.unshift('Plantation Type Code already exists')
                 errors.push(values);
                 fail++;
               }
@@ -653,7 +648,7 @@ const plantationTypeController = {
       // }
 
     } catch (err) {
-      console.log("[controllers][propertysetup][importCompanyData] :  Error", err);
+      console.log("[controllers][administrationFeatures][importPlantationTypeData] :  Error", err);
       //trx.rollback
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

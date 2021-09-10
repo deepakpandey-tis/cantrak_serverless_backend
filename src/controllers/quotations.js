@@ -549,7 +549,7 @@ const quotationsController = {
             let reqData = req.query;
             //let filters = req.body;
             let total, rows;
-            const accessibleProjects = req.userProjectResources[0].projects
+            const accessibleProjects = req.userPlantationResources[0].plantations
 
             let pagination = {};
             let per_page = reqData.per_page || 10;
@@ -1078,7 +1078,7 @@ const quotationsController = {
         try {
             let reqData = req.query;
             let total, rows;
-            const accessibleProjects = req.userProjectResources[0].projects
+            const accessibleProjects = req.userPlantationResources[0].plantations
             let pagination = {};
 
             [rows] = await Promise.all([
@@ -2117,7 +2117,7 @@ const quotationsController = {
         try {
 
             let rows;
-            const accessibleProjects = req.userProjectResources[0].projects
+            const accessibleProjects = req.userPlantationResources[0].plantations
             let payload = req.body;
             let result;
 
@@ -2477,7 +2477,7 @@ const quotationsController = {
         try {
 
             let rows;
-            const accessibleProjects = req.userProjectResources[0].projects
+            const accessibleProjects = req.userPlantationResources[0].plantations
             let payload = req.body;
             let result;
 
