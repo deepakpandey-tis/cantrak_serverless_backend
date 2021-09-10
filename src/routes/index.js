@@ -15,6 +15,7 @@ const teamsRouter = require("./teams");
 const vendorRouter = require("./vendor");
 const partsRouter = require("./parts");
 const assetRouter = require("./asset");
+const plantRouter = require("./plants");
 const peopleRouter = require("./people");
 const surveyOrderRouter = require("./survey-order");
 const quotationRouter = require("./quotations");
@@ -48,7 +49,11 @@ const resourceRouter = require("./resource");
 const signupRouter = require("./signup");
 
 const problemTypeRouter = require("./administration-features/problem-type");
+const growthStageRouter = require("./administration-features/growth-stages");
+const specieRouter = require("./administration-features/species");
 const strainRouter = require("./administration-features/strain");
+const supplierRouter = require("./administration-features/suppliers");
+const licenseRouter = require("./administration-features/licenses");
 const partCategoryRouter = require("./administration-features/part-category");
 const whtRouter = require("./administration-features/wht");
 const customerRouter = require("./administration-features/customers");
@@ -152,6 +157,7 @@ router.use("/teams", teamsRouter);
 router.use("/vendors", vendorRouter);
 router.use("/parts", partsRouter);
 router.use("/asset", assetRouter);
+router.use("/plants", plantRouter);
 router.use("/people", peopleRouter);
 router.use("/survey-order", surveyOrderRouter);
 router.use("/quotations", quotationRouter);
@@ -199,8 +205,24 @@ router.use(
   problemTypeRouter
 );
 router.use(
+  "/administration-features/growth-stages",
+  growthStageRouter
+);
+router.use(
+  "/administration-features/species",
+  specieRouter
+);
+router.use(
   "/administration-features/strain",
   strainRouter
+);
+router.use(
+  "/administration-features/suppliers",
+  supplierRouter
+);
+router.use(
+  "/administration-features/licenses",
+  licenseRouter
 );
 router.use(
   "/administration-features/part-category",

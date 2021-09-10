@@ -274,7 +274,7 @@ const plantationGroupController = {
             .where({ id: payload.id })
             .returning(["*"])
             .into("plantation_groups");
-            
+
           plantationGroup = floorZoneResult[0];
           message = "Plantation Group deactivated successfully!"
 
@@ -521,12 +521,12 @@ const plantationGroupController = {
               "plantation_phases.id"
             )
             .leftJoin("users", "plantation_groups.createdBy", "users.id")
-/*             .leftJoin(
-              "plantation_types",
-              "plantation_groups.plantationTypeId",
-              "plantation_types.id"
-            )
- */            
+            /*             .leftJoin(
+                          "plantation_types",
+                          "plantation_groups.plantationTypeId",
+                          "plantation_types.id"
+                        )
+             */
             .select([
               "companies.companyId as COMPANY",
               "companies.companyName as COMPANY_NAME",
@@ -553,12 +553,12 @@ const plantationGroupController = {
               "plantation_phases.id"
             )
             .leftJoin("users", "plantation_groups.createdBy", "users.id")
-/*             .leftJoin(
-              "plantation_types",
-              "plantation_groups.plantationTypeId",
-              "plantation_types.id"
-            )
- */            
+            /*             .leftJoin(
+                          "plantation_types",
+                          "plantation_groups.plantationTypeId",
+                          "plantation_types.id"
+                        )
+             */
             .select([
               "companies.companyId as COMPANY",
               "companies.companyName as COMPANY_NAME",
@@ -842,14 +842,14 @@ const plantationGroupController = {
                 continue;
               }
 
-/*               if (!plantationGroupData.E) {
-                let values = _.values(plantationGroupData)
-                values.unshift('Plantation type Code can not empty!')
-                errors.push(values);
-                fail++;
-                continue;
-              }
- */
+              /*               if (!plantationGroupData.E) {
+                              let values = _.values(plantationGroupData)
+                              values.unshift('Plantation type Code can not empty!')
+                              errors.push(values);
+                              fail++;
+                              continue;
+                            }
+               */
               if (!plantationGroupData.E) {
                 let values = _.values(plantationGroupData)
                 values.unshift('Plantation phase Code can not empty!')
@@ -924,25 +924,25 @@ const plantationGroupController = {
                 continue;
               }
 
-/*               /**GET PLANTATION TYPE ID OPEN *
-              let plantationTypeData = await knexReader("plantation_types")
-                .select("id")
-                .where({ code: plantationGroupData.E.toUpperCase(), orgId: req.orgId });
-              let plantationTypeId = null;
-              if (!plantationTypeData.length) {
-                fail++;
-                let values = _.values(plantationGroupData)
-                values.unshift('Plantation Type ID does not exist')
-
-                //errors.push(header);
-                errors.push(values);
-                continue;
-              }
-              if (plantationTypeData && plantationTypeData.length) {
-                plantationTypeId = plantationTypeData[0].id;
-              }
-              /**GET PLANTATION TYPE ID CLOSE *
- */
+              /*               /**GET PLANTATION TYPE ID OPEN *
+                            let plantationTypeData = await knexReader("plantation_types")
+                              .select("id")
+                              .where({ code: plantationGroupData.E.toUpperCase(), orgId: req.orgId });
+                            let plantationTypeId = null;
+                            if (!plantationTypeData.length) {
+                              fail++;
+                              let values = _.values(plantationGroupData)
+                              values.unshift('Plantation Type ID does not exist')
+              
+                              //errors.push(header);
+                              errors.push(values);
+                              continue;
+                            }
+                            if (plantationTypeData && plantationTypeData.length) {
+                              plantationTypeId = plantationTypeData[0].id;
+                            }
+                            /**GET PLANTATION TYPE ID CLOSE *
+               */
               /**GET PLANTATION PHASE ID OPEN */
 
               if (!plantationPhaseId) {
@@ -1186,7 +1186,63 @@ const plantationGroupController = {
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
-  }
+  },
+
+  //
+  getPlantationGroupsForCompany: async (req, res) => {
+    try {
+
+      let resourcePlantations = req.userPlantationResources[0].plantations;
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "plantation_groups.code";
+        sortPayload.orderBy = "asc"
+      }
+      let orgId = req.orgId;
+
+      let { companyId } = req.body;
+      //console.log('getPlantationGroupsForCompany: ', companyId, req.body, sortPayload);
+
+      let rows = await knexReader
+        .from("plantation_groups")
+        .leftJoin("companies", "plantation_groups.companyId", "companies.id")
+        .leftJoin("plantation_phases", "plantation_groups.plantationPhaseId", "plantation_phases.id")
+        .leftJoin("plantations", "plantation_groups.plantationId", "plantations.id")
+        .select([
+          "plantation_groups.id",
+          "plantation_groups.code",
+          "plantation_groups.description",
+          "plantation_groups.area",
+          "plantation_groups.isActive",
+          "plantations.id as plantationId",
+          "plantations.code as plantationCode",
+          "plantations.name as plantationName",
+          "plantation_phases.id as plantationPhaseId",
+          "plantation_phases.code as plantationPhaseCode",
+          "plantation_phases.description as plantationPhaseDescription",
+        ])
+        .where({ "plantation_phases.isActive": true })
+        .where({ "plantation_groups.orgId": orgId })
+        .where({ "plantation_groups.companyId": companyId })
+        .whereIn('plantation_groups.plantationId', resourcePlantations)
+        .orderBy(sortPayload.sortBy, sortPayload.orderBy)
+
+      return res.status(200).json({
+        data: {
+          records: rows
+        },
+        message: "Company Plantation Group List!"
+      });
+    } catch (err) {
+      console.log("[controllers][administrationFeatures][getPlantationGroupForCompany] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  //
+
 };
 
 module.exports = plantationGroupController;

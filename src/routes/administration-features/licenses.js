@@ -3,69 +3,61 @@ const path = require("path")
 const router = Router()
 const authMiddleware = require('../../middlewares/auth')
 const roleMiddleware = require('../../middlewares/role')
-const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddleware')
-const strainController = require('../../controllers/administration-features/strain')
+const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddleware');
+const licenseController = require('../../controllers/administration-features/licenses');
 
-router.post('/add-strain',
+
+router.post('/get-license-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.addStrain)
+  licenseController.getLicenseList
+);
 
-router.post('/update-strain',
+router.get('/get-licenses',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.updateStrain)
+  licenseController.getLicenses
+);
 
-router.post('/strain-detail',
+router.post('/get-license',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.viewStrain)
+  licenseController.getLicense
+);
 
-router.post('/delete-strain',
+router.post('/add-license',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.deleteStrain)
+  licenseController.addLicense
+);
 
-router.get('/export-strain',
+router.post('/update-license',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.exportStrain)
+  licenseController.updateLicense
+);
 
-router.post('/get-strain-list',
+router.post('/delete-license',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.getStrainList)
+  licenseController.deleteLicense
+);
 
-router.post('/get-all-strain-list',
+/* 
+router.get('/export-licenses',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.getAllStrainList)
+  licenseController.exportLicenses
+);
 
-router.post('/get-asset-list-for-filter',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
-  strainController.getAssetListForWorkOrderFilter)
-
-router.get(
-  '/get-asset-list-for-work-order',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  // resourceAccessMiddleware.isAssetAccessible,
-  resourceAccessMiddleware.isPMAccessible,
-  strainController.getAssetListForWorkOrderList
-)
-
-
-
-/**IMPORT DATA */
+// Import Licenses
 let tempraryDirectory = null;
 if (process.env.IS_OFFLINE) {
   tempraryDirectory = 'tmp/';
@@ -79,7 +71,7 @@ var storage = multer.diskStorage({
     let ext = path.extname(file.originalname)
     if (ext == '.csv') {
       time = Date.now();
-      cb(null, 'StrainData-' + time + ext);
+      cb(null, 'LicensesData-' + time + ext);
     } else {
       return false
     }
@@ -87,12 +79,13 @@ var storage = multer.diskStorage({
 });
 var upload = multer({ storage: storage });
 router.post(
-  "/import-strain-data",
+  "/import-licenses",
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.importStrainData
+  licenseController.importLicenses
 );
+ */
 
-module.exports = router
+module.exports = router;

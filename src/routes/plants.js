@@ -1,71 +1,63 @@
 const { Router } = require("express")
 const path = require("path")
 const router = Router()
-const authMiddleware = require('../../middlewares/auth')
-const roleMiddleware = require('../../middlewares/role')
-const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddleware')
-const strainController = require('../../controllers/administration-features/strain')
+const authMiddleware = require('../middlewares/auth')
+const roleMiddleware = require('../middlewares/role')
+const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddleware');
+const plantController = require('../controllers/plants');
 
-router.post('/add-strain',
+
+router.post('/get-plant-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.addStrain)
+  plantController.getPlantList
+);
 
-router.post('/update-strain',
+router.get('/get-plants',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.updateStrain)
+  plantController.getPlants
+);
 
-router.post('/strain-detail',
+router.post('/get-plant',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.viewStrain)
+  plantController.getPlant
+);
 
-router.post('/delete-strain',
+router.post('/add-plant',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.deleteStrain)
+  plantController.addPlant
+);
 
-router.get('/export-strain',
+router.post('/update-plant',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.exportStrain)
+  plantController.updatePlant
+);
 
-router.post('/get-strain-list',
+router.post('/delete-plant',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.getStrainList)
+  plantController.deletePlant
+);
 
-router.post('/get-all-strain-list',
+/* 
+router.get('/export-plants',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.getAllStrainList)
+  plantController.exportPlants
+);
 
-router.post('/get-asset-list-for-filter',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
-  strainController.getAssetListForWorkOrderFilter)
-
-router.get(
-  '/get-asset-list-for-work-order',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  // resourceAccessMiddleware.isAssetAccessible,
-  resourceAccessMiddleware.isPMAccessible,
-  strainController.getAssetListForWorkOrderList
-)
-
-
-
-/**IMPORT DATA */
+// Import Plants
 let tempraryDirectory = null;
 if (process.env.IS_OFFLINE) {
   tempraryDirectory = 'tmp/';
@@ -79,7 +71,7 @@ var storage = multer.diskStorage({
     let ext = path.extname(file.originalname)
     if (ext == '.csv') {
       time = Date.now();
-      cb(null, 'StrainData-' + time + ext);
+      cb(null, 'PlantsData-' + time + ext);
     } else {
       return false
     }
@@ -87,12 +79,13 @@ var storage = multer.diskStorage({
 });
 var upload = multer({ storage: storage });
 router.post(
-  "/import-strain-data",
+  "/import-plants",
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  strainController.importStrainData
+  plantController.importPlants
 );
+ */
 
-module.exports = router
+module.exports = router;

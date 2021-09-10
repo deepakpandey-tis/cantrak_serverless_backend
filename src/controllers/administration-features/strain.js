@@ -21,6 +21,7 @@ const StrainController = {
       const payload = req.body;
 
       const schema = Joi.object().keys({
+        specieId: Joi.string().required(),
         name: Joi.string().required()
       });
 
@@ -41,7 +42,7 @@ const StrainController = {
       // Check already exists
       const existStrain = await knex("strains")
         .where('name', 'iLIKE', payload.name)
-        .where({ orgId: req.orgId });
+        .where({ orgId: req.orgId, specieId: payload.specieId });
 
       console.log(
         "[controllers][administrationFeatures][addStrain]: ",
@@ -98,6 +99,7 @@ const StrainController = {
       const payload = req.body;
 
       const schema = Joi.object().keys({
+        specieId: Joi.string().required(),
         id: Joi.string().required(),
         name: Joi.string().required()
       });
@@ -119,7 +121,7 @@ const StrainController = {
       // Check already exists
       const existStrain = await knex("strains")
         .where('name', 'iLIKE', payload.name)
-        .where({ orgId: req.orgId })
+        .where({ orgId: req.orgId, specieId: payload.specieId })
         .whereNot({ id: payload.id });
 
       console.log(
@@ -238,14 +240,14 @@ const StrainController = {
           .where({ id: payload.id, orgId: req.orgId })
           .returning(["*"])
           .into("strains");
-          message = "Strain Deactivate successfully!"
+        message = "Strain Deactivate successfully!"
       } else {
         sqlResult = await knex
           .update({ isActive: true, updatedBy: userId, updatedAt: currentTime })
           .where({ id: payload.id, orgId: req.orgId })
           .returning(["*"])
           .into("strains");
-          message = "Strain Activate successfully!"
+        message = "Strain Activate successfully!"
       }
       strain = sqlResult[0];
 
@@ -286,27 +288,41 @@ const StrainController = {
           .count("* as count")
           .from("strains")
           .leftJoin("users", "users.id", "strains.createdBy")
+          .leftJoin("species", "species.id", "strains.specieId")
           .where({ "strains.orgId": req.orgId })
+          .where({
+            "species.isActive": true,
+            "species.orgId": req.orgId
+          })
           .where(qb => {
             if (name) {
               qb.where('strains.name', 'iLIKE', `%${name}%`)
+              qb.orWhere('species.name', 'iLIKE', `%${name}%`)
             }
           })
           .first(),
         knexReader
           .from("strains")
           .leftJoin("users", "users.id", "strains.createdBy")
+          .leftJoin("species", "species.id", "strains.specieId")
           .where({ "strains.orgId": req.orgId })
+          .where({
+            "species.isActive": true,
+            "species.orgId": req.orgId
+          })
           .select([
             "strains.id",
             "strains.name as name",
             "strains.isActive as Status",
             "users.name as Created By",
-            "strains.createdAt as Date Created"
+            "strains.createdAt as Date Created",
+            "strains.specieId as specieId",
+            "species.name as specieName",
           ])
           .where(qb => {
             if (name) {
               qb.where('strains.name', 'iLIKE', `%${name}%`)
+              qb.orWhere('species.name', 'iLIKE', `%${name}%`)
             }
           })
           .orderBy(sortPayload.sortBy, sortPayload.orderBy)
@@ -351,16 +367,21 @@ const StrainController = {
       if (!companyId) {
         [rows] = await Promise.all([
           knexReader("strains")
+            .leftJoin("species", "species.id", "strains.specieId")
             .select([
               "strains.name as STRAIN_NAME",
+              "species.name as SPECIE_NAME",
             ])
             .where({ "strains.orgId": orgId })
+            .orderBy([{ column: 'species.name', order: 'asc' }, { column: 'strains.name', order: 'asc' }])
         ]);
       } else {
         [rows] = await Promise.all([
           knexReader("strains")
+            .leftJoin("species", "species.id", "strains.specieId")
             .select([
               "strains.name as STRAIN_NAME",
+              "species.name as SPECIE_NAME",
             ])
             .where({
               "strains.orgId": orgId,
@@ -384,7 +405,10 @@ const StrainController = {
         var ws = XLSX.utils.json_to_sheet(rows);
 
       } else {
-        ws = XLSX.utils.json_to_sheet([{ STRAIN_NAME: '' }]);
+        ws = XLSX.utils.json_to_sheet([{
+          STRAIN_NAME: '',
+          SPECIE_NAME: ''
+        }]);
       }
 
       XLSX.utils.book_append_sheet(wb, ws, "pres");
@@ -422,7 +446,7 @@ const StrainController = {
             //   filename;
             res.status(200).json({
               data: rows,
-              message: "Strain Data Export Successfully!",
+              message: "Strain Data Exported Successfully!",
               url: url
             });
           }
@@ -470,7 +494,9 @@ const StrainController = {
 
       if (
         data[0].A == "Ã¯Â»Â¿STRAIN_NAME" ||
-        (data[0].A == "STRAIN_NAME")
+        (data[0].A == "STRAIN_NAME" &&
+          data[0].B == "SPECIE_NAME"
+        )
       ) {
         if (data.length > 0) {
           let i = 0;
@@ -486,25 +512,44 @@ const StrainController = {
                 continue;
               }
 
+              if (!strainData.B) {
+                let values = _.values(strainData)
+                values.unshift('Specie can not empty!')
+                errors.push(values);
+                fail++;
+                continue;
+              }
+
+              //  Get Specie Id
+              let specieId;
+
+              let recId = await knexReader("species")
+                .select("id")
+                .where('name', 'iLIKE', strainData.B)
+                .where({ orgId: req.orgId });
+              if (recId && recId.length) {
+                specieId = recId[0].id;
+              }
+
+              if (!specieId) {
+                console.log("breaking due to: null specieId");
+                fail++;
+                let values = _.values(strainData)
+                values.unshift('Specie ID does not exist')
+
+                errors.push(values);
+                continue;
+              }
+
               let checkExist = await knexReader("strains")
                 .select("name")
                 .where('name', 'iLIKE', strainData.A)
-                .where({ orgId: req.orgId })
-              // .where({
-              //   name: strainData.A,
-              //   orgId: req.orgId
-              // });
+                .where({ orgId: req.orgId, specieId: specieId })
               if (checkExist.length < 1 && strainData.A) {
-                // let categoryIdResult = await knex("companies")
-                //   .select("id")
-                //   .where({
-                //     orgId: req.orgId,
-                //     companyId: strainData.B
-                //   });
-                //if (categoryIdResult && categoryIdResult.length) {
                 success++;
                 let insertData = {
                   orgId: req.orgId,
+                  specieId: specieId,
                   name: strainData.A,
                   isActive: true,
                   createdBy: req.me.id,
@@ -517,9 +562,6 @@ const StrainController = {
                   .insert(insertData)
                   .returning(["*"])
                   .into("strains");
-                // } else {
-                //   fail++
-                // }
               } else {
                 let values = _.values(strainData)
                 values.unshift('Strain already exists')
@@ -561,13 +603,6 @@ const StrainController = {
           ]
         });
       }
-      // } else {
-      //   return res.status(400).json({
-      //     errors: [
-      //       { code: "VALIDATION_ERROR", message: "Please Choose valid File!" }
-      //     ]
-      //   });
-      // }
     } catch (err) {
       console.log(
         "[controllers][propertysetup][importStrainData] :  Error",
@@ -641,7 +676,52 @@ const StrainController = {
         err
       );
     }
-  }
+  },
+
+  //
+  getAllStrainList: async (req, res) => {
+    try {
+
+      let resourcePlantations = req.userPlantationResources[0].plantations;
+      let sortPayload = req.body;
+      if (!sortPayload.sortBy && !sortPayload.orderBy) {
+        sortPayload.sortBy = "strains.name";
+        sortPayload.orderBy = "asc"
+      }
+      let orgId = req.orgId;
+
+      let rows = await knexReader
+        .from("strains")
+        .leftJoin("species", "species.id", "strains.specieId")
+        .where({ "strains.orgId": orgId })
+        .where({
+          "species.isActive": true,
+          "species.orgId": orgId
+        })
+        .select([
+          "strains.id",
+          "strains.name as name",
+          "strains.isActive as Status",
+          "strains.specieId as specieId",
+          "species.name as specieName",
+        ])
+        .orderBy(sortPayload.sortBy, sortPayload.orderBy)
+
+      return res.status(200).json({
+        data: {
+          records: rows
+        },
+        message: "All Strain List!"
+      });
+    } catch (err) {
+      console.log("[controllers][administrationFeatures][getAllStrainList] :  Error", err);
+      //trx.rollback
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
+  //
 };
 
 module.exports = StrainController;

@@ -120,4 +120,12 @@ router.post(
   plantationGroupController.getPlantationGroupByMultiplePhaseId
 );
 
+router.post(
+  "/get-plantation-groups-for-company",
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isPropertySetupAccessible,
+  plantationGroupController.getPlantationGroupsForCompany
+);
+
 module.exports = router;
