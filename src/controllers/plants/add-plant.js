@@ -20,8 +20,10 @@ const addPlant = async (req, res) => {
             specieId: Joi.string().required(),
             strainId: Joi.string().required(),
             containerTypeId: Joi.string().required(),
+            growthStageId: Joi.number().integer().required(),
             plantedOn: Joi.date().required(),
-            plantsCount: Joi.string().required(),
+            plantsCount: Joi.number().integer().required(),
+            additionalAttributes: Joi.array().required(),
         });
 
         const result = Joi.validate(payload, schema);

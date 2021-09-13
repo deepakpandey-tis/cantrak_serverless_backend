@@ -4,11 +4,12 @@ const getGrowthStages = async (req, res) => {
     try {
         let result;
         let orgId = req.me.orgId;
+        let { specieId } = req.body;
 
         result = await knexReader('growth_stages')
             .select("id", "name_en", "name_th")
-            .where({ isActive: true, orgId: orgId })
-            .orderBy([{ column: 'id', order: 'asc' }])
+            .where({ isActive: true, orgId: orgId, specieId: specieId })
+            .orderBy([{ column: 'listOrder', order: 'asc' }])
 
         return res.status(200).json({
             data: {

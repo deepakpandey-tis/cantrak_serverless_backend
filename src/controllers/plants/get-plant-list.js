@@ -21,7 +21,7 @@ const getPlantList = async (req, res) => {
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'plantedOn';
+            sortCol = 'plantSerial';
         }
 
         if(!sortOrder || sortOrder === ''){
@@ -92,7 +92,7 @@ const getPlantList = async (req, res) => {
             sqlWhere += ` AND p2."plantationGroupId" = ${plantationGroupId}`;
         }
 
-        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}, id asc`;
+        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
         //console.log('getPlantList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
