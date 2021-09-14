@@ -26,7 +26,7 @@ const checkoutVisitor = async (req, res) => {
         // Checking whether logged-in user is allowed to check-out visitors of tenant's project
         // Get logged-in user authorised / accessible projects
         let authorisedProjectIds = [];
-        let authorisedProjects = req.userProjectResources.find(rec => rec.id == visitorModule)
+        let authorisedProjects = req.userPlantationResources.find(rec => rec.id == visitorModule)
         authorisedProjectIds = authorisedProjects.projects;
 
         sqlSelect = `SELECT vi.id`;

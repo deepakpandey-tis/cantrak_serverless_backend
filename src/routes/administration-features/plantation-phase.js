@@ -4,83 +4,83 @@ const path = require("path");
 const router = Router();
 const authMiddleware = require("../../middlewares/auth");
 
-const buildingPhaseController = require("../../controllers/administration-features/building-phase");
+const plantationPhaseController = require("../../controllers/administration-features/plantation-phase");
 const roleMiddleware = require("../../middlewares/role");
 const resourceAccessMiddleware = require("../../middlewares/resourceAccessMiddleware");
 
 router.post(
-  "/add-building-phase",
+  "/add-plantation-phase",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.addBuildingPhase
+  plantationPhaseController.addPlantationPhase
 );
 
 router.post(
-  "/update-building-phase",
+  "/update-plantation-phase",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.updateBuildingPhase
+  plantationPhaseController.updatePlantationPhase
 );
 
 router.post(
-  "/view-building-phase",
+  "/view-plantation-phase",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.viewBuildingPhase
+  plantationPhaseController.viewPlantationPhase
 );
 
 router.post(
-  "/delete-building-phase",
+  "/delete-plantation-phase",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.deleteBuildingPhase
+  plantationPhaseController.deletePlantationPhase
 );
 
 router.post(
-  "/get-building-phase-by-project-id",
+  "/get-plantation-phase-by-plantation-id",
   authMiddleware.isAuthenticated,
-  buildingPhaseController.getBuildingPhaseListByProjectId
+  plantationPhaseController.getPlantationPhaseListByPlantationId
 );
 
 router.post(
-  "/get-building-by-multiple-project",
+  "/get-plantation-by-multiple-project",
   authMiddleware.isAuthenticated,
-  buildingPhaseController.getBuildingPhaseListByMultipleProjectId
+  plantationPhaseController.getPlantationPhaseListByMultipleProjectId
 );
 
 router.post(
-  "/get-building-phase-list",
+  "/get-plantation-phase-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.getBuildingPhaseList
+  plantationPhaseController.getPlantationPhaseList
 );
-// Export Building Phase
+// Export Plantation Phase
 router.get(
-  "/export-building-phase",
+  "/export-plantation-phase",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.exportBuildingPhase
-);
-
-router.get(
-  "/get-buildings-phases-all-list",
-  authMiddleware.isAuthenticated,
-  buildingPhaseController.getBuildingPhaseAllList
+  plantationPhaseController.exportPlantationPhase
 );
 
 router.get(
-  "/get-building-phase",
+  "/get-plantations-phases-all-list",
   authMiddleware.isAuthenticated,
-  buildingPhaseController.getBuildingPhase
+  plantationPhaseController.getPlantationPhaseAllList
 );
 
-/**IMPORT Building DATA */
+router.get(
+  "/get-plantation-phase",
+  authMiddleware.isAuthenticated,
+  plantationPhaseController.getPlantationPhase
+);
+
+/**IMPORT Plantation DATA */
 let tempraryDirectory = null;
 if (process.env.IS_OFFLINE) {
   tempraryDirectory = "tmp/";
@@ -94,7 +94,7 @@ var storage = multer.diskStorage({
     let ext = path.extname(file.originalname);
     if (ext == ".csv") {
       time = Date.now();
-      cb(null, "buildingPhaseData-" + time + ext);
+      cb(null, "PlantationPhaseData-" + time + ext);
     } else {
       return false;
     }
@@ -102,66 +102,66 @@ var storage = multer.diskStorage({
 });
 var upload = multer({ storage: storage });
 router.post(
-  "/import-building-data",
+  "/import-plantation-data",
   // upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isPropertySetupAccessible,
-  buildingPhaseController.importBuildingData
+  plantationPhaseController.importPlantationData
 );
 
 router.get(
-  "/get-building-phase-all-list-having-property-units",
+  "/get-plantation-phase-all-list-having-property-units",
   roleMiddleware.parseUserPermission,
-  buildingPhaseController.getBuildingPhaseAllListHavingPropertyUnits
+  plantationPhaseController.getPlantationPhaseAllListHavingPropertyUnits
 );
 
 router.get(
-  "/get-building-phase-all-list-having-property-units-and-without-units",
+  "/get-plantation-phase-all-list-having-property-units-and-without-units",
   roleMiddleware.parseUserPermission,
-  buildingPhaseController.getBuildingPhaseAllListHavingPropertyUnitsAndWithoutUnits
+  plantationPhaseController.getPlantationPhaseAllListHavingPropertyUnitsAndWithoutUnits
 );
 
 router.post(
-  "/get-building-phase-by-Id",
+  "/get-plantation-phase-by-Id",
   authMiddleware.isAuthenticated,
-  buildingPhaseController.getBuildingPhaseById
+  plantationPhaseController.getPlantationPhaseById
 );
 
 router.get(
-  "/get-unit-list-by-building-id",
+  "/get-unit-list-by-plantation-id",
   roleMiddleware.parseUserPermission,
-  buildingPhaseController.getUnitListByBuildingId
+  plantationPhaseController.getUnitListByPlantationId
 );
 
 router.get(
-  "/generate-building-id",
+  "/generate-plantation-id",
   authMiddleware.isAuthenticated,
-  buildingPhaseController.generateBuildingId
+  plantationPhaseController.generatePlantationId
 )
 
 router.post(
-  "/add-building-info",
+  "/add-plantation-info",
   authMiddleware.isAuthenticated,
-  buildingPhaseController.addBuildingInfo
+  plantationPhaseController.addPlantationInfo
 )
 
 router.post(
   "/add-contact-info",
   authMiddleware.isAuthenticated,
-  buildingPhaseController.addContactInfo
+  plantationPhaseController.addContactInfo
 )
 
 router.post(
-  "/get-building-info",
+  "/get-plantation-info",
   authMiddleware.isAuthenticated,
-  buildingPhaseController.getBuildingInfoByBuildingId
+  plantationPhaseController.getPlantationInfoByPlantationId
 )
 
 router.post(
   "/get-contact-info",
   authMiddleware.isAuthenticated,
-  buildingPhaseController.getContactInfoById
+  plantationPhaseController.getContactInfoById
 )
 
 module.exports = router;

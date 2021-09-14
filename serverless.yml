@@ -68,9 +68,9 @@ provider:
   environment:
     ENV: ${self:provider.stage}
     REGION: ${self:provider.region}
-    DB_USER: servicemind
-    DB_PASS: password
-    DB_NAME: tis_database
+    DB_USER: pg888
+    DB_PASS: su99yTIS#2021
+    DB_NAME: pg888
     DB_HOST: 127.0.0.1
     DB_PORT: 5432
     SITE_URL: https://d1rjriqru0gswu.cloudfront.net

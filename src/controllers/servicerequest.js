@@ -821,9 +821,9 @@ const serviceRequestController = {
       let total, rows;
       console.log("service request list===", req.body);
 
-      //console.log('USER**************************************',req.userProjectResources)
+      //console.log('USER**************************************',req.userPlantationResources)
       const accessibleProjects =
-        req.userProjectResources[0].projects;
+        req.userPlantationResources[0].plantations;
       let projectIds = req.accessibleProjects;
 
       let pagination = {};
@@ -4393,7 +4393,7 @@ const serviceRequestController = {
         payload.priority
       );
       const accessibleProjects =
-        req.userProjectResources[0].projects;
+        req.userPlantationResources[0].plantations;
 
       /**fff */
 

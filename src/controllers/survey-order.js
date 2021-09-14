@@ -530,7 +530,7 @@ const surveyOrderController = {
       let dueToDate = "";
       let compToDate = "";
       const accessibleProjects =
-        req.userProjectResources[0].projects;
+        req.userPlantationResources[0].plantations;
 
       let projectIds = req.accessibleProjects;
 
@@ -1285,7 +1285,7 @@ const surveyOrderController = {
       let total;
       let rows;
       const accessibleProjects =
-        req.userProjectResources[0].projects;
+        req.userPlantationResources[0].plantations;
       let projectIds = req.accessibleProjects;
 
       let pagination = {};

@@ -2110,7 +2110,7 @@ const parcelManagementController = {
   getParcelDetails: async (req, res) => {
     try {
       let projectIds = [];
-      let projectsForPracel = req.userProjectResources;
+      let projectsForPracel = req.userPlantationResources;
       projectsForPracel = projectsForPracel.find(
         (pfp) => pfp.id == 10
       );
@@ -2931,7 +2931,7 @@ const parcelManagementController = {
   getUnitDetailsByUnitId: async (req, res) => {
     try {
       let projectIds = [];
-      let projectsForPracel = req.userProjectResources;
+      let projectsForPracel = req.userPlantationResources;
       projectsForPracel = projectsForPracel.find(
         (pfp) => pfp.id == 10
       );

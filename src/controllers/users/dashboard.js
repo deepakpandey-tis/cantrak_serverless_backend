@@ -19,7 +19,7 @@ const dashboardController = {
       let houseIds = req.me.houseIds;
 
       let orgId = req.orgId;
-      // let accessibleProjects = req.userProjectResources[0].projects
+      // let accessibleProjects = req.userPlantationResources[0].plantations
 
       let prioritySeq = await knex("incident_priority")
         .max("sequenceNo")
