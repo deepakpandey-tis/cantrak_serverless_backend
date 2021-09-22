@@ -2,15 +2,15 @@ version: '3.5'
 
 services:
 
-    tis-postgresql-server:
+    pg888-postgresql-server:
         build:
             context: ./postgresql
             args:
-                - POSTGRES_USER=servicemind
+                - POSTGRES_USER=pg888
                 - POSTGRES_PASSWORD=password
-                - POSTGRES_DB=tis_database
-        container_name: tis-postgresql-server
-        hostname: tis-postgresql-server        
+                - POSTGRES_DB=pg888
+        container_name: pg888-postgresql-server
+        hostname: pg888-postgresql-server        
         volumes:
             - ./data/postgresql/:/var/lib/postgresql
         networks:
@@ -21,17 +21,17 @@ services:
         ports:
             - "5432:5432"
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U servicemind  tis_database"]
+            test: ["CMD-SHELL", "pg_isready -U pg888  pg888"]
             interval: 15s
             timeout: 5s
             retries: 5
 
     
-    tis-redis-store:
+    pg888-redis-store:
         build:
             context: ./redis
-        container_name: tis-redis-store    
-        hostname: tis-redis-store    
+        container_name: pg888-redis-store    
+        hostname: pg888-redis-store    
         volumes:
             - ./data/redis:/data
         networks:
