@@ -1,6 +1,7 @@
-const knexReader = require('../../../db/knex-reader');
+const knexReader = require('../../db/knex-reader');
+const moment = require("moment");
 
-const getGrowthStageList = async (req, res) => {
+const getWorkPlanList = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -13,13 +14,13 @@ const getGrowthStageList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { specieId, name } = req.body;
+        let { name, companyId, plantationId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'listOrder';
+            sortCol = 'name';
         }
 
         if(!sortOrder || sortOrder === ''){
@@ -35,23 +36,31 @@ const getGrowthStageList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT gs.*, s.name "specieName", u2."name" "Created By"
+        sqlSelect = `SELECT wpm.*
+        , u2."name" "createdByName", c."companyName", p.name "plantationName"
         `;
 
-        sqlFrom = ` FROM growth_stages gs, users u2, species s`;
+        sqlFrom = ` FROM work_plan_master wpm, users u2, companies c, plantations p
+        `;
 
-        sqlWhere = ` WHERE gs."orgId" = ${orgId}`;
-        sqlWhere += ` AND gs."createdBy" = u2.id AND gs."specieId" = s.id`;
-        if(specieId){
-            sqlWhere += ` AND s.id = ${specieId}`;
-        }
-        if(name){
-            sqlWhere += ` AND (gs."name_en" iLIKE '%${name}%' OR gs."name_th" iLIKE '%${name}%')`;
+        sqlWhere = ` WHERE wpm."orgId" = ${orgId}`;
+        sqlWhere += ` AND wpm."createdBy" = u2.id AND wpm."companyId" = c.id AND wpm."plantationId" = p.id 
+        `;
+
+        if(name && name != ''){
+            sqlWhere += ` AND wpm."name" iLIKE '%${name}%'`;
         }
 
-        sqlOrderBy = ` ORDER BY "specieName" asc, "listOrder" asc, name_en asc`;
-        //sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
-        //console.log('getGrowthStageList sql: ', sqlSelect + sqlFrom + sqlWhere);
+        if(companyId && companyId != ''){
+            sqlWhere += ` AND wpm."companyId" = ${companyId}`;
+        }
+
+        if(plantationId && plantationId != ''){
+            sqlWhere += ` AND wpm."plantationId" = ${plantationId}`;
+        }
+
+        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
+        //console.log('getWorkPlanList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
@@ -61,7 +70,7 @@ const getGrowthStageList = async (req, res) => {
         sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
         sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
 
-        //console.log('getGrowthStageList: ', sqlStr);
+        //console.log('getWorkPlanList: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
@@ -69,7 +78,7 @@ const getGrowthStageList = async (req, res) => {
           const result = {
             data: {
                 list: selectedRecs.rows,
-                message: "Growth Stages list!"
+                message: "Work Plans list!"
             }
         }
         //console.log(result.data)
@@ -78,7 +87,7 @@ const getGrowthStageList = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][administration-features][growth-stages][getGrowthStageList] :  Error", err);
+        console.log("[controllers][work-plans][getWorkPlanList] :  Error", err);
         return res.status(500).json({
           errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
     });
@@ -87,7 +96,7 @@ const getGrowthStageList = async (req, res) => {
 
 }
 
-module.exports = getGrowthStageList;
+module.exports = getWorkPlanList;
 
 /**
  */
