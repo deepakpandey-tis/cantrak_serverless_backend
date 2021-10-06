@@ -17,9 +17,10 @@ const addLicense = async (req, res) => {
             expiredOn: Joi.date().required(),
             primaryHolder: Joi.string().required(),
             subHolder: Joi.string().required(),
-            category: Joi.number().required(),
             locationName: Joi.string().required(),
             location: Joi.string().required(),
+            licenseTypeId: Joi.string().required(),
+            licenseCategoryId: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);

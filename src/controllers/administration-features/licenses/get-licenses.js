@@ -14,7 +14,7 @@ const getLicenses = async (req, res) => {
             data: {
                 records: result
             },
-            message: "Licenses List!"
+            message: "Licenses!"
         });
     } catch (err) {
         console.log("[controllers][administrationFeatures][licenses][getLicenses] :  Error", err);

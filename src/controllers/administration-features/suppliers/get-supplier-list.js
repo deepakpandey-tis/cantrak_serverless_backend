@@ -35,15 +35,15 @@ const getSupplierList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT l2.*, u2."name" "createdByName"
+        sqlSelect = `SELECT s2.*, st.name "supplierType", u2."name" "createdByName"
         `;
 
-        sqlFrom = ` FROM suppliers l2, users u2`;
+        sqlFrom = ` FROM suppliers s2, supplier_types st, users u2`;
 
-        sqlWhere = ` WHERE l2."orgId" = ${orgId}`;
-        sqlWhere += ` AND l2."createdBy" = u2.id`;
+        sqlWhere = ` WHERE s2."orgId" = ${orgId} AND s2."supplierTypeId" = st.id`;
+        sqlWhere += ` AND s2."createdBy" = u2.id`;
         if(keyword){
-            sqlWhere += ` AND (l2."name" iLIKE '%${keyword}%'`;
+            sqlWhere += ` AND s2."name" iLIKE '%${keyword}%'`;
         }
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;

@@ -88,4 +88,18 @@ router.post(
 );
  */
 
+router.get('/get-license-types',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  licenseController.getLicenseTypes
+);
+
+router.get('/get-license-categories',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  licenseController.getLicenseCategories
+);
+
 module.exports = router;

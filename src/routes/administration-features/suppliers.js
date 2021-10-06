@@ -49,6 +49,13 @@ router.post('/delete-supplier',
   supplierController.deleteSupplier
 );
 
+router.get('/get-supplier-types',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  supplierController.getSupplierTypes
+);
+
 /* 
 router.get('/export-suppliers',
   authMiddleware.isAuthenticated,

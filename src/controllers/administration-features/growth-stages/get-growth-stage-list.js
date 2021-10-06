@@ -13,7 +13,7 @@ const getGrowthStageList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { specieId, name } = req.body;
+        let { itemId, name } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -35,21 +35,21 @@ const getGrowthStageList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT gs.*, s.name "specieName", u2."name" "Created By"
+        sqlSelect = `SELECT gs.*, i.name "itemName", u2."name" "Created By"
         `;
 
-        sqlFrom = ` FROM growth_stages gs, users u2, species s`;
+        sqlFrom = ` FROM growth_stages gs, users u2, items i`;
 
         sqlWhere = ` WHERE gs."orgId" = ${orgId}`;
-        sqlWhere += ` AND gs."createdBy" = u2.id AND gs."specieId" = s.id`;
-        if(specieId){
-            sqlWhere += ` AND s.id = ${specieId}`;
+        sqlWhere += ` AND gs."createdBy" = u2.id AND gs."itemId" = i.id`;
+        if(itemId){
+            sqlWhere += ` AND i.id = ${itemId}`;
         }
         if(name){
-            sqlWhere += ` AND (gs."name_en" iLIKE '%${name}%' OR gs."name_th" iLIKE '%${name}%')`;
+            sqlWhere += ` AND gs."name" iLIKE '%${name}%'`;
         }
 
-        sqlOrderBy = ` ORDER BY "specieName" asc, "listOrder" asc, name_en asc`;
+        sqlOrderBy = ` ORDER BY "itemName" asc, "listOrder" asc, name asc`;
         //sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
         //console.log('getGrowthStageList sql: ', sqlSelect + sqlFrom + sqlWhere);
 

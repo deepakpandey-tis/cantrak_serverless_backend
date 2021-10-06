@@ -35,13 +35,6 @@ router.post('/add-plant',
   plantController.addPlant
 );
 
-router.post('/update-plant',
-  authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
-  plantController.updatePlant
-);
-
 router.post('/delete-plant',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -87,5 +80,75 @@ router.post(
   plantController.importPlants
 );
  */
+
+router.post('/get-plant-lots',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  plantController.getPlantLots
+);
+
+router.post('/get-plant-existig-growth-stages',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  plantController.getPlantExistingGrowthStages
+);
+
+router.post('/change-growth-stage',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  plantController.changeGrowthStage
+);
+
+router.post('/check-lot-name-exists',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  plantController.checkLotNameExists
+);
+
+router.post('/get-plant-lot-groups',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  plantController.getPlantLotGroups
+);
+
+router.post('/get-growth-stage-txn-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  plantController.getGrowthStageTxnList
+);
+
+router.post('/change-location',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  plantController.changeLocation
+);
+
+router.post('/get-location-txn-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  plantController.getLocationTxnList
+);
+
+router.post('/waste-entry',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  plantController.wasteEntry
+);
+
+router.post('/get-waste-txn-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  plantController.getWasteTxnList
+);
 
 module.exports = router;

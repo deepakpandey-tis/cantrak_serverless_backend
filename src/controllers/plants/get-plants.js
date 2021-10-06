@@ -17,7 +17,7 @@ const getPlants = async (req, res) => {
             message: "Plants List!"
         });
     } catch (err) {
-        console.log("[controllers][administrationFeatures][plants][getPlants] :  Error", err);
+        console.log("[controllers][plants][getPlants] :  Error", err);
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
         });

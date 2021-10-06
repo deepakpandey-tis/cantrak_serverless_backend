@@ -35,13 +35,13 @@ const getLicenseList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT l2.*, u2."name" "createdByName"
+        sqlSelect = `SELECT l2.*, lt.name "licenseType", lc.name "licenseCategory", u2."name" "createdByName"
         `;
 
-        sqlFrom = ` FROM licenses l2, users u2`;
+        sqlFrom = ` FROM licenses l2, license_types lt, license_categories lc, users u2`;
 
         sqlWhere = ` WHERE l2."orgId" = ${orgId}`;
-        sqlWhere += ` AND l2."createdBy" = u2.id`;
+        sqlWhere += ` AND l2."licenseTypeId" = lt.id AND l2."licenseCategoryId" = lc.id AND l2."createdBy" = u2.id`;
         if(keyword){
             sqlWhere += ` AND (l2."number" iLIKE '%${keyword}%' OR l2."primaryHolder" iLIKE '%${keyword}%'
             OR l2."subHolder" iLIKE '%${keyword}%' OR l2."locationName" iLIKE '%${keyword}%'

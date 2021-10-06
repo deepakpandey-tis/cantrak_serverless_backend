@@ -10,6 +10,8 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         let sortCol = payload.sortBy;
         let sortOrder = payload.orderBy;
 
+        const { id, workOrderDate, displayId, frequencyTag, status, plantationGroupId } = req.body;
+
         let reqData = req.query;
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
@@ -42,9 +44,24 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         sqlFrom = ` FROM work_plan_schedules wps, work_plan_schedule_assign_groups wpsag, plantation_groups pg
         `;
 
-        sqlWhere = ` WHERE wps."orgId" = ${orgId} AND wps."workPlanMasterId" = ${req.body.id}`;
-        sqlWhere += ` AND wpsag."workPlanScheduleId" = wps.id AND wpsag."plantationGroupId" = pg.id 
-        `;
+        sqlWhere = ` WHERE wps."orgId" = ${orgId} AND wps."workPlanMasterId" = ${id}`;
+
+        sqlWhere += ` AND wpsag."workPlanScheduleId" = wps.id AND wpsag."workOrderDate" <= ${workOrderDate} AND wpsag."plantationGroupId" = pg.id`;
+        if(plantationGroupId){
+            sqlWhere += ` AND wpsag."plantationGroupId" = ${plantationGroupId}`;
+        }
+        if(displayId){
+            sqlWhere += ` AND wpsag."displayId" = ${displayId}`;
+        }
+        if(frequencyTag){
+            sqlWhere += ` AND wpsag."frequencyTag" = '${frequencyTag}'`;
+        }
+        if(status){
+            var arr = (status + "").split(",");
+            var str = "('" + arr.join("', '") + "')";
+            console.log('status: ', (status + "").split(","));
+            sqlWhere += ` AND wpsag."status" in ${str}`;
+        }
 
         sqlOrderBy = ` ORDER BY "workOrderDate" desc, "displayId" desc, "description" asc, name asc`;
         //sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;

@@ -17,7 +17,7 @@ const deletePlant = async (req, res) => {
 
         const result = Joi.validate(payload, schema);
         console.log(
-            "[controllers][administration-features][plants]deletePlant: JOi Result",
+            "[controllers][plants]deletePlant: JOi Result",
             result
         );
 
@@ -54,7 +54,7 @@ const deletePlant = async (req, res) => {
             message: message
         });
     } catch (err) {
-        console.log("[controllers][administration-features][plants][deletePlant] :  Error", err);
+        console.log("[controllers][plants][deletePlant] :  Error", err);
         //trx.rollback
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

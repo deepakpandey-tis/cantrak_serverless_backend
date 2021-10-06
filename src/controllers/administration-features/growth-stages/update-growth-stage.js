@@ -13,9 +13,8 @@ const updateGrowthStage = async (req, res) => {
 
         const schema = Joi.object().keys({
             id: Joi.number().integer().required(),
-            specieId: Joi.string().required(),
-            name_en: Joi.string().required(),
-            name_th: Joi.string().required(),
+            itemId: Joi.string().required(),
+            name: Joi.string().required(),
             listOrder: Joi.number().integer().required()
         });
 
@@ -35,11 +34,9 @@ const updateGrowthStage = async (req, res) => {
 
         // Check already exists
         const alreadyExists = await knexReader("growth_stages")
-            .where(qb => {
-                qb.where('name_en', 'iLIKE', payload.name_en)
-                qb.orWhere('name_th', 'iLIKE', payload.name_th)
-            })
+            .where('name', 'iLIKE', payload.name.trim())
             .where({ orgId: req.orgId })
+            .where({ itemId: payload.itemId })
             .whereNot({ id: payload.id });
 
         console.log(
@@ -59,6 +56,7 @@ const updateGrowthStage = async (req, res) => {
         let insertData = {
             orgId: orgId,
             ...payload,
+            name: payload.name.trim(),
             updatedBy: userId,
             updatedAt: currentTime,
         };

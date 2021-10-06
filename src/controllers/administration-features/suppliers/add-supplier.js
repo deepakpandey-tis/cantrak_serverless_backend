@@ -13,7 +13,7 @@ const addSupplier = async (req, res) => {
 
         const schema = Joi.object().keys({
             name: Joi.string().required(),
-            group: Joi.number().required(),
+            supplierTypeId: Joi.string().required(),
             taxId: Joi.allow('').optional(),
             address: Joi.allow('').optional(),
         });

@@ -41,7 +41,7 @@ const addWorkPlan = async (req, res) => {
         // Check already exists
         const alreadyExists = await knexReader("work_plan_master")
             .where(qb => {
-                qb.where('name', 'iLIKE', payload.name)
+                qb.where('name', 'iLIKE', payload.name.trim())
             })
             .where({ orgId: req.orgId })
             .where({ companyId: payload.companyId });
