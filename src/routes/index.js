@@ -53,6 +53,8 @@ const problemTypeRouter = require("./administration-features/problem-type");
 const growthStageRouter = require("./administration-features/growth-stages");
 //const specieRouter = require("./administration-features/species");
 //const strainRouter = require("./administration-features/strain");
+
+
 const strainRouter = require("./administration-features/strains");
 const itemRouter = require("./administration-features/items");
 const supplierRouter = require("./administration-features/suppliers");
@@ -60,6 +62,8 @@ const licenseRouter = require("./administration-features/licenses");
 const unitOfMeasurementRouter = require("./administration-features/ums");
 const locationRouter = require("./administration-features/locations");
 const storageLocationRouter = require("./administration-features/storage-locations");
+const inventoryRouter = require("./inventories");
+
 
 const partCategoryRouter = require("./administration-features/part-category");
 const whtRouter = require("./administration-features/wht");
@@ -213,6 +217,11 @@ router.use(
   "/administration-features/problem-type",
   problemTypeRouter
 );
+
+
+
+
+
 router.use(
   "/administration-features/growth-stages",
   growthStageRouter
@@ -253,6 +262,13 @@ router.use(
   "/administration-features/ums",
   unitOfMeasurementRouter
 );
+router.use(
+  "/inventories",
+  inventoryRouter
+);
+
+
+
 
 router.use(
   "/administration-features/part-category",

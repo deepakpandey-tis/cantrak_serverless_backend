@@ -14,7 +14,7 @@ router.post('/get-item-list',
   itemController.getItemList
 );
 
-router.get('/get-items',
+router.post('/get-items',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,

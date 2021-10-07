@@ -14,7 +14,7 @@ router.post('/get-storage-location-list',
   storageLocationController.getStorageLocationList
 );
 
-router.get('/get-storage-locations',
+router.post('/get-storage-locations',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
