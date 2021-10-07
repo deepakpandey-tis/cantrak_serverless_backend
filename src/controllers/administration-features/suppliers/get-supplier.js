@@ -22,9 +22,9 @@ const getSupplier = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT l2.*`;
-        sqlFrom = ` FROM suppliers l2 `;
-        sqlWhere = ` WHERE l2.id = ${payload.id} and l2."orgId" = ${orgId}`;
+        sqlSelect = `SELECT s2.*, st.name "supplierType"`;
+        sqlFrom = ` FROM suppliers s2, supplier_types st `;
+        sqlWhere = ` WHERE s2."orgId" = ${orgId} AND s2.id = ${payload.id} AND s2."supplierTypeId" = st.id`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 

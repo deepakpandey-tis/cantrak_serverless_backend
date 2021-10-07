@@ -1200,7 +1200,7 @@ const plantationGroupController = {
       }
       let orgId = req.orgId;
 
-      let { companyId } = req.body;
+      let { companyId, plantationId } = req.body;
       //console.log('getPlantationGroupsForCompany: ', companyId, req.body, sortPayload);
 
       let rows = await knexReader
@@ -1224,6 +1224,11 @@ const plantationGroupController = {
         .where({ "plantation_phases.isActive": true })
         .where({ "plantation_groups.orgId": orgId })
         .where({ "plantation_groups.companyId": companyId })
+        .where(qb => {
+          if (plantationId) {
+            qb.where('plantation_groups.plantationId', plantationId)
+          }
+        })
         .whereIn('plantation_groups.plantationId', resourcePlantations)
         .orderBy(sortPayload.sortBy, sortPayload.orderBy)
 

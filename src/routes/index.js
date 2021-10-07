@@ -16,6 +16,7 @@ const vendorRouter = require("./vendor");
 const partsRouter = require("./parts");
 const assetRouter = require("./asset");
 const plantRouter = require("./plants");
+const workPlanRouter = require("./work-plans");
 const peopleRouter = require("./people");
 const surveyOrderRouter = require("./survey-order");
 const quotationRouter = require("./quotations");
@@ -50,10 +51,20 @@ const signupRouter = require("./signup");
 
 const problemTypeRouter = require("./administration-features/problem-type");
 const growthStageRouter = require("./administration-features/growth-stages");
-const specieRouter = require("./administration-features/species");
-const strainRouter = require("./administration-features/strain");
+//const specieRouter = require("./administration-features/species");
+//const strainRouter = require("./administration-features/strain");
+
+
+const strainRouter = require("./administration-features/strains");
+const itemRouter = require("./administration-features/items");
 const supplierRouter = require("./administration-features/suppliers");
 const licenseRouter = require("./administration-features/licenses");
+const unitOfMeasurementRouter = require("./administration-features/ums");
+const locationRouter = require("./administration-features/locations");
+const storageLocationRouter = require("./administration-features/storage-locations");
+const inventoryRouter = require("./inventories");
+
+
 const partCategoryRouter = require("./administration-features/part-category");
 const whtRouter = require("./administration-features/wht");
 const customerRouter = require("./administration-features/customers");
@@ -69,7 +80,8 @@ const userDashboardRouter = require("./users/dashboard");
 const allUsersRouter = require("./administration-features/all-users");
 const remarksRouter = require("./remarks");
 const userFacilityRouter = require("./users/facility");
-const containerTypeRouter = require("./administration-features/container-type");
+//const containerTypeRouter = require("./administration-features/container-type");
+const containerTypeRouter = require("./administration-features/container-types");
 const courierRouter = require("./administration-features/courier-storage");
 const storageRouter = require("./administration-features/storage");
 const parcelManagementRouter = require("./parcel-management");
@@ -158,6 +170,7 @@ router.use("/vendors", vendorRouter);
 router.use("/parts", partsRouter);
 router.use("/asset", assetRouter);
 router.use("/plants", plantRouter);
+router.use("/work-plans", workPlanRouter);
 router.use("/people", peopleRouter);
 router.use("/survey-order", surveyOrderRouter);
 router.use("/quotations", quotationRouter);
@@ -204,16 +217,29 @@ router.use(
   "/administration-features/problem-type",
   problemTypeRouter
 );
+
+
+
+
+
 router.use(
   "/administration-features/growth-stages",
   growthStageRouter
 );
+// router.use(
+//   "/administration-features/species",
+//   specieRouter
+// );
+// router.use(
+//   "/administration-features/strain",
+//   strainRouter
+// );
 router.use(
-  "/administration-features/species",
-  specieRouter
+  "/administration-features/items",
+  itemRouter
 );
 router.use(
-  "/administration-features/strain",
+  "/administration-features/strains",
   strainRouter
 );
 router.use(
@@ -224,6 +250,26 @@ router.use(
   "/administration-features/licenses",
   licenseRouter
 );
+router.use(
+  "/administration-features/locations",
+  locationRouter
+);
+router.use(
+  "/administration-features/storage-locations",
+  storageLocationRouter
+);
+router.use(
+  "/administration-features/ums",
+  unitOfMeasurementRouter
+);
+router.use(
+  "/inventories",
+  inventoryRouter
+);
+
+
+
+
 router.use(
   "/administration-features/part-category",
   partCategoryRouter
@@ -254,10 +300,17 @@ router.use("/facility_booking", facilityBookingRouter);
 router.use("/users/dashboard", userDashboardRouter);
 router.use("/remarks", remarksRouter);
 router.use("/users/facility", userFacilityRouter);
-router.use(
+
+/* router.use(
   "/administration-features/container-type",
   containerTypeRouter
 );
+ */
+router.use(
+  "/administration-features/container-types",
+  containerTypeRouter
+);
+
 router.use(
   "/administration-features/courier-storage",
   courierRouter

@@ -1,5 +1,4 @@
 const knexReader = require('../../db/knex-reader');
-const moment = require("moment");
 
 const getPlantList = async (req, res) => {
     try {
@@ -15,7 +14,7 @@ const getPlantList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { fromDate, endDate, plantSerial, strainId, growthStageId, companyId, plantationId, plantationPhaseId, plantationGroupId} = req.body;
+        let { fromDate, endDate, plantSerial, specieId, strainId, growthStageId, companyId, plantLotId, plantationId, plantationPhaseId, plantationGroupId} = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -37,21 +36,30 @@ const getPlantList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT p2.*, pl."companyId", pl."plantationId", pl."plantationPhaseId", pl."plantationGroupId"
+        sqlSelect = `SELECT p2.*, plt.name "plantLotName", plt.description "plantLotDescription", pgs."startDate" "growthStageDate"
         , u2."name" "createdByName", c."companyName", p.name "plantationName", pp.description "plantationPhaseName"
         , pg.description "plantationGroupName", l."primaryHolder", l."subHolder", l."number", s2.name "specieName", s.name "strainName"
-        , ct."descriptionEng" "containerTypeName", splr.name "supplierName", gs.name_en "growthStage_en", gs.name_th "growthStage_th"
+        , ct."descriptionEng" "containerTypeName", splr.name "supplierName", gs.id "growthStageId", gs.name_en "growthStage_en", gs.name_th "growthStage_th"
         `;
 
-        sqlFrom = ` FROM plants p2, plant_locations pl, users u2, companies c, plantations p, plantation_phases pp, plantation_groups pg
+        sqlFrom = ` FROM plant_lots plt, plants p2, plant_locations pl, plant_growth_stages pgs, users u2, companies c, plantations p, plantation_phases pp, plantation_groups pg
         , licenses l, species s2, strains s, container_types ct, suppliers splr, growth_stages gs
         `;
 
-        sqlWhere = ` WHERE p2."orgId" = ${orgId} and p2.id = pl."plantId"`;
+        sqlWhere = ` WHERE p2."orgId" = ${orgId} AND p2."plantLotId" = plt.id AND p2."isActive" AND NOT p2."isWaste"`;
+        sqlWhere += ` AND p2.id = pl."plantId" AND pl.id = (select id from plant_locations pl2 where pl2."plantId" = p2.id order by id desc limit 1)`;
+        sqlWhere += ` AND p2.id = pgs."plantId" AND pgs.id = (select id from plant_growth_stages pgs2 where pgs2."plantId" = p2.id order by id desc limit 1)`;
+        if(specieId){
+            sqlWhere += ` AND plt."specieId" = ${specieId}`;
+        }
+        if(plantLotId){
+            sqlWhere += ` AND p2."plantLotId" = ${plantLotId}`;
+        }
+
         sqlWhere += ` AND p2."createdBy" = u2.id AND pl."companyId" = c.id AND pl."plantationId" = p.id 
         AND pl."plantationPhaseId" = pp.id AND pl."plantationGroupId" = pg.id AND p2."licenseId" = l.id
-        AND p2."specieId" = s2.id AND p2."strainId" = s.id AND p2."containerTypeId" = ct.id AND p2."supplierId" = splr.id
-        AND p2."growthStageId" = gs.id
+        AND plt."specieId" = s2.id AND plt."strainId" = s.id AND p2."containerTypeId" = ct.id AND p2."supplierId" = splr.id
+        AND pgs."growthStageId" = gs.id
         `;
 
         if(fromDate && fromDate != ''){
@@ -73,23 +81,23 @@ const getPlantList = async (req, res) => {
         }
 
         if(growthStageId && growthStageId != ''){
-            sqlWhere += ` AND p2."growthStageId" = ${growthStageId}`;
+            sqlWhere += ` AND pgs."growthStageId" = ${growthStageId}`;
         }
 
         if(companyId && companyId != ''){
-            sqlWhere += ` AND p2."companyId" = ${companyId}`;
+            sqlWhere += ` AND pl."companyId" = ${companyId}`;
         }
 
         if(plantationId && plantationId != ''){
-            sqlWhere += ` AND p2."plantationId" = ${plantationId}`;
+            sqlWhere += ` AND pl."plantationId" = ${plantationId}`;
         }
 
         if(plantationPhaseId && plantationPhaseId != ''){
-            sqlWhere += ` AND p2."plantationPhaseId" = ${plantationPhaseId}`;
+            sqlWhere += ` AND pl."plantationPhaseId" = ${plantationPhaseId}`;
         }
 
         if(plantationGroupId && plantationGroupId != ''){
-            sqlWhere += ` AND p2."plantationGroupId" = ${plantationGroupId}`;
+            sqlWhere += ` AND pl."plantationGroupId" = ${plantationGroupId}`;
         }
 
         sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
@@ -120,7 +128,7 @@ const getPlantList = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][administration-features][plants][getPlantList] :  Error", err);
+        console.log("[controllers][plants][getPlantList] :  Error", err);
         return res.status(500).json({
           errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
     });

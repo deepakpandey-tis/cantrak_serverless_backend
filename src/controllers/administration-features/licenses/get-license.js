@@ -22,9 +22,9 @@ const getLicense = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT l2.*`;
-        sqlFrom = ` FROM licenses l2 `;
-        sqlWhere = ` WHERE l2.id = ${payload.id} and l2."orgId" = ${orgId}`;
+        sqlSelect = `SELECT l2.*, lt.name "licenseType", lc.name "licenseCategory"`;
+        sqlFrom = ` FROM licenses l2, license_types lt, license_categories lc `;
+        sqlWhere = ` WHERE l2.id = ${payload.id} AND l2."orgId" = ${orgId} AND l2."licenseTypeId" = lt.id AND l2."licenseCategoryId" = lc.id`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 
