@@ -2,7 +2,7 @@ const Joi = require("@hapi/joi");
 const knex = require('../../../db/knex');
 const knexReader = require("../../../db/knex-reader");
 
-const updateGrowthStage = async (req, res) => {
+const updateCustomer = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -12,15 +12,16 @@ const updateGrowthStage = async (req, res) => {
         let insertedRecord = [];
 
         const schema = Joi.object().keys({
-            id: Joi.number().integer().required(),
-            specieId: Joi.string().required(),
+            id: Joi.string().required(),
             name: Joi.string().required(),
-            listOrder: Joi.number().integer().required()
+            customerTypeId: Joi.string().required(),
+            taxId: Joi.allow('').optional(),
+            address: Joi.allow('').optional(),
         });
 
         const result = Joi.validate(payload, schema);
         console.log(
-            "[controllers][administration-features][growth-stages]updateGrowthStage: JOi Result",
+            "[controllers][administration-features][customers]updateCustomer: JOi Result",
             result
         );
 
@@ -33,21 +34,20 @@ const updateGrowthStage = async (req, res) => {
         }
 
         // Check already exists
-        const alreadyExists = await knexReader("growth_stages")
-            .where('name', 'iLIKE', payload.name.trim())
+        const alreadyExists = await knexReader('customers')
+            .where('name', 'iLIKE', payload.name)
             .where({ orgId: req.orgId })
-            .where({ specieId: payload.specieId })
             .whereNot({ id: payload.id });
 
         console.log(
-            "[controllers][administration-features][growth-stages][updateGrowthStage]: ",
+            "[controllers][administration-features][customers][updateCustomer]: ",
             alreadyExists
         );
 
         if (alreadyExists && alreadyExists.length) {
             return res.status(400).json({
                 errors: [
-                    { code: "VALIDATION_ERROR", message: "Growth Stage already exist!" }
+                    { code: "VALIDATION_ERROR", message: "Customer already exist!" }
                 ]
             });
         }
@@ -56,17 +56,16 @@ const updateGrowthStage = async (req, res) => {
         let insertData = {
             orgId: orgId,
             ...payload,
-            name: payload.name.trim(),
             updatedBy: userId,
             updatedAt: currentTime,
         };
-        console.log('growth stage insert record: ', insertData);
+        console.log('Customer insert record: ', insertData);
 
         const insertResult = await knex
             .update(insertData)
             .where({ id: payload.id, orgId: req.orgId })
             .returning(["*"])
-            .into("growth_stages");
+            .into('customers');
 
         insertedRecord = insertResult[0];
 
@@ -74,10 +73,10 @@ const updateGrowthStage = async (req, res) => {
             data: {
                 record: insertedRecord
             },
-            message: 'Growth Stage updated successfully.'
+            message: 'Customer updated successfully.'
         });
     } catch (err) {
-        console.log("[controllers][administration-features][growth-stages][updateGrowthStage] :  Error", err);
+        console.log("[controllers][administration-features][customers][updateCustomer] :  Error", err);
         //trx.rollback
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -85,7 +84,7 @@ const updateGrowthStage = async (req, res) => {
     }
 }
 
-module.exports = updateGrowthStage;
+module.exports = updateCustomer;
 
 /**
  */

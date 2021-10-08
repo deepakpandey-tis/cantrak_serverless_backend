@@ -13,7 +13,7 @@ const addStrain = async (req, res) => {
 
         const schema = Joi.object().keys({
             name: Joi.string().required(),
-            itemId: Joi.string().required(),
+            specieId: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -34,7 +34,7 @@ const addStrain = async (req, res) => {
         const alreadyExists = await knexReader('strains')
             .where('name', 'iLIKE', payload.name.trim())
             .where({ orgId: req.orgId })
-            .where({ itemId: payload.itemId });
+            .where({ specieId: payload.specieId });
 
         console.log(
             "[controllers][administration-features][strains][addStrain]: ",

@@ -1,6 +1,6 @@
 const knexReader = require('../../../db/knex-reader');
 
-const getGrowthStageList = async (req, res) => {
+const getCustomerList = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -13,13 +13,13 @@ const getGrowthStageList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { specieId, name } = req.body;
+        let { keyword } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'listOrder';
+            sortCol = 'name';
         }
 
         if(!sortOrder || sortOrder === ''){
@@ -35,23 +35,19 @@ const getGrowthStageList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT gs.*, s2.name "specieName", u2."name" "Created By"
+        sqlSelect = `SELECT c2.*, ct.name "customerType", u2."name" "createdByName"
         `;
 
-        sqlFrom = ` FROM growth_stages gs, users u2, species s2`;
+        sqlFrom = ` FROM customers c2, customer_types ct, users u2`;
 
-        sqlWhere = ` WHERE gs."orgId" = ${orgId}`;
-        sqlWhere += ` AND gs."createdBy" = u2.id AND gs."specieId" = s2.id`;
-        if(specieId){
-            sqlWhere += ` AND s2.id = ${specieId}`;
-        }
-        if(name){
-            sqlWhere += ` AND gs."name" iLIKE '%${name}%'`;
+        sqlWhere = ` WHERE c2."orgId" = ${orgId} AND c2."customerTypeId" = ct.id`;
+        sqlWhere += ` AND c2."createdBy" = u2.id`;
+        if(keyword){
+            sqlWhere += ` AND c2."name" iLIKE '%${keyword}%'`;
         }
 
-        sqlOrderBy = ` ORDER BY "specieName" asc, "listOrder" asc, name asc`;
-        //sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
-        //console.log('getGrowthStageList sql: ', sqlSelect + sqlFrom + sqlWhere);
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
+        //console.log('getCustomerList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
@@ -61,7 +57,7 @@ const getGrowthStageList = async (req, res) => {
         sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
         sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
 
-        //console.log('getGrowthStageList: ', sqlStr);
+        //console.log('getCustomerList: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
@@ -69,7 +65,7 @@ const getGrowthStageList = async (req, res) => {
           const result = {
             data: {
                 list: selectedRecs.rows,
-                message: "Growth Stages list!"
+                message: "Customers list!"
             }
         }
         //console.log(result.data)
@@ -78,7 +74,7 @@ const getGrowthStageList = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][administration-features][growth-stages][getGrowthStageList] :  Error", err);
+        console.log("[controllers][administration-features][customers][getCustomerList] :  Error", err);
         return res.status(500).json({
           errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
     });
@@ -87,7 +83,7 @@ const getGrowthStageList = async (req, res) => {
 
 }
 
-module.exports = getGrowthStageList;
+module.exports = getCustomerList;
 
 /**
  */

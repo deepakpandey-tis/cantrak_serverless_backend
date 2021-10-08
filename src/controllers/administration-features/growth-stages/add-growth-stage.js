@@ -12,7 +12,7 @@ const addGrowthStage = async (req, res) => {
         let insertedRecord = [];
 
         const schema = Joi.object().keys({
-            itemId: Joi.string().required(),
+            specieId: Joi.string().required(),
             name: Joi.string().required(),
             listOrder: Joi.number().integer().required()
         });
@@ -35,7 +35,7 @@ const addGrowthStage = async (req, res) => {
         const alreadyExists = await knexReader("growth_stages")
             .where('name', 'iLIKE', payload.name.trim())
             .where({ orgId: req.orgId })
-            .where({ itemId: payload.itemId });
+            .where({ specieId: payload.specieId });
 
         console.log(
             "[controllers][administration-features][growth-stages][addGrowthStage]: ",

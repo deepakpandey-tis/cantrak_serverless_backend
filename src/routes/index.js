@@ -51,13 +51,14 @@ const signupRouter = require("./signup");
 
 const problemTypeRouter = require("./administration-features/problem-type");
 const growthStageRouter = require("./administration-features/growth-stages");
-//const specieRouter = require("./administration-features/species");
 //const strainRouter = require("./administration-features/strain");
 
 
+const specieRouter = require("./administration-features/species");
 const strainRouter = require("./administration-features/strains");
 const itemRouter = require("./administration-features/items");
 const supplierRouter = require("./administration-features/suppliers");
+const customerRouter = require("./administration-features/customers");
 const licenseRouter = require("./administration-features/licenses");
 const unitOfMeasurementRouter = require("./administration-features/ums");
 const locationRouter = require("./administration-features/locations");
@@ -67,7 +68,7 @@ const inventoryRouter = require("./inventories");
 
 const partCategoryRouter = require("./administration-features/part-category");
 const whtRouter = require("./administration-features/wht");
-const customerRouter = require("./administration-features/customers");
+//const customerRouter = require("./administration-features/customers");
 const serviceUserRequestsRouter = require("./users/servicerequest");
 const surveyUserOrderRouter = require("./users/surveyorder");
 const serviceAppointmentRouter = require("./users/service-appointment");
@@ -222,21 +223,22 @@ router.use(
 
 
 
-router.use(
-  "/administration-features/growth-stages",
-  growthStageRouter
-);
-// router.use(
-//   "/administration-features/species",
-//   specieRouter
-// );
 // router.use(
 //   "/administration-features/strain",
 //   strainRouter
 // );
+
+router.use(
+  "/administration-features/growth-stages",
+  growthStageRouter
+);
 router.use(
   "/administration-features/items",
   itemRouter
+);
+router.use(
+  "/administration-features/species",
+  specieRouter
 );
 router.use(
   "/administration-features/strains",
@@ -245,6 +247,10 @@ router.use(
 router.use(
   "/administration-features/suppliers",
   supplierRouter
+);
+router.use(
+  "/administration-features/customers",
+  customerRouter
 );
 router.use(
   "/administration-features/licenses",
@@ -276,10 +282,10 @@ router.use(
 );
 router.use("/administration-features/wht", whtRouter);
 router.use("/signup", signupRouter);
-router.use(
-  "/administration-features/customers",
-  customerRouter
-);
+// router.use(
+//   "/administration-features/customers",
+//   customerRouter
+// );
 router.use(
   "/users/servicerequest",
   serviceUserRequestsRouter

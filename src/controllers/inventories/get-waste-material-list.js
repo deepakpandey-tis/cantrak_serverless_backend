@@ -1,6 +1,6 @@
 const knexReader = require('../../db/knex-reader');
 
-const getItemFromSupplierList = async (req, res) => {
+const getWasteMaterialList = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -13,7 +13,7 @@ const getItemFromSupplierList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { itemCategoryId, lotNo, companyId, itemId, strainId, storageLocationId, supplierId } = req.body;
+        let { itemCategoryId, lotNo, companyId, itemId, strainId, storageLocationId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -35,17 +35,16 @@ const getItemFromSupplierList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT it.*, its.id "itemTxnSupplierId", its."supplierId", its."lotNo" "supplierLotNo"
-        , its."licenseNo" "supplierLicenseNo", its."internalCode" "supplierInternalCode", its."quality" "supplierQuality", splr.name "supplierName"
+        sqlSelect = `SELECT it.*
         , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
         `;
 
-        sqlFrom = ` FROM item_txns it, item_txn_suppliers its, companies c, strains s, species s2, items i2, ums, suppliers splr
+        sqlFrom = ` FROM item_txns it, companies c, strains s, species s2, items i2, ums
         , storage_locations sl, item_categories ic, users u2
         `;
 
-        sqlWhere = ` WHERE s."orgId" = ${orgId} AND it.id = its."itemTxnId"`;
+        sqlWhere = ` WHERE s."orgId" = ${orgId}`;
         if(itemCategoryId){
             sqlWhere += ` AND it."itemCategoryId" = ${itemCategoryId}`;
         }
@@ -61,19 +60,16 @@ const getItemFromSupplierList = async (req, res) => {
         if(storageLocationId){
             sqlWhere += ` AND it."storageLocationId" = ${storageLocationId}`;
         }
-        if(supplierId){
-            sqlWhere += ` AND its."supplierId" = ${supplierId}`;
-        }
         if(lotNo){
             sqlWhere += ` AND it."lotNo" iLIKE '%${lotNo}%'`;
         }
 
         sqlWhere += ` AND it."itemId" = i2.id AND it."strainId" = s.id AND it."specieId" = s2.id AND it."companyId" = c.id AND it."umId" = ums.id
-          AND its."supplierId" = splr.id AND it."storageLocationId" = sl.id AND it."itemCategoryId" = ic.id AND it."umId" = ums.id AND it."createdBy" = u2.id
+          AND it."storageLocationId" = sl.id AND it."itemCategoryId" = ic.id AND it."umId" = ums.id AND it."createdBy" = u2.id
         `;
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
-        //console.log('getItemFromSupplierList sql: ', sqlSelect + sqlFrom + sqlWhere);
+        //console.log('getWasteMaterialList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
@@ -83,7 +79,7 @@ const getItemFromSupplierList = async (req, res) => {
         sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
         sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
 
-        //console.log('getItemFromSupplierList: ', sqlStr);
+        //console.log('getWasteMaterialList: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
@@ -100,7 +96,7 @@ const getItemFromSupplierList = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][administration-features][inventories][getItemFromSupplierList] :  Error", err);
+        console.log("[controllers][administration-features][inventories][getWasteMaterialList] :  Error", err);
         return res.status(500).json({
           errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
     });
@@ -109,7 +105,7 @@ const getItemFromSupplierList = async (req, res) => {
 
 }
 
-module.exports = getItemFromSupplierList;
+module.exports = getWasteMaterialList;
 
 /**
  */

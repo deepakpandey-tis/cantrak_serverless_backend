@@ -1,7 +1,7 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../db/knex-reader");
 
-const getItemFromSupplier = async (req, res) => {
+const getWasteMaterial = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -22,17 +22,16 @@ const getItemFromSupplier = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT it.*, its.id "itemTxnSupplierId", its."supplierId", its."lotNo" "supplierLotNo"
-        , its."licenseNo" "supplierLicenseNo", its."internalCode" "supplierInternalCode", its."quality" "supplierQuality", splr.name "supplierName"
+        sqlSelect = `SELECT it.*
         , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
         `;
-        sqlFrom = ` FROM item_txns it, item_txn_suppliers its, companies c, strains s, species s2, items i2, ums, suppliers splr
+        sqlFrom = ` FROM item_txns it, companies c, strains s, species s2, items i2, ums
         , storage_locations sl, item_categories ic, users u2
         `;
-        sqlWhere = ` WHERE it.id = ${payload.id} AND it."orgId" = ${orgId} AND it.id = its."itemTxnId"`;
+        sqlWhere = ` WHERE it.id = ${payload.id} AND it."orgId" = ${orgId}`;
         sqlWhere += ` AND it."itemId" = i2.id AND it."strainId" = s.id AND it."specieId" = s2.id AND it."companyId" = c.id AND it."umId" = ums.id
-          AND its."supplierId" = splr.id AND it."storageLocationId" = sl.id AND it."itemCategoryId" = ic.id AND it."umId" = ums.id AND it."createdBy" = u2.id
+          AND it."storageLocationId" = sl.id AND it."itemCategoryId" = ic.id AND it."umId" = ums.id AND it."createdBy" = u2.id
         `;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
@@ -43,11 +42,11 @@ const getItemFromSupplier = async (req, res) => {
             data: {
                 record: selectedRecs.rows[0],
             },
-            message: "Raw material from supplier detail!"
+            message: "Waste material detail!"
         });
 
     } catch (err) {
-        console.log("[controllers][administration-features][inventories][getItemFromSupplier] :  Error", err);
+        console.log("[controllers][administration-features][inventories][getWasteMaterial] :  Error", err);
         return res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
         });
@@ -56,4 +55,4 @@ const getItemFromSupplier = async (req, res) => {
 
 }
 
-module.exports = getItemFromSupplier;
+module.exports = getWasteMaterial;

@@ -1,30 +1,30 @@
 const knexReader = require('../../../db/knex-reader');
 
-const getSpecies = async (req, res) => {
+const getCustomerTypes = async (req, res) => {
     try {
         let result;
         let orgId = req.me.orgId;
 
-        result = await knexReader("species")
+        result = await knexReader('customer_types')
             .select("id", "name")
-            .where({ isActive: true, orgId: orgId })
-            .orderBy('species.name', 'asc');
+            .where({ isActive: true })
+            .orderBy([{ column: 'name', order: 'asc' }])
 
         return res.status(200).json({
             data: {
                 records: result
             },
-            message: "Species List!"
+            message: "Customer Types!"
         });
     } catch (err) {
-        console.log("[controllers][administrationFeatures][getSpecies] :  Error", err);
+        console.log("[controllers][administrationFeatures][customers][getCustomerTypes] :  Error", err);
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
         });
     }
 }
 
-module.exports = getSpecies;
+module.exports = getCustomerTypes;
 
 /**
  */
