@@ -7,13 +7,12 @@ const getStrains = async (req, res) => {
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
-        sqlSelect = `SELECT s.*, i2."name" "itemName", i2."description" "itemDessciption", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation"
+        sqlSelect = `SELECT s.*, s2."name" "specieName"
         `;
 
-        sqlFrom = ` FROM strains s, items i2, item_categories ic, ums`;
+        sqlFrom = ` FROM strains s, species s2`;
 
-        sqlWhere = ` WHERE s.id = ${payload.itemId} AND s."orgId" = ${orgId} AND s."isActive" AND s."itemId" = i2.id`;
-        sqlWhere += ` AND i2."itemCategoryId" = ic.id AND i2."umId" = ums.id`;
+        sqlWhere = ` WHERE s."orgId" = ${orgId} AND s."isActive" AND s."specieId" = s2.id AND s2."isActive"`;
 
         sqlOrderBy = ` ORDER BY s.name asc`;
 

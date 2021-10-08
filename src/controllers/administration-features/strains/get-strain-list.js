@@ -13,7 +13,7 @@ const getStrainList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { name, itemId } = req.body;
+        let { name, specieId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -35,23 +35,23 @@ const getStrainList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT s.*, i2.name "itemName", i2.description "itemDescription", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation"
-        , u2."name" "createdByName"
+        sqlSelect = `SELECT s.*, s2.name "specieName", u2."name" "createdByName"
         `;
 
-        sqlFrom = ` FROM strains s, items i2, item_categories ic, ums, users u2`;
+        sqlFrom = ` FROM strains s, species s2, users u2`;
 
-        sqlWhere = ` WHERE s."orgId" = ${orgId} AND s."itemId" = i2.id`;
-        sqlWhere += ` AND i2."itemCategoryId" = ic.id AND i2."umId" = ums.id AND s."createdBy" = u2.id`;
-        if(itemId){
-            sqlWhere += ` AND s."itemId" = ${itemId}`;
+        sqlWhere = ` WHERE s."orgId" = ${orgId} AND s."specieId" = s2.id`;
+        sqlWhere += ` AND s."createdBy" = u2.id`;
+        if(specieId){
+            sqlWhere += ` AND s."specieId" = ${specieId}`;
         }
 
         if(name){
             sqlWhere += ` AND s."name" iLIKE '%${name}%'`;
         }
 
-        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
+        sqlOrderBy = ` ORDER BY "specieName" asc, name asc`;
+        // sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getStrainList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

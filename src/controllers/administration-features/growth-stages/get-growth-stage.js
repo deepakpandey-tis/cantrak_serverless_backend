@@ -22,9 +22,9 @@ const getGrowthStage = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT sg.*, i.name "itemName"`;
-        sqlFrom = ` FROM growth_stages sg, items i `;
-        sqlWhere = ` WHERE sg.id = ${payload.id} AND sg."orgId" = ${orgId} AND sg."itemId" = i.id`;
+        sqlSelect = `SELECT gs.*, s2.name "specieName"`;
+        sqlFrom = ` FROM growth_stages gs, species s2 `;
+        sqlWhere = ` WHERE gs.id = ${payload.id} AND gs."orgId" = ${orgId} AND gs."specieId" = s2.id`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 

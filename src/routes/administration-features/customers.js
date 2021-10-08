@@ -1,38 +1,59 @@
-const Router = require('express').Router
+const { Router } = require("express")
+const path = require("path")
 const router = Router()
-const customerMiddleware = require('../../controllers/administration-features/customers')
 const authMiddleware = require('../../middlewares/auth')
 const roleMiddleware = require('../../middlewares/role')
-const trimmerSpace = require('../../middlewares/trimmerSpace');
 const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddleware');
+const customerController = require('../../controllers/administration-features/customers');
 
 
+router.post('/get-customer-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  customerController.getCustomerList
+);
 
-router.post('/get-customers',
-    authMiddleware.isAuthenticated,
-    roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPropertySetupAccessible,
-    customerMiddleware.getCustomers)
-// router.get('/reset-password', authMiddleware.isAuthenticated, customerMiddleware.resetPassword)
-router.post('/reset-password', authMiddleware.isAuthenticated, customerMiddleware.resetPassword)
-router.post('/disassociate-house', authMiddleware.isAuthenticated, customerMiddleware.disassociateHouse)
+router.get('/get-customers',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  customerController.getCustomers
+);
 
-router.post('/create-customer', authMiddleware.isAuthenticated, trimmerSpace.signUpTrimmer, customerMiddleware.createCustomer)
-router.post('/update-customer', authMiddleware.isAuthenticated, trimmerSpace.signUpTrimmer, customerMiddleware.updateCustomer)
+router.post('/get-customer',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  customerController.getCustomer
+);
 
-router.get('/export-tenant-data',
-    authMiddleware.isAuthenticated,
-    roleMiddleware.parseUserPermission,
-    customerMiddleware.exportTenantData)
+router.post('/add-customer',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  customerController.addCustomer
+);
 
-router.post('/import-tenant-data',
-    authMiddleware.isAuthenticated,
-    roleMiddleware.parseUserPermission,
-    customerMiddleware.importTenantData)
+router.post('/update-customer',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  customerController.updateCustomer
+);
 
-router.post('/get-tenant-list-by-multiple-unit', authMiddleware.isAuthenticated, customerMiddleware.getTenantListByMultiplePropertyUnits)
-router.post('/get-inactive-customers', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission, customerMiddleware.getInactiveCustomers)
-router.post('/get-tenant-list-by-projects',authMiddleware.isAuthenticated,customerMiddleware.getTenantListByProject)
-router.post('/signup-rejected',authMiddleware.isAuthenticated,customerMiddleware.rejectAccount)
+router.post('/delete-customer',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  customerController.deleteCustomer
+);
 
-module.exports = router
+router.get('/get-customer-types',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  customerController.getCustomerTypes
+);
+
+module.exports = router;

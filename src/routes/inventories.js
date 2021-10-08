@@ -28,4 +28,25 @@ router.post('/add-item-from-supplier',
   inventoriesController.addItemFromSupplier
 );
 
+router.post('/get-waste-material-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getWasteMaterialList
+);
+
+router.post('/get-waste-material',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getWasteMaterial
+);
+
+router.post('/add-waste-material',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.addWasteMaterial
+);
+
 module.exports = router;

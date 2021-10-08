@@ -1,7 +1,7 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../../db/knex-reader");
 
-const getStrain = async (req, res) => {
+const getCustomer = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -22,9 +22,9 @@ const getStrain = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT s.*, s2.name "specieName"`;
-        sqlFrom = ` FROM strains s, species s2`;
-        sqlWhere = ` WHERE s.id = ${payload.id} AND s."orgId" = ${orgId} AND s."specieId" = s2.id`;
+        sqlSelect = `SELECT c2.*, ct.name "customerType"`;
+        sqlFrom = ` FROM customers c2, customer_types ct `;
+        sqlWhere = ` WHERE c2."orgId" = ${orgId} AND c2.id = ${payload.id} AND c2."customerTypeId" = ct.id`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 
@@ -34,11 +34,11 @@ const getStrain = async (req, res) => {
             data: {
                 record: selectedRecs.rows[0],
             },
-            message: "Strain detail!"
+            message: "Customer detail!"
         });
 
     } catch (err) {
-        console.log("[controllers][administration-features][strains][getStrain] :  Error", err);
+        console.log("[controllers][administration-features][customers][getCustomer] :  Error", err);
         return res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
         });
@@ -47,4 +47,4 @@ const getStrain = async (req, res) => {
 
 }
 
-module.exports = getStrain;
+module.exports = getCustomer;
