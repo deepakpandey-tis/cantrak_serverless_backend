@@ -23,20 +23,16 @@ const getLocationTxnList = async (req, res) => {
             pageSize = 10;
         }
 
-        sqlSelect = `SELECT pt.*, pl."name", pl.description, p.name "fromPlantation", p2.name "toPlantation", pp.description "fromPlantationPhase", pp2.description "toPlantationPhase"
-        , pg.description "fromPlantationGroup", pg2.description "toPlantationGroup"
-        , s."name" "strainName", s2."name" "specieName", c."companyName", gs."name_en" "growthStage_en", gs."name_th" "growthStage_th"
+        sqlSelect = `SELECT plt.*, pl."lotNo", l.name "fromLocationName", l2.name "toLocationName", gs.name "growthStageName"
+        , s."name" "strainName", s2."name" "specieName", c."companyName"
         `;
 
-        sqlFrom = ` FROM plant_location_txns pt, plant_lots pl, plantations p, plantations p2, plantation_phases pp, plantation_phases pp2
-        , plantation_groups pg, plantation_groups pg2, growth_stages gs
+        sqlFrom = ` FROM plant_location_txns plt, plant_lots pl, locations l, locations l2, growth_stages gs
         , strains s, species s2, companies c
         `;
 
-        sqlWhere = ` WHERE pt."fromPlantationId" = p.id AND pt."toPlantationId" = p2.id AND pt."fromPlantationPhaseId" = pp.id AND pt."toPlantationPhaseId" = pp2.id 
-        AND pt."fromPlantationGroupId" = pg.id AND pt."toPlantationGroupId" = pg2.id`;
-        sqlWhere += ` AND pl.id = pt."plantLotId" AND s.id = pl."strainId" AND s2.id = pl."specieId" and c.id = pl."companyId" `;
-        sqlWhere += ` AND pt."growthStageId" = gs.id`;
+        sqlWhere = ` WHERE plt."plantLotId" = pl.id AND plt."fromLocationId" = l.id AND plt."toLocationId" = l2.id`;
+        sqlWhere += ` AND plt."growthStageId" = gs.id AND pl."strainId" = s.id AND pl."specieId" = s2.id and pl."companyId" = c.id `;
 
         sqlOrderBy = ` ORDER BY id desc`;
         //console.log('getLocationTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);

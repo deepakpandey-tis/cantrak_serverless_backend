@@ -49,4 +49,11 @@ router.post('/add-waste-material',
   inventoriesController.addWasteMaterial
 );
 
+router.post('/get-raw-material-for-plant-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getRawMaterialForPlantList
+);
+
 module.exports = router;

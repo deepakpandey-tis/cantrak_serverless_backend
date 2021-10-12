@@ -14,7 +14,7 @@ router.post('/get-location-list',
   locationController.getLocationList
 );
 
-router.get('/get-locations',
+router.post('/get-locations',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,

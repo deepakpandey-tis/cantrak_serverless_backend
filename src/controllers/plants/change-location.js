@@ -15,15 +15,10 @@ const changeLocation = async (req, res) => {
 
     const schema = Joi.object().keys({
         date: Joi.date().required(),
-        companyId: Joi.string().required(),
         plantLotId: Joi.string().required(),
         growthStageId: Joi.string().required(),
-        fromPlantationId: Joi.string().required(),
-        fromPlantationPhaseId: Joi.string().required(),
-        fromPlantationGroupId: Joi.string().required(),
-        toPlantationId: Joi.string().required(),
-        toPlantationPhaseId: Joi.string().required(),
-        toPlantationGroupId: Joi.string().required(),
+        fromLocationId: Joi.string().required(),
+        toLocationId: Joi.string().required(),
         totalPlants: Joi.number().integer().required(),
         selectedPlantIds: Joi.array().required(),
     });
@@ -71,20 +66,20 @@ const changeLocation = async (req, res) => {
 
             //  Change Location Records
             if(allPlants){
-                sqlInsert = `INSERT INTO plant_locations ("orgId", "plantId", "companyId", "plantTxnId"
-                , "plantationId", "plantationPhaseId", "plantationGroupId", "startDate")`;
-                sqlSelect = ` SELECT ${orgId}, p.id, ${txnHeader.companyId}, ${insertedRecord.id}, ${txnHeader.toPlantationId}
-                , ${txnHeader.toPlantationPhaseId}, ${txnHeader.toPlantationGroupId}, ${new Date(txnHeader.date).getTime()}`;
-                sqlFrom = ` FROM plants p, plant_lots plt, plant_locations pl`;
-                sqlWhere = ` WHERE plt.id = ${txnHeader.plantLotId} AND p."plantLotId" = plt.id and p.id = pl."plantId"`;
-                sqlWhere += ` AND p2."isActive" AND NOT p2."isWaste" AND pl."plantationGroupId" = ${txnHeader.fromPlantationGroupId}`;
+                sqlInsert = `INSERT INTO plant_locations ("orgId", "plantId", "plantLocationTxnId", "locationId"
+                , "startDate")`;
+                sqlSelect = ` SELECT ${orgId}, p.id, ${insertedRecord.id}, ${txnHeader.toLocationId}
+                , ${new Date(txnHeader.date).getTime()}`;
+                sqlFrom = ` FROM plants p, plant_lots pl, plant_locations ploc`;
+                sqlWhere = ` WHERE pl.id = ${txnHeader.plantLotId} AND p."plantLotId" = pl.id and p.id = ploc."plantId"`;
+                sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND ploc."locationId" = ${txnHeader.fromLocationId}`;
 
                 sqlStr = sqlInsert + sqlSelect + sqlFrom + sqlWhere;
             } else {
-                sqlInsert = `INSERT INTO plant_locations ("orgId", "plantId", "companyId", "plantTxnId"
-                , "plantationId", "plantationPhaseId", "plantationGroupId", "startDate")`;
-                sqlSelect = ` SELECT ${orgId}, p.id, ${txnHeader.companyId}, ${insertedRecord.id}, ${txnHeader.toPlantationId}
-                , ${txnHeader.toPlantationPhaseId}, ${txnHeader.toPlantationGroupId}, ${new Date(txnHeader.date).getTime()}`;
+                sqlInsert = `INSERT INTO plant_locations ("orgId", "plantId", "plantLocationTxnId", "locationId"
+                , "startDate")`;
+                sqlSelect = ` SELECT ${orgId}, p.id, ${insertedRecord.id}, ${txnHeader.toLocationId}
+                , ${new Date(txnHeader.date).getTime()}`;
                 sqlFrom = ` FROM jsonb_to_recordset('${selectedPlantIds}') as p(id bigint)`;
 
                 sqlStr = sqlInsert + sqlSelect + sqlFrom;

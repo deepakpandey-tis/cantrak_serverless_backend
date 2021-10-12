@@ -7,11 +7,11 @@ const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddlewar
 const plantController = require('../controllers/plants');
 
 
-router.post('/get-plant-list',
+router.post('/get-lot-plant-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  plantController.getPlantList
+  plantController.getLotPlantList
 );
 
 router.get('/get-plants',
@@ -42,44 +42,19 @@ router.post('/delete-plant',
   plantController.deletePlant
 );
 
-/* 
-router.get('/export-plants',
+router.post('/get-plant-lot-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  plantController.exportPlants
+  plantController.getPlantLotList
 );
 
-// Import Plants
-let tempraryDirectory = null;
-if (process.env.IS_OFFLINE) {
-  tempraryDirectory = 'tmp/';
-} else {
-  tempraryDirectory = '/tmp/';
-}
-var multer = require('multer');
-var storage = multer.diskStorage({
-  destination: tempraryDirectory,
-  filename: function (req, file, cb) {
-    let ext = path.extname(file.originalname)
-    if (ext == '.csv') {
-      time = Date.now();
-      cb(null, 'PlantsData-' + time + ext);
-    } else {
-      return false
-    }
-  }
-});
-var upload = multer({ storage: storage });
-router.post(
-  "/import-plants",
-  upload.single("file"),
+router.post('/get-plant-lot',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  plantController.importPlants
+  plantController.getPlantLot
 );
- */
 
 router.post('/get-plant-lots',
   authMiddleware.isAuthenticated,
@@ -109,11 +84,11 @@ router.post('/check-lot-name-exists',
   plantController.checkLotNameExists
 );
 
-router.post('/get-plant-lot-groups',
+router.post('/get-plant-lot-locations',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
-  plantController.getPlantLotGroups
+  plantController.getPlantLotLocations
 );
 
 router.post('/get-growth-stage-txn-list',
