@@ -33,5 +33,5 @@ module.exports = {
     changeLocation,
     getLocationTxnList,
     wasteEntry,
-    getWasteTxnList
+    getWasteTxnList,
 };

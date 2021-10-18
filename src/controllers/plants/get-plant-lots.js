@@ -26,7 +26,7 @@ const getPlantLots = async (req, res) => {
 
         sqlFrom = ` FROM plant_lots pl, companies c, strains s, species s2, locations l, licenses lic`;
 
-        sqlWhere = ` WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} `;
+        sqlWhere = ` WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND pl."harvestPlantLotId" is null`;
         sqlWhere += ` AND pl."locationId" = l.id AND pl."companyId" = c.id AND pl."strainId" = s.id and pl."specieId" = s2.id AND pl."licenseId" = lic.id`;
 
         sqlOrderBy  = ` ORDER BY pl."lotNo" desc`;

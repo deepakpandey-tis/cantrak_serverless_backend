@@ -35,6 +35,13 @@ router.post('/get-waste-material-list',
   inventoriesController.getWasteMaterialList
 );
 
+router.post('/get-inventory-items-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getInventoryItemsList
+);
+
 router.post('/get-waste-material',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

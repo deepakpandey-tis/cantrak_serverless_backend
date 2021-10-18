@@ -45,9 +45,11 @@ const getItemFromSupplierList = async (req, res) => {
         , its."licenseNo" "supplierLicenseNo", its."internalCode" "supplierInternalCode", its."quality" "supplierQuality", splr.name "supplierName"
         , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
+        , l.number "licenseNumber"
         `;
 
-        sqlFrom = ` FROM item_txns it, item_txn_suppliers its, companies c, strains s, species s2, items i2, ums, suppliers splr
+        sqlFrom = ` FROM item_txns it LEFT OUTER JOIN licenses l on l.id = it."licenseId"
+        , item_txn_suppliers its, companies c, strains s, species s2, items i2, ums, suppliers splr
         , storage_locations sl, item_categories ic, users u2
         `;
 
