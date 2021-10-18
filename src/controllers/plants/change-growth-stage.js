@@ -15,9 +15,8 @@ const changeGrowthStage = async (req, res) => {
 
     const schema = Joi.object().keys({
         date: Joi.date().required(),
-        companyId: Joi.string().required(),
         plantLotId: Joi.string().required(),
-        plantationGroupId: Joi.string().required(),
+        locationId: Joi.string().required(),
         fromGrowthStageId: Joi.string().required(),
         toGrowthStageId: Joi.string().required(),
         totalPlants: Joi.number().integer().required(),
@@ -47,9 +46,8 @@ const changeGrowthStage = async (req, res) => {
         let currentTime = new Date().getTime();
         let insertData = {
             orgId: orgId,
-            companyId: payload.companyId,
             plantLotId: payload.plantLotId,
-            plantationGroupId: payload.plantationGroupId,
+            locationId: payload.locationId,
             date: new Date(payload.date).getTime(),
             fromGrowthStageId: payload.fromGrowthStageId,
             toGrowthStageId: payload.toGrowthStageId,
@@ -66,16 +64,16 @@ const changeGrowthStage = async (req, res) => {
             .insert(insertData)
             .returning(["*"])
             .transacting(trx)
-            .into("plant_txns");
+            .into("plant_growth_stage_txns");
 
             insertedRecord = insertResult[0];
 
             //  Growth Stage Records
-            sqlInsert = `INSERT INTO plant_growth_stages ("orgId", "plantId", "plantTxnId", "growthStageId", "startDate")`;
+            sqlInsert = `INSERT INTO plant_growth_stages ("orgId", "plantId", "plantGrowthStageTxnId", "growthStageId", "startDate")`;
             sqlSelect = ` SELECT ${orgId}, p.id, ${insertedRecord.id}, ${payload.toGrowthStageId}, ${new Date(payload.date).getTime()}`;
-            sqlFrom = ` FROM plants p, plant_lots plt, plant_locations pl`;
-            sqlWhere = ` WHERE plt.id = ${payload.plantLotId} AND p."plantLotId" = plt.id and p.id = pl."plantId"`;
-            sqlWhere += ` AND p2."isActive" AND NOT p2."isWaste" AND pl."plantationGroupId" = ${payload.plantationGroupId}`;
+            sqlFrom = ` FROM plants p, plant_lots pl, plant_locations ploc`;
+            sqlWhere = ` WHERE pl.id = ${payload.plantLotId} AND p."plantLotId" = pl.id and p.id = ploc."plantId"`;
+            sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND ploc."locationId" = ${payload.locationId}`;
 
             sqlStr = sqlInsert + sqlSelect + sqlFrom + sqlWhere;
 

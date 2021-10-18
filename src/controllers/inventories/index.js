@@ -4,6 +4,8 @@ const getItemFromSupplier = require('./get-item-from-supplier');
 const addWasteMaterial = require('./add-waste-material');
 const getWasteMaterialList = require('./get-waste-material-list');
 const getWasteMaterial = require('./get-waste-material');
+const getRawMaterialForPlantList = require('./get-raw-material-for-plant-list');
+const getInventoryItemsList = require('./get-inventory-items-list');
 
 module.exports = {
     addItemFromSupplier,
@@ -12,4 +14,6 @@ module.exports = {
     addWasteMaterial,
     getWasteMaterialList,
     getWasteMaterial,
+    getRawMaterialForPlantList,
+    getInventoryItemsList
 };

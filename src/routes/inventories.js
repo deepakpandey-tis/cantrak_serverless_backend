@@ -35,6 +35,13 @@ router.post('/get-waste-material-list',
   inventoriesController.getWasteMaterialList
 );
 
+router.post('/get-inventory-items-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getInventoryItemsList
+);
+
 router.post('/get-waste-material',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -47,6 +54,13 @@ router.post('/add-waste-material',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAssetAccessible,
   inventoriesController.addWasteMaterial
+);
+
+router.post('/get-raw-material-for-plant-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getRawMaterialForPlantList
 );
 
 module.exports = router;

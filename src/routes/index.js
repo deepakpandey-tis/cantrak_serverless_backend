@@ -64,6 +64,7 @@ const unitOfMeasurementRouter = require("./administration-features/ums");
 const locationRouter = require("./administration-features/locations");
 const storageLocationRouter = require("./administration-features/storage-locations");
 const inventoryRouter = require("./inventories");
+const harvestRouter = require("./harvest");
 
 
 const partCategoryRouter = require("./administration-features/part-category");
@@ -271,6 +272,10 @@ router.use(
 router.use(
   "/inventories",
   inventoryRouter
+);
+router.use(
+  "/harvest",
+  harvestRouter
 );
 
 

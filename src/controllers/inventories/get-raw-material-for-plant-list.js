@@ -1,12 +1,22 @@
 const knexReader = require('../../db/knex-reader');
 
+const ItemCategory = {
+    AllInventoryItems: 0,
+    RawMaterial: 1,
+    Product: 2,
+    WasteMaterial: 3,
+    FinishedGoods: 4
+};
+
 const TxnTypes ={
     ReceiveFromSupplier: 11,
     ReceiveFromTxnType: 11,
-    ReceiveUptoTxnType: 50
+    ReceiveUptoTxnType: 50,
+    IssueFromTxnType: 51,
+    IssueUptoTxnType: 90,
 };
 
-const getItemFromSupplierList = async (req, res) => {
+const getRawMaterialForPlantList = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -45,15 +55,16 @@ const getItemFromSupplierList = async (req, res) => {
         , its."licenseNo" "supplierLicenseNo", its."internalCode" "supplierInternalCode", its."quality" "supplierQuality", splr.name "supplierName"
         , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
-        , l.number "licenseNumber"
+        , (SELECT coalesce(sum(quantity), 0) FROM item_txns txn WHERE txn."orgId" = it."orgId" AND txn."companyId" = it."companyId"
+           AND txn."lotNo" = it."lotNo"
+           AND txn."txnType" >= ${TxnTypes.IssueFromTxnType} AND txn."txnType" <= ${TxnTypes.IssueUptoTxnType}) "issuedQuantity"
         `;
 
-        sqlFrom = ` FROM item_txns it LEFT OUTER JOIN licenses l on l.id = it."licenseId"
-        , item_txn_suppliers its, companies c, strains s, species s2, items i2, ums, suppliers splr
+        sqlFrom = ` FROM item_txns it, item_txn_suppliers its, companies c, strains s, species s2, items i2, ums, suppliers splr
         , storage_locations sl, item_categories ic, users u2
         `;
 
-        sqlWhere = ` WHERE s."orgId" = ${orgId} AND it.id = its."itemTxnId"`;
+        sqlWhere = ` WHERE it."orgId" = ${orgId} AND it.id = its."itemTxnId"`;
         if(itemCategoryId){
             sqlWhere += ` AND it."itemCategoryId" = ${itemCategoryId}`;
         }
@@ -76,12 +87,13 @@ const getItemFromSupplierList = async (req, res) => {
             sqlWhere += ` AND it."lotNo" iLIKE '%${lotNo}%'`;
         }
 
-        sqlWhere += ` AND it."txnType" = ${TxnTypes.ReceiveFromSupplier} AND it."itemId" = i2.id AND it."strainId" = s.id AND it."specieId" = s2.id AND it."companyId" = c.id AND it."umId" = ums.id
+        sqlWhere += ` AND it."itemCategoryId" = ${ItemCategory.RawMaterial} AND it."txnType" >= ${TxnTypes.ReceiveFromTxnType} AND it."txnType" <= ${TxnTypes.ReceiveUptoTxnType} 
+          AND it."itemId" = i2.id AND it."strainId" = s.id AND it."specieId" = s2.id AND it."companyId" = c.id AND it."umId" = ums.id
           AND its."supplierId" = splr.id AND it."storageLocationId" = sl.id AND it."itemCategoryId" = ic.id AND it."umId" = ums.id AND it."createdBy" = u2.id
         `;
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
-        //console.log('getItemFromSupplierList sql: ', sqlSelect + sqlFrom + sqlWhere);
+        //console.log('getRawMaterialForPlantList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
@@ -91,7 +103,7 @@ const getItemFromSupplierList = async (req, res) => {
         sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
         sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
 
-        //console.log('getItemFromSupplierList: ', sqlStr);
+        //console.log('getRawMaterialForPlantList: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
@@ -99,7 +111,7 @@ const getItemFromSupplierList = async (req, res) => {
           const result = {
             data: {
                 list: selectedRecs.rows,
-                message: "Item From Supplier list!"
+                message: "Raw Material For Plant list!"
             }
         }
         //console.log(result.data)
@@ -108,7 +120,7 @@ const getItemFromSupplierList = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][administration-features][inventories][getItemFromSupplierList] :  Error", err);
+        console.log("[controllers][administration-features][inventories][getRawMaterialForPlantList] :  Error", err);
         return res.status(500).json({
           errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
     });
@@ -117,7 +129,7 @@ const getItemFromSupplierList = async (req, res) => {
 
 }
 
-module.exports = getItemFromSupplierList;
+module.exports = getRawMaterialForPlantList;
 
 /**
  */

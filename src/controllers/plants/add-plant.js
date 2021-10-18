@@ -1,6 +1,21 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
-const knexReader = require('../../db/knex-reader');
+
+const ItemCategory = {
+    RawMaterial: 1,
+    Product: 2,
+    WasteMaterial: 3,
+    FinishedGoods: 4
+};
+
+const TxnTypes ={
+    ReceiveFromSupplier: 11,
+    ReceiveFromTxnType: 11,
+    ReceiveUptoTxnType: 50,
+    IssueForPlantation: 51,
+    IssueFromTxnType: 51,
+    IssueUptoTxnType: 90,
+};
 
 const addPlant = async (req, res) => {
     try {
@@ -10,19 +25,21 @@ const addPlant = async (req, res) => {
         const payload = req.body;
 
         let insertedRecord = [];
+        let insertedIssueTxn = [];
 
         const schema = Joi.object().keys({
-            plantLotId: Joi.string().required(),
-            plantLotName: Joi.string().required(),
-            plantLotDescription: Joi.string().optional().allow(''),
             companyId: Joi.string().required(),
-            plantationId: Joi.string().required(),
-            plantationPhaseId: Joi.string().required(),
-            plantationGroupId: Joi.string().required(),
-            licenseId: Joi.string().required(),
-            supplierId: Joi.string().required(),
+            itemTxnId: Joi.string().required(),
+            itemCategoryId: Joi.string().required(),
+            itemId: Joi.string().required(),
+            umId: Joi.string().required(),
+            storageLocationId: Joi.string().required(),
+            itemLotNo: Joi.string().required(),
             specieId: Joi.string().required(),
             strainId: Joi.string().required(),
+            supplierId: Joi.string().required(),
+            locationId: Joi.string().required(),
+            licenseId: Joi.string().required(),
             containerTypeId: Joi.string().required(),
             growthStageId: Joi.number().integer().required(),
             plantedOn: Joi.date().required(),
@@ -44,60 +61,103 @@ const addPlant = async (req, res) => {
             });
         }
 
-        // Check already exists
-        if(+payload.plantLotId <= 0){
-            const alreadyExists = await knexReader("plant_lots")
-                .where(qb => {
-                    qb.where('name', 'iLIKE', payload.plantLotName.trim())
-                })
-                .where({ orgId: req.orgId })
-                .where({ companyId: payload.companyId });
-
-            console.log(
-                "[controllers][work-plans][addPlant]: ",
-                alreadyExists
-            );
-
-            if (alreadyExists && alreadyExists.length) {
-                return res.status(400).json({
-                    errors: [
-                        { code: "VALIDATION_ERROR", message: "Plant Lot Name already exist!" }
-                    ]
-                });
-            }
-        }
-
         await knex.transaction(async (trx) => {
 
             let currentTime = new Date().getTime();
 
-            if(+payload.plantLotId <= 0){
-                    let insertData = {
+            let insertData = {
+                orgId: orgId,
+                companyId: payload.companyId,
+                itemTxnId: payload.itemTxnId,
+                itemCategoryId: payload.itemCategoryId,
+                itemId: payload.itemId,
+                itemLotNo: payload.itemLotNo,
+                specieId: payload.specieId,
+                strainId: payload.strainId,
+                supplierId: payload.supplierId,
+                licenseId: payload.licenseId,
+                containerTypeId: payload.containerTypeId,
+                locationId: payload.locationId,
+                plantedOn: new Date(payload.plantedOn).getTime(),
+                plantsCount: payload.plantsCount,
+                createdBy: userId,
+                createdAt: currentTime,
+                updatedBy: userId,
+                updatedAt: currentTime,
+            };
+
+            let insertResult = await knex
+                .insert(insertData)
+                .returning(["*"])
+                .transacting(trx)
+                .into("plant_lots");
+
+            insertedRecord = insertResult[0];
+
+            // Additional Attributes
+            let additionalAttribute;
+            let insertedAdditionalRecords = [];
+            let additionalRecNo;
+
+            additionalRecNo = 0;
+            for (let rec of payload.additionalAttributes) {
+                additionalAttribute = {
                     orgId: orgId,
-                    companyId: payload.companyId,
-                    specieId: payload.specieId,
-                    strainId: payload.strainId,
-                    name: payload.plantLotName,
-                    description: payload.plantLotDescription,
+                    plantLotId: insertedRecord.id,
+                    attributeName: rec.attributeName,
+                    attributeValue: rec.attributeValue,
                     createdBy: userId,
                     createdAt: currentTime,
                     updatedBy: userId,
                     updatedAt: currentTime,
                 };
+                console.log('additionalAttribute: ', additionalAttribute);
 
+                additionalRecNo += 1;
                 const insertResult = await knex
-                    .insert(insertData)
+                    .insert(additionalAttribute)
                     .returning(["*"])
                     .transacting(trx)
-                    .into("plant_lots");
+                    .into("plant_lot_attributes");
 
-                insertedRecord = insertResult[0];
+                insertedAdditionalRecords[additionalRecNo] = insertResult[0];
             }
 
+            // Issue Txn
+            insertData = {
+                orgId: orgId,
+                companyId: payload.companyId,
+                txnType: TxnTypes.IssueForPlantation,
+                date: new Date(payload.plantedOn).getTime(),
+                itemCategoryId: payload.itemCategoryId,
+                itemId: payload.itemId,
+                lotNo: payload.itemLotNo,
+                specieId: payload.specieId,
+                strainId: payload.strainId,
+                quantity: payload.plantsCount,
+                umId: payload.umId,
+                storageLocationId: payload.storageLocationId,
+                createdBy: userId,
+                createdAt: currentTime,
+                updatedBy: userId,
+                updatedAt: currentTime,
+            };
+            console.log('waste txn insert record: ', insertData);
+
+            insertResult = await knex
+                .insert(insertData)
+                .returning(["*"])
+                .transacting(trx)
+                .into("item_txns");
+
+            insertedIssueTxn = insertResult[0];
+
+
+            // Plants
             insertData = {
                 orgId: orgId,
                 ...payload,
-                plantLotId: +payload.plantLotId <= 0 ? insertedRecord.id : payload.plantLotId,
+                plantLotId: insertedRecord.id,
                 plantedOn: new Date(payload.plantedOn).getTime(),
                 createdBy: userId,
                 createdAt: currentTime,
