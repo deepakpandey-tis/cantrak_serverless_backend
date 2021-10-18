@@ -137,6 +137,7 @@ const addPlant = async (req, res) => {
                 quantity: payload.plantsCount,
                 umId: payload.umId,
                 storageLocationId: payload.storageLocationId,
+                plantLotId: insertedRecord.id,
                 createdBy: userId,
                 createdAt: currentTime,
                 updatedBy: userId,
