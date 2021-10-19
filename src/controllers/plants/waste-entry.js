@@ -1,6 +1,24 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
 
+const ItemCategory = {
+    RawMaterial: 1,
+    Product: 2,
+    WasteMaterial: 3,
+    FinishedGoods: 4
+};
+
+const TxnTypes ={
+    ReceiveFromSupplier: 11,
+    ReceiveProductFromHarvest: 21,
+    ReceiveWasteFromPlantWaste: 22,
+    ReceiveFromTxnType: 11,
+    ReceiveUptoTxnType: 50,
+    IssueForPlantation: 51,
+    IssueFromTxnType: 51,
+    IssueUptoTxnType: 90,
+};
+
 const wasteEntry = async (req, res) => {
     let orgId = req.me.orgId;
     let userId = req.me.id;
@@ -12,17 +30,20 @@ const wasteEntry = async (req, res) => {
     );
 
     let insertedRecord = [];
+    let insertedReceiveTxn = [];
 
     const schema = Joi.object().keys({
         date: Joi.date().required(),
         companyId: Joi.string().required(),
         plantLotId: Joi.string().required(),
+        plantLotNo: Joi.string().required(),
         growthStageId: Joi.string().required(),
-        plantationId: Joi.string().required(),
-        plantationPhaseId: Joi.string().required(),
-        plantationGroupId: Joi.string().required(),
-        weightKg: Joi.number().integer().required(),
-        weightGm: Joi.number().integer().required(),
+        itemId: Joi.string().required(),
+        specieId: Joi.string().required(),
+        strainId: Joi.string().required(),
+        umId: Joi.string().required(),
+        storageLocationId: Joi.string().required(),
+        quantity: Joi.number().required(),
         isDestroy: Joi.bool().required(),
         reason: Joi.string().required(),
         totalPlants: Joi.number().integer().required(),
@@ -53,9 +74,13 @@ const wasteEntry = async (req, res) => {
         let currentTime = new Date().getTime();
         let insertData = {
             orgId: orgId,
-            ...txnHeader,
+            companyId: txnHeader.companyId,
+            plantLotId: txnHeader.plantLotId,
             date: new Date(txnHeader.date).getTime(),
+            growthStageId: txnHeader.growthStageId,
             plantIds: selectedPlantIds,
+            totalPlants: txnHeader.totalPlants,
+            isDestroy: txnHeader.isDestroy,
             createdBy: userId,
             createdAt: currentTime,
             updatedBy: userId,
@@ -74,21 +99,53 @@ const wasteEntry = async (req, res) => {
 
             //  Mandatory reason
             insertData = {
-                entityId: payload.id,
-                entityType: "waste_entry",
+                entityId: insertedRecord.id,
+                entityType: "plant_waste_txn_entry",
                 description: reason,
                 orgId: req.orgId,
                 createdBy: req.me.id,
                 createdAt: currentTime,
                 updatedAt: currentTime,
             };
-            console.log('cancel work order reason record: ', insertData);
+            console.log('Waste Entry Txn reason record: ', insertData);
 
             const insertRemarkResult = await knex
                 .insert(insertData)
                 .returning(["*"])
                 .transacting(trx)
                 .into("remarks_master");
+
+            // Waste Receive Txn
+            insertData = {
+                orgId: orgId,
+                companyId: txnHeader.companyId,
+                txnType: TxnTypes.ReceiveWasteFromPlantWaste,
+                date: new Date(txnHeader.date).getTime(),
+                itemCategoryId: ItemCategory.WasteMaterial,
+                itemId: txnHeader.itemId,
+                lotNo: txnHeader.plantLotNo,
+                specieId: txnHeader.specieId,
+                strainId: txnHeader.strainId,
+                quantity: txnHeader.quantity,
+                plantsCount: txnHeader.totalPlants,
+                umId: txnHeader.umId,
+                storageLocationId: txnHeader.storageLocationId,
+                plantLotId: txnHeader.plantLotId,
+                plantWasteTxnId: insertedRecord.id,
+                createdBy: userId,
+                createdAt: currentTime,
+                updatedBy: userId,
+                updatedAt: currentTime,
+            };
+            console.log('Waste receive txn from plant waste insert record: ', insertData);
+
+            const insertReceiveResult = await knex
+                .insert(insertData)
+                .returning(["*"])
+                .transacting(trx)
+                .into("item_txns");
+
+            insertedReceiveTxn = insertReceiveResult[0];
 
 
             //  Mark Plants as Waste, Destroy and EndOfLife

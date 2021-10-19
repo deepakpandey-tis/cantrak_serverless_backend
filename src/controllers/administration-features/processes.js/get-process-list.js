@@ -1,6 +1,6 @@
-const knexReader = require('../../db/knex-reader');
+const knexReader = require('../../../db/knex-reader');
 
-const getWasteTxnList = async (req, res) => {
+const getProcessList = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -13,7 +13,18 @@ const getWasteTxnList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
+        let { searchValue } = req.body;
+
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
+
+        // Setting default values, if not passed
+        if(!sortCol || sortCol === ''){
+            sortCol = 'name';
+        }
+
+        if(!sortOrder || sortOrder === ''){
+            sortOrder = 'asc';
+        }
 
         if(pageNumber < 1){
             pageNumber = 1;
@@ -22,20 +33,21 @@ const getWasteTxnList = async (req, res) => {
         if(pageSize < 0){
             pageSize = 10;
         }
-
-        sqlSelect = `SELECT pwt.*, pl."lotNo" "plantLotNo"
-        , s."name" "strainName", s2."name" "specieName", c."companyName", l.name "locationName", gs."name" "growthStageName"
+        
+        // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
+        sqlSelect = `SELECT p.*, u2."name" "createdByName"
         `;
 
-        sqlFrom = ` FROM plant_waste_txns pwt, plant_lots pl, locations l
-        , strains s, species s2, companies c, growth_stages gs
-        `;
+        sqlFrom = ` FROM processes p, users u2`;
 
-        sqlWhere = ` WHERE pwt."growthStageId" = gs.id`;
-        sqlWhere += ` AND pwt."plantLotId" = pl.id AND pl."strainId" = s.id AND pl."specieId" = s2.id AND pl."locationId" = l.id AND pwt."companyId" = c.id`;
+        sqlWhere = ` WHERE p."orgId" = ${orgId}`;
+        sqlWhere += ` AND p."createdBy" = u2.id`;
+        if(searchValue){
+            sqlWhere += ` AND (p."name" iLIKE '%${searchValue}%' OR p."description" iLIKE '%${searchValue}%')`;
+        }
 
-        sqlOrderBy = ` ORDER BY id desc`;
-        //console.log('getWasteTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
+        //console.log('getProcessList sql: ', sqlSelect + sqlFrom + sqlWhere + sqlOrderBy);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
@@ -45,7 +57,7 @@ const getWasteTxnList = async (req, res) => {
         sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
         sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
 
-        //console.log('getWasteTxnList: ', sqlStr);
+        //console.log('getProcessList: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
@@ -53,7 +65,7 @@ const getWasteTxnList = async (req, res) => {
           const result = {
             data: {
                 list: selectedRecs.rows,
-                message: "Waste Txn list!"
+                message: "Processes list!"
             }
         }
         //console.log(result.data)
@@ -62,7 +74,7 @@ const getWasteTxnList = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][plants][getWasteTxnList] :  Error", err);
+        console.log("[controllers][administration-features][processes][getProcessList] :  Error", err);
         return res.status(500).json({
           errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
     });
@@ -71,7 +83,7 @@ const getWasteTxnList = async (req, res) => {
 
 }
 
-module.exports = getWasteTxnList;
+module.exports = getProcessList;
 
 /**
  */

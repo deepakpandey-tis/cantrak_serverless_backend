@@ -143,7 +143,7 @@ const addPlant = async (req, res) => {
                 updatedBy: userId,
                 updatedAt: currentTime,
             };
-            console.log('waste txn insert record: ', insertData);
+            console.log('issue txn insert record: ', insertData);
 
             insertResult = await knex
                 .insert(insertData)

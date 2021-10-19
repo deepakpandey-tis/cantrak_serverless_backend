@@ -63,6 +63,7 @@ const licenseRouter = require("./administration-features/licenses");
 const unitOfMeasurementRouter = require("./administration-features/ums");
 const locationRouter = require("./administration-features/locations");
 const storageLocationRouter = require("./administration-features/storage-locations");
+const processRouter = require("./administration-features/processes");
 const inventoryRouter = require("./inventories");
 const harvestRouter = require("./harvest");
 
@@ -268,6 +269,10 @@ router.use(
 router.use(
   "/administration-features/ums",
   unitOfMeasurementRouter
+);
+router.use(
+  "/administration-features/processes",
+  processRouter
 );
 router.use(
   "/inventories",

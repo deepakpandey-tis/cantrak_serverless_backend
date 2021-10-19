@@ -15,6 +15,7 @@ const changeLocation = require('./change-location');
 const getLocationTxnList = require('./get-location-txn-list');
 const wasteEntry = require('./waste-entry');
 const getWasteTxnList = require('./get-waste-txn-list');
+const getWasteTxn = require('./get-waste-txn');
 
 module.exports = {
     getLotPlantList,
@@ -34,4 +35,5 @@ module.exports = {
     getLocationTxnList,
     wasteEntry,
     getWasteTxnList,
+    getWasteTxn,
 };
