@@ -126,4 +126,11 @@ router.post('/get-waste-txn-list',
   plantController.getWasteTxnList
 );
 
+router.post('/get-waste-txn',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  plantController.getWasteTxn
+);
+
 module.exports = router;

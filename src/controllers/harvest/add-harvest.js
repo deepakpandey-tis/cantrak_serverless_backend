@@ -11,6 +11,7 @@ const ItemCategory = {
 const TxnTypes ={
     ReceiveFromSupplier: 11,
     ReceiveProductFromHarvest: 21,
+    ReceiveWasteFromPlantWaste: 22,
     ReceiveFromTxnType: 11,
     ReceiveUptoTxnType: 50,
     IssueForPlantation: 51,
