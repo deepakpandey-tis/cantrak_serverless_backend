@@ -1,6 +1,24 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
 
+const ItemCategory = {
+    RawMaterial: 1,
+    Product: 2,
+    WasteMaterial: 3,
+    FinishedGoods: 4
+};
+
+const TxnTypes ={
+    ReceiveFromSupplier: 11,
+    ReceiveProductFromHarvest: 21,
+    ReceiveWasteFromPlantWaste: 22,
+    ReceiveFromTxnType: 11,
+    ReceiveUptoTxnType: 50,
+    IssueForPlantation: 51,
+    IssueFromTxnType: 51,
+    IssueUptoTxnType: 90,
+};
+
 const addItemFromSupplier = async (req, res) => {
     try {
         let orgId = req.me.orgId;
@@ -49,7 +67,7 @@ const addItemFromSupplier = async (req, res) => {
             let insertData = {
                 orgId: orgId,
                 companyId: payload.companyId,
-                txnType: 11,
+                txnType: TxnType.ReceiveFromSupplier,
                 date: new Date(payload.date).getTime(),
                 itemCategoryId: payload.itemCategoryId,
                 itemId: payload.itemId,

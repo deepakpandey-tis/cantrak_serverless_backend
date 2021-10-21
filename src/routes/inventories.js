@@ -63,4 +63,11 @@ router.post('/get-raw-material-for-plant-list',
   inventoriesController.getRawMaterialForPlantList
 );
 
+router.post('/get-item-available-lotnos',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getItemAvailableLotNos
+);
+
 module.exports = router;

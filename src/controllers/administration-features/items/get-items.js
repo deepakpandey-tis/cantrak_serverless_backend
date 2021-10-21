@@ -7,7 +7,7 @@ const getItems = async (req, res) => {
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
-        sqlSelect = `SELECT i2."id", i2."name", i2."description", i2."umId", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation"
+        sqlSelect = `SELECT i2.*, ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation"
         `;
 
         sqlFrom = ` FROM items i2, item_categories ic, ums`;

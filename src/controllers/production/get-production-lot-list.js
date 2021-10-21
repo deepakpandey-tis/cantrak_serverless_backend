@@ -1,6 +1,6 @@
 const knexReader = require('../../db/knex-reader');
 
-const getHarvestLotList = async (req, res) => {
+const getProductionLotList = async (req, res) => {
     try {
         let orgId = req.me.orgId;
 
@@ -34,37 +34,36 @@ const getHarvestLotList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT hpl.*
-        , it."itemId", it."itemCategoryId", it.quantity "quantity", it."umId" "itemUMId", it."plantsCount" "itemPlantsCount", it.quality "quality", it."storageLocationId"
+        sqlSelect = `SELECT pl.*
         , itm.name "itemName", sl.name "storageLocationName", um.name "itemUM"
-        , c."companyName", lic.number "licenseNo", pl."lotNo" "plantLotNo"
+        , c."companyName", pl."lotNo" "plantLotNo", p.name "processName"
         , u2."name" "createdByName"
         `;
 
-        sqlFrom = ` FROM harvest_plant_lots hpl, item_txns it, items itm, ums um, companies c, storage_locations sl, licenses lic
-        , plant_lots pl, users u2
+        sqlFrom = ` FROM production_lots pl, items itm, ums um, companies c, storage_locations sl
+        , users u2, processes p
         `;
 
-        sqlWhere = ` WHERE hpl."orgId" = ${orgId} AND hpl."orgId" = it."orgId" AND hpl."companyId" = it."companyId" AND hpl.id = it."harvestPlantLotId"`;
+        sqlWhere = ` WHERE pl."orgId" = ${orgId}`;
         if(companyId){
-            sqlWhere += ` AND hpl."companyId" = ${companyId}`;
+            sqlWhere += ` AND pl."companyId" = ${companyId}`;
         }
         if(itemId){
-            sqlWhere += ` AND it."itemId" = ${itemId}`;
+            sqlWhere += ` AND pl."itemId" = ${itemId}`;
         }
         if(storageLocationId){
-            sqlWhere += ` AND it."storageLocationId" = ${storageLocationId}`;
+            sqlWhere += ` AND pl."storageLocationId" = ${storageLocationId}`;
         }
         if(lotNo){
-            sqlWhere += ` AND hpl."lotNo" iLIKE '%${lotNo}%'`;
+            sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
         }
 
-        sqlWhere += ` AND hpl."companyId" = c.id AND hpl."licenseId" = lic.id AND hpl."plantLotId" = pl.id
-          AND it."itemId" = itm.id AND it."storageLocationId" = sl.id AND it."umId" = um.id AND hpl."createdBy" = u2.id
+        sqlWhere += ` AND pl."companyId" = c.id AND pl."processId" = p.id
+          AND pl."itemId" = itm.id AND pl."storageLocationId" = sl.id AND pl."umId" = um.id AND pl."createdBy" = u2.id
         `;
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
-        //console.log('getHarvestLotList sql: ', sqlSelect + sqlFrom + sqlWhere);
+        //console.log('getProductionLotList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
@@ -74,7 +73,7 @@ const getHarvestLotList = async (req, res) => {
         sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
         sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
 
-        //console.log('getHarvestLotList: ', sqlStr);
+        //console.log('getProductionLotList: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
@@ -82,7 +81,7 @@ const getHarvestLotList = async (req, res) => {
           const result = {
             data: {
                 list: selectedRecs.rows,
-                message: "Harvest lot list!"
+                message: "Production lot list!"
             }
         }
         //console.log(result.data)
@@ -91,14 +90,14 @@ const getHarvestLotList = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][harvest][getHarvestLotList] :  Error", err);
+        console.log("[controllers][production][getProductionLotList] :  Error", err);
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
         });
     }
 }
 
-module.exports = getHarvestLotList;
+module.exports = getProductionLotList;
 
 /**
  */

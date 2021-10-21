@@ -7,7 +7,7 @@ const getProcesses = async (req, res) => {
 
         result = await knexReader('processes')
             .select("id", "name", "description")
-            .where({ isActive: true })
+            .where({ isActive: true, orgId: orgId })
             .orderBy('name', 'asc');
 
         return res.status(200).json({

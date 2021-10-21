@@ -32,11 +32,12 @@ const addHarvest = async (req, res) => {
 
         const schema = Joi.object().keys({
             companyId: Joi.string().required(),
+            plantLotId: Joi.string().required(),
             licenseId: Joi.string().required(),
             harvestedOn: Joi.date().required(),
             plantsCount: Joi.number().integer().required(),
-            harvestedPlantLotsCount: Joi.number().integer().required(),
-            harvestedPlantLotIds: Joi.array().required(),
+            specieId: Joi.string().required(),
+            strainId: Joi.string().required(),
             harvestedProducts: Joi.array().required(),
             harvestedWastes: Joi.array().required(),
         });
@@ -62,11 +63,12 @@ const addHarvest = async (req, res) => {
             let insertData = {
                 orgId: orgId,
                 companyId: payload.companyId,
+                plantLotId: payload.plantLotId,
                 licenseId: payload.licenseId,
-                harvestedPlantLotsCount: payload.harvestedPlantLotsCount,
-                harvestedPlantLotIds: payload.harvestedPlantLotIds,
                 plantsCount: payload.plantsCount,
                 harvestedOn: new Date(payload.harvestedOn).getTime(),
+                specieId: payload.specieId,
+                strainId: payload.strainId,
 
                 createdBy: userId,
                 createdAt: currentTime,
@@ -82,7 +84,7 @@ const addHarvest = async (req, res) => {
 
             insertedRecord = insertResult[0];
 
-            // Receipt Products
+            // Receive Products
             let product;
             let productRecNo;
 
@@ -95,14 +97,15 @@ const addHarvest = async (req, res) => {
                     date: new Date(payload.harvestedOn).getTime(),
                     itemCategoryId: ItemCategory.Product,
                     itemId: rec.itemId,
-//                    specieId: payload.specieId,
-//                    strainId: payload.strainId,
+                    specieId: payload.specieId,
+                    strainId: payload.strainId,
                     plantsCount: rec.plantsCount,
                     quantity: rec.quantity,
                     umId: rec.umId,
                     quality: rec.quality,
                     storageLocationId: rec.storageLocationId,
                     licenseId: payload.licenseId,
+                    plantLotId: payload.plantLotId,
                     harvestPlantLotId: insertedRecord.id,
                     createdBy: userId,
                     createdAt: currentTime,
@@ -121,7 +124,7 @@ const addHarvest = async (req, res) => {
                 insertedProductRecords[productRecNo] = insertResult[0];
             }
 
-            // Receipt Wastes
+            // Receive Wastes
             let waste;
             let wasteRecNo;
 
@@ -134,14 +137,15 @@ const addHarvest = async (req, res) => {
                     date: new Date(payload.harvestedOn).getTime(),
                     itemCategoryId: ItemCategory.WasteMaterial,
                     itemId: rec.itemId,
-//                    specieId: payload.specieId,
-//                    strainId: payload.strainId,
+                    specieId: payload.specieId,
+                    strainId: payload.strainId,
                     plantsCount: rec.plantsCount,
                     quantity: rec.quantity,
                     umId: rec.umId,
                     quality: rec.quality,
                     storageLocationId: rec.storageLocationId,
                     licenseId: payload.licenseId,
+                    plantLotId: payload.plantLotId,
                     harvestPlantLotId: insertedRecord.id,
                     createdBy: userId,
                     createdAt: currentTime,
@@ -160,13 +164,10 @@ const addHarvest = async (req, res) => {
                 insertedWasteRecords[wasteRecNo] = insertResult[0];
             }
 
-            // Update Plant Lots with harvestPlantLotId
-            // create array of values for wherein clause
-            const harvestedPlantLotIds = JSON.parse(payload.harvestedPlantLotIds).map(r => r.id);
-            console.log('harvestedPlantLotIds array: ', harvestedPlantLotIds);
+            // Update Plant Lot with harvestPlantLotId
             plantLotResult = await knex
               .update({ harvestPlantLotId: insertedRecord.id })
-              .whereIn("id", harvestedPlantLotIds)
+              .where("id", payload.plantLotId)
               .returning(["*"])
               .transacting(trx)
               .into("plant_lots");
@@ -177,7 +178,7 @@ const addHarvest = async (req, res) => {
 
         return res.status(200).json({
             data: {
-                harvestPlantLot: insertedRecord,
+                record: insertedRecord,
                 products: insertedProductRecords,
                 wastes: insertedWasteRecords
             },
