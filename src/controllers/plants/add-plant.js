@@ -134,7 +134,7 @@ const addPlant = async (req, res) => {
                 lotNo: payload.itemLotNo,
                 specieId: payload.specieId,
                 strainId: payload.strainId,
-                quantity: payload.plantsCount,
+                quantity: (payload.plantsCount * -1),
                 umId: payload.umId,
                 storageLocationId: payload.storageLocationId,
                 plantLotId: insertedRecord.id,

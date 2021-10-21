@@ -4,7 +4,7 @@ const router = Router()
 const authMiddleware = require('../../middlewares/auth')
 const roleMiddleware = require('../../middlewares/role')
 const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddleware');
-const processController = require('../../controllers/administration-features/processes.js');
+const processController = require('../../controllers/administration-features/processes/index.js');
 
 router.post('/get-process-list',
   authMiddleware.isAuthenticated,

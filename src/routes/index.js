@@ -66,6 +66,7 @@ const storageLocationRouter = require("./administration-features/storage-locatio
 const processRouter = require("./administration-features/processes");
 const inventoryRouter = require("./inventories");
 const harvestRouter = require("./harvest");
+const productionRouter = require("./production");
 
 
 const partCategoryRouter = require("./administration-features/part-category");
@@ -281,6 +282,10 @@ router.use(
 router.use(
   "/harvest",
   harvestRouter
+);
+router.use(
+  "/production",
+  productionRouter
 );
 
 
