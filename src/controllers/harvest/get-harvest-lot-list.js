@@ -35,7 +35,7 @@ const getHarvestLotList = async (req, res) => {
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT hpl.*
-        , it."itemId", it."itemCategoryId", it.quantity "quantity", it."umId" "itemUMId", it."plantsCount" "itemPlantsCount", it.quality "quality", it."storageLocationId"
+        , it."itemId", it."itemCategoryId", it.quantity "quantity", it."umId" "itemUMId", it."plantsCount" "itemPlantsCount", it.quality "quality", it."expiryDate" "expiryDate", it."storageLocationId"
         , itm.name "itemName", sl.name "storageLocationName", um.name "itemUM"
         , c."companyName", lic.number "licenseNo", pl."lotNo" "plantLotNo"
         , u2."name" "createdByName"
