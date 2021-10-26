@@ -25,14 +25,14 @@ const getItemAvailableLotNos = async (req, res) => {
         }
 
         sqlSelect = `SELECT it."itemCategoryId", it."itemId", it."lotNo", it."storageLocationId", it."specieId" , it."strainId"
-        , sum(it.quantity) "quantity"
+        , it."expiryDate", sum(it.quantity) "quantity"
         `;
 
         sqlFrom = ` FROM item_txns it`;
 
         sqlWhere = ` WHERE it."companyId" = ${payload.companyId} AND it."itemCategoryId" = ${payload.itemCategoryId} AND it."itemId" = ${payload.itemId}`;
 
-        sqlGroupBy = ` GROUP BY it."itemCategoryId", it."itemId", it."lotNo", it."storageLocationId", it."specieId" , it."strainId"`;
+        sqlGroupBy = ` GROUP BY it."itemCategoryId", it."itemId", it."lotNo", it."storageLocationId", it."specieId" , it."strainId", it."expiryDate"`;
         sqlOrderBy  = ` ORDER BY "lotNo" ASC`;
 
         sqlStr  = `WITH Main_CTE AS (`;
