@@ -101,7 +101,7 @@ const getInventoryItemsList = async (req, res) => {
           const result = {
             data: {
                 list: selectedRecs.rows,
-                message: "Strains list!"
+                message: "Inventory Items list!"
             }
         }
         //console.log(result.data)
@@ -110,7 +110,7 @@ const getInventoryItemsList = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][administration-features][inventories][getInventoryItemsList] :  Error", err);
+        console.log("[controllers][inventories][getInventoryItemsList] :  Error", err);
         return res.status(500).json({
           errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
     });

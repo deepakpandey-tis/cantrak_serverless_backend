@@ -70,4 +70,18 @@ router.post('/get-item-available-lotnos',
   inventoriesController.getItemAvailableLotNos
 );
 
+router.post('/get-item-lot-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getItemLotList
+);
+
+router.post('/add-adjustment',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.addAdjustment
+);
+
 module.exports = router;
