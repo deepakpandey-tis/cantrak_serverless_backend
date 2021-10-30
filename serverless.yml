@@ -76,23 +76,21 @@ provider:
     SITE_URL: https://d1rjriqru0gswu.cloudfront.net
     ORIGIN_URL: http://localhost:3000/
     JWT_PRIVATE_KEY: t6785464sdxfkgxhil8ed@gus4560*&%$%5664)bu54654645
-    S3_BUCKET_NAME: servicemind-resources-staging
+    S3_BUCKET_NAME: pg888-resources
     VAPID_PUBLIC_KEY: BMpCMLxldme4F8BHAKyz41cAEh8FgFvibgwdJrM7LH8Th5t47J84NVGZiPhuTOEKRBOzfsJMAgXQueLjPyoc8z0
     VAPID_PRIVATE_KEY: MwnSWApwHAJZXnhk6K1s9jqS_ndArrcMSGuI60c7gZc
-    ACCESS_KEY_ID: AKIA37VN5NQI5HY4VFVN
-    SECRET_ACCESS_KEY: 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
-    SQS_MAIL_QUEUE_URL: https://sqs.ap-southeast-1.amazonaws.com/823924714513/mail-queue
-    SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/823924714513/long-jobs
-    FROM_EMAIL_ADDRESS: no-reply@staging.servicemind.asia
-    APP_ENV: STAGE
-    S3_BUCKET_URL:  https://servicemind-resources-staging.s3.ap-southeast-1.amazonaws.com
-    SOCKET_ENDPOINT: wss://msz3mgq914.execute-api.ap-southeast-1.amazonaws.com/stage
-    CDN_URL: resources.staging.servicemind.asia
+    ACCESS_KEY_ID: AKIA2PLM3DNSLWMFB57N
+    SECRET_ACCESS_KEY: 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
+    SQS_MAIL_QUEUE_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/mail-queue
+    SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/long-jobs
+    FROM_EMAIL_ADDRESS: no-reply@servicemind.asia
+    APP_ENV: PRODUCTION
+    S3_BUCKET_URL:  https://pg888-resources.s3.ap-southeast-1.amazonaws.com
+    SOCKET_ENDPOINT: ws://0.0.0.0:3001
+    # CDN_URL: resources.servicemind.asia
     REDIS_HOST: 127.0.0.1
     REDIS_PORT: 6379
-    MNT_DIR: ${self:custom.localMountPath} 
-    THIRDPARTY_SNS_ARN: arn:aws:sns:ap-southeast-1:175922227966:servicemind-thirdparty-notifications
-    THIRDPARTY_SNS_ARN_REGION: ap-southeast-1
+    MNT_DIR: ${self:custom.localMountPath}
   vpc:
     securityGroupIds:
       - sg-085a4849cdbd4f122
