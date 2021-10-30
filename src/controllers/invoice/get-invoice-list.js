@@ -1,6 +1,6 @@
 const knexReader = require('../../db/knex-reader');
 
-const getHarvestLotList = async (req, res) => {
+const getInvoiceList = async (req, res) => {
     try {
         let orgId = req.me.orgId;
 
@@ -12,13 +12,13 @@ const getHarvestLotList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, itemId, storageLocationId } = req.body;
+        let { companyId, invoiceNo } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `"lotNo"`;
+            sortCol = `"invoiceNo"`;
         }
 
         if(!sortOrder || sortOrder === ''){
@@ -34,37 +34,29 @@ const getHarvestLotList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT hpl.*
-        , it."itemId", it."itemCategoryId", it.quantity "quantity", it."umId" "itemUMId", it."plantsCount" "itemPlantsCount", it.quality "quality", it."expiryDate" "expiryDate", it."storageLocationId"
-        , itm.name "itemName", sl.name "storageLocationName", um.name "itemUM"
-        , c."companyName", lic.number "licenseNo", pl."lotNo" "plantLotNo"
+        sqlSelect = `SELECT inv.*
+        , c."companyName", lic.number "licenseNo", c2.name "customerName"
         , u2."name" "createdByName"
         `;
 
-        sqlFrom = ` FROM harvest_plant_lots hpl, item_txns it, items itm, ums um, companies c, storage_locations sl, licenses lic
-        , plant_lots pl, users u2
+        sqlFrom = ` FROM invoices inv, companies c, licenses lic, customers c2
+        , users u2
         `;
 
-        sqlWhere = ` WHERE hpl."orgId" = ${orgId} AND hpl."orgId" = it."orgId" AND hpl."companyId" = it."companyId" AND hpl.id = it."harvestPlantLotId"`;
+        sqlWhere = ` WHERE inv."orgId" = ${orgId}`;
         if(companyId){
-            sqlWhere += ` AND hpl."companyId" = ${companyId}`;
+            sqlWhere += ` AND inv."companyId" = ${companyId}`;
         }
-        if(itemId){
-            sqlWhere += ` AND it."itemId" = ${itemId}`;
-        }
-        if(storageLocationId){
-            sqlWhere += ` AND it."storageLocationId" = ${storageLocationId}`;
-        }
-        if(lotNo){
-            sqlWhere += ` AND hpl."lotNo" iLIKE '%${lotNo}%'`;
+        if(invoiceNo){
+            sqlWhere += ` AND inv."invoiceNo" = ${invoiceNo}`;
         }
 
-        sqlWhere += ` AND hpl."companyId" = c.id AND hpl."licenseId" = lic.id AND hpl."plantLotId" = pl.id
-          AND it."itemId" = itm.id AND it."storageLocationId" = sl.id AND it."umId" = um.id AND hpl."createdBy" = u2.id
+        sqlWhere += ` AND inv."companyId" = c.id AND inv."licenseId" = lic.id
+          AND inv."customerId" = c2.id AND inv."createdBy" = u2.id
         `;
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
-        //console.log('getHarvestLotList sql: ', sqlSelect + sqlFrom + sqlWhere);
+        //console.log('getInvoiceList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
@@ -74,7 +66,7 @@ const getHarvestLotList = async (req, res) => {
         sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
         sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
 
-        //console.log('getHarvestLotList: ', sqlStr);
+        //console.log('getInvoiceList: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
@@ -82,7 +74,7 @@ const getHarvestLotList = async (req, res) => {
           const result = {
             data: {
                 list: selectedRecs.rows,
-                message: "Harvest lot list!"
+                message: "Invoice list!"
             }
         }
         //console.log(result.data)
@@ -91,14 +83,14 @@ const getHarvestLotList = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][harvest][getHarvestLotList] :  Error", err);
+        console.log("[controllers][invoice][getInvoiceList] :  Error", err);
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
         });
     }
 }
 
-module.exports = getHarvestLotList;
+module.exports = getInvoiceList;
 
 /**
  */

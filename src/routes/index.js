@@ -68,6 +68,7 @@ const processRouter = require("./administration-features/processes");
 const inventoryRouter = require("./inventories");
 const harvestRouter = require("./harvest");
 const productionRouter = require("./production");
+const invoiceRouter = require("./invoice");
 
 
 const partCategoryRouter = require("./administration-features/part-category");
@@ -78,7 +79,6 @@ const surveyUserOrderRouter = require("./users/surveyorder");
 const serviceAppointmentRouter = require("./users/service-appointment");
 const quotationUserRouter = require("./users/quotations");
 const sharedListingRouter = require("./shared-listing");
-const invoiceRouter = require("./invoice");
 const facilityBookingRouter = require("./facility_booking");
 const serviceUserDetailsRouter = require("./users/servicedetails");
 const userDashboardRouter = require("./users/dashboard");
@@ -305,6 +305,10 @@ router.use(
   "/production",
   productionRouter
 );
+router.use(
+  "/invoice", 
+  invoiceRouter
+  );
 
 
 
@@ -330,7 +334,6 @@ router.use(
 );
 router.use("/users/quotations", quotationUserRouter);
 router.use("/shared-listing", sharedListingRouter);
-router.use("/invoice", invoiceRouter);
 router.use(
   "/users/servicedetails",
   serviceUserDetailsRouter

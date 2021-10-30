@@ -102,6 +102,7 @@ const addHarvest = async (req, res) => {
                     plantsCount: rec.plantsCount,
                     quantity: rec.quantity,
                     umId: rec.umId,
+                    expiryDate: new Date(rec.expiryDate).getTime(),
                     quality: rec.quality,
                     storageLocationId: rec.storageLocationId,
                     licenseId: payload.licenseId,

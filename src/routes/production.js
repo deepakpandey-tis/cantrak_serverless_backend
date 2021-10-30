@@ -21,4 +21,11 @@ router.post('/get-production-lot-list',
   productionController.getProductionLotList
 );
 
+router.post('/get-production-lot',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  productionController.getProductionLot
+);
+
 module.exports = router;
