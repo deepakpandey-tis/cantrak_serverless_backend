@@ -44,6 +44,7 @@ const roleRouter = require("./role");
 const testRouter = require("./test");
 const taskGroupRouter = require("./administration-features/task-group");
 const organisationsRouter = require("./administration-features/organisations");
+const themePresetsRouter = require("./administration-features/themePresets");
 
 const pushNotificationRouter = require("./push-notification");
 const resourceRouter = require("./resource");
@@ -106,6 +107,10 @@ const agmTemplateRouter = require("./administration-features/agm-template");
 const parcelTypeRouter = require("./administration-features/parcel-type");
 
 const billPaymentRouter = require("./bill-payment");
+const resourceMasterRouter = require("./administration-features/resources");
+const userComponentMasterRouter = require("./administration-features/user-component");
+const themeRouter = require("./theme");
+
 
 
 /* GET home page. */
@@ -116,6 +121,9 @@ router.get("/", async (req, res, next) => {
 /**
  * Routers
  */
+
+
+router.use("/theme", themeRouter);
 router.use("/push-notification", pushNotificationRouter);
 router.use("/test", testRouter);
 router.use("/entrance", entranceRouter);
@@ -169,6 +177,8 @@ router.use(
   allUsersRouter
 );
 
+router.use("/administration-features/theme-presets", themePresetsRouter);
+
 router.use("/teams", teamsRouter);
 router.use("/vendors", vendorRouter);
 router.use("/parts", partsRouter);
@@ -215,8 +225,16 @@ router.use(
 router.use("/role", roleRouter);
 router.use(
   "/administration-features/resource",
-  resourceRouter
+  resourceMasterRouter
 );
+router.use(
+  "/administration-features/user-component",
+  userComponentMasterRouter
+);
+// router.use(
+//   "/administration-features/resource",
+//   resourceRouter
+// );
 router.use(
   "/administration-features/problem-type",
   problemTypeRouter

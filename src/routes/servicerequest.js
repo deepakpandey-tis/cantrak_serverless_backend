@@ -48,8 +48,6 @@ router.post(
 router.post(
   "/upload-image-url",
   authMiddleware.isAuthenticated,
-  roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
   serviceRequestController.getImageUploadUrl
 );
 

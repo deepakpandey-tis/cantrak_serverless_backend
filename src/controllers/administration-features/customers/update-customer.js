@@ -13,9 +13,11 @@ const updateCustomer = async (req, res) => {
 
         const schema = Joi.object().keys({
             id: Joi.string().required(),
+            contactPerson: Joi.string().required(),
             name: Joi.string().required(),
             customerTypeId: Joi.string().required(),
             taxId: Joi.allow('').optional(),
+            creditDays: Joi.number().required(),
             address: Joi.allow('').optional(),
         });
 

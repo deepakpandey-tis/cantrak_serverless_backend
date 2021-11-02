@@ -40,6 +40,8 @@ const addInvoice = async (req, res) => {
             invoiceOn: Joi.date().required(),
             customerId: Joi.string().required(),
             customerLicense: Joi.string().allow('').allow(null).required(),
+            creditDays: Joi.number().allow(0).required(),
+            dueDate: Joi.date().required(),
             invoiceItems: Joi.array().required(),
         });
 
@@ -76,6 +78,8 @@ const addInvoice = async (req, res) => {
                 licenseId: payload.licenseId,
                 invoiceOn: new Date(payload.invoiceOn).getTime(),
                 invoiceAmount: invoiceAmount,
+                creditDays: payload.creditDays,
+                dueDate: new Date(payload.dueDate).getTime(),
                 customerId: payload.customerId,
                 customerLicense: payload.customerLicense,
 
@@ -106,6 +110,8 @@ const addInvoice = async (req, res) => {
                     itemId: rec.itemId,
                     umId: rec.umId,
                     quantity: rec.quantity,
+                    unitPrice: rec.unitPrice,
+                    chargeVAT: rec.chargeVAT,
                     amount: rec.amount,
                     lotNos: JSON.stringify(rec.lotNos),
 

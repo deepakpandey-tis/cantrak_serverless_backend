@@ -23,8 +23,8 @@ const getInvoice = async (req, res) => {
         }
 
         sqlSelect = `SELECT inv.*
-        , invi."itemCategoryId", invi."itemId", invi."umId", invi.quantity "quantity", invi.amount "amount", invi."lotNos" "lotNos"
-        , i2.name "itemName", c."companyName", lic.number "licenseNo", c2.name "customerName"
+        , invi."itemCategoryId", invi."itemId", invi."umId", invi.quantity "quantity", invi."unitPrice", invi."chargeVAT", invi.amount "amount", invi."lotNos" "lotNos"
+        , i2.name "itemName", c."companyName", lic.number "licenseNo", c2.name "customerName", c2."contactPerson", c2."address", c2."taxId"
         , ic.name "itemCategoryName", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
         `;
 
