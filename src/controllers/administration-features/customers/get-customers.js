@@ -6,7 +6,7 @@ const getCustomers = async (req, res) => {
         let orgId = req.me.orgId;
 
         result = await knexReader('customers')
-            .select("id", "name")
+            .select("*")
             .where({ isActive: true, orgId: orgId })
             .orderBy('customers.name', 'asc');
 

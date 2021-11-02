@@ -12,9 +12,11 @@ const addCustomer = async (req, res) => {
         let insertedRecord = [];
 
         const schema = Joi.object().keys({
+            contactPerson: Joi.string().required(),
             name: Joi.string().required(),
             customerTypeId: Joi.string().required(),
             taxId: Joi.allow('').optional(),
+            creditDays: Joi.number().required(),
             address: Joi.allow('').optional(),
         });
 
