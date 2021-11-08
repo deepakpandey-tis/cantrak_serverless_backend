@@ -62,7 +62,7 @@ const addWasteMaterial = async (req, res) => {
             let insertData = {
                 orgId: orgId,
                 companyId: payload.companyId,
-                txnType: TxnType.ReceiveWaste,
+                txnType: TxnTypes.ReceiveWaste,
                 date: new Date(payload.date).getTime(),
                 itemCategoryId: payload.itemCategoryId,
                 itemId: payload.itemId,
