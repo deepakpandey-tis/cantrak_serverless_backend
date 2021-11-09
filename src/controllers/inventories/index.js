@@ -9,6 +9,7 @@ const getInventoryItemsList = require('./get-inventory-items-list');
 const getItemAvailableLotNos = require('./get-item-available-lotnos');
 const getItemLotList = require('./get-item-lot-list');
 const addAdjustment = require('./add-adjustment');
+const getStockLedger = require('./get-stock-ledger');
 
 module.exports = {
     addItemFromSupplier,
@@ -22,4 +23,5 @@ module.exports = {
     getItemAvailableLotNos,
     getItemLotList,
     addAdjustment,
+    getStockLedger,
 };

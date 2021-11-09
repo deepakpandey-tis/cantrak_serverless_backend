@@ -35,13 +35,13 @@ const getItemAvailableLotNos = async (req, res) => {
         sqlGroupBy = ` GROUP BY it."itemCategoryId", it."itemId", it."lotNo", it."storageLocationId", it."specieId" , it."strainId", it."expiryDate"`;
         sqlOrderBy  = ` ORDER BY "lotNo" ASC`;      //  ASC to show older lots first
 
-        sqlStr  = sqlSelect + sqlFrom + sqlWhere + sqlGroupBy + sqlOrderBy;
+        // sqlStr  = sqlSelect + sqlFrom + sqlWhere + sqlGroupBy + sqlOrderBy;
 
-/*         sqlStr  = `WITH Main_CTE AS (`;
+        sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlGroupBy + `)`;
-        sqlStr += ` SELECT * FROM Main_CTE`;
+        sqlStr += ` SELECT * FROM Main_CTE WHERE quantity > 0`;
         sqlStr += sqlOrderBy;
- */
+
         var selectedRecs = await knexReader.raw(sqlStr);
 
         return res.status(200).json({

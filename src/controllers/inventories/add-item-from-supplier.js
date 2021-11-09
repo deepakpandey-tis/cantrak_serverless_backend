@@ -67,7 +67,7 @@ const addItemFromSupplier = async (req, res) => {
             let insertData = {
                 orgId: orgId,
                 companyId: payload.companyId,
-                txnType: TxnType.ReceiveFromSupplier,
+                txnType: TxnTypes.ReceiveFromSupplier,
                 date: new Date(payload.date).getTime(),
                 itemCategoryId: payload.itemCategoryId,
                 itemId: payload.itemId,

@@ -84,4 +84,11 @@ router.post('/add-adjustment',
   inventoriesController.addAdjustment
 );
 
+router.post('/get-stock-ledger',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getStockLedger
+);
+
 module.exports = router;
