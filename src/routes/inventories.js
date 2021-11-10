@@ -98,4 +98,18 @@ router.post('/get-stock-ledger-item-storage-location',
   inventoriesController.getStockLedgerItemStorageLocation
 );
 
+router.post('/get-item-txn-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getItemTxnList
+);
+
+router.post('/get-item-txn',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getItemTxn
+);
+
 module.exports = router;
