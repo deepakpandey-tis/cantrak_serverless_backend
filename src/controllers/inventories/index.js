@@ -11,6 +11,8 @@ const getItemLotList = require('./get-item-lot-list');
 const addAdjustment = require('./add-adjustment');
 const getStockLedger = require('./get-stock-ledger');
 const getStockLedgerItemStorageLocation = require('./get-stock-ledger-item-storage-location');
+const getItemTxnList = require('./get-item-txn-list');
+const getItemTxn = require('./get-item-txn');
 
 module.exports = {
     addItemFromSupplier,
@@ -26,4 +28,6 @@ module.exports = {
     addAdjustment,
     getStockLedger,
     getStockLedgerItemStorageLocation,
+    getItemTxnList,
+    getItemTxn,
 };
