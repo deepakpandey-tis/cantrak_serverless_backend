@@ -44,6 +44,7 @@ const addProduction = async (req, res) => {
             specieId: Joi.string().allow(null).allow("").optional(),
             strainId: Joi.string().allow(null).allow("").optional(),
             itemLotNo: Joi.string().required(),
+            itemLotExpiryDate: Joi.date().allow(null).required(),
             quantity: Joi.number().required(),
             outputItems: Joi.array().required(),
         });
@@ -108,6 +109,7 @@ const addProduction = async (req, res) => {
                 strainId: payload.strainId,
                 quantity: (payload.quantity * -1),
                 umId: payload.umId,
+                expiryDate: payload.itemLotExpiryDate,
                 storageLocationId: payload.storageLocationId,
                 productionLotId: insertedRecord.id,
                 lotNo: payload.itemLotNo,
@@ -187,5 +189,8 @@ const addProduction = async (req, res) => {
 
 module.exports = addProduction;
 
+
 /**
+ * 2021/11/09 ds  Bug: Input item lot expiry date not saved in issue txn
+ *                Resolution: fixed
  */
