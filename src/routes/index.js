@@ -110,6 +110,7 @@ const billPaymentRouter = require("./bill-payment");
 const resourceMasterRouter = require("./administration-features/resources");
 const userComponentMasterRouter = require("./administration-features/user-component");
 const themeRouter = require("./theme");
+const superadminTenantRouter = require('./superadmin/tenant');
 
 
 
@@ -383,6 +384,8 @@ router.use("/administration-features/parcel-type",parcelTypeRouter);
 
 router.use("/bill-payment",billPaymentRouter);
 router.use("/db-migration",dbMigrationRouter);
+
+router.use("/superadmin/tenant", superadminTenantRouter);
 
 
 module.exports = router;
