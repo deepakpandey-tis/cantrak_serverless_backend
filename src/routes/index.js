@@ -65,6 +65,7 @@ const unitOfMeasurementRouter = require("./administration-features/ums");
 const locationRouter = require("./administration-features/locations");
 const storageLocationRouter = require("./administration-features/storage-locations");
 const processRouter = require("./administration-features/processes");
+const txnTypeRouter = require("./administration-features/txn-types");
 const inventoryRouter = require("./inventories");
 const harvestRouter = require("./harvest");
 const productionRouter = require("./production");
@@ -294,6 +295,10 @@ router.use(
   processRouter
 );
 router.use(
+  "/administration-features/txn-types", 
+  txnTypeRouter
+);
+router.use(
   "/inventories",
   inventoryRouter
 );
@@ -308,8 +313,8 @@ router.use(
 router.use(
   "/invoice", 
   invoiceRouter
-  );
-
+);
+  
 
 
 

@@ -19,7 +19,7 @@ const getItemTxnList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { itemCategoryId, lotNo, companyId, itemId, strainId, storageLocationId, supplierId } = req.body;
+        let { itemCategoryId, lotNo, companyId, itemId, strainId, storageLocationId, supplierId, txnType, fromDate, toDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -45,12 +45,13 @@ const getItemTxnList = async (req, res) => {
         , its."licenseNo" "supplierLicenseNo", its."internalCode" "supplierInternalCode", its."quality" "supplierQuality", splr.name "supplierName"
         , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
-        , l.number "licenseNumber"
+        , l.number "licenseNumber", tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh"
         `;
 
         sqlFrom = ` FROM item_txns it LEFT OUTER JOIN licenses l on l.id = it."licenseId"
         LEFT OUTER JOIN item_txn_suppliers its on its."itemTxnId" = it.id
         LEFT OUTER JOIN suppliers splr on splr.id = its."supplierId"
+        LEFT OUTER JOIN txn_types tt on tt.id = it."txnType"
         , companies c, strains s, species s2, items i2, ums
         , storage_locations sl, item_categories ic, users u2
         `;
@@ -76,6 +77,15 @@ const getItemTxnList = async (req, res) => {
         }
         if(lotNo){
             sqlWhere += ` AND it."lotNo" iLIKE '%${lotNo}%'`;
+        }
+        if(txnType){
+            sqlWhere += ` AND tt."id" = ${txnType}`;
+        }
+        if(fromDate){
+            sqlWhere += ` AND it."date" >= ${new Date(fromDate).getTime()}`;
+        }
+        if(toDate){
+            sqlWhere += ` AND it."date" <= ${new Date(toDate).getTime()}`;
         }
 
         sqlWhere += ` AND it."itemId" = i2.id AND it."strainId" = s.id AND it."specieId" = s2.id AND it."companyId" = c.id AND it."umId" = ums.id
