@@ -12,13 +12,13 @@ const getProductionLotList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, itemId, storageLocationId } = req.body;
+        let { companyId, lotNo, itemId, storageLocationId, processId, fromDate, toDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `"lotNo"`;
+            sortCol = `lotNo`;
         }
 
         if(!sortOrder || sortOrder === ''){
@@ -54,15 +54,24 @@ const getProductionLotList = async (req, res) => {
         if(storageLocationId){
             sqlWhere += ` AND pl."storageLocationId" = ${storageLocationId}`;
         }
+        if(processId){
+            sqlWhere += ` AND pl."processId" = ${processId}`;
+        }
         if(lotNo){
             sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
+        }
+        if(fromDate){
+            sqlWhere += ` AND pl."productionOn" >= ${new Date(fromDate).getTime()}`;
+        }
+        if(toDate){
+            sqlWhere += ` AND pl."productionOn" <= ${new Date(toDate).getTime()}`;
         }
 
         sqlWhere += ` AND pl."companyId" = c.id AND pl."processId" = p.id
           AND pl."itemId" = itm.id AND pl."storageLocationId" = sl.id AND pl."umId" = um.id AND pl."createdBy" = u2.id
         `;
 
-        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
+        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
         //console.log('getProductionLotList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

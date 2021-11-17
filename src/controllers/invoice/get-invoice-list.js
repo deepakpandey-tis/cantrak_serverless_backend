@@ -12,13 +12,13 @@ const getInvoiceList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, invoiceNo } = req.body;
+        let { companyId, customerId, invoiceNo, fromDate, toDate, dueFromDate, dueToDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `"invoiceNo"`;
+            sortCol = `invoiceNo`;
         }
 
         if(!sortOrder || sortOrder === ''){
@@ -47,15 +47,30 @@ const getInvoiceList = async (req, res) => {
         if(companyId){
             sqlWhere += ` AND inv."companyId" = ${companyId}`;
         }
+        if(customerId){
+            sqlWhere += ` AND inv."customerId" = ${customerId}`;
+        }
         if(invoiceNo){
-            sqlWhere += ` AND inv."invoiceNo" = ${invoiceNo}`;
+            sqlWhere += ` AND inv."invoiceNo" iLIKE '%${invoiceNo}%'`;
+        }
+        if(fromDate){
+            sqlWhere += ` AND inv."invoiceOn" >= ${new Date(fromDate).getTime()}`;
+        }
+        if(toDate){
+            sqlWhere += ` AND inv."invoiceOn" <= ${new Date(toDate).getTime()}`;
+        }
+        if(dueFromDate){
+            sqlWhere += ` AND inv."dueDate" >= ${new Date(dueFromDate).getTime()}`;
+        }
+        if(dueToDate){
+            sqlWhere += ` AND inv."dueDate" <= ${new Date(dueToDate).getTime()}`;
         }
 
         sqlWhere += ` AND inv."companyId" = c.id AND inv."licenseId" = lic.id
           AND inv."customerId" = c2.id AND inv."createdBy" = u2.id
         `;
 
-        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
+        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
         //console.log('getInvoiceList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

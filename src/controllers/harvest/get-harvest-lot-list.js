@@ -12,13 +12,13 @@ const getHarvestLotList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, itemId, storageLocationId } = req.body;
+        let { companyId, lotNo, plantLotNo, itemId, storageLocationId, fromDate, toDate, expiryFromDate, expiryToDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `"lotNo"`;
+            sortCol = `lotNo`;
         }
 
         if(!sortOrder || sortOrder === ''){
@@ -49,21 +49,36 @@ const getHarvestLotList = async (req, res) => {
         if(companyId){
             sqlWhere += ` AND hpl."companyId" = ${companyId}`;
         }
+        if(lotNo){
+            sqlWhere += ` AND hpl."lotNo" iLIKE '%${lotNo}%'`;
+        }
+        if(fromDate){
+            sqlWhere += ` AND hpl."harvestedOn" >= ${new Date(fromDate).getTime()}`;
+        }
+        if(toDate){
+            sqlWhere += ` AND hpl."harvestedOn" <= ${new Date(toDate).getTime()}`;
+        }
+        if(plantLotNo){
+            sqlWhere += ` AND pl."lotNo" iLIKE '%${plantLotNo}%'`;
+        }
         if(itemId){
             sqlWhere += ` AND it."itemId" = ${itemId}`;
         }
         if(storageLocationId){
             sqlWhere += ` AND it."storageLocationId" = ${storageLocationId}`;
         }
-        if(lotNo){
-            sqlWhere += ` AND hpl."lotNo" iLIKE '%${lotNo}%'`;
+        if(expiryFromDate){
+            sqlWhere += ` AND it."expiryDate" >= ${new Date(expiryFromDate).getTime()}`;
+        }
+        if(expiryToDate){
+            sqlWhere += ` AND it."expiryDate" <= ${new Date(expiryToDate).getTime()}`;
         }
 
         sqlWhere += ` AND hpl."companyId" = c.id AND hpl."licenseId" = lic.id AND hpl."plantLotId" = pl.id
           AND it."itemId" = itm.id AND it."storageLocationId" = sl.id AND it."umId" = um.id AND hpl."createdBy" = u2.id
         `;
 
-        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
+        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
         //console.log('getHarvestLotList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

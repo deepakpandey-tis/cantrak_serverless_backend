@@ -13,6 +13,8 @@ const getGrowthStageTxnList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
+        let { companyId, lotNo, locationId, strainId, fromDate, toDate, trackingNumber, fromGrowthStageId, toGrowthStageId} = req.body;
+
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         if(pageNumber < 1){
@@ -30,8 +32,36 @@ const getGrowthStageTxnList = async (req, res) => {
         sqlFrom = ` FROM plant_growth_stage_txns pgst, plant_lots pl, growth_stages gs, growth_stages gs2, locations l, strains s, species s2, companies c
         `;
 
-        sqlWhere = ` WHERE pgst."plantLotId" = pl.id AND pgst."fromGrowthStageId" = gs.id AND pgst."toGrowthStageId" = gs2.id`;
+        sqlWhere = ` WHERE pgst."orgId" = ${orgId}`;
+        sqlWhere += ` AND pgst."plantLotId" = pl.id AND pgst."fromGrowthStageId" = gs.id AND pgst."toGrowthStageId" = gs2.id`;
         sqlWhere += ` AND pgst."locationId" = l.id AND pl."strainId" = s.id AND pl."specieId" = s2.id and pl."companyId" = c.id `;
+        if(trackingNumber){
+            sqlWhere += ` AND pgst."id" = ${trackingNumber}`;
+        }
+        if(companyId){
+            sqlWhere += ` AND pl."companyId" = ${companyId}`;
+        }
+        if(strainId){
+            sqlWhere += ` AND pl."strainId" = ${strainId}`;
+        }
+        if(locationId){
+            sqlWhere += ` AND pgst."locationId" = ${locationId}`;
+        }
+        if(lotNo){
+            sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
+        }
+        if(fromDate){
+            sqlWhere += ` AND pgst."date" >= ${new Date(fromDate).getTime()}`;
+        }
+        if(toDate){
+            sqlWhere += ` AND pgst."date" <= ${new Date(toDate).getTime()}`;
+        }
+        if(fromGrowthStageId){
+            sqlWhere += ` AND pgst."fromGrowthStageId" = ${fromGrowthStageId}`;
+        }
+        if(toGrowthStageId){
+            sqlWhere += ` AND pgst."toGrowthStageId" = ${toGrowthStageId}`;
+        }
 
         sqlOrderBy = ` ORDER BY id desc`;
         //console.log('getGrowthStageTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);
