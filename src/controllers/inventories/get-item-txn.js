@@ -26,18 +26,19 @@ const getItemTxn = async (req, res) => {
         , its."licenseNo" "supplierLicenseNo", its."internalCode" "supplierInternalCode", its."quality" "supplierQuality", splr.name "supplierName"
         , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
-        , l.number "licenseNumber", inv."invoiceNo", inv."customerId", cust.name "customerName"
+        , l.number "licenseNumber", inv."invoiceNo", inv."customerId", cust.name "customerName", tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh"
         `;
         sqlFrom = ` FROM item_txns it LEFT OUTER JOIN licenses l on l.id = it."licenseId"
         LEFT OUTER JOIN item_txn_suppliers its on its."itemTxnId" = it.id
         LEFT OUTER JOIN suppliers splr on splr.id = its."supplierId"
         LEFT OUTER JOIN invoices inv on inv.id = it."invoiceId"
         LEFT OUTER JOIN customers cust on cust.id = inv."customerId"
-        , companies c, strains s, species s2, items i2, ums
+        , companies c, strains s, species s2, items i2, ums, txn_types tt
         , storage_locations sl, item_categories ic, users u2
         `;
         sqlWhere = ` WHERE it.id = ${payload.id} AND it."orgId" = ${orgId}`;
-        sqlWhere += ` AND it."itemId" = i2.id AND it."strainId" = s.id AND it."specieId" = s2.id AND it."companyId" = c.id AND it."umId" = ums.id
+        sqlWhere += ` AND it."itemId" = i2.id AND it."strainId" = s.id AND it."specieId" = s2.id AND it."companyId" = c.id
+          AND it."umId" = ums.id AND tt.id = it."txnType"
           AND it."storageLocationId" = sl.id AND it."itemCategoryId" = ic.id AND it."umId" = ums.id AND it."createdBy" = u2.id
         `;
 

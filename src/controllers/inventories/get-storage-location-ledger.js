@@ -44,15 +44,16 @@ const getStorageLocationLedger = async (req, res) => {
         `;
 
         //  Adding outer select to set order by 'Item Category', 'Item Name'
-        sqlStr = `SELECT ic.name "itemCategoryName", i.name "itemName", ums.name "UoM", recs.*, it."lotNo", s.name "supplierName", c.name "customerName"
+        sqlStr = `SELECT ic.name "itemCategoryName", i.name "itemName", ums.name "UoM", recs.*
+            , it."lotNo", s.name "supplierName", c.name "customerName", tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh"
             FROM (
             ${sqlSelectWith}  ${sqlSelect}
-            ) recs, item_categories ic, items i, ums, item_txns it
+            ) recs, item_categories ic, items i, ums, txn_types tt, item_txns it
             LEFT OUTER JOIN item_txn_suppliers its ON it."orgId" = its."orgId" AND it.id = its."itemTxnId"
             LEFT OUTER JOIN suppliers s ON its."supplierId" = s.id
             LEFT OUTER JOIN invoices inv ON it."orgId" = inv."orgId" AND it."invoiceId" = inv."id"
             LEFT OUTER JOIN customers c ON inv."customerId" = c.id
-            WHERE recs."itemCategoryId" = ic.id and recs."itemId" = i.id and recs."umId" = ums.id and recs.id = it.id
+            WHERE recs."itemCategoryId" = ic.id and recs."itemId" = i.id and recs."umId" = ums.id and recs.id = it.id AND tt.id = it."txnType"
             ORDER BY ic.name, i.name, recs.row;
         `;
 
