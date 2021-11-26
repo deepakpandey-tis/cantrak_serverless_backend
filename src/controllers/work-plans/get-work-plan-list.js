@@ -40,11 +40,13 @@ const getWorkPlanList = async (req, res) => {
         , u2."name" "createdByName", c."companyName", p.name "plantationName"
         `;
 
-        sqlFrom = ` FROM work_plan_master wpm, users u2, companies c, plantations p
+        sqlFrom = ` FROM work_plan_master wpm
+        LEFT JOIN plantations p ON wpm."plantationId" = p.id
+        , users u2, companies c
         `;
 
         sqlWhere = ` WHERE wpm."orgId" = ${orgId}`;
-        sqlWhere += ` AND wpm."createdBy" = u2.id AND wpm."companyId" = c.id AND wpm."plantationId" = p.id 
+        sqlWhere += ` AND wpm."createdBy" = u2.id AND wpm."companyId" = c.id
         `;
 
         if(name && name != ''){

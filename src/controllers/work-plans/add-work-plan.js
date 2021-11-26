@@ -19,8 +19,9 @@ const addWorkPlan = async (req, res) => {
         const schema = Joi.object().keys({
             name: Joi.string().required(),
             companyId: Joi.string().required(),
-            plantationId: Joi.string().required(),
-            plantationGroupIds: Joi.array().required(),
+            locationIds: Joi.array().required(),
+            // plantationId: Joi.string().required(),
+            // plantationGroupIds: Joi.array().required(),
             tasks: Joi.array().required(),
         });
 

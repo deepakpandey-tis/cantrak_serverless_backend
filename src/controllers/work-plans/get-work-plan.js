@@ -22,6 +22,59 @@ const getWorkPlan = async (req, res) => {
             });
         }
 
+        //
+        sqlSelect = `SELECT wpm.*, c."companyName", l.name "locationName"`;
+        sqlFrom = ` FROM work_plan_master wpm, companies c, locations l`;
+        sqlWhere = ` WHERE wpm."orgId" = ${orgId} and wpm.id = ${payload.id} `;
+        sqlWhere += ` AND wpm."companyId" = c.id AND wpm."orgId" = c."orgId"`;
+        sqlWhere += ` AND wpm."orgId" = l."orgId" AND wpm."companyId" = l."companyId"`;
+
+        sqlStr = sqlSelect + sqlFrom + sqlWhere;
+
+        var selectedRecs = await knexReader.raw(sqlStr);
+
+        //  Get Work Plan Tasks
+        sqlSelect = `SELECT wpt.*`;
+        sqlFrom = ` FROM work_plan_tasks wpt`;
+        sqlWhere = ` WHERE wpt."workPlanMasterId" = ${payload.id} AND wpt."orgId" = ${orgId}`;
+
+        sqlStr = sqlSelect + sqlFrom + sqlWhere;
+
+        var workPlanTasks = await knexReader.raw(sqlStr);
+
+        //  Get Work Plan Selected Locations
+        //  Checking if All Locations selected
+        const allLocations = selectedRecs.rows[0].locationIds.find(r => r.id == 0);
+
+        sqlSelect = `SELECT l.id, l.name`;
+        sqlFrom = ` FROM locations l`;
+        if(allLocations){
+            //  All Locations Selected
+            sqlWhere = ` WHERE l."orgId" = ${orgId} AND l."companyId" = ${selectedRecs.rows[0].companyId}`;
+        } else {
+            //  Some Locations Selected
+            sqlWhere = ` WHERE l."orgId" = ${orgId} AND l."companyId" = ${selectedRecs.rows[0].companyId}`;
+            sqlWhere += ` AND l.id in (`;
+            sqlWhere += ` SELECT location.id from work_plan_master wpm , jsonb_to_recordset(wpm."locationIds") as location(id bigint) where wpm.id = ${payload.id}`;
+            sqlWhere += `)`;
+        }
+
+        sqlStr = sqlSelect + sqlFrom + sqlWhere;
+
+        var workPlanLocations = await knexReader.raw(sqlStr);
+
+        console.log('workplan: ', selectedRecs.rows[0].locationIds.find(r => r.id == 0));
+        return res.status(200).json({
+            data: {
+                record: selectedRecs.rows[0],
+                workPlanLocations: workPlanLocations.rows,
+                workPlanTasks: workPlanTasks.rows
+            },
+            message: "Work Plan detail!"
+        });
+        //
+
+/* 
         sqlSelect = `SELECT wpm.*, c."companyName", p.name "plantationName"`;
         sqlFrom = ` FROM work_plan_master wpm, companies c, plantations p`;
         sqlWhere = ` WHERE wpm."orgId" = ${orgId} and wpm.id = ${payload.id} `;
@@ -73,7 +126,7 @@ const getWorkPlan = async (req, res) => {
             },
             message: "Work Plan detail!"
         });
-
+ */
     } catch (err) {
         console.log("[controllers][work-plans][getWorkPlan] :  Error", err);
         return res.status(500).json({

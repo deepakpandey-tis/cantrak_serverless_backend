@@ -101,10 +101,7 @@ const announcementRouter = require("./announcement");
 const bannersRouter = require("./administration-features/banners");
 
 const dashboardIconRouter = require("./administration-features/dashboard-icons");
-const agmRouter = require("./agm");
 
-const visitorRouter = require("./visitor");
-const agmTemplateRouter = require("./administration-features/agm-template");
 const parcelTypeRouter = require("./administration-features/parcel-type");
 
 const billPaymentRouter = require("./bill-payment");
@@ -380,10 +377,7 @@ router.use("/service-request",serviceRequestNotificationRouter);
 router.use("/announcement", announcementRouter);
 
 router.use("/dashboard-icon", dashboardIconRouter);
-router.use("/agm", agmRouter);
 
-router.use("/visitor", visitorRouter);
-router.use("/agm-template", agmTemplateRouter);
 router.use("/administration-features/parcel-type",parcelTypeRouter);
 
 router.use("/bill-payment",billPaymentRouter);

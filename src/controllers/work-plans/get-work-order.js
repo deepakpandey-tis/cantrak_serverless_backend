@@ -22,24 +22,23 @@ const getWorkOrder = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT wpsag.*, c."companyName", p.name "plantationName", pg.description`;
+        sqlSelect = `SELECT wpsa.*, c."companyName", l.name "locationName"`;
 
-        sqlFrom = ` FROM work_plan_schedule_assign_groups wpsag, companies c, plantations p, plantation_groups pg`;
+        sqlFrom = ` FROM work_plan_schedule_assign_locations wpsa, companies c, locations l`;
 
-        sqlWhere = ` WHERE wpsag.id = ${payload.id} AND wpsag."orgId" = ${orgId}`;
-        sqlWhere += ` AND wpsag."companyId" = c.id AND wpsag."orgId" = c."orgId"`;
-        sqlWhere += ` AND wpsag."plantationId" = p.id AND wpsag."orgId" = p."orgId"`;
-        sqlWhere += ` AND wpsag."plantationGroupId" = pg.id AND wpsag."orgId" = pg."orgId"`;
+        sqlWhere = ` WHERE wpsa.id = ${payload.id} AND wpsa."orgId" = ${orgId}`;
+        sqlWhere += ` AND wpsa."companyId" = c.id AND wpsa."orgId" = c."orgId"`;
+        sqlWhere += ` AND wpsa."locationId" = l.id AND wpsa."orgId" = l."orgId"`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 
         var selectedRecs = await knexReader.raw(sqlStr);
 
         //  Get Work Order Tasks
-        sqlSelect = `SELECT wpsgt.*`;
-        sqlFrom = ` FROM work_plan_schedule_group_tasks wpsgt`;
-        sqlWhere = ` WHERE wpsgt."orgId" = ${orgId} and wpsgt."workPlanScheduleAssignGroupId" = ${payload.id} `;
-        sqlOrderBy = ` ORDER BY wpsgt.id asc`;
+        sqlSelect = `SELECT wpslt.*`;
+        sqlFrom = ` FROM work_plan_schedule_location_tasks wpslt`;
+        sqlWhere = ` WHERE wpslt."orgId" = ${orgId} and wpslt."workPlanScheduleAssignLocationId" = ${payload.id} `;
+        sqlOrderBy = ` ORDER BY wpslt.id asc`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
 

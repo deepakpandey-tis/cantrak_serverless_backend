@@ -23,7 +23,7 @@ const getProductionLot = async (req, res) => {
         }
 
         sqlSelect = `SELECT pl.*
-        , p."name" "processName", ic."name" "itemCategoryName", i."name" "itemName", u."name" "itemUM", sl."name" "storageLocation"
+        , p."name" "processName", ic."name" "itemCategoryName", i."name" "itemName", i."gtin" "itemGtin", u."name" "itemUM", sl."name" "storageLocation"
         , it.quantity, it.quality, it."expiryDate", c."companyName"
         `;
         sqlFrom = ` FROM production_lots pl, item_txns it, processes p, item_categories ic, items i, ums u

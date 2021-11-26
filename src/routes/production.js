@@ -14,6 +14,13 @@ router.post('/add-production',
   productionController.addProduction
 );
 
+router.post('/get-production-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  productionController.getProductionList
+);
+
 router.post('/get-production-lot-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
