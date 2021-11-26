@@ -123,6 +123,7 @@ const addInvoice = async (req, res) => {
                     cost: rec.cost,
                     vat: rec.vat,
                     amount: rec.amount,
+                    gtin: rec.gtin,
                     lotNos: JSON.stringify(rec.lotNos),
 
                     createdBy: userId,

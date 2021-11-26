@@ -17,6 +17,7 @@ const updateItem = async (req, res) => {
             itemCategoryId: Joi.string().required(),
             umId: Joi.string().required(),
             description: Joi.string().allow("").required(),
+            gtin: Joi.string().allow("").required(),
         });
 
         const result = Joi.validate(payload, schema);
