@@ -34,6 +34,7 @@ const addItemFromSupplier = async (req, res) => {
             date: Joi.date().required(),
             itemCategoryId: Joi.number().integer().required(),
             itemId: Joi.string().required(),
+            imported: Joi.bool().default(false).optional(),
             quantity: Joi.number().required(),
             umId: Joi.string().required(),
             specieId: Joi.string().required(),
@@ -71,6 +72,7 @@ const addItemFromSupplier = async (req, res) => {
                 date: new Date(payload.date).getTime(),
                 itemCategoryId: payload.itemCategoryId,
                 itemId: payload.itemId,
+                imported: payload.imported,
                 specieId: payload.specieId,
                 strainId: payload.strainId,
                 quantity: payload.quantity,
@@ -133,4 +135,5 @@ const addItemFromSupplier = async (req, res) => {
 module.exports = addItemFromSupplier;
 
 /**
+ * 2021/11/29:  column imported added
  */
