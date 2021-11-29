@@ -70,6 +70,7 @@ const inventoryRouter = require("./inventories");
 const harvestRouter = require("./harvest");
 const productionRouter = require("./production");
 const invoiceRouter = require("./invoice");
+const misRouter = require("./mis");
 
 
 const partCategoryRouter = require("./administration-features/part-category");
@@ -310,6 +311,10 @@ router.use(
 router.use(
   "/invoice", 
   invoiceRouter
+);
+router.use(
+  "/mis", 
+  misRouter
 );
   
 
