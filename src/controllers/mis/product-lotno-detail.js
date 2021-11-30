@@ -61,7 +61,7 @@ const getProductLotNoDetail = async (req, res) => {
             var selectedHarvestRecs = await knexReader.raw(sqlStr);
 
             //  3. Plant detail of harvested item used in production
-            sqlSelect = `SELECT pl.*, l."number" "licenseNumber", l2."name" "plantLocation", it.*, i."name" "itemName", i.gtin, u."name"  "itemUM", u.abbreviation "itemUMAbbreviation", sl.name "itemStorageLocation"
+            sqlSelect = `SELECT pl.*, l."number" "licenseNumber", l2."name" "plantLocation"
             , i2."name" "rawItemName", i2.gtin "rawItemGtin", ic."name" "rawItemCategoryName", u2."name" "rawItemUM", s."name" "rawItemSupplierName", it2.quantity "rawItemQuantity", it2."date" "rawItemDate", it2."lotNo" "rawItemLotNo", it2.imported "rawItemImported", sl2."name" "rawItemStorageLocation"
             , (SELECT json_agg(row_to_json(p.*)) "plants" 
             FROM (
@@ -71,12 +71,11 @@ const getProductLotNoDetail = async (req, res) => {
             ) p
             )`;
 
-            sqlFrom = ` FROM plant_lots pl, item_txns it, items i, ums u, storage_locations sl, licenses l, locations l2
+            sqlFrom = ` FROM plant_lots pl, licenses l, locations l2
             , items i2, item_categories ic , ums u2, item_txns it2, storage_locations sl2, suppliers s 
             `;
 
-            sqlWhere = ` WHERE pl.id = '${selectedHarvestRecs.rows[0].plantLotId}' AND  pl."licenseId" = l.id and pl."locationId" = l2.id AND it."plantLotId" = pl.id AND it."itemCategoryId" = ${selectedRecs.rows[0].itemCategoryId} AND it."itemId" = ${selectedRecs.rows[0].itemId}
-            AND it."itemId" = i.id AND it."umId" = u.id AND it."storageLocationId" = sl.id
+            sqlWhere = ` WHERE pl.id = '${selectedHarvestRecs.rows[0].plantLotId}' AND  pl."licenseId" = l.id and pl."locationId" = l2.id 
             AND pl."itemId" = i2.id AND pl."itemCategoryId" = ic.id AND i2."umId" = u2.id AND pl."supplierId" = s.id 
             AND pl."itemTxnId" = it2.id AND it2."storageLocationId" = sl2.id;
             `;
