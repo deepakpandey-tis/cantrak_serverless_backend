@@ -87,7 +87,7 @@ router.post('/add-adjustment',
 router.post('/get-storage-location-ledger',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getStorageLocationLedger
 );
 
@@ -101,28 +101,28 @@ router.post('/get-stock-ledger',
 router.post('/get-stock-summary',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getStockSummary
 );
 
 router.post('/get-item-txn-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getItemTxnList
 );
 
 router.post('/get-item-txn',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getItemTxn
 );
 
 router.post('/get-stock-status',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getStockStatus
 );
 

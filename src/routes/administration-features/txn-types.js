@@ -9,7 +9,7 @@ const TxnTypeController = require('../../controllers/administration-features/txn
 router.get('/get-txn-types',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   TxnTypeController.getTxnTypes
 );
 

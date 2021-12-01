@@ -24,7 +24,7 @@ router.post('/get-harvest-lot-list',
 router.post('/get-harvest-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   harvestController.getHarvestList
 );
 
