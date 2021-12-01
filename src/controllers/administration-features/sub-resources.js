@@ -194,8 +194,8 @@ const SubResourcesController = {
                         organizations,
                         async (o) => {
 
-                            let addedSubResourcesIcon = await knex("components_icon_master")
-                            .insert({ componentId: newId, orgId: o.id, createdAt: currentTime, updatedAt: currentTime })
+                            let addedSubResourcesIcon = await knex("organisation_sub_resources_master")
+                            .insert({ "subResourceId": newId, orgId: o.id, createdAt: currentTime, updatedAt: currentTime })
                             .returning(["*"])
                             .transacting(trx);
                         }
