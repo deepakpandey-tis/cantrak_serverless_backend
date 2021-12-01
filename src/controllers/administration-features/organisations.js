@@ -293,49 +293,53 @@ const organisationsController = {
         user = insertUser[0];
 
 
-        let adminResources = req.body.resources;
-        let userResource = req.body.userResources;
+        let resources = req.body?.resources;
 
-
-        let a = adminResources, b = userResource
-        let resources = a.concat(b.filter((item) => a.indexOf(item) < 0));
+        // let resources = a.concat(b.filter((item) => a.indexOf(item) < 0));
         // Merges both arrays and gets unique items
+        
         console.log("unique ++ unique", resources);
 
-        let updateData = await knex('organisation_resources_master').update({ userStatus: false, adminStatus: false }).where({ orgId: payload.id });
-        if (resources.length > 0) {
-          for (let resourceId of resources) {
+        const Parallel = require("async-parallel");
 
-            if (userResource.includes(resourceId)) {
-              console.log("exist in user", resourceId);
-              let insertData = {
-                updatedAt: currentTime,
-                userStatus: true,
-                adminStatus: true
-              }
-              let resourceResult = await knex.update(insertData).where({ orgId: payload.id, resourceId: resourceId }).returning(['*'])
-                .transacting(trx).into('organisation_resources_master');
-              resource = resourceResult[0];
-            } 
-            else {
-              let insertData = {
-                updatedAt: currentTime,
-                adminStatus: true
-              }
-              let resourceResult = await knex.update(insertData).where({ orgId: payload.id, resourceId: resourceId }).returning(['*'])
-                .transacting(trx).into('organisation_resources_master');
-              resource = resourceResult[0];
-            }
+        rows = await Parallel.map(resources, async (pd) => {
+          let updateData = await knex('organisation_resources_master').update({ isShow: pd.isShow, isAuthorized: pd.isAuthorized }).where({ orgId: payload.id, id: pd.id });
+          return pd;
+        });
 
-          }
-        }
+        // if (resources.length > 0) {
+        //   for (let resourceId of resources) {
+
+        //     if (userResource.includes(resourceId)) {
+        //       console.log("exist in user", resourceId);
+        //       let insertData = {
+        //         updatedAt: currentTime,
+        //         userStatus: true,
+        //         adminStatus: true
+        //       }
+        //       let resourceResult = await knex.update(insertData).where({ orgId: payload.id, resourceId: resourceId }).returning(['*'])
+        //         .transacting(trx).into('organisation_resources_master');
+        //       resource = resourceResult[0];
+        //     } 
+        //     else {
+        //       let insertData = {
+        //         updatedAt: currentTime,
+        //         adminStatus: true
+        //       }
+        //       let resourceResult = await knex.update(insertData).where({ orgId: payload.id, resourceId: resourceId }).returning(['*'])
+        //         .transacting(trx).into('organisation_resources_master');
+        //       resource = resourceResult[0];
+        //     }
+
+        //   }
+        // }
         trx.commit;
 
       });
 
       return res.status(200).json({
         data: {
-          organisation: { ...organisation, ...user, ...resource }
+          organisation: { ...organisation, ...user }
         },
         message: "Organisation details updated successfully."
       });

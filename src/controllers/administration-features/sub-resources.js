@@ -13,8 +13,8 @@ const emailHelper = require('../../helpers/email')
 const XLSX = require("xlsx");
 const fs = require('fs');
 
-const userComponentController = {
-    UserComponentDetail: async (req, res) => {
+const SubResourcesController = {
+    SubResourcesDetail: async (req, res) => {
 
         let id = req.params.id;
 
@@ -23,22 +23,22 @@ const userComponentController = {
             if (!id) {
                 res.status(400).json({
                     errors: [
-                        { code: 'BAD_REQUEST', message: 'Invalid UserComponent Id' }
+                        { code: 'BAD_REQUEST', message: 'Invalid SubResources Id' }
                     ],
                 });
             }
 
-            const userComponentDetails = await knex
-            .from('user_component_master as ucm')
-            .select(['r.resourceName', 'ucm.*'])
-            .where("ucm.id", id)
+            const subResourcesDetails = await knex
+            .from('sub_resources as sr')
+            .select(['r.resourceName', 'sr.*'])
+            .where("sr.id", id)
             .leftJoin(
                 "resources as r",
-                "ucm.resourceId",
+                "sr.resourceId",
                 "r.id"
             )
             .first();
-            console.log(`[controllers][v1][v1][userComponent][userComponentDetails]: User Component Details:`, userComponentDetails);
+            console.log(`[controllers][v1][v1][SubResources][subResourcesDetails]:  SubResources Details:`, subResourcesDetails);
 
             // let resources = await knex.raw(`select "resourceId", jsonb_array_elements(jsonb_agg("accessType")) as permissions 
             //                                     from role_resource_access_master where "roleId" = ${id} group by "resourceId";`);
@@ -55,10 +55,10 @@ const userComponentController = {
             //     return res;
             // });
             // applicationRole.resources = resources;
-            return res.status(200).json({ data: userComponentDetails });
+            return res.status(200).json({ data: subResourcesDetails });
 
         } catch (err) {
-            console.log('[controllers][v1][v1][userComponent][userComponentDetails] :  Error', err);
+            console.log('[controllers][v1][v1][SubResources][subResourcesDetails] :  Error', err);
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -71,7 +71,7 @@ const userComponentController = {
 
         try {
 
-            console.log('[controllers][v1][UserComponent][list]');
+            console.log('[controllers][v1][SubResources][list]');
 
             let reqData = req.query;
 
@@ -87,22 +87,22 @@ const userComponentController = {
 
             [total, rows] = await Promise.all([
                 knex.count("r.* as count")
-                    .from("user_component_master as ucm")
+                    .from("sub_resources as sr")
                     .leftJoin(
                         "resources as r",
-                        "ucm.resourceId",
+                        "sr.resourceId",
                         "r.id"
                     )
                     .first(),
 
-                knex("user_component_master as ucm")
+                knex("sub_resources as sr")
                     .leftJoin(
                         "resources as r",
-                        "ucm.resourceId",
+                        "sr.resourceId",
                         "r.id"
                     )
-                    .select(['r.resourceName', 'ucm.*'])
-                    .orderBy("ucm.id", "desc")
+                    .select(['r.resourceName', 'r.resourceNameTh', 'sr.*'])
+                    .orderBy("sr.id", "desc")
                     .offset(offset)
                     .limit(per_page)
             ]);
@@ -135,7 +135,7 @@ const userComponentController = {
             return res.status(200).json(pagination);
 
         } catch (err) {
-            console.log('[controllers][v1][UserComponent][list] :  Error', err);
+            console.log('[controllers][v1][SubResources][list] :  Error', err);
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -144,24 +144,23 @@ const userComponentController = {
         }
     },
 
-    createUserComponent: async (req, res) => {
+    createSubResources: async (req, res) => {
 
         try {
 
-            const payload = req.body;
-            // const payload = _.omit(req.body, ["icon"]);
-            console.log('[controllers][v1][UserComponent][createUserComponent]:', req.body);
+            // const payload = req.body;
+            const payload = _.omit(req.body, ["icon", "iconCode"]);
+            console.log('[controllers][v1][SubResources][createSubResources]:', req.body);
             const schema = Joi.object().keys({
                 code: Joi.string().required().min(1).max(255),
                 componentName: Joi.string().required().min(1).max(255),
                 componentNameTh: Joi.string().required().min(1).max(255),
                 resourceId: Joi.string().required().min(1).max(255),
-                icon: Joi.string().required().min(1).max(255),
                 uri: Joi.string().required().min(1).max(255)
             });
 
             const result = schema.validate(payload);
-            console.log('[controllers][v1][uresultser][createUserComponent]: Joi Validate Result', result);
+            console.log('[controllers][v1][uresultser][createSubResources]: Joi Validate Result', result);
 
             if (result && result.hasOwnProperty('error') && result.error) {
                 return res.status(400).json({
@@ -176,12 +175,12 @@ const userComponentController = {
 
             await knex.transaction(async trx => {
                 let newId;
-                let addedUserComponent = await knex("user_component_master")
+                let addedSubResources = await knex("sub_resources")
                     .insert({ ...req.body, createdAt: currentTime, updatedAt: currentTime })
                     .returning(["*"])
                     .transacting(trx);
-                addedUserComponent = addedUserComponent && addedUserComponent[0] ? addedUserComponent[0] : addedUserComponent;
-                newId = addedUserComponent?.id;
+                addedSubResources = addedSubResources && addedSubResources[0] ? addedSubResources[0] : addedSubResources;
+                newId = addedSubResources?.id;
                 if(newId){
                     
                     let organizations = await knex("organisations as o")
@@ -195,7 +194,7 @@ const userComponentController = {
                         organizations,
                         async (o) => {
 
-                            let addedComponentIcon = await knex("components_icon_master")
+                            let addedSubResourcesIcon = await knex("components_icon_master")
                             .insert({ componentId: newId, orgId: o.id, createdAt: currentTime, updatedAt: currentTime })
                             .returning(["*"])
                             .transacting(trx);
@@ -204,12 +203,12 @@ const userComponentController = {
                 }
             });
 
-            console.log('[controllers][v1][UserComponent][createUserComponent]: Payload:', payload);
+            console.log('[controllers][v1][SubResources][createSubResources]: Payload:', payload);
 
-            return res.status(200).json({ data: {}, message: 'UserComponent Created Successfully.' });
+            return res.status(200).json({ data: {}, message: 'SubResources Created Successfully.' });
 
         } catch (err) {
-            console.log('[controllers][v1][UserComponent][createUserComponent] :  Error', err);
+            console.log('[controllers][v1][SubResources][createSubResources] :  Error', err);
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -218,7 +217,7 @@ const userComponentController = {
         }
     },
 
-    updateUserComponent: async (req, res) => {
+    updateSubResources: async (req, res) => {
 
         try {
 
@@ -226,14 +225,14 @@ const userComponentController = {
             if (!id) {
                 res.status(400).json({
                     errors: [
-                        { code: 'BAD_REQUEST', message: 'Invalid UserComponent Id' }
+                        { code: 'BAD_REQUEST', message: 'Invalid SubResources Id' }
                     ],
                 });
             }
 
             // const payload = req.body;
-            const payload = _.omit(req.body, ["icon"]);
-            console.log('[controllers][v1][v1][UserComponent][updateUserComponent]:', req.body);
+            const payload = _.omit(req.body, ["icon", "iconCode"]);
+            console.log('[controllers][v1][v1][SubResources][updateSubResources]:', req.body);
             
             const schema = Joi.object().keys({
                 code: Joi.string().required().min(1).max(255),
@@ -244,7 +243,7 @@ const userComponentController = {
             });
 
             const result = schema.validate(payload);
-            console.log('[controllers][v1][UserComponent][updateUserComponent]: Joi Validate Result', result);
+            console.log('[controllers][v1][SubResources][updateSubResources]: Joi Validate Result', result);
 
             if (result && result.hasOwnProperty('error') && result.error) {
                 return res.status(400).json({
@@ -257,7 +256,7 @@ const userComponentController = {
             let currentTime = moment().valueOf();
 
             await knex.transaction(async trx => {
-                let updatedUserComponents = await knex("user_component_master")
+                let updatedSubResourcess = await knex("sub_resources")
                     .update({ ...req.body, updatedAt: currentTime })
                     .where({id})
                     .returning(["*"])
@@ -265,12 +264,12 @@ const userComponentController = {
 
             });
 
-            console.log('[controllers][v1][v1][UserComponent][updateUserComponent]: Payload:', payload);
+            console.log('[controllers][v1][v1][SubResources][updateSubResources]: Payload:', payload);
 
-            return res.status(200).json({ data: {}, message: 'UserComponent Updated Successfully.' });
+            return res.status(200).json({ data: {}, message: 'SubResources Updated Successfully.' });
 
         } catch (err) {
-            console.log('[controllers][v1][v1][UserComponent][updateUserComponent]:  Error', err);
+            console.log('[controllers][v1][v1][SubResources][updateSubResources]:  Error', err);
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -279,7 +278,7 @@ const userComponentController = {
         }
     },
 
-    updateUserComponentStatus: async (req, res) => {
+    updateSubResourcesStatus: async (req, res) => {
 
         try {
 
@@ -287,20 +286,20 @@ const userComponentController = {
             if (!id) {
                 res.status(400).json({
                     errors: [
-                        { code: 'BAD_REQUEST', message: 'Invalid UserComponent Id' }
+                        { code: 'BAD_REQUEST', message: 'Invalid SubResources Id' }
                     ],
                 });
             }
 
             const payload = req.body;
-            console.log('[controllers][v1][v1][UserComponent][updateUserComponentStatus]:', payload);
+            console.log('[controllers][v1][v1][SubResources][updateSubResourcesStatus]:', payload);
 
             const schema = Joi.object().keys({
                 isActive: Joi.boolean().required(),
             });
 
             const result = schema.validate(payload);
-            console.log('[controllers][v1][UserComponent][updateUserComponentStatus]: Joi Validate Result', result);
+            console.log('[controllers][v1][SubResources][updateSubResourcesStatus]: Joi Validate Result', result);
 
             if (result && result.hasOwnProperty('error') && result.error) {
                 return res.status(400).json({
@@ -313,7 +312,7 @@ const userComponentController = {
             let currentTime = moment().valueOf();
 
             await knex.transaction(async trx => {
-                let updatedUserComponents = await knex("user_component_master")
+                let updatedSubResourcess = await knex("sub_resources")
                     .update({ ...payload, updatedAt: currentTime })
                     .where({id})
                     .returning(["*"])
@@ -321,12 +320,12 @@ const userComponentController = {
 
             });
 
-            console.log('[controllers][v1][v1][UserComponent][updateUserComponentStatus]: Payload:', payload);
+            console.log('[controllers][v1][v1][SubResources][updateSubResourcesStatus]: Payload:', payload);
 
-            return res.status(200).json({ data: {}, message: 'User Component Status Updated Successfully.' });
+            return res.status(200).json({ data: {}, message: ' SubResources Status Updated Successfully.' });
 
         } catch (err) {
-            console.log('[controllers][v1][v1][UserComponent][updateUserComponentStatus]:  Error', err);
+            console.log('[controllers][v1][v1][SubResources][updateSubResourcesStatus]:  Error', err);
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -336,4 +335,4 @@ const userComponentController = {
     },
     
 }
-module.exports = userComponentController
+module.exports = SubResourcesController

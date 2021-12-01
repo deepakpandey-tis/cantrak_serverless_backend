@@ -39,7 +39,7 @@ const dashboardRouter = require("./dashboard");
 const imageRouter = require("./image");
 const imageRekognitionRouter = require("./image-rekognition");
 const fileRouter = require("./file");
-const pmRouter = require("./preventive-maintenance");
+const workRouter = require("./work-plan");
 const roleRouter = require("./role");
 const testRouter = require("./test");
 const taskGroupRouter = require("./administration-features/task-group");
@@ -108,7 +108,8 @@ const parcelTypeRouter = require("./administration-features/parcel-type");
 
 const billPaymentRouter = require("./bill-payment");
 const resourceMasterRouter = require("./administration-features/resources");
-const userComponentMasterRouter = require("./administration-features/user-component");
+const orgResourceMasterRouter = require("./administration-features/org-resource");
+const subResourcesRouter = require("./administration-features/sub-resources");
 const themeRouter = require("./theme");
 const superadminTenantRouter = require('./superadmin/tenant');
 
@@ -217,7 +218,7 @@ router.use(
 router.use("/image", imageRouter);
 router.use("/image-rekognition", imageRekognitionRouter);
 router.use("/file", fileRouter);
-router.use("/preventive-maintenance", pmRouter);
+router.use("/work-plan", workRouter);
 router.use("/task-group", taskGroupRouter);
 router.use(
   "/administration-features/organisations",
@@ -229,8 +230,12 @@ router.use(
   resourceMasterRouter
 );
 router.use(
-  "/administration-features/user-component",
-  userComponentMasterRouter
+  "/administration-features/org-resource",
+  orgResourceMasterRouter
+);
+router.use(
+  "/administration-features/sub-resources",
+  subResourcesRouter
 );
 // router.use(
 //   "/administration-features/resource",
