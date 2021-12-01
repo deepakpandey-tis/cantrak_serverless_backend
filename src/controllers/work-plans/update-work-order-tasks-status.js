@@ -62,7 +62,7 @@ const updateWorkOrderTasksStatus = async (req, res) => {
                         .where({ id: woTask.id, orgId: orgId })
                         .returning(["*"])
                         .transacting(trx)
-                        .into('work_plan_schedule_group_tasks');
+                        .into('work_plan_schedule_location_tasks');
 
                     insertedRecord.push(insertResult[0]);
                 }
@@ -84,10 +84,10 @@ const updateWorkOrderTasksStatus = async (req, res) => {
 
                     const insertResult = await knex
                         .update(workOrderData)
-                        .where({ id: payload.workOrderTasks[0].workPlanScheduleAssignGroupId, orgId: orgId })
+                        .where({ id: payload.workOrderTasks[0].workPlanScheduleAssignLocationId, orgId: orgId })
                         .returning(["*"])
                         .transacting(trx)
-                        .into('work_plan_schedule_assign_groups');
+                        .into('work_plan_schedule_assign_locations');
 
                         insertWorkOrder = insertResult[0];
                 }

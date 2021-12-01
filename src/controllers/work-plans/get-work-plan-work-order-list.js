@@ -10,7 +10,7 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         let sortCol = payload.sortBy;
         let sortOrder = payload.orderBy;
 
-        const { id, workOrderDate, displayId, frequencyTag, status, plantationGroupId } = req.body;
+        const { id, workOrderDate, displayId, frequencyTag, status, locationId } = req.body;
 
         let reqData = req.query;
         let pageSize = reqData.per_page || 10;
@@ -37,33 +37,33 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT wps.*
-        , wpsag."id" "workOrderId", wpsag."displayId", wpsag."name", wpsag."plantationGroupId", wpsag."workOrderDate", wpsag."isOverdue", wpsag."status", wpsag."frequencyTag"
-        , pg."description"
+        , wpsal."id" "workOrderId", wpsal."displayId", wpsal."name", wpsal."locationId", wpsal."workOrderDate", wpsal."isOverdue", wpsal."status", wpsal."frequencyTag"
+        , l."name" "locationName"
         `;
 
-        sqlFrom = ` FROM work_plan_schedules wps, work_plan_schedule_assign_groups wpsag, plantation_groups pg
+        sqlFrom = ` FROM work_plan_schedules wps, work_plan_schedule_assign_locations wpsal, locations l
         `;
 
         sqlWhere = ` WHERE wps."orgId" = ${orgId} AND wps."workPlanMasterId" = ${id}`;
 
-        sqlWhere += ` AND wpsag."workPlanScheduleId" = wps.id AND wpsag."workOrderDate" <= ${workOrderDate} AND wpsag."plantationGroupId" = pg.id`;
-        if(plantationGroupId){
-            sqlWhere += ` AND wpsag."plantationGroupId" = ${plantationGroupId}`;
+        sqlWhere += ` AND wpsal."workPlanScheduleId" = wps.id AND wpsal."workOrderDate" <= ${workOrderDate} AND wpsal."locationId" = l.id`;
+        if(locationId){
+            sqlWhere += ` AND wpsal."locationId" = ${locationId}`;
         }
         if(displayId){
-            sqlWhere += ` AND wpsag."displayId" = ${displayId}`;
+            sqlWhere += ` AND wpsal."displayId" = ${displayId}`;
         }
         if(frequencyTag){
-            sqlWhere += ` AND wpsag."frequencyTag" = '${frequencyTag}'`;
+            sqlWhere += ` AND wpsal."frequencyTag" = '${frequencyTag}'`;
         }
         if(status){
             var arr = (status + "").split(",");
             var str = "('" + arr.join("', '") + "')";
             console.log('status: ', (status + "").split(","));
-            sqlWhere += ` AND wpsag."status" in ${str}`;
+            sqlWhere += ` AND wpsal."status" in ${str}`;
         }
 
-        sqlOrderBy = ` ORDER BY "workOrderDate" desc, "displayId" desc, "description" asc, name asc`;
+        sqlOrderBy = ` ORDER BY "workOrderDate" desc, "displayId" desc, "locationName" asc, name asc`;
         //sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
         //console.log('getWorkPlanWorkOrderList sql: ', sqlSelect + sqlFrom + sqlWhere);
 

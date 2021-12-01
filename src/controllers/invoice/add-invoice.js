@@ -40,6 +40,7 @@ const addInvoice = async (req, res) => {
             invoiceOn: Joi.date().required(),
             customerId: Joi.string().required(),
             customerLicense: Joi.string().allow('').allow(null).required(),
+            customerPo: Joi.string().allow('').allow(null).required(),
             creditDays: Joi.number().allow(0).required(),
             dueDate: Joi.date().required(),
             invoiceItems: Joi.array().required(),
@@ -66,8 +67,12 @@ const addInvoice = async (req, res) => {
             let currentTime = new Date().getTime();
 
             //  Calculate Invoice Amount
+            let invoiceCost = 0;
+            let invoiceVat = 0;
             let invoiceAmount = 0;
             for (let rec of payload.invoiceItems){
+                invoiceCost += rec.cost;
+                invoiceVat += rec.vat;
                 invoiceAmount += rec.amount;
             }
             console.log('invoice amount: ', invoiceAmount);
@@ -77,11 +82,14 @@ const addInvoice = async (req, res) => {
                 companyId: payload.companyId,
                 licenseId: payload.licenseId,
                 invoiceOn: new Date(payload.invoiceOn).getTime(),
+                invoiceCost: invoiceCost,
+                invoiceVat: invoiceVat,
                 invoiceAmount: invoiceAmount,
                 creditDays: payload.creditDays,
                 dueDate: new Date(payload.dueDate).getTime(),
                 customerId: payload.customerId,
                 customerLicense: payload.customerLicense,
+                customerPo: payload.customerPo,
 
                 createdBy: userId,
                 createdAt: currentTime,
@@ -112,7 +120,10 @@ const addInvoice = async (req, res) => {
                     quantity: rec.quantity,
                     unitPrice: rec.unitPrice,
                     chargeVAT: rec.chargeVAT,
+                    cost: rec.cost,
+                    vat: rec.vat,
                     amount: rec.amount,
+                    gtin: rec.gtin,
                     lotNos: JSON.stringify(rec.lotNos),
 
                     createdBy: userId,

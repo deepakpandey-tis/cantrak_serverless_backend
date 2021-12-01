@@ -9,7 +9,12 @@ const getInventoryItemsList = require('./get-inventory-items-list');
 const getItemAvailableLotNos = require('./get-item-available-lotnos');
 const getItemLotList = require('./get-item-lot-list');
 const addAdjustment = require('./add-adjustment');
+const getStorageLocationLedger = require('./get-storage-location-ledger');
 const getStockLedger = require('./get-stock-ledger');
+const getStockSummary = require('./get-stock-summary');
+const getItemTxnList = require('./get-item-txn-list');
+const getItemTxn = require('./get-item-txn');
+const getStockStatus = require('./get-stock-status');
 
 module.exports = {
     addItemFromSupplier,
@@ -23,5 +28,10 @@ module.exports = {
     getItemAvailableLotNos,
     getItemLotList,
     addAdjustment,
+    getStorageLocationLedger,
     getStockLedger,
+    getStockSummary,
+    getItemTxnList,
+    getItemTxn,
+    getStockStatus,
 };

@@ -84,11 +84,46 @@ router.post('/add-adjustment',
   inventoriesController.addAdjustment
 );
 
+router.post('/get-storage-location-ledger',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getStorageLocationLedger
+);
+
 router.post('/get-stock-ledger',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   inventoriesController.getStockLedger
+);
+
+router.post('/get-stock-summary',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getStockSummary
+);
+
+router.post('/get-item-txn-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getItemTxnList
+);
+
+router.post('/get-item-txn',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getItemTxn
+);
+
+router.post('/get-stock-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  inventoriesController.getStockStatus
 );
 
 module.exports = router;

@@ -44,7 +44,7 @@ const updateWorkOrderDate = async (req, res) => {
                 .where({ id: payload.id, orgId: orgId })
                 .returning(["*"])
                 .transacting(trx)
-                .into('work_plan_schedule_assign_groups');
+                .into('work_plan_schedule_assign_locations');
 
             insertedRecord = insertResult[0];
 

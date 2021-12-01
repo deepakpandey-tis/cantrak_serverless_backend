@@ -17,8 +17,9 @@ const updateWorkPlan = async (req, res) => {
             id: Joi.string().required(),
             name: Joi.string().required(),
             companyId: Joi.string().required(),
-            plantationId: Joi.string().required(),
-            plantationGroupIds: Joi.array().required(),
+            locationIds: Joi.array().required(),
+            // plantationId: Joi.string().required(),
+            // plantationGroupIds: Joi.array().required(),
             tasks: Joi.array().required(),
         });
 
@@ -64,9 +65,10 @@ const updateWorkPlan = async (req, res) => {
         await knex.transaction(async (trx) => {
             let insertData = {
                 companyId: payload.companyId,
-                plantationId: payload.plantationId,
+                // plantationId: payload.plantationId,
                 name: payload.name,
-                plantationGroupIds: payload.plantationGroupIds,
+                // plantationGroupIds: payload.plantationGroupIds,
+                locationIds: payload.locationIds,
                 updatedBy: userId,
                 updatedAt: currentTime,
             };

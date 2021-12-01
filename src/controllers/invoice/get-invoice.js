@@ -22,9 +22,9 @@ const getInvoice = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT inv.*, '' "refPo"
-        , invi."itemCategoryId", invi."itemId", invi."umId", invi.quantity "quantity", invi."unitPrice", invi."chargeVAT", invi.amount "amount", invi."lotNos" "lotNos"
-        , i2.name "itemName", i2."description" "itemDescription"
+        sqlSelect = `SELECT inv.*
+        , invi."itemCategoryId", invi."itemId", invi."umId", invi.quantity "quantity", invi."unitPrice", invi."chargeVAT", invi.amount "amount", invi.cost "cost", invi.vat "vat"
+        , invi.gtin "gtin", invi."lotNos" "lotNos", i2.name "itemName", i2."description" "itemDescription"
         , c."companyName", c."companyAddressEng", c."companyAddressThai", c.telephone "companyTelephone", c."logoFile" "companyLogoFile", c."orgLogoFile" "companyOrgLogoFile"
         , lic.number "licenseNo", c2.name "customerName", c2."contactPerson" "customerContactPerson", c2."address" "customerAddress", c2."taxId" "customerTaxId"
         , ic.name "itemCategoryName", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"

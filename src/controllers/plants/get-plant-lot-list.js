@@ -12,13 +12,13 @@ const getPlantLotList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, locationId, strainId } = req.body;
+        let { companyId, lotNo, locationId, strainId, fromDate, toDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `"lotNo"`;
+            sortCol = `lotNo`;
         }
 
         if(!sortOrder || sortOrder === ''){
@@ -56,12 +56,18 @@ const getPlantLotList = async (req, res) => {
         if(lotNo){
             sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
         }
+        if(fromDate){
+            sqlWhere += ` AND pl."plantedOn" >= ${new Date(fromDate).getTime()}`;
+        }
+        if(toDate){
+            sqlWhere += ` AND pl."plantedOn" <= ${new Date(toDate).getTime()}`;
+        }
 
         sqlWhere += ` AND pl."strainId" = s.id AND pl."specieId" = s2.id AND pl."companyId" = c.id AND pl."licenseId" = lic.id
           AND pl."locationId" = l.id AND pl."createdBy" = u2.id
         `;
 
-        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
+        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
         //console.log('getPlantLotList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

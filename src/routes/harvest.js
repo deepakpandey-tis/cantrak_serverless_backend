@@ -21,4 +21,11 @@ router.post('/get-harvest-lot-list',
   harvestController.getHarvestLotList
 );
 
+router.post('/get-harvest-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAssetAccessible,
+  harvestController.getHarvestList
+);
+
 module.exports = router;

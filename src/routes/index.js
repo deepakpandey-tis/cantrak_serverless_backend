@@ -65,10 +65,12 @@ const unitOfMeasurementRouter = require("./administration-features/ums");
 const locationRouter = require("./administration-features/locations");
 const storageLocationRouter = require("./administration-features/storage-locations");
 const processRouter = require("./administration-features/processes");
+const txnTypeRouter = require("./administration-features/txn-types");
 const inventoryRouter = require("./inventories");
 const harvestRouter = require("./harvest");
 const productionRouter = require("./production");
 const invoiceRouter = require("./invoice");
+const misRouter = require("./mis");
 
 
 const partCategoryRouter = require("./administration-features/part-category");
@@ -100,10 +102,7 @@ const announcementRouter = require("./announcement");
 const bannersRouter = require("./administration-features/banners");
 
 const dashboardIconRouter = require("./administration-features/dashboard-icons");
-const agmRouter = require("./agm");
 
-const visitorRouter = require("./visitor");
-const agmTemplateRouter = require("./administration-features/agm-template");
 const parcelTypeRouter = require("./administration-features/parcel-type");
 
 const billPaymentRouter = require("./bill-payment");
@@ -300,6 +299,10 @@ router.use(
   processRouter
 );
 router.use(
+  "/administration-features/txn-types", 
+  txnTypeRouter
+);
+router.use(
   "/inventories",
   inventoryRouter
 );
@@ -314,8 +317,12 @@ router.use(
 router.use(
   "/invoice", 
   invoiceRouter
-  );
-
+);
+router.use(
+  "/mis", 
+  misRouter
+);
+  
 
 
 
@@ -381,10 +388,7 @@ router.use("/service-request",serviceRequestNotificationRouter);
 router.use("/announcement", announcementRouter);
 
 router.use("/dashboard-icon", dashboardIconRouter);
-router.use("/agm", agmRouter);
 
-router.use("/visitor", visitorRouter);
-router.use("/agm-template", agmTemplateRouter);
 router.use("/administration-features/parcel-type",parcelTypeRouter);
 
 router.use("/bill-payment",billPaymentRouter);

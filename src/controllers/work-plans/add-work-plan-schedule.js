@@ -62,7 +62,7 @@ const addWorkPlanSchedule = async (req, res) => {
 
             insertedRecord = insertResult[0];
 
-            //  Schedule Assign Plantation Groups (Work Orders)
+            //  Location Work Order
             woNo = 0;
             for (let wo of workOrders) {
                 workOrderData = {
@@ -81,16 +81,16 @@ const addWorkPlanSchedule = async (req, res) => {
                     .insert(workOrderData)
                     .returning(["*"])
                     .transacting(trx)
-                    .into("work_plan_schedule_assign_groups");
+                    .into("work_plan_schedule_assign_locations");
 
                 insertedWorkOrders[woNo] = insertResult[0];
 
-                //  Schedule Assign Plantation Group (Work Order) Tasks
+                //  Location Work Ordr Tasks
                 woTaskNo = 0;
                 for (let woTask of workOrderTasks) {
                     workOrderTaskData = {
                         orgId: orgId,
-                        workPlanScheduleAssignGroupId: insertedWorkOrders[woNo].id,
+                        workPlanScheduleAssignLocationId: insertedWorkOrders[woNo].id,
                         ...woTask,
                         createdBy: userId,
                         createdAt: currentTime,
@@ -103,13 +103,13 @@ const addWorkPlanSchedule = async (req, res) => {
                         .insert(workOrderTaskData)
                         .returning(["*"])
                         .transacting(trx)
-                        .into("work_plan_schedule_group_tasks");
+                        .into("work_plan_schedule_location_tasks");
 
                         insertedWorkOrderTasks[woTaskNo] = insertResult[0];
                     woTaskNo += 1;
                 }
 
-                // Next Assigned Plantation Group (Work Order)
+                // Next Assigned Location (Work Order)
                 woNo += 1;
             }
 
