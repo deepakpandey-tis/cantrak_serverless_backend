@@ -13,84 +13,84 @@ router.post(
     "/get-parts",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.getParts
 );
 router.post(
     "/add-parts",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.addParts
 );
 router.post(
     "/update-part-details",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.updatePartDetails
 );
 router.post(
     "/get-part-details",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.getPartDetails
 );
 router.post(
     "/add-part-stock",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.addPartStock
 );
 router.get(
     "/search-part",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.searchParts
 );
 // router.post(
 //   "/export-part",
 //   authMiddleware.isAuthenticated,
 //   roleMiddleware.parseUserPermission,
-//   resourceAccessMiddleware.isPartAccessible,
+//   resourceAccessMiddleware.isAccessible,
 //   partsController.exportPart
 // );
 router.get(
     "/part-list",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.partList
 );
 router.get(
     "/part-code-exist",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.partCodeExist
 );
 router.get(
     "/get-part-detail-by-id",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.getPartDetailById
 );
 router.get(
     "/check-order-work-id",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.checkOrderWorkId
 );
 router.post(
     "/part-requisition-log-list",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.partRequisitionLogList
 );
 //FOR DROP DOWN ADJUST TYPE LIST
@@ -98,7 +98,7 @@ router.get(
     "/adjust-type-list",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.adjustTypeList
 );
 
@@ -116,7 +116,7 @@ router.post(
     "/delete-part",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.deletePart
 );
 
@@ -150,7 +150,7 @@ router.post(
     "/import-part-data",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.importPartData
 );
 
@@ -158,7 +158,7 @@ router.post(
     "/export-part-data",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.exportPartData
 );
 
@@ -166,91 +166,91 @@ router.post(
     "/get-service-request-assigned-parts",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.getServiceRequestAssignedParts
 );
 
 router.post("/get-service-order-assigned-parts",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.getServiceOrderAssignedParts)
 
 
 router.post("/get-quotation-assigned-parts",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.getQuotationAssignedParts)
 
 router.post('/get-pending-approval-requests-for-parts',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.getPendingApprovalRequestsForParts)
 
 router.post('/approve-part-requisition-request',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.approvePartRequisitionRequest
 )
 
 router.post('/edit-part-requisition-request',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.editPartRequisitionRequest
 )
 
 router.post('/decline-part-requisition-request',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.declinePartRequisitionRequest
 )
 
 router.post('/get-all-part-categories',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.getAllPartCategories
 )
 
 router.post('/get-available-parts', authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.getAvailableParts)
 
 router.get(
     "/check-service-order-id/",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.checkServiceOrderId
 );
 
 router.post("/delete-quotations-assigned-parts/", authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible, partsController.deleteQuotationAssignedParts
+    resourceAccessMiddleware.isAccessible, partsController.deleteQuotationAssignedParts
 );
 
 router.post('/generate-new-part-id',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.generateNewPartId)
 
 router.post('/stock-report',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.stockReport)
 
 
 router.get('/get-requisition-report',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.getRequisitionReport)
 
 router.get('/get-building-list-by-partId', authMiddleware.isAuthenticated, partsController.getBuildingListByPartId);
@@ -258,14 +258,14 @@ router.get('/get-building-list-by-partId', authMiddleware.isAuthenticated, parts
 router.post('/stock-summary-report',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.stockSummaryReport)
 
 router.post(
     "/get-pm-assign-parts",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.getPmAssignParts
 );
 
@@ -273,7 +273,7 @@ router.post(
     "/requested-part-pm",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isPartAccessible,
+    resourceAccessMiddleware.isAccessible,
     partsController.requestedPartForPm
 )
 
@@ -294,14 +294,14 @@ router.post(
 // router.post('/get-pm-assigned-part-list', 
 // authMiddleware.isAuthenticated, 
 // roleMiddleware.parseUserPermission, 
-// resourceAccessMiddleware.isPartAccessible, 
+// resourceAccessMiddleware.isAccessible, 
 // partsController.getPmAssignedPartList)
 
 
 router.get("/update-avg-price",
     // authMiddleware.isAuthenticated,
     //roleMiddleware.parseUserPermission,
-    //resourceAccessMiddleware.isCMAccessible,
+    //resourceAccessMiddleware.isAccessible,
     partsController.updateAvgPrice)
 
 

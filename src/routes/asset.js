@@ -16,7 +16,7 @@ router.post(
   "/get-asset-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   assetController.getAssetList
 );
 router.get(

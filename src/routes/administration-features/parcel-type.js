@@ -10,7 +10,7 @@ router.post(
   "/add-parcel-type",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelTypeController.addParcelType
 );
 
@@ -18,7 +18,7 @@ router.post(
   "/get-parcel-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelTypeController.getParcelTypeList
 )
 
@@ -26,7 +26,7 @@ router.post(
   "/get-parcel-type-detail",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelTypeController.getParcelTypeDetail
 )
 
@@ -34,7 +34,7 @@ router.post(
   "/update-parcel-type",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelTypeController.updateParcelType
 )
 
@@ -42,7 +42,7 @@ router.post(
   "/toggle-parcel-type",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelTypeController.toggleParcelType
 )
 

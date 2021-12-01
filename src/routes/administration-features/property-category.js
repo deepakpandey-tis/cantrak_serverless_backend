@@ -12,19 +12,19 @@ const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddle
 router.post('/add-category',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   propertyCategoryController.addCategory);
 
 router.post('/update-category',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   propertyCategoryController.updateCategory);
 
 router.post('/delete-category',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   propertyCategoryController.deleteCategory);
 
 router.get('/property-category-list', authMiddleware.isAuthenticated, propertyCategoryController.propertyCategoryList);
@@ -32,13 +32,13 @@ router.get('/property-category-list', authMiddleware.isAuthenticated, propertyCa
 router.post('/category-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   propertyCategoryController.categoryList);
 
 router.post('/get-category-details',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   propertyCategoryController.getCategoryDetails);
 
 //Export Property  Category Data
@@ -48,7 +48,7 @@ router.get('/export-property-category', authMiddleware.isAuthenticated, property
 router.get('/export-category',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   propertyCategoryController.exportCategory);
 //DROP DOWN ASSET LIST
 router.get('/asset-category-list', authMiddleware.isAuthenticated, propertyCategoryController.assetCategoryList);
@@ -81,7 +81,7 @@ var upload = multer({ storage: storage });
 router.post('/import-problem-category-data', upload.single('file'),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   propertyCategoryController.importProblemCategoryData)
 
 

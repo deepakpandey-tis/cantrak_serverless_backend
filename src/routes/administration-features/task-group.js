@@ -11,7 +11,7 @@ router.post(
   "/create-task-group-template",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.createTaskGroupTemplate
 );
 
@@ -20,7 +20,7 @@ router.post(
   "/get-group-template-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getGroupTemplateList
 );
 
@@ -29,7 +29,7 @@ router.post(
   "/get-group-task-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getGroupTaskList
 );
 
@@ -38,7 +38,7 @@ router.post(
   "/create-pm-taskgroup-schedule",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.createPmTaskgroupSchedule
 );
 
@@ -47,7 +47,7 @@ router.post(
   "/get-taskgroup-schedule-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getTaskGroupScheduleList
 );
 
@@ -55,7 +55,7 @@ router.post(
   "/get-pm-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getPmList
 );
 
@@ -64,7 +64,7 @@ router.post(
   "/create-brand-new-pm",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
 
   taskGroupController.createBrandNewPm
 );
@@ -74,14 +74,14 @@ router.post(
   "/get-task-group-asset-pms-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getTaskGroupAssetPmsList
 );
 router.post(
   "/get-task-group-asset-pms-list-on-today",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getTaskGroupAssetPmsListOnToday
 );
 
@@ -90,7 +90,7 @@ router.post(
   "/create-task-template",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.createTaskTemplate
 );
 // GET TASK TEMPLATE LIST
@@ -98,7 +98,7 @@ router.post(
   "/get-task-template-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getTaskTemplateList
 );
 
@@ -107,7 +107,7 @@ router.post(
   "/get-task-template-complete-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getTaskTemplateComplateList
 );
 
@@ -116,7 +116,7 @@ router.post(
   "/get-taskgroup-asset-pm-details",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getTaskgroupAssetPmDetails
 );
 
@@ -125,7 +125,7 @@ router.post(
   "/get-pm-task-details",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getPmTaskDetails
 );
 
@@ -133,56 +133,56 @@ router.post(
   "/create-pm-template",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.createPMTemplate
 );
 router.post(
   "/update-task-status",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.updateTaskStatus
 );
 router.post(
   "/send-feedback-for-task",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.sendFeedbackForTask
 );
 router.post(
   "/edit-work-order",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.editWorkOrder
 );
 router.post(
   "/get-task-group-details",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getTaskGroupDetails
 );
 router.post(
   "/get-task-group-template-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getTaskGroupTemplateList
 );
 router.post(
   "/update-task-group-template-detail",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.updateTaskGroupDetails
 );
 router.post(
   "/get-task-feedbacks",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getFeedbacksOfTask
 );
 
@@ -190,14 +190,14 @@ router.post(
   "/get-task-group-schedule-details",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getTaskGroupScheduleDetails
 );
 router.post(
   "/update-old-task-group-schedule-with-work-orders",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.updateOldTaskGroupScheduleWithWorkOrders
 );
 
@@ -205,7 +205,7 @@ router.post(
   '/toggle-pm-template-status',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.togglePmTemplateStatus
 )
 
@@ -232,7 +232,7 @@ router.post(
   "/task-perform",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.taskPerform
 );
 
@@ -241,7 +241,7 @@ router.post(
   "/all-task-perform",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.allTaskPerform
 );
 
@@ -250,7 +250,7 @@ router.post(
   "/task-feedback",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.taskFeedback
 );
 
@@ -258,7 +258,7 @@ router.post(
   "/get-work-order-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getWorkOrderList
 )
 
@@ -266,7 +266,7 @@ router.post(
   "/update-task-status-result",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.updateTaskStatusResult
 )
 
@@ -275,42 +275,42 @@ router.post(
   "/get-work-order-report",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.getWorkOrderReport
 );
 
 router.post('/cancel-pm-plan',authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
-resourceAccessMiddleware.isPMAccessible,
+resourceAccessMiddleware.isAccessible,
 taskGroupController.cancelPmPlan
 );
 
 router.post('/get-team-data-from-workOrderId',authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
-resourceAccessMiddleware.isPMAccessible,
+resourceAccessMiddleware.isAccessible,
 taskGroupController.getTeamDataByWorkOrderId
 )
 
 router.post('/get-additional-user-by-workOrderId',authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
-resourceAccessMiddleware.isPMAccessible,
+resourceAccessMiddleware.isAccessible,
 taskGroupController.getAdditionalUsersByWorkOrderId
 )
 router.post('/get-task-name-by-workOrderDate',authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
-resourceAccessMiddleware.isPMAccessible,
+resourceAccessMiddleware.isAccessible,
 taskGroupController.getTaskNameFromWorkOrderDate
 )
 
 router.post('/get-workDate-by-pmId',authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
-resourceAccessMiddleware.isPMAccessible,
+resourceAccessMiddleware.isAccessible,
 taskGroupController.getWorkOrderDateFromPmId
 )
 
 router.post('/get-workOrderList-By-Date',authMiddleware.isAuthenticated,
 roleMiddleware.parseUserPermission,
-resourceAccessMiddleware.isPMAccessible,
+resourceAccessMiddleware.isAccessible,
 taskGroupController.getWorkOrderListFromDate
 )
 
@@ -318,7 +318,7 @@ router.post(
   '/import-workOrder-checklist',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   taskGroupController.importPmChecklist
 )
 

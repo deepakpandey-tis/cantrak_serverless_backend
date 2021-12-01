@@ -14,38 +14,38 @@ const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddle
 router.post('/add-wht',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   whtController.addWht);
 
 router.post('/update-wht',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   whtController.updateWht);
 
 router.post('/get-wht-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   whtController.getWhtList);
 
 router.post('/delete-wht',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   whtController.deleteWht);
 
 router.post('/get-wht-details',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   whtController.viewWhtDetails);
 
 router.get(
   "/export-wht-data",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   whtController.exportWhtData
 );
 
@@ -77,7 +77,7 @@ router.post(
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   whtController.importWhtData
 );
 module.exports = router;

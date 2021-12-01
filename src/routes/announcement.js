@@ -28,7 +28,7 @@ router.post(
   "/get-announcement-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAnnouncementAccessible,
+  resourceAccessMiddleware.isAccessible,
   announcementController.getAnnouncementList
 );
 

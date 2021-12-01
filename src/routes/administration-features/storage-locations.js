@@ -10,42 +10,42 @@ const storageLocationController = require('../../controllers/administration-feat
 router.post('/get-storage-location-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   storageLocationController.getStorageLocationList
 );
 
 router.post('/get-storage-locations',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   storageLocationController.getStorageLocations
 );
 
 router.post('/get-storage-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   storageLocationController.getStorageLocation
 );
 
 router.post('/add-storage-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   storageLocationController.addStorageLocation
 );
 
 router.post('/update-storage-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   storageLocationController.updateStorageLocation
 );
 
 router.post('/delete-storage-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   storageLocationController.deleteStorageLocation
 );
 

@@ -15,43 +15,43 @@ const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddle
 router.post('/add-taxes',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   taxesController.addTaxes);
 
 router.post('/update-taxes',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   taxesController.updateTaxes);
 
 router.post('/get-taxes-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   taxesController.getTaxesList);
 
 router.post('/delete-taxes',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   taxesController.deleteTaxes);
 
 router.post('/get-taxes-details',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   taxesController.viewTaxDetails);
 
 router.get('/export-tax-data',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   taxesController.exportTaxeData);
 
 router.get('/get-tax-list-details',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   taxesController.getTaxesListDetails);
 
 
@@ -83,7 +83,7 @@ router.post(
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isBillingAccessible,
+  resourceAccessMiddleware.isAccessible,
   taxesController.importTaxData
 );
 module.exports = router;

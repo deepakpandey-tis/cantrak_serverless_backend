@@ -10,84 +10,84 @@ const inventoriesController = require('../controllers/inventories');
 router.post('/get-item-from-supplier-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getItemFromSupplierList
 );
 
 router.post('/get-item-from-supplier',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getItemFromSupplier
 );
 
 router.post('/add-item-from-supplier',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.addItemFromSupplier
 );
 
 router.post('/get-waste-material-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getWasteMaterialList
 );
 
 router.post('/get-inventory-items-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getInventoryItemsList
 );
 
 router.post('/get-waste-material',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getWasteMaterial
 );
 
 router.post('/add-waste-material',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.addWasteMaterial
 );
 
 router.post('/get-raw-material-for-plant-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getRawMaterialForPlantList
 );
 
 router.post('/get-item-available-lotnos',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getItemAvailableLotNos
 );
 
 router.post('/get-item-lot-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getItemLotList
 );
 
 router.post('/add-adjustment',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.addAdjustment
 );
 
 router.post('/get-stock-ledger',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   inventoriesController.getStockLedger
 );
 

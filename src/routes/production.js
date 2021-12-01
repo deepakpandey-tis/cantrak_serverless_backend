@@ -10,21 +10,21 @@ const productionController = require('../controllers/production');
 router.post('/add-production',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   productionController.addProduction
 );
 
 router.post('/get-production-lot-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   productionController.getProductionLotList
 );
 
 router.post('/get-production-lot',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   productionController.getProductionLot
 );
 

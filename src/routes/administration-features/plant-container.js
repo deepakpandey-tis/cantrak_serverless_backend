@@ -11,25 +11,25 @@ const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddle
 router.post('/add-plant-container',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantContainerController.addPlantContainer)
 
 router.post('/update-plant-container',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantContainerController.updatePlantContainer)
 
 router.post('/view-plant-container',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantContainerController.viewPlantContainer)
 
 router.post('/delete-plant-container',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantContainerController.deletePlantContainer)
 
 router.post('/get-plant-container-list-by-group',
@@ -39,7 +39,7 @@ router.post('/get-plant-container-list-by-group',
 router.post('/get-plant-container-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantContainerController.getPlantContainerList)
 
 router.get('/get-plant-container-all-list',
@@ -51,13 +51,13 @@ router.get('/get-plant-container-all-list',
 router.get('/export-plant-container',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantContainerController.exportPlantContainer)
 
 router.post('/get-plant-container-detail',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantContainerController.getPlantContainerDetail)
 
   /* pg888: not required
@@ -104,7 +104,7 @@ router.get("/get-all-plant-container",
 router.post('/toggle-status',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantContainerController.toggleStatus);
 
 router.post('/get-plant-container-by-multiple-group', authMiddleware.isAuthenticated, plantContainerController.getPlantContainersByMultipleGroup);

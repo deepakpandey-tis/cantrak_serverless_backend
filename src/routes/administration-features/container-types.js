@@ -10,42 +10,42 @@ const containerTypeController = require('../../controllers/administration-featur
 router.post('/get-container-type-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   containerTypeController.getContainerTypeList
 );
 
 router.get('/get-container-types',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   containerTypeController.getContainerTypes
 );
 
 router.get('/get-container-type',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   containerTypeController.getContainerType
 );
 
 router.post('/add-container-type',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   containerTypeController.addContainerType
 );
 
 router.post('/update-container-type',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   containerTypeController.updateContainerType
 );
 
 router.post('/toggle-container-type',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   containerTypeController.deleteContainerType
 );
 
