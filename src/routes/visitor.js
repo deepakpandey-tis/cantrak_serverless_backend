@@ -22,14 +22,14 @@ router.post(
     "/get-admin-property-units"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
-    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , resourceAccessMiddleware.isAccessible
     , visitorController.getAdminPropertyUnits)
 
 router.post(
     "/get-unit-tenants"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
-    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , resourceAccessMiddleware.isAccessible
     , visitorController.getUnitTenants)
 
 
@@ -49,7 +49,7 @@ router.post(
     "/get-visitor-list"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
-    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , resourceAccessMiddleware.isAccessible
     , visitorController.getVisitorList
 );
 
@@ -57,7 +57,7 @@ router.get(
     "/get-checkin-visitors"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
-    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , resourceAccessMiddleware.isAccessible
     , visitorController.getCheckinVisitors
 );
 
@@ -65,7 +65,7 @@ router.get(
     "/get-checkout-visitors"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
-    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , resourceAccessMiddleware.isAccessible
     , visitorController.getCheckoutVisitors
 );
 
@@ -98,7 +98,7 @@ router.post(
     "/checkin-visitor"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
-    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , resourceAccessMiddleware.isAccessible
     , visitorController.checkinVisitor
 );
 
@@ -106,7 +106,7 @@ router.post(
     "/checkout-visitor"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
-    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , resourceAccessMiddleware.isAccessible
     , visitorController.checkoutVisitor
 );
 
@@ -129,7 +129,7 @@ router.post(
     "/get-calendar-count"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
-    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , resourceAccessMiddleware.isAccessible
     , visitorController.getCalendarCount
 );
 
@@ -137,7 +137,7 @@ router.get(
     "/get-company-list"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
-    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , resourceAccessMiddleware.isAccessible
     , visitorController.getCompanyList
 );
 
@@ -145,7 +145,7 @@ router.post(
     "/get-calendar-visitor-list"
     , authMiddleware.isAuthenticated
     , roleMiddleware.parseUserPermission
-    , resourceAccessMiddleware.isVisitorManagementAccessible
+    , resourceAccessMiddleware.isAccessible
     , visitorController.getCalendarVisitorList
 );
 
@@ -153,7 +153,7 @@ router.post(
     "/get-tenant-visitor-list"
     , authMiddleware.isAuthenticated
     //, roleMiddleware.parseUserPermission
-    //, resourceAccessMiddleware.isVisitorManagementAccessible
+    //, resourceAccessMiddleware.isAccessible
     , visitorController.getTenantVisitorList
 );
 
