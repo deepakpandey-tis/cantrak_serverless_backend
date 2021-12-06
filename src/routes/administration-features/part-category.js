@@ -9,37 +9,37 @@ const partCategoryController = require('../../controllers/administration-feature
 router.post('/add-part-category',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPartAccessible,
+  resourceAccessMiddleware.isAccessible,
   partCategoryController.addPartCategory)
 
 router.post('/update-part-category',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPartAccessible,
+  resourceAccessMiddleware.isAccessible,
   partCategoryController.updatePartCategory)
 
 router.post('/part-category-details',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPartAccessible,
+  resourceAccessMiddleware.isAccessible,
   partCategoryController.viewPartCategory)
 
 router.post('/delete-part-category',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPartAccessible,
+  resourceAccessMiddleware.isAccessible,
   partCategoryController.deletePartCategory)
 /// Export Asset Category Data 
 router.get('/export-part-category',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPartAccessible,
+  resourceAccessMiddleware.isAccessible,
   partCategoryController.exportPartCategory)
 
 router.post('/get-part-category-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPartAccessible,
+  resourceAccessMiddleware.isAccessible,
   partCategoryController.getPartCategoryList)
 
 
@@ -71,7 +71,7 @@ router.post(
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPartAccessible,
+  resourceAccessMiddleware.isAccessible,
   partCategoryController.importPartCategoryData
 );
 

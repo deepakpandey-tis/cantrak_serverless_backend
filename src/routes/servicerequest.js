@@ -14,7 +14,7 @@ router.post(
   "/post-service-request",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.addServiceRequest
 );
 
@@ -22,18 +22,18 @@ router.post(
   "/add-service-problems",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.addServiceProblems
 );
 
 // router.post('/update-service-request', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-// 	resourceAccessMiddleware.isCMAccessible, serviceRequestController.updateServiceRequest);
+// 	resourceAccessMiddleware.isAccessible, serviceRequestController.updateServiceRequest);
 
 router.post(
   "/get-service-request-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getServiceRequestList
 );
 
@@ -41,7 +41,7 @@ router.post(
   "/upload-images",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.updateImages
 );
 
@@ -55,7 +55,7 @@ router.post(
   "/add-service-request-part",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.addServiceRequestPart
 );
 
@@ -63,7 +63,7 @@ router.post(
   "/add-service-request-asset",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.addServiceRequestAsset
 );
 
@@ -71,28 +71,28 @@ router.post(
   "/delete-service-request-part",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.deleteServiceRequestPart
 );
 router.post(
   "/delete-service-request-asset",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.deleteServiceRequestAsset
 );
 router.post(
   "/export-service-request",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.exportServiceRequest
 );
 router.post(
   "/get-property-units",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getPropertyUnits
 );
 
@@ -100,14 +100,14 @@ router.post(
   "/get-service-request-report-data",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getServiceRequestReportData
 );
 router.post(
   "/get-service-request-assigned-assets",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getServiceRequestAssignedAssets
 );
 
@@ -116,7 +116,7 @@ router.get(
   "/get-house-details",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getHouseDetailData
 );
 
@@ -125,7 +125,7 @@ router.post(
   "/create-service-request",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.createServiceRequest
 );
 
@@ -134,7 +134,7 @@ router.get(
   "/get-houseid-by-unit-no",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getHouseIdByUnitNo
 );
 /*GET SERVICE REQUEST DETAILS BY SERVICE REQUEST ID. */
@@ -142,7 +142,7 @@ router.get(
   "/get-service-request-detail-by-id",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getServiceRequestDetailById
 );
 
@@ -151,7 +151,7 @@ router.post(
   "/edit-service-request",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.editServiceRequest
 );
 
@@ -159,14 +159,14 @@ router.post(
   "/decline-service-request",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.declineServiceRequest
 );
 router.post(
   "/approve-service-request",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.approveServiceRequest
 );
 
@@ -174,7 +174,7 @@ router.post(
   "/delete-service-problem",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.deleteServiceProblem
 );
 
@@ -182,7 +182,7 @@ router.post(
   "/check-service-request-id",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.checkServiceRequestId
 );
 
@@ -190,14 +190,14 @@ router.post(
   "/get-service-request-assigned-teams",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getServiceAssignedTeamAndUsers
 );
 router.post(
   "/update-service-request-project-id",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.updateServiceRequestProjectId
 );
 
@@ -205,7 +205,7 @@ router.post(
   "/get-assigned-assets-by-entity",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getAssignedAssetsByEntity
 );
 
@@ -213,28 +213,28 @@ router.post(
   "/get-service-order-id-by-service-request-id",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getServiceOrderIdByServiceRequestId
 );
 router.post(
   "/get-service-order-id-by-service-request-id-asset",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getServiceOrderIdByServiceRequestId
 );
 router.post(
   "/get-service-request-id-by-service-order-id",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getServiceRequestIdByServiceOrderId
 );
 router.post(
   "/get-service-request-id-by-service-order-id-asset",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getServiceRequestIdByServiceOrderId
 );
 
@@ -242,7 +242,7 @@ router.post(
   "/get-service-request-for-report",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getServiceRequestForReport
 );
 
@@ -264,7 +264,7 @@ router.post(
   "/get-report-by-status",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getReportByStatus
 );
 
@@ -273,7 +273,7 @@ router.post(
   "/get-report-by-team",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getReportByTeam
 );
 
@@ -282,7 +282,7 @@ router.post(
   "/get-report-by-system",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getReportBySystem
 );
 
@@ -291,7 +291,7 @@ router.post(
   "/get-report-by-tag",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getReportByTag
 );
 
@@ -300,7 +300,7 @@ router.post(
   "/get-report-cm-revenue",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   serviceRequestController.getReportCmRevenue
 );
 

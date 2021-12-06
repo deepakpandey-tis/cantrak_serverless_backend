@@ -13,24 +13,24 @@ const chargeController = require("../controllers/charge")
 router.post('/add-charge',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isBillingAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.addCharge)
 router.post('/update-charge',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isBillingAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.updateCharge)
 
 router.post('/delete-charge',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isBillingAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.deleteCharges)
 
 router.post('/get-charges-list',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isBillingAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.getChargesList)
 
 router.post('/add-service-order-fix-charge', authMiddleware.isAuthenticated, chargeController.addServiceOrderFixCharge)
@@ -41,25 +41,25 @@ router.post('/add-service-request-fix-charge', authMiddleware.isAuthenticated, c
 router.get('/export-charge',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isBillingAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.exportCharge)
 
 router.get('/get-vat-code-list',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isBillingAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.getVatCodeList)
 
 router.get('/get-wht-code-list',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isBillingAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.getWhtCodeList)
 
 router.post('/charges-details',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isBillingAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.getChargesDetails)
 
 
@@ -93,23 +93,23 @@ router.post("/import-charge-data", upload.single("file"), authMiddleware.isAuthe
 
 router.post("/get-quotation-assigned-charges", authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.getQuotationAssignedCharges)
 
 router.post("/get-service-order-assigned-charges", authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.getServiceOrderAssignedCharges)
 
 router.post("/get-service-request-assigned-charges",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.getServiceRequestAssignedCharges)
 
 router.post("/delete-quotations-assigned-charges/", authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     chargeController.deleteQuotationAssignedCharges);
 
 module.exports = router;

@@ -10,7 +10,7 @@ router.post(
   "/get-problem-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemController.getProblems
 );
 // Export SUBCATEGORY Problem Data
@@ -18,7 +18,7 @@ router.get(
   "/export-problem-subcategory",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemController.exportProblem
 );
 
@@ -32,7 +32,7 @@ router.post(
   "/get-subcategories-by-category",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemController.getSubcategories
 );
 
@@ -40,7 +40,7 @@ router.get(
   "/get-problem-details",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemController.getProblemDetails
 );
 
@@ -71,14 +71,14 @@ router.post(
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemController.importProblemSubCategoryData
 );
 router.post(
   "/toggle-problem-status",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemController.deleteProblem
 );
 router.post(

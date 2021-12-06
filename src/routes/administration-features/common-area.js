@@ -13,35 +13,35 @@ router.post(
   "/add-common-area",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   commonAreaController.addCommonArea
 );
 router.post(
   "/update-common-area",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   commonAreaController.updateCommonArea
 );
 router.post(
   "/get-common-area-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   commonAreaController.getCommonAreaList
 );
 router.post(
   "/delete-common-area",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   commonAreaController.deleteCommonArea
 );
 router.post(
   "/view-common-area",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   commonAreaController.getdetailsCommonArea
 );
 // Export Common Area 
@@ -49,7 +49,7 @@ router.post(
   "/export-common-area",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   commonAreaController.exportCommonArea
 );
 
@@ -80,7 +80,7 @@ router.post(
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   commonAreaController.importCommonAreaData
 );
 
@@ -89,7 +89,7 @@ router.get(
   "/get-common-area-all-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   commonAreaController.getCommonAreaAllList
 );
 

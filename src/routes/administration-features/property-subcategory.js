@@ -14,7 +14,7 @@ router.post('/add-subcategory', authMiddleware.isAuthenticated, propertySubCateg
 router.post('/update-subcategory',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     propertySubCategoryController.updateSubCategory);
 
 router.post('/delete-subcategory', authMiddleware.isAuthenticated, propertySubCategoryController.deleteSubCategory);

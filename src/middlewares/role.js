@@ -53,17 +53,25 @@ const roleMiddleware = {
               .select("id")
               .where({ orgId: req.orgId });
 
-            const resources = await knexReader("organisation_resources_master")
-              .select("resourceId as id")
-              .where({ orgId: req.orgId });
+            const resources = await knexReader("organisation_resources_master as orm")
+              .leftJoin(
+                "resources as r",
+                "r.id",
+                "orm.resourceId"
+              )
+              .select("r.id as id", "r.code")
+              .where({ 'orm.orgId': req.orgId })
+              .where({ 'orm.isAuthorized': true });
 
             userProjectResources = _.uniqBy(resources, "id").map(v => ({
               id: v.id,
+              code: v.code,
               plantations: plantations.map(v => v.id)
             }));
 
             userCompanyResources = _.uniqBy(resources, "id").map(v => ({
               id: v.id,
+              code: v.code,
               companies: companies.map(v => v.id)
             }));
 

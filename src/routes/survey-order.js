@@ -12,21 +12,21 @@ router.post('/update-survey-order', authMiddleware.isAuthenticated, surveyOrderC
 // We can also get survey order by serviceRequestId so we support both at same route
 //TODO: REMOVE BELOW API
 router.post('/get-survey-orders', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible, surveyOrderController.getSurveyOrderList)
+    resourceAccessMiddleware.isAccessible, surveyOrderController.getSurveyOrderList)
 
 router.post('/get-survey-order-list-new', 
 authMiddleware.isAuthenticated, 
 roleMiddleware.parseUserPermission, 
-resourceAccessMiddleware.isCMAccessible,
+resourceAccessMiddleware.isAccessible,
 surveyOrderController.getSurveyOrderListNew)
 
 router.post('/get-survey-order-details', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-resourceAccessMiddleware.isCMAccessible, surveyOrderController.getSurveyOrderDetails)
+resourceAccessMiddleware.isAccessible, surveyOrderController.getSurveyOrderDetails)
 /// Survey Order Export Data 
 router.post('/export-survey-order', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible, surveyOrderController.exportSurveyOrder);
+    resourceAccessMiddleware.isAccessible, surveyOrderController.exportSurveyOrder);
 router.post('/update-survey-status', authMiddleware.isAuthenticated, roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible, surveyOrderController.updateSurveyStatus)
+    resourceAccessMiddleware.isAccessible, surveyOrderController.updateSurveyStatus)
 
 
 module.exports = router;

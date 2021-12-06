@@ -10,7 +10,7 @@ const misController = require('../controllers/mis');
 router.post('/get-product-lotno-detail',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   misController.getProductLotNoDetail
 );
 

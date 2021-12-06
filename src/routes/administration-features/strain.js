@@ -9,57 +9,57 @@ const strainController = require('../../controllers/administration-features/stra
 router.post('/add-strain',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   strainController.addStrain)
 
 router.post('/update-strain',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   strainController.updateStrain)
 
 router.post('/strain-detail',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   strainController.viewStrain)
 
 router.post('/delete-strain',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   strainController.deleteStrain)
 
 router.get('/export-strain',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   strainController.exportStrain)
 
 router.post('/get-strain-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   strainController.getStrainList)
 
 router.post('/get-all-strain-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   strainController.getAllStrainList)
 
 router.post('/get-asset-list-for-filter',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   strainController.getAssetListForWorkOrderFilter)
 
 router.get(
   '/get-asset-list-for-work-order',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  // resourceAccessMiddleware.isAssetAccessible,
-  resourceAccessMiddleware.isPMAccessible,
+  // resourceAccessMiddleware.isAccessible,
+  resourceAccessMiddleware.isAccessible,
   strainController.getAssetListForWorkOrderList
 )
 
@@ -91,7 +91,7 @@ router.post(
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   strainController.importStrainData
 );
 

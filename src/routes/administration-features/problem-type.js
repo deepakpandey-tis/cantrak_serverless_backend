@@ -8,31 +8,31 @@ const resourceAccessMiddleware = require('../../middlewares/resourceAccessMiddle
 router.post('/add-problem-type',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemTypeController.addProblemType)
 
 router.post('/update-problem-type',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemTypeController.updateProblemType)
 
 router.post('/problem-type-details',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemTypeController.viewProblemType)
 // router.post('/delete-project', authMiddleware.isAuthenticated, projectController.deleteProject)
 router.post('/get-problem-type-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemTypeController.getProblemTypeList)
 /**EXPORT PROBLEM TYPE DATA*/
 router.get('/export-problem-type-data',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemTypeController.exportProblemTypeData)
 
 /**IMPORT PROBLEM TYPE DATA */
@@ -60,12 +60,12 @@ var upload = multer({ storage: storage });
 router.post('/import-problem-type-data', upload.single('file'),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemTypeController.importProblemTypeData)
 
 router.post('/toggle-problem-type',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   problemTypeController.toggleProblemType)
 module.exports = router

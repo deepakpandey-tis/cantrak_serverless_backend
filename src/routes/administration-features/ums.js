@@ -9,42 +9,42 @@ const unitOfMeasurementController = require('../../controllers/administration-fe
 router.post('/get-um-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   unitOfMeasurementController.getUMList
 );
 
 router.get('/get-ums',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   unitOfMeasurementController.getUMs
 );
 
 router.get('/get-um',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   unitOfMeasurementController.getUM
 );
 
 router.post('/add-um',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   unitOfMeasurementController.addUM
 );
 
 router.post('/update-um',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   unitOfMeasurementController.updateUM
 );
 
 router.post('/toggle-um',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   unitOfMeasurementController.deleteUM
 );
 

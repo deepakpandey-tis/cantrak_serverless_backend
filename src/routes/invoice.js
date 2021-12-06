@@ -10,21 +10,21 @@ const invoiceController = require('../controllers/invoice');
 router.post('/add-invoice',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   invoiceController.addInvoice
 );
 
 router.post('/get-invoice-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   invoiceController.getInvoiceList
 );
 
 router.post('/get-invoice',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   invoiceController.getInvoice
 );
 

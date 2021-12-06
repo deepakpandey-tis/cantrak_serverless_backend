@@ -32,7 +32,7 @@ router.post(
   "/generate-pdf-of-parcel-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManageController.generatePdfOfParcelDocument
 );
 
@@ -40,7 +40,7 @@ router.get(
   "/get-parcel-slip-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManageController.getParcelSlip
 );
 
@@ -48,7 +48,7 @@ router.post(
   "/get-parcel-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManageController.getParcelList
 );
 
@@ -56,7 +56,7 @@ router.post(
   "/get-parcel-details",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManageController.getParcelDetails
 );
 
@@ -64,7 +64,7 @@ router.post(
   "/get-pending-parcel-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManageController.getPendingParcelList
 );
 
@@ -72,7 +72,7 @@ router.get(
   "/get-tracking-number-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManageController.getTrackingNumberList
 );
 
@@ -122,7 +122,7 @@ router.post(
   "/get-property-units-data",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManageController.getUnitDetailsByUnitId
 );
 
@@ -130,7 +130,7 @@ router.post(
   "/get-building-list-for-parcel",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManagementController.getBuildingPhaseListForParcel
 );
 
@@ -138,7 +138,7 @@ router.get(
   "/get-parcel-type",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManagementController.getParcelType
 );
 
@@ -146,7 +146,7 @@ router.post(
   "/get-pickeup-parcel",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManagementController.getPickedupParcelList
 );
 
@@ -154,7 +154,7 @@ router.get(
   "/get-storage",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManagementController.getStorage
 )
 
@@ -162,7 +162,7 @@ router.post(
   "/get-property-unit-for-parcel",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isParcelManagementAccessible,
+  resourceAccessMiddleware.isAccessible,
   parcelManagementController.getUnitByBuilding
 )
 

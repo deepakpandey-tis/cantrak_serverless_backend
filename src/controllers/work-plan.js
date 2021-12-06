@@ -12,7 +12,7 @@ function getYears(mils) {
   return years;
 }
 
-const pmController = {
+const workPlanController = {
   getPmAssetListByFilter: async (req, res) => {
     try {
       let reqData = req.query;
@@ -2346,7 +2346,7 @@ const pmController = {
     }
   }
 };
-module.exports = pmController;
+module.exports = workPlanController;
 
 function genrateWork(payload) {
   let repeatPeriod = payload.repeatPeriod;
