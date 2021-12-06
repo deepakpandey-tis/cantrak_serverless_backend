@@ -11,7 +11,7 @@ const getProductLotNoDetail = async (req, res) => {
         let { companyId, lotNo } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
-        let validProductLotNo, result;
+        let validProductionLotNo, harvestLotNo, validHarvestLotNo, validPlantLotNo, lotNoDetail, result;
 
         //  1. Production detail of product lotNo
         sqlSelect = `SELECT pl.*, i.name  "itemName", ic.name "itemCategoryName", i.gtin "itemGtin", p."name" "processName", c."companyName", u."name"  "itemUM", u.abbreviation "itemUMAbbreviation", sl.name "itemStorageLocation"
@@ -42,9 +42,16 @@ const getProductLotNoDetail = async (req, res) => {
         var selectedRecs = await knexReader.raw(sqlStr);
         console.log('selectedRecs: ', selectedRecs);
 
-        validProductLotNo = selectedRecs.rows.length > 0;
+        validProductionLotNo = selectedRecs.rows.length > 0;
 
-        if(validProductLotNo){
+        if(validProductionLotNo){
+            harvestLotNo = selectedRecs.rows[0].itemLotNo;
+        }
+        else {
+            harvestLotNo = lotNo;
+        }
+
+/*         if(validProductionLotNo){ */
             //  2. Harvest detail of item used in production
             sqlSelect = `SELECT hpl.*, it.*, i."name" "itemName", i.gtin "itemGtin", ic.name "itemCategoryName", u."name"  "itemUM", u.abbreviation "itemUMAbbreviation", sl.name "itemStorageLocation"
             `;
@@ -52,13 +59,21 @@ const getProductLotNoDetail = async (req, res) => {
             sqlFrom = ` FROM harvest_plant_lots hpl, item_txns it, items i, item_categories ic, ums u, storage_locations sl
             `;
 
-            sqlWhere = ` WHERE hpl."lotNo" = '${selectedRecs.rows[0].itemLotNo}' AND it."harvestPlantLotId" = hpl.id AND it."itemCategoryId" = ${selectedRecs.rows[0].itemCategoryId} AND it."itemId" = ${selectedRecs.rows[0].itemId}
+            sqlWhere = ` WHERE hpl."orgId" = ${orgId} AND hpl."lotNo" = '${harvestLotNo}' AND it."harvestPlantLotId" = hpl.id
+            `;
+            if(validProductionLotNo){
+                sqlWhere += ` AND it."itemCategoryId" = ${selectedRecs.rows[0].itemCategoryId} AND it."itemId" = ${selectedRecs.rows[0].itemId}
+                `;
+            }
+            sqlWhere += `
             AND it."itemId" = i.id AND it."itemCategoryId" = ic.id AND it."umId" = u.id AND it."storageLocationId" = sl.id;
             `;
 
             sqlStr = sqlSelect + sqlFrom + sqlWhere;
             
             var selectedHarvestRecs = await knexReader.raw(sqlStr);
+
+            validHarvestLotNo = selectedHarvestRecs.rows.length > 0;
 
             //  3. Plant detail of harvested item used in production
             sqlSelect = `SELECT pl.*, l."number" "licenseNumber", l2."name" "plantLocation"
@@ -75,7 +90,14 @@ const getProductLotNoDetail = async (req, res) => {
             , items i2, item_categories ic , ums u2, item_txns it2, storage_locations sl2, suppliers s 
             `;
 
-            sqlWhere = ` WHERE pl.id = '${selectedHarvestRecs.rows[0].plantLotId}' AND  pl."licenseId" = l.id and pl."locationId" = l2.id 
+            sqlWhere = ` WHERE`;
+            if(validHarvestLotNo){
+                sqlWhere += ` pl.id = '${selectedHarvestRecs.rows[0].plantLotId}'`;
+            }
+            else {
+                sqlWhere += ` pl."orgId" = ${orgId} AND pl."lotNo" = '${lotNo}'`;
+            }
+            sqlWhere += ` AND  pl."licenseId" = l.id and pl."locationId" = l2.id 
             AND pl."itemId" = i2.id AND pl."itemCategoryId" = ic.id AND i2."umId" = u2.id AND pl."supplierId" = s.id 
             AND pl."itemTxnId" = it2.id AND it2."storageLocationId" = sl2.id;
             `;
@@ -84,15 +106,68 @@ const getProductLotNoDetail = async (req, res) => {
             
             var selectedPlantLotRecs = await knexReader.raw(sqlStr);
 
-            selectedRecs.rows[0].harvestDetail = selectedHarvestRecs.rows;
+            validPlantLotNo = selectedPlantLotRecs.rows.length > 0;
+
+            //  4. Raw Material
+            var selectedRawMaterialLotRecs = { rows: [] };
+            if(!validPlantLotNo){
+                // Checking if a Raw Material Lot No
+                sqlSelect = `SELECT it.quantity "rawItemQuantity", it."date" "rawItemDate", it."lotNo" "rawItemLotNo", it.imported "rawItemImported"
+                , i."name" "rawItemName", i.gtin "rawItemGtin", ic."name" "rawItemCategoryName", u."name" "rawItemUM", sl."name" "rawItemStorageLocation", l."number" "licenseNumber", s."name" "rawItemSupplierName"
+                `;
+
+                sqlFrom = ` FROM items i, item_categories ic, ums u, storage_locations sl, item_txns it
+                LEFT JOIN licenses l ON l.id = it."licenseId"
+                LEFT JOIN item_txn_suppliers its ON its."itemTxnId" = it.id
+                LEFT JOIN suppliers s ON s.id = its."supplierId"
+                `;
+
+                sqlWhere = ` WHERE it."orgId" = ${orgId} AND it."lotNo" = '${lotNo}' AND it."txnType" = 11`;
+                sqlWhere += ` AND it."itemCategoryId" = ic.id and it."itemId" = i.id and it."umId" = u.id and it."storageLocationId" = sl.id ;
+                `;
+
+                sqlStr = sqlSelect + sqlFrom + sqlWhere;
+            
+                selectedRawMaterialLotRecs = await knexReader.raw(sqlStr);
+            }
+
+            lotNoDetail = {};
+/*             if(validProductionLotNo){
+                lotNoDetail = {
+                    productionDetail: selectedRecs.rows,
+                    harvestDetail: selectedHarvestRecs.rows,
+                    plantLotDetail: selectedPlantLotRecs.rows,
+                };
+            }
+            else{ */
+                lotNoDetail = {
+                    productionDetail: selectedRecs.rows,
+                    harvestDetail: selectedHarvestRecs.rows,
+                    plantLotDetail: selectedPlantLotRecs.rows,
+                    rawMaterialLotDetail: selectedRawMaterialLotRecs.rows,
+                };
+            // }
+            console.log('lotNoDetail: ', lotNoDetail);
+
+            result = {
+                data: {
+                    records: lotNoDetail,
+                    message: "Product Lot No. Detail!"
+                }
+            }            
+
+/*             selectedRecs.rows[0].harvestDetail = selectedHarvestRecs.rows;
             selectedRecs.rows[0].plantLotDetail = selectedPlantLotRecs.rows;
+            console.log('selectedRecs: ', selectedRecs.rows);
             result = {
                 data: {
                     records: selectedRecs.rows,
                     message: "Product Lot No. Detail!"
                 }
-            }            
-        }
+            }
+ */
+
+/*         }
         else{
             result = {
                 data: {
@@ -100,7 +175,7 @@ const getProductLotNoDetail = async (req, res) => {
                     message: "Product Lot No. Detail!"
                 }
             }
-        }
+        } */
         //console.log(result.data)
 
         return res.status(200).json({

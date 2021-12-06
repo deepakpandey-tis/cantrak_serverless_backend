@@ -103,6 +103,9 @@ const SubResourcesController = {
                     )
                     .select(['r.resourceName', 'r.resourceNameTh', 'sr.*'])
                     .orderBy("r.orderBy", "asc")
+                    .orderBy('r.resourceName', "asc")
+                    .orderBy("sr.orderBy", "asc")
+                    .orderBy("sr.componentName", "asc")
                     .offset(offset)
                     .limit(per_page)
             ]);

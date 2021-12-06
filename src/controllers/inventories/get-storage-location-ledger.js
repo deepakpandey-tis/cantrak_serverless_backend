@@ -12,7 +12,7 @@ const getStorageLocationLedger = async (req, res) => {
         let sqlStrItemsOpening, sqlSelectItemsOpening, andItemId;
 
         sqlSelectWith = `WITH ledger AS (
-            SELECT id, "itemCategoryId", "itemId", "umId", "date", "txnType"
+            SELECT id, "txnId", "itemCategoryId", "itemId", "umId", "date", "txnType"
             , case when "txnType" >= 1 and "txnType" <= 50 then quantity else 0 end as credit
             , case when "txnType" >= 51 and "txnType" <= 90 then (quantity * -1) else 0 end as debit
             , row_number() over (order by "itemCategoryId", "itemId", date, "txnType") as row
@@ -32,15 +32,15 @@ const getStorageLocationLedger = async (req, res) => {
 
         sqlSelectWith += `)`;
 
-        sqlSelect = ` SELECT l1."itemCategoryId", l1."itemId", l1."umId", l1."date", l1."txnType", l1.row, l1.id
+        sqlSelect = ` SELECT l1."itemCategoryId", l1."itemId", l1."umId", l1."date", l1."txnType", l1."txnId", l1.row, l1.id
         , (coalesce(SUM(L2.credit), 0) - coalesce(SUM(L2.debit), 0))  AS opening
         , l1.credit as credit, l1.debit as debit
         , (coalesce( L1.credit, 0) + coalesce(SUM(L2.credit), 0) - coalesce(SUM(L2.debit), 0)- coalesce((L1.debit), 0)) As closing
         FROM ledger l1
         LEFT JOIN ledger l2
         ON l1."itemCategoryId" = l2."itemCategoryId" and l1."itemId" = l2."itemId" and l1.row > l2.row
-        GROUP BY l1."itemCategoryId", l1."itemId", l1."umId", l1."date", l1."txnType", l1.row, l1.id, l1.credit, l1.debit
-        ORDER BY l1."itemCategoryId", l1."itemId", l1."umId", l1."date", l1."txnType", l1.row
+        GROUP BY l1."itemCategoryId", l1."itemId", l1."umId", l1."txnId", l1."date", l1."txnType", l1.row, l1.id, l1.credit, l1.debit
+        ORDER BY l1."itemCategoryId", l1."itemId", l1."umId", l1."date", l1."txnType", l1."txnId", l1.row
         `;
 
         //  Adding outer select to set order by 'Item Category', 'Item Name'
