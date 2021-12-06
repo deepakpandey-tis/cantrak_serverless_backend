@@ -108,6 +108,7 @@ const parcelTypeRouter = require("./administration-features/parcel-type");
 const billPaymentRouter = require("./bill-payment");
 const resourceMasterRouter = require("./administration-features/resources");
 const orgResourceMasterRouter = require("./administration-features/org-resource");
+const orgSubResourceMasterRouter = require("./administration-features/org-sub-resource");
 const subResourcesRouter = require("./administration-features/sub-resources");
 const themeRouter = require("./theme");
 const superadminTenantRouter = require('./superadmin/tenant');
@@ -231,6 +232,11 @@ router.use(
 router.use(
   "/administration-features/org-resource",
   orgResourceMasterRouter
+);
+
+router.use(
+  "/administration-features/org-sub-resource",
+  orgSubResourceMasterRouter
 );
 router.use(
   "/administration-features/sub-resources",

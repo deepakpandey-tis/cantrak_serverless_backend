@@ -13,8 +13,8 @@ const emailHelper = require('../../helpers/email')
 const XLSX = require("xlsx");
 const fs = require('fs');
 
-const resourcesController = {
-    resourceDetail: async (req, res) => {
+const subResourcesController = {
+    subResourcesDetail: async (req, res) => {
 
         let id = req.params.id;
         let orgId = req.me.orgId;
@@ -29,23 +29,24 @@ const resourcesController = {
                 });
             }
 
-            const resourcesDetails = await knex
-            .select("orm.id","orm.orderBy","orm.resourceId","r.resourceName","r.resourceNameTh","r.code", "r.uri", "r.iconCode","orm.icon as iconFromOrg","orm.isAuthorized","orm.isShow")
-            .from('organisation_resources_master as orm')
-            .leftJoin("resources as r","r.id","orm.resourceId")
-            .where("orm.id", id)
-            .where("orm.orgId", orgId)
+            const subResourcesDetails = await knex
+            .select("osrm.id","osrm.orderBy", "osrm.subResourceId", "r.resourceName", "r.resourceNameTh","sr.componentName","sr.componentNameTh","sr.code", "sr.uri", "sr.iconCode","osrm.icon as iconFromOrg")
+            .from('organisation_sub_resources_master as osrm')
+            .leftJoin("sub_resources as sr","sr.id","osrm.subResourceId")
+            .leftJoin("resources as r","r.id","sr.resourceId")
+            .where("osrm.id", id)
+            .where("osrm.orgId", orgId)
             .first();
 
-            console.log(`[controllers][v1][v1][Org Resource][ResourcesDetail]: Resources Details:`, resourcesDetails);
+            console.log(`[controllers][v1][v1][Org Resource][ResourcesDetail]: Resources Details:`, subResourcesDetails);
 
-            return res.status(200).json({ data: resourcesDetails });
+            return res.status(200).json({ data: subResourcesDetails });
 
         } catch (err) {
             console.log('[controllers][v1][v1][Org Resource][ResourcesDetail] :  Error', err);
             res.status(500).json({
                 errors: [
-                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                    { code: 'UNKNOWN_SERVER_ERROR', message: ersr.message }
                 ],
             });
         }
@@ -55,7 +56,7 @@ const resourcesController = {
 
         try {
 
-            console.log('[controllers][v1][Org Resource][list]');
+            console.log('[controllers][v1][Org Sub Resource][list]');
 
             let reqData = req.query;
             let orgId = req.me.orgId;
@@ -71,27 +72,23 @@ const resourcesController = {
             let offset = (page - 1) * per_page;
 
             [total, rows] = await Promise.all([
-                knex.count("orm.* as count")
-                    .from('organisation_resources_master as orm')
-                    .leftJoin("resources as r","r.id","orm.resourceId")
-                    .where("orm.orgId", orgId)
+                knex.count("osrm.* as count")
+                    .from('organisation_sub_resources_master as osrm')
+                    .leftJoin("sub_resources as sr","sr.id","osrm.subResourceId")
+                    .leftJoin("resources as r","r.id","sr.resourceId")
+                    .where("osrm.orgId", orgId)
+                    .where("sr.isActive", true)
                     .where("r.isActive", true)
-                    .where((qb)=>{
-                        qb.where("orm.isAuthorized", true);
-                        qb.orWhere("orm.isShow", true)
-                    })
                     .first(),
 
-                knex.select("orm.id","orm.orderBy","orm.resourceId","r.resourceName","r.resourceNameTh","r.code", "r.uri", "r.iconCode","orm.icon as iconFromOrg","orm.isAuthorized","orm.isShow","orm.updatedAt")
-                    .from('organisation_resources_master as orm')
-                    .leftJoin("resources as r","r.id","orm.resourceId")
-                    .where("orm.orgId", orgId)
+                knex.select("osrm.id","osrm.orderBy","osrm.subResourceId","r.resourceName", "r.resourceNameTh","sr.componentName","sr.componentNameTh","sr.code", "sr.uri", "sr.iconCode","osrm.icon as iconFromOrg","osrm.updatedAt")
+                    .from('organisation_sub_resources_master as osrm')
+                    .leftJoin("sub_resources as sr","sr.id","osrm.subResourceId")
+                    .leftJoin("resources as r","r.id","sr.resourceId")
+                    .where("osrm.orgId", orgId)
+                    .where("sr.isActive", true)
                     .where("r.isActive", true)
-                    .where((qb)=>{
-                        qb.where("orm.isAuthorized", true);
-                        qb.orWhere("orm.isShow", true)
-                    })
-                    .orderBy('orm.orderBy', 'asc')
+                    .orderBy('r.resourceName', 'asc')
                     .offset(offset)
                     .limit(per_page)
             ]);
@@ -111,9 +108,9 @@ const resourcesController = {
             // pagination.data = await Parallel.map(rows, async pd => {
 
             //     let assocResPermissions = await knex.from('role_resource_access_master as rram')
-            //         .join('resources as rs', 'rs.id', 'rram.resourceId')
+            //         .join('sub_resources as srs', 'rs.id', 'rram.subResourceId')
             //         .where({ "rram.roleId": pd.id })
-            //         .select(['rram.resourceId', 'rram.accessType as permissions', 'rs.resourceName']);
+            //         .select(['rram.subResourceId', 'rram.accessType as permissions', 'rs.resourceName']);
 
             //     return {
             //         ...pd,
@@ -124,7 +121,7 @@ const resourcesController = {
             return res.status(200).json(pagination);
 
         } catch (err) {
-            console.log('[controllers][v1][Org Resource][list] :  Error', err);
+            console.log('[controllers][v1][Org Sub Resource][list] :  Error', err);
             res.status(500).json({
                 errors: [
                     { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
@@ -133,7 +130,7 @@ const resourcesController = {
         }
     },
 
-    updateResource: async (req, res) => {
+    updateSubResources: async (req, res) => {
 
         try {
 
@@ -149,19 +146,19 @@ const resourcesController = {
             }
 
             const payload = _.omit(req.body, ["icon"]);
-            console.log('[controllers][v1][v1][Org Resource][updateResource]:', payload);
+            console.log('[controllers][v1][v1][Org Resource][updateSubResources]:', payload);
 
             const schema = Joi.object().keys({
                 orderBy: Joi.number().required().min(1).max(255)
             });
 
             const result = schema.validate(payload);
-            console.log('[controllers][v1][Org Resource][updateResource]: Joi Validate Result', result);
+            console.log('[controllers][v1][Org Resource][updateSubResources]: Joi Validate Result', result);
 
             if (result && result.hasOwnProperty('error') && result.error) {
                 return res.status(400).json({
                     errors: [
-                        { code: 'VALIDATION_ERROR', message: result.error.message }
+                        { code: 'VALIDATION_ERROR', message: result.errosr.message }
                     ],
                 });
             }
@@ -169,30 +166,30 @@ const resourcesController = {
             let currentTime = moment().valueOf();
 
             await knex.transaction(async trx => {
-                let updatedResources = await knex("organisation_resources_master as orm")
+                let updatedResources = await knex("organisation_sub_resources_master as osrm")
                     .update({ ...req.body, updatedAt: currentTime })
                     .where({id})
-                    .where("orm.orgId", orgId)
+                    .where("osrm.orgId", orgId)
                     .returning(["*"])
                     .transacting(trx);
 
             });
 
-            console.log('[controllers][v1][v1][Org Resource][updateResource]: Payload:', payload);
+            console.log('[controllers][v1][v1][Org Sub Resource][updateSubResources]: Payload:', payload);
 
-            return res.status(200).json({ data: {}, message: 'Resource Updated Successfully.' });
+            return res.status(200).json({ data: {}, message: 'Sub Resource Updated Successfully.' });
 
         } catch (err) {
-            console.log('[controllers][v1][v1][Org Resource][updateResource]:  Error', err);
+            console.log('[controllers][v1][v1][Org Sub Resource][updateSubResources]:  Error', err);
             res.status(500).json({
                 errors: [
-                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                    { code: 'UNKNOWN_SERVER_ERROR', message: ersr.message }
                 ],
             });
         }
     },
 
-    resetResourcePosition: async (req, res) => {
+    resetSubResourcePosition: async (req, res) => {
 
         try {
 
@@ -226,15 +223,15 @@ const resourcesController = {
 
             let currentTime = moment().valueOf();
 
-            const rows = await knex('resources');
+            const rows = await knex('sub_resources');
 
             const Parallel = require('async-parallel');
 
             let data = await Parallel.map(rows, async pd => {
 
-                let updatedResources = await knex("organisation_resources_master as orm")
+                let updatedResources = await knex("organisation_sub_resources_master as orm")
                     .update({ orderBy: pd.orderBy, updatedAt: currentTime })
-                    .where({"orm.resourceId": pd.id})
+                    .where({"orm.subResourceId": pd.id})
                     .where("orm.orgId", orgId);
 
                 return {
@@ -258,4 +255,4 @@ const resourcesController = {
     },
     
 }
-module.exports = resourcesController
+module.exports = subResourcesController

@@ -102,7 +102,7 @@ const SubResourcesController = {
                         "r.id"
                     )
                     .select(['r.resourceName', 'r.resourceNameTh', 'sr.*'])
-                    .orderBy("sr.id", "desc")
+                    .orderBy("r.orderBy", "asc")
                     .offset(offset)
                     .limit(per_page)
             ]);
@@ -156,6 +156,7 @@ const SubResourcesController = {
                 componentName: Joi.string().required().min(1).max(255),
                 componentNameTh: Joi.string().required().min(1).max(255),
                 resourceId: Joi.string().required().min(1).max(255),
+                orderBy: Joi.number().required().min(1),
                 uri: Joi.string().required().min(1).max(255)
             });
 
@@ -195,7 +196,7 @@ const SubResourcesController = {
                         async (o) => {
 
                             let addedSubResourcesIcon = await knex("organisation_sub_resources_master")
-                            .insert({ "subResourceId": newId, orgId: o.id, createdAt: currentTime, updatedAt: currentTime })
+                            .insert({ "subResourceId": newId, orgId: o.id, orderBy: req.body.orderBy, createdAt: currentTime, updatedAt: currentTime })
                             .returning(["*"])
                             .transacting(trx);
                         }
@@ -239,6 +240,7 @@ const SubResourcesController = {
                 componentName: Joi.string().required().min(1).max(255),
                 componentNameTh: Joi.string().required().min(1).max(255),
                 resourceId: Joi.string().required().min(1).max(255),
+                orderBy: Joi.number().required().min(1),
                 uri: Joi.string().required().min(1).max(255)
             });
 

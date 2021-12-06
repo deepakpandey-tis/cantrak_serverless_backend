@@ -86,7 +86,7 @@ const resourcesController = {
 
                 knex("resources as r")
                     .select(['r.*'])
-                    .orderBy("r.id", "desc")
+                    .orderBy("r.orderBy", "asc")
                     .offset(offset)
                     .limit(per_page)
             ]);
@@ -139,6 +139,7 @@ const resourcesController = {
                 resourceName: Joi.string().required().min(1).max(255),
                 resourceNameTh: Joi.string().required().min(1).max(255),
                 code: Joi.string().required().min(1).max(255),
+                orderBy: Joi.number().required().min(1),
                 iconCode: Joi.string().required().min(1).max(255)
             });
 
@@ -178,7 +179,7 @@ const resourcesController = {
                         async (o) => {
 
                             let addedResourceRole = await knex("organisation_resources_master")
-                            .insert({ resourceId : newId, orgId: o.id, isShow: false, isAuthorized: false, createdAt: currentTime, updatedAt: currentTime })
+                            .insert({ resourceId : newId, orgId: o.id, orderBy: req.body.orderBy, isShow: false, isAuthorized: false, createdAt: currentTime, updatedAt: currentTime })
                             .returning(["*"])
                             .transacting(trx);
                         }
@@ -220,6 +221,7 @@ const resourcesController = {
                 code: Joi.string().required().min(1).max(255),
                 resourceName: Joi.string().required().min(1).max(255),
                 resourceNameTh: Joi.string().required().min(1).max(255),
+                orderBy: Joi.number().required().min(1),
                 iconCode: Joi.string().required().min(1).max(255)
             });
 
