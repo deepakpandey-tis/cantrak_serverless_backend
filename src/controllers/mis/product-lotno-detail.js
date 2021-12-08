@@ -65,6 +65,11 @@ const getProductLotNoDetail = async (req, res) => {
                 sqlWhere += ` AND it."itemCategoryId" = ${selectedRecs.rows[0].itemCategoryId} AND it."itemId" = ${selectedRecs.rows[0].itemId}
                 `;
             }
+            else{
+                if(companyId){
+                    sqlWhere += ` AND hpl."companyId" = ${companyId}`;
+                }
+            }
             sqlWhere += `
             AND it."itemId" = i.id AND it."itemCategoryId" = ic.id AND it."umId" = u.id AND it."storageLocationId" = sl.id;
             `;
@@ -96,6 +101,9 @@ const getProductLotNoDetail = async (req, res) => {
             }
             else {
                 sqlWhere += ` pl."orgId" = ${orgId} AND pl."lotNo" = '${lotNo}'`;
+                if(companyId){
+                    sqlWhere += ` AND pl."companyId" = ${companyId}`;
+                }
             }
             sqlWhere += ` AND  pl."licenseId" = l.id and pl."locationId" = l2.id 
             AND pl."itemId" = i2.id AND pl."itemCategoryId" = ic.id AND i2."umId" = u2.id AND pl."supplierId" = s.id 
@@ -123,6 +131,9 @@ const getProductLotNoDetail = async (req, res) => {
                 `;
 
                 sqlWhere = ` WHERE it."orgId" = ${orgId} AND it."lotNo" = '${lotNo}' AND it."txnType" = 11`;
+                if(companyId){
+                    sqlWhere += ` AND it."companyId" = ${companyId}`;
+                }
                 sqlWhere += ` AND it."itemCategoryId" = ic.id and it."itemId" = i.id and it."umId" = u.id and it."storageLocationId" = sl.id ;
                 `;
 

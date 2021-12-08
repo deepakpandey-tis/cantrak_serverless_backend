@@ -14,4 +14,11 @@ router.post('/get-product-lotno-detail',
   misController.getProductLotNoDetail
 );
 
+router.post('/get-raw-material-lotno-detail',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  misController.getRawMaterialLotNoDetail
+);
+
 module.exports = router;

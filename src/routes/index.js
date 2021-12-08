@@ -71,6 +71,7 @@ const harvestRouter = require("./harvest");
 const productionRouter = require("./production");
 const invoiceRouter = require("./invoice");
 const misRouter = require("./mis");
+const userCustomisationRouter = require("./user-customisation");
 
 
 const partCategoryRouter = require("./administration-features/part-category");
@@ -327,6 +328,10 @@ router.use(
 router.use(
   "/mis", 
   misRouter
+);
+router.use(
+  "/user-customisation", 
+  userCustomisationRouter
 );
   
 
