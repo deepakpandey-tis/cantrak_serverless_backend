@@ -7,6 +7,20 @@ const authMiddleware = require('../middlewares/auth')
 const userCustomisationController = require('../controllers/user-customisation');
 
 
+router.get('/get-list-component-columns-templates',
+  authMiddleware.isAuthenticated,
+//   roleMiddleware.parseUserPermission,
+//   resourceAccessMiddleware.isAccessible,
+  userCustomisationController.getListComponentColumnsTemplates
+);
+
+router.post('/add-list-component-columns-template',
+  authMiddleware.isAuthenticated,
+//   roleMiddleware.parseUserPermission,
+//   resourceAccessMiddleware.isAccessible,
+  userCustomisationController.addListComponentColumnsTemplate
+);
+
 router.get('/get-user-list-component-columns',
   authMiddleware.isAuthenticated,
 //   roleMiddleware.parseUserPermission,

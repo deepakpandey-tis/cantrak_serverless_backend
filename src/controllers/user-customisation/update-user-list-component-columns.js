@@ -12,6 +12,7 @@ const updateUserListComponentColumns = async (req, res) => {
 
         const schema = Joi.object().keys({
             id: Joi.string().required(),
+            name: Joi.string().required(),
             listComponent: Joi.string().required(),
             defaultColumns: Joi.string().required(),
             displayColumns: Joi.string().required(),
