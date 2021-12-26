@@ -15,6 +15,10 @@ const getStockSummary = require('./get-stock-summary');
 const getItemTxnList = require('./get-item-txn-list');
 const getItemTxn = require('./get-item-txn');
 const getStockStatus = require('./get-stock-status');
+const getStorageLocationReceiptRegister = require('./get-storage-location-receipt-register');
+const getStorageLocationReceiptRegisterExcel = require('./get-storage-location-receipt-register-excel');
+const getStorageLocationIssueRegister = require('./get-storage-location-issue-register');
+const getStorageLocationIssueRegisterExcel = require('./get-storage-location-issue-register-excel');
 
 module.exports = {
     addItemFromSupplier,
@@ -34,4 +38,8 @@ module.exports = {
     getItemTxnList,
     getItemTxn,
     getStockStatus,
+    getStorageLocationReceiptRegister,
+    getStorageLocationReceiptRegisterExcel,
+    getStorageLocationIssueRegister,
+    getStorageLocationIssueRegisterExcel,
 };
