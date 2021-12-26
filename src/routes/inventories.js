@@ -126,4 +126,32 @@ router.post('/get-stock-status',
   inventoriesController.getStockStatus
 );
 
+router.post('/get-storage-location-receipt-register',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getStorageLocationReceiptRegister
+);
+
+router.post('/get-storage-location-receipt-register-excel',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getStorageLocationReceiptRegisterExcel
+);
+
+router.post('/get-storage-location-issue-register',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getStorageLocationIssueRegister
+);
+
+router.post('/get-storage-location-issue-register-excel',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getStorageLocationIssueRegisterExcel
+);
+
 module.exports = router;
