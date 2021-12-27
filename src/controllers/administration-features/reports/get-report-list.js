@@ -2,6 +2,9 @@ const knexReader = require('../../../db/knex-reader');
 
 const getReportList = async (req, res) => {
     try {
+
+        console.log('getReportList entry', req.body);
+        
         let orgId = req.me.orgId;
         let userId = req.me.id;
 
