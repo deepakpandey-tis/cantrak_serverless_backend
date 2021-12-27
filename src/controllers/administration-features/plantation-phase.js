@@ -12,7 +12,7 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const fs = require("fs");
 const path = require("path");
-const request = require("request");
+// const request = require("request");
 const { whereIn } = require("../../db/knex");
 const { join } = require("path");
 

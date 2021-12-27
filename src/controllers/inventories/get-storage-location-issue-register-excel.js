@@ -69,7 +69,16 @@ const getStorageLocationIssueRegisterExcel = async (req, res) => {
         worksheet_issue_register.getRow(1).font = { bold: true };
         worksheet_issue_register.addRows(selectedRecs.rows);
 
-        var tempFilePath = path.join(global.appRoot, 'tmp', 'issue_register' + '.xlsx'); // 'tmp/' + msisdn + '.xlsx';                  // 'tmp/MSISDN2021.xlsx';     // on cloud '/tmp/MSISDN2021.xlsx'
+        // var tempFilePath = path.join(global.appRoot, 'tmp', 'issue_register' + '.xlsx'); // 'tmp/' + msisdn + '.xlsx';                  // 'tmp/MSISDN2021.xlsx';     // on cloud '/tmp/MSISDN2021.xlsx'
+        let tempraryDirectory = null;
+        if (process.env.IS_OFFLINE) {
+            tempraryDirectory = path.join(global.appRoot, 'tmp/');
+        } else {
+            tempraryDirectory = "/tmp/";
+        }
+
+        var tempFilePath = tempraryDirectory + 'issue_register.xlsx';
+
         await workbook.xlsx.writeFile(tempFilePath);
         console.log('File Created: ' + tempFilePath);
         // since we are using absolute path, no need to specify {root: path} res.sendFile(tempFilePath, { root: '.' }, function(err) {

@@ -40,7 +40,7 @@ const getRawMaterialLotNoDetail = async (req, res) => {
     
         selectedRawMaterialLotRecs = await knexReader.raw(sqlStr);
 
-        validRawMaterialLotNo = selectedRawMaterialLotRecs.rows.length > 0;
+        validRawMaterialLotNo = selectedRawMaterialLotRecs?.rows.length > 0;
 
         //  2. Plant Lots (Plantation) of Raw Material lotNo
         if(!validRawMaterialLotNo){
@@ -72,7 +72,7 @@ const getRawMaterialLotNoDetail = async (req, res) => {
             
             var selectedPlantLotRecs = await knexReader.raw(sqlStr);
 
-            validPlantLot = selectedPlantLotRecs.rows.length > 0;
+            validPlantLot = selectedPlantLotRecs?.rows.length > 0;
         }
 
         //  3. Harvest Plant Lots
@@ -81,7 +81,7 @@ const getRawMaterialLotNoDetail = async (req, res) => {
             validHarvestLot = false;
         }
         else{
-            const harvestedPlantIds = selectedPlantLotRecs.rows.map(r => r.id);
+            const harvestedPlantIds = selectedPlantLotRecs?.rows.map(r => r.id);
             // console.log('harvest plant ids: ', harvestedPlantIds);
 
             sqlSelect = `SELECT hpl.*, it.*, i."name" "itemName", i.gtin "itemGtin", ic.name "itemCategoryName", u."name"  "itemUM", u.abbreviation "itemUMAbbreviation", sl.name "itemStorageLocation"
@@ -104,7 +104,7 @@ const getRawMaterialLotNoDetail = async (req, res) => {
             
             var selectedHarvestRecs = await knexReader.raw(sqlStr);
 
-            validHarvestLot = selectedHarvestRecs.rows.length > 0;
+            validHarvestLot = selectedHarvestRecs?.rows.length > 0;
         }
 
         //  4. Production
@@ -114,7 +114,7 @@ const getRawMaterialLotNoDetail = async (req, res) => {
         }
         else{
             //  using Set constructor and spread to remove duplicate lot nos
-            const harvestLotNos = [... new Set(selectedHarvestRecs.rows.map(r => "'" + r.lotNo + "'"))];
+            const harvestLotNos = [... new Set(selectedHarvestRecs?.rows.map(r => "'" + r.lotNo + "'"))];
             console.log('harvest lot nos: ', harvestLotNos);
 
             sqlSelect = `SELECT pl.*, i.name  "itemName", ic.name "itemCategoryName", i.gtin "itemGtin", p."name" "processName", c."companyName", u."name"  "itemUM", u.abbreviation "itemUMAbbreviation", sl.name "itemStorageLocation"
@@ -144,15 +144,15 @@ const getRawMaterialLotNoDetail = async (req, res) => {
             
             var selectedRecs = await knexReader.raw(sqlStr);
 
-            validProductionLot = selectedRecs.rows.length > 0;
+            validProductionLot = selectedRecs?.rows.length > 0;
         }
 
         lotNoDetail = {};
         lotNoDetail = {
-            rawMaterialLotDetail: selectedRawMaterialLotRecs.rows,
-            plantLotDetail: selectedPlantLotRecs.rows,
-            harvestDetail: selectedHarvestRecs.rows,
-            productionDetail: selectedRecs.rows,
+            rawMaterialLotDetail: selectedRawMaterialLotRecs?.rows,
+            plantLotDetail: selectedPlantLotRecs?.rows,
+            harvestDetail: selectedHarvestRecs?.rows,
+            productionDetail: selectedRecs?.rows,
         };
         console.log('lotNoDetail: ', lotNoDetail);
 
