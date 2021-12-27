@@ -1,7 +1,7 @@
 const Joi = require("@hapi/joi");
-const knex = require('../../db/knex');
+const knex = require('../../../db/knex');
 
-const updateUserListComponentColumns = async (req, res) => {
+const addUserReport = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -11,16 +11,15 @@ const updateUserListComponentColumns = async (req, res) => {
         let insertedRecord = [];
 
         const schema = Joi.object().keys({
-            id: Joi.string().required(),
-            name: Joi.string().required(),
-            listComponent: Joi.string().required(),
-            defaultColumns: Joi.string().required(),
-            displayColumns: Joi.string().required(),
+            moduleName: Joi.string().required(),
+            reportName: Joi.string().required(),
+            mainReportId: Joi.number().required(),
+            filterJson: Joi.object().required(),
         });
 
         const result = Joi.validate(payload, schema);
         console.log(
-            "[controllers][user-customisation][updateUserListComponentColumns]: JOi Result",
+            "[controllers][administration-features][reports][addUserReport]: JOi Result",
             result
         );
 
@@ -35,16 +34,18 @@ const updateUserListComponentColumns = async (req, res) => {
         let currentTime = new Date().getTime();
         let insertData = {
             orgId: orgId,
-            userId: userId,
             ...payload,
+            createdBy: userId,
+            createdAt: currentTime,
+            updatedBy: userId,
+            updatedAt: currentTime,
         };
-        console.log('User list component columns insert record: ', insertData);
+        console.log('User report insert record: ', insertData);
 
         const insertResult = await knex
-            .update(insertData)
-            .where({ id: payload.id, orgId: req.orgId })
+            .insert(insertData)
             .returning(["*"])
-            .into('user_list_component_columns');
+            .into('report_master');
 
         insertedRecord = insertResult[0];
 
@@ -52,10 +53,10 @@ const updateUserListComponentColumns = async (req, res) => {
             data: {
                 record: insertedRecord
             },
-            message: 'User list component columns updated successfully.'
+            message: 'User report added successfully.'
         });
     } catch (err) {
-        console.log("[controllers][user-customisation][updateUserListComponentColumns] :  Error", err);
+        console.log("[controllers][administration-features][reports][addUserReport] :  Error", err);
         //trx.rollback
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -63,7 +64,7 @@ const updateUserListComponentColumns = async (req, res) => {
     }
 }
 
-module.exports = updateUserListComponentColumns;
+module.exports = addUserReport;
 
 /**
  */

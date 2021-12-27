@@ -1,8 +1,10 @@
-const knexReader = require('../../db/knex-reader');
-const moment = require("moment");
+const knexReader = require('../../../db/knex-reader');
 
-const getWorkPlanList = async (req, res) => {
+const getReportList = async (req, res) => {
     try {
+
+        console.log('getReportList entry', req.body);
+        
         let orgId = req.me.orgId;
         let userId = req.me.id;
 
@@ -14,14 +16,13 @@ const getWorkPlanList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { name, companyId } = req.body;
-        // let { name, companyId, plantationId } = req.body;
+        let { moduleName, reportName } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'name';
+            sortCol = '"mainReportId"';
         }
 
         if(!sortOrder || sortOrder === ''){
@@ -37,34 +38,22 @@ const getWorkPlanList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT wpm.*
-        , u2."name" "createdByName", c."companyName"
-        `;
-        // , u2."name" "createdByName", c."companyName", p.name "plantationName"
-
-        sqlFrom = ` FROM work_plan_master wpm
-        , users u2, companies c
-        `;
-        // LEFT JOIN plantations p ON wpm."plantationId" = p.id
-
-        sqlWhere = ` WHERE wpm."orgId" = ${orgId}`;
-        sqlWhere += ` AND wpm."createdBy" = u2.id AND wpm."companyId" = c.id
+        sqlSelect = `SELECT rm.*
+        , u2."name" "createdByName"
         `;
 
-        if(name && name != ''){
-            sqlWhere += ` AND wpm."name" iLIKE '%${name}%'`;
+        sqlFrom = ` FROM report_master rm
+        LEFT JOIN users u2 ON rm."createdBy" = u2.id
+        `;
+
+        sqlWhere = ` WHERE (rm."orgId" = 0 OR rm."orgId" = ${orgId}) AND rm."moduleName" = '${moduleName}'`;
+        if(reportName){
+            sqlWhere += ` AND rm."reportName" iLIKE '%${reportName}%'`;
         }
 
-        if(companyId && companyId != ''){
-            sqlWhere += ` AND wpm."companyId" = ${companyId}`;
-        }
-
-        // if(plantationId && plantationId != ''){
-        //     sqlWhere += ` AND wpm."plantationId" = ${plantationId}`;
-        // }
-
-        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
-        //console.log('getWorkPlanList sql: ', sqlSelect + sqlFrom + sqlWhere);
+        sqlOrderBy = ` ORDER BY "mainReportId", "id"`;
+        // sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
+        //console.log('getReportList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
@@ -74,7 +63,7 @@ const getWorkPlanList = async (req, res) => {
         sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
         sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
 
-        //console.log('getWorkPlanList: ', sqlStr);
+        //console.log('getReportList: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
@@ -82,7 +71,7 @@ const getWorkPlanList = async (req, res) => {
           const result = {
             data: {
                 list: selectedRecs.rows,
-                message: "Work Plans list!"
+                message: "Reports list!"
             }
         }
         //console.log(result.data)
@@ -91,7 +80,7 @@ const getWorkPlanList = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][work-plans][getWorkPlanList] :  Error", err);
+        console.log("[controllers][administrationFeatures][reports][getReportList] :  Error", err);
         return res.status(500).json({
           errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
     });
@@ -100,7 +89,7 @@ const getWorkPlanList = async (req, res) => {
 
 }
 
-module.exports = getWorkPlanList;
+module.exports = getReportList;
 
 /**
  */

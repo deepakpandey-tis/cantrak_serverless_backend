@@ -8,9 +8,11 @@ const getUserListComponentColumns = async (req, res) => {
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere;
 
-        sqlSelect = `SELECT ulcc.*`;
-        sqlFrom = ` FROM user_list_component_columns ulcc `;
-        sqlWhere = ` WHERE ulcc."orgId" = ${orgId} AND ulcc."userId" = ${userId} AND ulcc."listComponent" = '${req.query.listComponent}'`;
+        sqlSelect = `SELECT lcct.*`;
+        sqlFrom = ` FROM list_component_columns_templates lcct, user_list_component_columns ulcc `;
+        sqlWhere = ` WHERE ulcc."orgId" = ${orgId} AND ulcc."userId" = ${userId} AND ulcc."listComponentName" = '${req.query.listComponent}'
+        AND ulcc."listComponentColumnsTemplateId" = lcct.id
+        `;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 
