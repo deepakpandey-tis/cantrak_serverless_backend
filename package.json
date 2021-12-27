@@ -51,7 +51,6 @@
     "puppeteer-core": "^8.0.0",
     "qrcode": "^1.4.4",
     "redis": "^3.1.2",
-    "request": "^2.88.2",
     "rrule": "^2.6.6",
     "s3-upload-stream": "^1.0.7",
     "s3-zip": "^3.2.0",

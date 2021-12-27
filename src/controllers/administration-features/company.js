@@ -11,7 +11,7 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 // const serviceRequest = require("../servicerequest");
 const fs = require("fs");
-const request = require("request");
+// const request = require("request");
 const path = require("path");
 
 const companyController = {
