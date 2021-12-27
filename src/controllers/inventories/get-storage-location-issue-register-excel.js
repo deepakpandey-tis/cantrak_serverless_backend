@@ -2,6 +2,8 @@ const Joi = require("@hapi/joi");
 const knexReader = require("../../db/knex-reader");
 const ExcelJS = require('exceljs');
 const path = require('path');
+// const mime = require('mime');
+// const fs = require('fs-extra');
 
 const getStorageLocationIssueRegisterExcel = async (req, res) => {
     try {
@@ -69,7 +71,7 @@ const getStorageLocationIssueRegisterExcel = async (req, res) => {
         worksheet_issue_register.getRow(1).font = { bold: true };
         worksheet_issue_register.addRows(selectedRecs.rows);
 
-        // var tempFilePath = path.join(global.appRoot, 'tmp', 'issue_register' + '.xlsx'); // 'tmp/' + msisdn + '.xlsx';                  // 'tmp/MSISDN2021.xlsx';     // on cloud '/tmp/MSISDN2021.xlsx'
+        // var tempFilePath = path.join(global.appRoot, 'tmp', 'issue_register' + '.xlsx');
         let tempraryDirectory = null;
         if (process.env.IS_OFFLINE) {
             tempraryDirectory = path.join(global.appRoot, 'tmp/');
@@ -81,14 +83,34 @@ const getStorageLocationIssueRegisterExcel = async (req, res) => {
 
         await workbook.xlsx.writeFile(tempFilePath);
         console.log('File Created: ' + tempFilePath);
+
+        var file = tempFilePath;
+
+        // console.log('File extension: ' + mime.getType(file));
+        // console.log('File extension lookup: ' + mime.lookup(file));
+
+/*         var filename = path.basename(file);
+        var mimetype = mime.getType(file);
+      
+        res.setHeader('Content-disposition', 'attachment; filename=' + filename);
+        res.setHeader('Content-type', mimetype);
+      
+        var filestream = fs.createReadStream(file);
+        filestream.pipe(res);
+ */
         // since we are using absolute path, no need to specify {root: path} res.sendFile(tempFilePath, { root: '.' }, function(err) {
+        // res.download(tempFilePath);
         res.sendFile(tempFilePath, function(err) {
             if(err){
                 console.log('Error downloading the file: ' + err);
             }
+            else{
+                console.log('File sent successful: ' + tempraryDirectory);
+            }
         });
 
-/*         return res.status(200).json({
+
+        /*         return res.status(200).json({
             data: {
                 records: selectedRecs.rows,
             },
