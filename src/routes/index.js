@@ -94,7 +94,7 @@ const containerTypeRouter = require("./administration-features/container-types")
 //const courierRouter = require("./administration-features/courier-storage");
 // const storageRouter = require("./administration-features/storage");
 //const parcelManagementRouter = require("./parcel-management");
-const facilityDashboardRouter = require("./facility_dashboard");
+// const facilityDashboardRouter = require("./facility_dashboard");
 const facilityTypeMaster = require("./administration-features/plantation-group");
 const notificationRouter = require("./notifications");
 //const parcelNotificationRouter = require("./parcel-notification");
@@ -391,7 +391,7 @@ router.use(
 //   storageRouter
 // );
 //router.use("/parcel-management", parcelManagementRouter);
-router.use("/facility-dashboard", facilityDashboardRouter);
+// router.use("/facility-dashboard", facilityDashboardRouter);
 router.use("/administration-features/facility-type",facilityTypeMaster);
 
 router.use("/notifications", notificationRouter);

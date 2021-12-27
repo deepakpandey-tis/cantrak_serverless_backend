@@ -1,7 +1,6 @@
 const Joi = require("@hapi/joi");
 const _ = require("lodash");
-const moment = require("moment");
-require("moment-recur");
+const moment = require("moment-timezone");
 
 const { RRule, RRuleSet, rrulestr } = require("rrule");
 const { leftJoin } = require("../db/knex");
