@@ -1,16 +1,9 @@
 const knex = require("../../db/knex");
 const knexReader = require("../../db/knex-reader");
 const Joi = require("@hapi/joi");
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
-const Moment = require("moment");
-const MomentRange = require("moment-range");
-const moment = MomentRange.extendMoment(Moment);
+const moment = require("moment-timezone");
 
-const uuidv4 = require("uuid/v4");
-var jwt = require("jsonwebtoken");
 const _ = require("lodash");
-const { orWhere, select } = require("../../db/knex");
 
 const dashboardController = {
   getDashboardData: async (req, res) => {

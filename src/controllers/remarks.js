@@ -4,7 +4,6 @@ const uuidv4 = require("uuid/v4");
 var jwt = require("jsonwebtoken");
 const _ = require("lodash");
 const multer = require("multer");
-const multerS3 = require("multer-s3");
 
 const knex = require("../db/knex");
 
