@@ -14,8 +14,10 @@ const getStorageLocationIssueRegister = async (req, res) => {
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlGroupBy, sqlOrderBy;
 
         sqlSelect = `SELECT ic."name" "itemCategory", sl."name" "storageLocation", i."name" "itemName", u.name "UoM"
-        , tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh", it.*
+        , tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh"
+        , it."storageLocationId", it.date, it."txnId", it."lotNo", (it.quantity * -1) "quantity"
         `;
+        // , it.*
 
         sqlFrom = ` FROM item_txns it, item_categories ic, items i, storage_locations sl, txn_types tt, ums u`;
 
