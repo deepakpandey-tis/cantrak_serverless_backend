@@ -141,6 +141,7 @@ const organisationsController = {
           .into('organisations')
 
 
+/* 2022/01/05 add Org without adding resources, resources added in update option
 
         // Assign Resources to current organisation
         // let resources = req.body.resources;
@@ -174,7 +175,7 @@ const organisationsController = {
             ).insert(insertPayload).transacting(trx).returning(['*'])
           }
         }
-
+ */
         // let insertPayload = resources.map(resource => ({
         //   updatedAt: currentTime,
         //   createdAt: currentTime,
