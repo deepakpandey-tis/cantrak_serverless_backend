@@ -26,11 +26,12 @@ const getItemTxnList = async (req, res) => {
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
             sortCol = `"companyName" asc, "date" desc, "txnType" asc, "lotNo" desc`;
-        }
-
-        if(!sortOrder || sortOrder === ''){
             sortOrder = '';
         }
+
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = '';
+        // }
 
         if(pageNumber < 1){
             pageNumber = 1;

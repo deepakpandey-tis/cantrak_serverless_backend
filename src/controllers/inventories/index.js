@@ -1,4 +1,5 @@
 const addItemFromSupplier = require('./add-item-from-supplier');
+const importItemFromSupplier = require('./import-item-from-supplier');
 const getItemFromSupplierList = require('./get-item-from-supplier-list');
 const getItemFromSupplier = require('./get-item-from-supplier');
 const addWasteMaterial = require('./add-waste-material');
@@ -22,6 +23,7 @@ const getStorageLocationIssueRegisterExcel = require('./get-storage-location-iss
 
 module.exports = {
     addItemFromSupplier,
+    importItemFromSupplier,
     getItemFromSupplierList,
     getItemFromSupplier,
     addWasteMaterial,

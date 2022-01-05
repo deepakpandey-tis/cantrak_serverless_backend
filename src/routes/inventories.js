@@ -28,6 +28,13 @@ router.post('/add-item-from-supplier',
   inventoriesController.addItemFromSupplier
 );
 
+router.post('/import-item-from-supplier',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.importItemFromSupplier
+);
+
 router.post('/get-waste-material-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
