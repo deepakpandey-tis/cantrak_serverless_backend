@@ -63,6 +63,13 @@ router.post('/add-waste-material',
   inventoriesController.addWasteMaterial
 );
 
+router.post('/import-waste-material',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.importWasteMaterial
+);
+
 router.post('/get-raw-material-for-plant-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
