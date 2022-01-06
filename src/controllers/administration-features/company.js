@@ -47,7 +47,8 @@ const companyController = {
 
         const schema = Joi.object().keys({
           companyName: Joi.string().required(),
-          companyId: Joi.string().required(),
+          // 2022/01/06 companyId is now generated in procedure companyId: Joi.string().required(),
+          companyId: Joi.string().allow("").optional(),
           descriptionEng: Joi.string().allow("").optional(),
           description1: Joi.string().allow("").optional(),
           contactPerson: Joi.string().allow("").optional(),
@@ -76,6 +77,7 @@ const companyController = {
         }
 
         /*CHECK DUPLICATE VALUES OPEN */
+/*      2022/01/06 companyId is now generated in procedure 
         let existValue = await knex('companies')
           .where({ companyId: payload.companyId.toUpperCase(), orgId: orgId });
         if (existValue && existValue.length) {
@@ -84,7 +86,7 @@ const companyController = {
               { code: "VALIDATION_ERROR", message: "Company Id already exist!!" }
             ]
           });
-        }
+        } */
         /*CHECK DUPLICATE VALUES CLOSE */
 
 
@@ -112,7 +114,7 @@ const companyController = {
         let currentTime = new Date().getTime();
         let insertData = {
           ...payload,
-          companyId: payload.companyId.toUpperCase(),
+          // 2021/01/06 companyId: payload.companyId.toUpperCase(),
           createdBy: userId,
           logoFile: logo,
           orgLogoFile: orgLogo,
