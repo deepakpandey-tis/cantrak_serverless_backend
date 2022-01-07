@@ -17,14 +17,15 @@ const getProductionList = async (req, res) => {
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
-/*         if(!sortCol || sortCol === ''){
-            sortCol = `lotNo`;
+        if(!sortCol || sortCol === ''){
+            sortCol = `"productionOn" DESC, "itemName" ASC`;
+            sortOrder = '';
         }
 
-        if(!sortOrder || sortOrder === ''){
-            sortOrder = 'desc';
-        }
- */
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'desc';
+        // }
+
         if(pageNumber < 1){
             pageNumber = 1;
         }
@@ -34,6 +35,7 @@ const getProductionList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
+/* Below SQL to return data production detail, json of output / produced items 
         sqlSelect = `SELECT pl.*, i2."name" "itemName", p."name" "processName", c."companyName", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", sl.name "itemStorageLocation"
         , (SELECT json_agg(row_to_json(o.*)) "outItems" 
         FROM (SELECT it.*, i.name "itemName", i.gtin, ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", sl.name "itemStorageLocation" FROM item_txns it, items i, ums, storage_locations sl 
@@ -45,6 +47,22 @@ const getProductionList = async (req, res) => {
 
         sqlWhere = ` WHERE pl."orgId" = ${orgId}`;
         sqlWhere += ` AND pl."itemId" = i2.id AND pl."umId" = ums.id AND pl."storageLocationId" = sl.id AND pl."processId" = p.id AND pl."companyId" = c.id`;
+ */
+
+        sqlSelect = `SELECT pl.*
+        , it.quantity "itemQuantity", i.name "itemName", i.gtin, ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", sl.name "storageLocationName"
+        , c."companyName", u."name" "createdByName"
+        `;
+
+        sqlFrom = ` FROM production_lots pl
+        , item_txns it, items i, ums, storage_locations sl
+        , companies c, users u
+        `;
+
+        sqlWhere = ` WHERE pl."orgId" = ${orgId}`;
+        sqlWhere += ` AND pl."companyId" = c.id AND pl."createdBy" = u.id`;
+        sqlWhere += ` AND it."productionLotId" = pl.id AND it.quantity > 0 AND it."itemId" = i.id AND it."umId" = ums.id AND it."storageLocationId" = sl.id`;
+        
         if(companyId){
             sqlWhere += ` AND pl."companyId" = ${companyId}`;
         }
@@ -64,7 +82,7 @@ const getProductionList = async (req, res) => {
             sqlWhere += ` AND pl."productionOn" <= ${new Date(toDate).getTime()}`;
         }
 
-        sqlOrderBy = ` ORDER BY "productionOn" DESC, "itemName" ASC`;
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getProductionList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

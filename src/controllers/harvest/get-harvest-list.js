@@ -17,14 +17,15 @@ const getHarvestList = async (req, res) => {
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
-/*         if(!sortCol || sortCol === ''){
-            sortCol = `lotNo`;
+        if(!sortCol || sortCol === ''){
+            sortCol = `"harvestedOn" DESC, "lotNo" desc`;
+            sortOrder = '';
         }
 
-        if(!sortOrder || sortOrder === ''){
-            sortOrder = 'desc';
-        }
- */
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'desc';
+        // }
+
         if(pageNumber < 1){
             pageNumber = 1;
         }
@@ -34,6 +35,7 @@ const getHarvestList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
+/*  Below SQL to return data harvest detail, json of output items 
         sqlSelect = `select hpl.*, pl."lotNo" "plantLotNo", l."name" "plantLocation", c."companyName", u."name" "createdByName"
         , (SELECT json_agg(row_to_json(o.*)) "outItems" 
         FROM (SELECT it.*, i.name "itemName", i.gtin, ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", sl.name "itemStorageLocation" FROM item_txns it, items i, ums, storage_locations sl 
@@ -46,6 +48,22 @@ const getHarvestList = async (req, res) => {
 
         sqlWhere = ` WHERE hpl."orgId" = ${orgId}`;
         sqlWhere += ` AND hpl."plantLotId" = pl.id and pl."locationId" = l.id AND hpl."companyId" = c.id AND hpl."createdBy" = u.id`;
+ */
+
+        sqlSelect = `select hpl.*, pl."lotNo" "plantLotNo", l."name" "plantLocation"
+        , it.quantity, it."plantsCount" "itemPlantsCount", it.quality, it."expiryDate", i.name "itemName", i.gtin, ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", sl.name "storageLocationName"
+        , c."companyName", u."name" "createdByName"
+        `;
+
+        sqlFrom = ` FROM harvest_plant_lots hpl, plant_lots pl, locations l
+        , item_txns it, items i, ums, storage_locations sl
+        , companies c, users u
+        `;
+
+        sqlWhere = ` WHERE hpl."orgId" = ${orgId}`;
+        sqlWhere += ` AND hpl."plantLotId" = pl.id and pl."locationId" = l.id AND hpl."companyId" = c.id AND hpl."createdBy" = u.id`;
+        sqlWhere += ` AND it."harvestPlantLotId" = hpl.id AND it."itemId" = i.id AND it."umId" = ums.id AND it."storageLocationId" = sl.id`;
+
 
         if(companyId){
             sqlWhere += ` AND hpl."companyId" = ${companyId}`;
@@ -79,7 +97,8 @@ const getHarvestList = async (req, res) => {
             sqlWhere += ` AND it."expiryDate" <= ${new Date(expiryToDate).getTime()}`;
         }
  */
-        sqlOrderBy = ` ORDER BY "harvestedOn" DESC, "plantLocation" ASC`;
+
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getHarvestList sql: ', sqlSelect + sqlFrom + sqlWhere + sqlOrderBy);
 
         sqlStr  = `WITH Main_CTE AS (`;
