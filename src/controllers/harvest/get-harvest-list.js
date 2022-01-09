@@ -12,7 +12,7 @@ const getHarvestList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, plantLotNo, locationId, fromDate, toDate } = req.body;
+        let { companyId, itemId, storageLocationId, lotNo, plantLotNo, locationId, fromDate, toDate, expiryFromDate, expiryToDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -84,7 +84,7 @@ const getHarvestList = async (req, res) => {
             sqlWhere += ` AND pl."locationId" = ${locationId}`;
         }
 
-/*         if(itemId){
+        if(itemId){
             sqlWhere += ` AND it."itemId" = ${itemId}`;
         }
         if(storageLocationId){
@@ -96,7 +96,7 @@ const getHarvestList = async (req, res) => {
         if(expiryToDate){
             sqlWhere += ` AND it."expiryDate" <= ${new Date(expiryToDate).getTime()}`;
         }
- */
+
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getHarvestList sql: ', sqlSelect + sqlFrom + sqlWhere + sqlOrderBy);
