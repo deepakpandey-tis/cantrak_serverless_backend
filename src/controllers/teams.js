@@ -249,13 +249,13 @@ const teamsController = {
                     let deletedProject = await knex('team_roles_project_master').where({ teamId: upTeamsPayload.teamId }).del();
                     for (let i = 0; i < roleProjectData.length; i++) {
 
-                        if (roleProjectData[i].projectId && roleProjectData[i].roleId) {
+                        if (roleProjectData[i].roleId) {
                             //  for (let role of roleProjectData[i].roleId) {
 
                             let insertObject = {
                                 teamId: upTeamsPayload.teamId,
                                 roleId: roleProjectData[i].roleId,
-                                projectId: roleProjectData[i].projectId,
+                                projectId: 0,
                                 orgId: orgId,
                                 createdAt: currentTime,
                                 updatedAt: currentTime
@@ -265,7 +265,7 @@ const teamsController = {
                             let checkProject = await knex.from('team_roles_project_master').where({
                                 teamId: upTeamsPayload.teamId,
                                 roleId: roleProjectData[i].roleId,
-                                projectId: roleProjectData[i].projectId,
+                                projectId: 0,
                                 orgId: orgId
                             });
 
