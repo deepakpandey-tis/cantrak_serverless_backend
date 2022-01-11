@@ -339,6 +339,39 @@ const resourcesController = {
         }
     },
 
+    getResourceAccessible: async (req, res) => {
+
+        try {
+            const resourcesDetails =    await  knex("organisation_resources_master") 
+            .leftJoin(
+                "resources",
+                "resources.id",
+                "organisation_resources_master.resourceId" 
+            )
+            .select([            
+                "resources.code as resourceCode",
+                "resources.resourceName as resourceName",
+                "resources.id"
+            ])
+            .where({           
+                "organisation_resources_master.orgId": req.orgId,
+                "resources.isActive": true,
+                "organisation_resources_master.isAuthorized":true
+            })
+            .orderBy("organisation_resources_master.orderBy", "ASC")
+
+            return res.status(200).json({data: resourcesDetails});
+
+        } catch (err) {
+            console.log('[controllers][v1][Resource][list] :  Error', err);
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+        }
+    },
+
     getResourceListWithSubResource: async (req, res) => {
 
         try {

@@ -10,6 +10,7 @@ router.post('/', authMiddleware.isAuthenticated, resourceController.list);
 router.post('/create', authMiddleware.isAuthenticated, resourceController.createResource);
 
 router.get('/get-resource-list', authMiddleware.isAuthenticated, resourceController.getResourceList);
+router.get('/get-resource-accessible', authMiddleware.isAuthenticated, resourceController.getResourceAccessible);
 router.get('/get-resource-list-with-sub-resource/:id', authMiddleware.isAuthenticated, resourceController.getResourceListWithSubResource);
 router.get('/get-active-resource-list-with-sub-resource/:id', authMiddleware.isAuthenticated, resourceController.getActiveResourceListWithSubResource);
 router.get('/get-active-resource-list-with-sub-resource', authMiddleware.isAuthenticated, resourceController.getActiveResourceListWithSubResource);
