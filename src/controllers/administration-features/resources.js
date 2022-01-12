@@ -529,7 +529,7 @@ const resourcesController = {
 
                         if(currentResource.count == 0){
                             let addedComponentIcon = await knex("organisation_resources_master")
-                            .insert({ resourceId: r.id, orgId: id, createdAt: currentTime, updatedAt: currentTime, isShow: false, isAuthorized: false })
+                            .insert({ resourceId: r.id, orgId: id, orderBy: r.orderBy, createdAt: currentTime, updatedAt: currentTime, isShow: false, isAuthorized: false })
                             .returning(["*"])
                             .transacting(trx);
 
@@ -561,7 +561,7 @@ const resourcesController = {
                         // data.push({currentComponent: currentComponent});
                         if(currentComponent.count == 0){
                             let addedComponentIcon = await knex("organisation_sub_resources_master")
-                            .insert({ subResourceId: sr.id, orgId: id, createdAt: currentTime, updatedAt: currentTime })
+                            .insert({ subResourceId: sr.id, orderBy: sr.orderBy, orgId: id, createdAt: currentTime, updatedAt: currentTime })
                             .returning(["*"])
                             .transacting(trx); 
 
