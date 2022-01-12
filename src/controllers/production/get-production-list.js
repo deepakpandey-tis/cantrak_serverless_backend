@@ -18,7 +18,7 @@ const getProductionList = async (req, res) => {
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `"productionOn" DESC, "itemName" ASC`;
+            sortCol = `"productionOn" DESC, "lotNo" DESC, "itemName" ASC`;
             sortOrder = '';
         }
 
@@ -49,7 +49,9 @@ const getProductionList = async (req, res) => {
         sqlWhere += ` AND pl."itemId" = i2.id AND pl."umId" = ums.id AND pl."storageLocationId" = sl.id AND pl."processId" = p.id AND pl."companyId" = c.id`;
  */
 
-        sqlSelect = `SELECT pl.*
+        sqlSelect = `SELECT pl.id, pl."orgId", pl."companyId", pl."processId", pl."productionOn", pl."lotNo"
+        , pl."isActive", pl."createdBy", pl."createdAt", pl."updatedBy", pl."updatedAt"
+        , it."itemCategoryId", it."itemId", it."txnType", it."lotNo" "itemLotNo", it."umId", it."specieId", it."strainId", it."storageLocationId"
         , it.quantity "itemQuantity", i.name "itemName", i.gtin, ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", sl.name "storageLocationName"
         , c."companyName", u."name" "createdByName"
         `;
