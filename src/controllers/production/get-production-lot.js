@@ -22,9 +22,11 @@ const getProductionLot = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT pl.*
+        sqlSelect = `SELECT pl.id, pl."orgId", pl."companyId", pl."processId", pl."productionOn", pl."lotNo" "productionLotNo"
+        , pl."isActive", pl."createdBy", pl."createdAt", pl."updatedBy", pl."updatedAt"
         , p."name" "processName", ic."name" "itemCategoryName", i."name" "itemName", i."gtin" "itemGtin", u."name" "itemUM", sl."name" "storageLocation"
-        , it.quantity, it.quality, it."expiryDate", c."companyName"
+        , it."itemCategoryId", it."itemId", it."txnType", it.quantity, it.quality, it."expiryDate", it."lotNo", it."umId", it."specieId", it."strainId", it."storageLocationId"
+        , c."companyName"
         `;
         sqlFrom = ` FROM production_lots pl, item_txns it, processes p, item_categories ic, items i, ums u
         , storage_locations sl , companies c
