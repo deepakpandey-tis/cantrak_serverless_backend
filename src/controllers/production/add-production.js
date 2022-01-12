@@ -30,22 +30,23 @@ const addProduction = async (req, res) => {
         const payload = req.body;
 
         let insertedRecord = [];
-        let insertedIssueRecord = [];
+        let insertedIssueRecords = [];
         let insertedReceiveRecords = [];
 
         const schema = Joi.object().keys({
             companyId: Joi.string().required(),
             productionOn: Joi.date().required(),
             processId: Joi.string().required(),
-            itemCategoryId: Joi.string().required(),
-            itemId: Joi.string().required(),
-            umId: Joi.string().required(),
-            storageLocationId: Joi.string().required(),
-            specieId: Joi.string().allow(null).allow("").optional(),
-            strainId: Joi.string().allow(null).allow("").optional(),
-            itemLotNo: Joi.string().required(),
-            itemLotExpiryDate: Joi.date().allow(null).required(),
-            quantity: Joi.number().required(),
+            // itemCategoryId: Joi.string().required(),
+            // itemId: Joi.string().required(),
+            // umId: Joi.string().required(),
+            // storageLocationId: Joi.string().required(),
+            // specieId: Joi.string().allow(null).allow("").optional(),
+            // strainId: Joi.string().allow(null).allow("").optional(),
+            // itemLotNo: Joi.string().required(),
+            // itemLotExpiryDate: Joi.date().allow(null).required(),
+            // quantity: Joi.number().required(),
+            inputItems: Joi.array().required(),
             outputItems: Joi.array().required(),
         });
 
@@ -72,20 +73,21 @@ const addProduction = async (req, res) => {
                 companyId: payload.companyId,
                 processId: payload.processId,
                 productionOn: new Date(payload.productionOn).getTime(),
-                itemCategoryId: payload.itemCategoryId,
-                itemId: payload.itemId,
-                umId: payload.umId,
-                storageLocationId: payload.storageLocationId,
-                specieId: payload.specieId,
-                strainId: payload.strainId,
-                itemLotNo: payload.itemLotNo,
-                quantity: payload.quantity,
+                // itemCategoryId: payload.itemCategoryId,
+                // itemId: payload.itemId,
+                // umId: payload.umId,
+                // storageLocationId: payload.storageLocationId,
+                // specieId: payload.specieId,
+                // strainId: payload.strainId,
+                // itemLotNo: payload.itemLotNo,
+                // quantity: payload.quantity,
 
                 createdBy: userId,
                 createdAt: currentTime,
                 updatedBy: userId,
                 updatedAt: currentTime,
             };
+            console.log('production_lots rec: ', insertData);
 
             let insertResult = await knex
                 .insert(insertData)
@@ -95,7 +97,7 @@ const addProduction = async (req, res) => {
 
             insertedRecord = insertResult[0];
 
-
+/* Provision on multiple input items given
             // Issue Txn
             insertData = {
                 orgId: orgId,
@@ -126,11 +128,51 @@ const addProduction = async (req, res) => {
                 .transacting(trx)
                 .into("item_txns");
 
-            insertedIssueRecord = insertResult[0];
+            insertedIssueRecords = insertResult[0];
+ */
 
-            // Receive Items
+            // Issue Items
             let item;
             let itemRecNo;
+
+            itemRecNo = 0;
+            for (let rec of payload.inputItems) {
+                item = {
+                    orgId: orgId,
+                    companyId: payload.companyId,
+                    txnType: TxnTypes.IssueForProduction,
+                    date: new Date(payload.productionOn).getTime(),
+                    itemCategoryId: rec.itemCategoryId,
+                    itemId: rec.itemId,
+                    specieId: payload.specieId,
+                    strainId: payload.strainId,
+                    quantity: (rec.quantity * -1),
+                    umId: rec.umId,
+                    expiryDate: rec.expiryDate,
+                    // quality: rec.quality,
+                    storageLocationId: rec.storageLocationId,
+                    productionLotId: insertedRecord.id,
+                    lotNo: rec.lotNo,
+                    createdBy: userId,
+                    createdAt: currentTime,
+                    updatedBy: userId,
+                    updatedAt: currentTime,
+                };
+                console.log('item: ', item);
+
+                itemRecNo += 1;
+                const insertResult = await knex
+                    .insert(item)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("item_txns");
+
+                insertedIssueRecords[itemRecNo] = insertResult[0];
+            }
+
+            // Receive Items
+            // let item;
+            // let itemRecNo;
 
             itemRecNo = 0;
             for (let rec of payload.outputItems) {
@@ -173,7 +215,7 @@ const addProduction = async (req, res) => {
         return res.status(200).json({
             data: {
                 record: insertedRecord,
-                inputItem: insertedIssueRecord,
+                inputItems: insertedIssueRecords,
                 outputItems: insertedReceiveRecords
             },
             message: 'Production added successfully.'
