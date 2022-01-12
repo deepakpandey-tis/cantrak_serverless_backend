@@ -18,12 +18,13 @@ const getInvoiceList = async (req, res) => {
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `invoiceNo`;
+            sortCol = `"invoiceOn" DESC, "invoiceNo" DESC`;
+            sortOrder = '';
         }
 
-        if(!sortOrder || sortOrder === ''){
-            sortOrder = 'desc';
-        }
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'desc';
+        // }
 
         if(pageNumber < 1){
             pageNumber = 1;
@@ -70,7 +71,7 @@ const getInvoiceList = async (req, res) => {
           AND inv."customerId" = c2.id AND inv."createdBy" = u2.id
         `;
 
-        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getInvoiceList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

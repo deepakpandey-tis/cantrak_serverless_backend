@@ -6,7 +6,7 @@ const getStockStatus = async (req, res) => {
         let orgId = req.me.orgId;
         let userId = req.me.id;
 
-        let {companyId, itemCategoryId, itemId, storageLocationId, asOnDate} = req.body;
+        let {companyId, itemCategoryId, itemId, storageLocationId, asOnDate, lotNo} = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlGroupBy, sqlOrderBy;
 
@@ -25,6 +25,10 @@ const getStockStatus = async (req, res) => {
 
         if(storageLocationId){
             sqlSelect += ` AND it."storageLocationId" = ${storageLocationId}`;
+        }
+
+        if(lotNo){
+            sqlSelect += ` AND it."lotNo" LIKE '${lotNo}%'`;
         }
 
         sqlSelect += ` AND it."date" < ${new Date(asOnDate).getTime()}`;
