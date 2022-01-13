@@ -126,6 +126,15 @@ router.post(
 )
 
 
+router.get(
+    "/get-active-resource-list-with-sub-resource-for-dashboard",
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isAccessible,
+    dashboardController.getActiveResourceListWithSubResourceForDashboard
+)
+
+
 
 
 module.exports = router;
