@@ -304,7 +304,7 @@ const organisationsController = {
         const Parallel = require("async-parallel");
 
         rows = await Parallel.map(resources, async (pd) => {
-          let updateData = await knex('organisation_resources_master').update({ isShow: pd.isShow, isAuthorized: pd.isAuthorized }).where({ orgId: payload.id, id: pd.id });
+          let updateData = await knex('organisation_resources_master').update({ isShowDashboard: pd.isShowDashboard, isShow: pd.isShow, isAuthorized: pd.isAuthorized }).where({ orgId: payload.id, id: pd.id });
           return pd;
         });
 

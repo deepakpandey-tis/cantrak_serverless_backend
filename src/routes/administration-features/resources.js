@@ -14,6 +14,8 @@ router.get('/get-resource-accessible', authMiddleware.isAuthenticated, resourceC
 router.get('/get-resource-list-with-sub-resource/:id', authMiddleware.isAuthenticated, resourceController.getResourceListWithSubResource);
 router.get('/get-active-resource-list-with-sub-resource/:id', authMiddleware.isAuthenticated, resourceController.getActiveResourceListWithSubResource);
 router.get('/get-active-resource-list-with-sub-resource', authMiddleware.isAuthenticated, resourceController.getActiveResourceListWithSubResource);
+router.get('/get-active-resource-list-with-sub-resource-with-display/:id', authMiddleware.isAuthenticated, resourceController.getActiveResourceListWithSubResourceWithDisplay);
+router.get('/get-active-resource-list-with-sub-resource-with-display', authMiddleware.isAuthenticated, resourceController.getActiveResourceListWithSubResourceWithDisplay);
 router.get('/:id', authMiddleware.isAuthenticated, resourceController.resourceDetail);
 router.get('/generate-resource-and-sub-resources/:id', authMiddleware.isAuthenticated, resourceController.generateResourceAndSubResource);
 router.post('/update/:id', authMiddleware.isAuthenticated, resourceController.updateResource);
