@@ -1,6 +1,6 @@
 const knexReader = require('../../../db/knex-reader');
 
-const getLicenseList = async (req, res) => {
+const getLicenseObjectiveList = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -13,17 +13,17 @@ const getLicenseList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { keyword } = req.body;
+        let { name, licenseTypeId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'number';
+            sortCol = '"licenseTypeName" asc, name asc';
         }
 
         if(!sortOrder || sortOrder === ''){
-            sortOrder = 'asc';
+            sortOrder = '';
         }
 
         if(pageNumber < 1){
@@ -35,21 +35,21 @@ const getLicenseList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT l2.*, lt.name "licenseType", c2."companyName", u2."name" "createdByName"
+        sqlSelect = `SELECT lo.*, lt."name" "licenseTypeName"
         `;
 
-        sqlFrom = ` FROM licenses l2, license_types lt, companies c2, users u2`;
+        sqlFrom = ` FROM license_objectives lo, license_types lt`;
 
-        sqlWhere = ` WHERE l2."orgId" = ${orgId}`;
-        sqlWhere += ` AND l2."licenseTypeId" = lt.id AND l2."companyId" = c2.id AND l2."createdBy" = u2.id`;
-        if(keyword){
-            sqlWhere += ` AND (l2."number" iLIKE '%${keyword}%' OR l2."primaryHolder" iLIKE '%${keyword}%'
-            OR l2."subHolder" iLIKE '%${keyword}%' OR l2."locationName" iLIKE '%${keyword}%'
-            OR l2."location" iLIKE '%${keyword}%')`;
+        sqlWhere = ` WHERE lo."licenseTypeId" = lt.id`;
+        if(licenseTypeId){
+            sqlWhere += ` AND lo."licenseTypeId" = ${licenseTypeId}`;
+        }
+        if(name){
+            sqlWhere += ` AND lo."name" iLIKE '%${name}%'`;
         }
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
-        //console.log('getLicenseList sql: ', sqlSelect + sqlFrom + sqlWhere);
+        //console.log('getLicenseObjectiveList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
@@ -59,7 +59,7 @@ const getLicenseList = async (req, res) => {
         sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
         sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
 
-        //console.log('getLicenseList: ', sqlStr);
+        //console.log('getLicenseObjectiveList: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
@@ -67,7 +67,7 @@ const getLicenseList = async (req, res) => {
           const result = {
             data: {
                 list: selectedRecs.rows,
-                message: "Licenses list!"
+                message: "License Objectives list!"
             }
         }
         //console.log(result.data)
@@ -76,7 +76,7 @@ const getLicenseList = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        console.log("[controllers][administration-features][licenses][getLicenseList] :  Error", err);
+        console.log("[controllers][administration-features][licenses][getLicenseObjectiveList] :  Error", err);
         return res.status(500).json({
           errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
     });
@@ -85,7 +85,7 @@ const getLicenseList = async (req, res) => {
 
 }
 
-module.exports = getLicenseList;
+module.exports = getLicenseObjectiveList;
 
 /**
  */

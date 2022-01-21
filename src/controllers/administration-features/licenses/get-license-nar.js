@@ -1,7 +1,7 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../../db/knex-reader");
 
-const getLicense = async (req, res) => {
+const getLicenseNar = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -22,17 +22,16 @@ const getLicense = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT l2.*, lt.name "licenseType"
+        sqlSelect = `SELECT ln.*, s.name "supplierName"
         , (SELECT json_agg(row_to_json(i.*)) "items" 
         FROM (
-        SELECT li.id::text, li."itemCategoryId"::text, li."itemId"::text, li.quantity, li."umId"::text, li."isActive", it.name, ums.name "itemUM"
-        , (SELECT sum(quantity) FROM license_nar_items lni WHERE li."itemCategoryId" = lni."itemCategoryId" and li."itemId" = lni."itemId") "quantityReceived"
-        FROM license_items li, items it, ums
-        WHERE li."licenseId" = l2.id AND li."itemId" = it.id AND li."umId" = ums.id
+        SELECT lni.id::text, lni."itemCategoryId"::text, lni."itemId"::text, lni.quantity, lni.quantity "originalQuantity", lni."umId"::text, lni."isActive", ums.name "itemUM"
+        FROM license_nar_items lni, ums
+        WHERE lni."licenseNarId" = ln.id AND lni."umId" = ums.id
         ) i
         )`;
-        sqlFrom = ` FROM licenses l2, license_types lt `;
-        sqlWhere = ` WHERE l2.id = ${payload.id} AND l2."orgId" = ${orgId} AND l2."licenseTypeId" = lt.id`;
+        sqlFrom = ` FROM license_nars ln, suppliers s `;
+        sqlWhere = ` WHERE ln.id = ${payload.id} AND ln."orgId" = ${orgId} AND ln."supplierId" = s.id`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 
@@ -42,11 +41,11 @@ const getLicense = async (req, res) => {
             data: {
                 record: selectedRecs.rows[0],
             },
-            message: "License detail!"
+            message: "License NAR detail!"
         });
 
     } catch (err) {
-        console.log("[controllers][administration-features][licenses][getLicense] :  Error", err);
+        console.log("[controllers][administration-features][licenses][getLicenseNar] :  Error", err);
         return res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
         });
@@ -55,4 +54,4 @@ const getLicense = async (req, res) => {
 
 }
 
-module.exports = getLicense;
+module.exports = getLicenseNar;
