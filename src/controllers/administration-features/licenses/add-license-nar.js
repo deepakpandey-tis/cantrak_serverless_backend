@@ -1,8 +1,7 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../../db/knex');
-const knexReader = require("../../../db/knex-reader");
 
-const addLicense = async (req, res) => {
+const addLicenseNar = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -13,19 +12,17 @@ const addLicense = async (req, res) => {
         let insertedItemRecords = [];
 
         const schema = Joi.object().keys({
-            companyId: Joi.string().required(),
-            number: Joi.string().required(),
+            licenseId: Joi.string().required(),
+            supplierId: Joi.string().required(),
+            permitNumber: Joi.string().required(),
             issuedOn: Joi.date().required(),
             expiredOn: Joi.date().required(),
-            assignedPerson: Joi.string().required(),
-            licenseTypeId: Joi.string().required(),
-            licenseObjectiveIds: Joi.array().required(),
-            items: Joi.array().required(),
+            itemArray: Joi.array().required(),
         });
 
         const result = Joi.validate(payload, schema);
         console.log(
-            "[controllers][administration-features][licenses][addLicense]: JOi Result",
+            "[controllers][administration-features][licenses][addLicenseNar]: JOi Result",
             result
         );
 
@@ -37,25 +34,6 @@ const addLicense = async (req, res) => {
             });
         }
 
-        // Check already exists
-        /*
-        const alreadyExists = await knexReader('licenses')
-            .where('name', 'iLIKE', payload.name)
-            .where({ orgId: req.orgId });
-
-        console.log(
-            "[controllers][administration-features][licenses][addLicense]: ",
-            alreadyExists
-        );
-
-        if (alreadyExists && alreadyExists.length) {
-            return res.status(400).json({
-                errors: [
-                    { code: "VALIDATION_ERROR", message: "License already exist!" }
-                ]
-            });
-        }
-        */
 
         await knex.transaction(async (trx) => {
 
@@ -63,13 +41,11 @@ const addLicense = async (req, res) => {
             
             let insertData = {
                 orgId: orgId,
-                companyId: payload.companyId,
-                number: payload.number,
+                licenseId: payload.licenseId,
+                permitNumber: payload.permitNumber,
+                supplierId: payload.supplierId,
                 issuedOn: new Date(payload.issuedOn).getTime(),
                 expiredOn: new Date(payload.expiredOn).getTime(),
-                assignedPerson: payload.assignedPerson,
-                licenseTypeId: payload.licenseTypeId,
-                licenseObjectiveIds: payload.licenseObjectiveIds,
                 createdBy: userId,
                 createdAt: currentTime,
                 updatedBy: userId,
@@ -80,7 +56,7 @@ const addLicense = async (req, res) => {
             const insertResult = await knex
                 .insert(insertData)
                 .returning(["*"])
-                .into('licenses');
+                .into('license_nars');
     
             insertedRecord = insertResult[0];
 
@@ -88,11 +64,10 @@ const addLicense = async (req, res) => {
             let itemRecNo;
 
             itemRecNo = 0;
-            for (let rec of payload.items) {
+            for (let rec of payload.itemArray) {
                 item = {
                     orgId: orgId,
-                    companyId: payload.companyId,
-                    licenseId: insertedRecord.id,
+                    licenseNarId: insertedRecord.id,
                     itemCategoryId: rec.itemCategoryId,
                     itemId: rec.itemId,
                     quantity: rec.quantity,
@@ -109,7 +84,7 @@ const addLicense = async (req, res) => {
                     .insert(item)
                     .returning(["*"])
                     .transacting(trx)
-                    .into("license_items");
+                    .into("license_nar_items");
 
                 insertedItemRecords[itemRecNo] = insertResult[0];
             }
@@ -117,31 +92,23 @@ const addLicense = async (req, res) => {
             trx.commit;
         });
 
-
         return res.status(200).json({
             data: {
                 record: insertedRecord,
                 items: insertedItemRecords
             },
-            message: 'License added successfully.'
+            message: `License NAR added successfully.`
         });
     } catch (err) {
-        console.log("[controllers][administration-features][licenses][addLicense] :  Error", err);
-        if (err.code == 23505){            // unique_violation
-            res.status(500).json({
-                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: 'License for Assigne Person and Number already exists.' }]
-            });
-        }
-        else{
+        console.log("[controllers][administration-features][licenses][addLicenseNar] :  Error", err);
         //trx.rollback
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-            });
-        }
+        });
     }
 }
 
-module.exports = addLicense;
+module.exports = addLicenseNar;
 
 /**
  */
