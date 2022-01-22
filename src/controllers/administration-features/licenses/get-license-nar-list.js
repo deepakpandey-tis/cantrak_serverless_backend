@@ -20,6 +20,7 @@ const getLicenseNarList = async (req, res) => {
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
             sortCol = '"issuedOn" asc';
+            sortOrder = '';
         }
 
         if(!sortOrder || sortOrder === ''){

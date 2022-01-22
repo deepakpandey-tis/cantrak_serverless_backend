@@ -19,12 +19,13 @@ const getLicenseList = async (req, res) => {
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'number';
+            sortCol = 'number asc';
+            sortOrder = '';
         }
 
-        if(!sortOrder || sortOrder === ''){
-            sortOrder = 'asc';
-        }
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'asc';
+        // }
 
         if(pageNumber < 1){
             pageNumber = 1;
