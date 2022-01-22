@@ -13,7 +13,7 @@ const getLicenseList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { keyword } = req.body;
+        let { companyId, number, assignedPerson, licenseTypeId, fromIssuedOn, toIssuedOn, fromExpiredOn, toExpiredOn } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -42,10 +42,29 @@ const getLicenseList = async (req, res) => {
 
         sqlWhere = ` WHERE l2."orgId" = ${orgId}`;
         sqlWhere += ` AND l2."licenseTypeId" = lt.id AND l2."companyId" = c2.id AND l2."createdBy" = u2.id`;
-        if(keyword){
-            sqlWhere += ` AND (l2."number" iLIKE '%${keyword}%' OR l2."primaryHolder" iLIKE '%${keyword}%'
-            OR l2."subHolder" iLIKE '%${keyword}%' OR l2."locationName" iLIKE '%${keyword}%'
-            OR l2."location" iLIKE '%${keyword}%')`;
+        if(companyId){
+            sqlWhere += ` AND l2."companyId" = ${companyId}`;
+        }
+        if(licenseTypeId){
+            sqlWhere += ` AND l2."licenseTypeId" = ${licenseTypeId}`;
+        }
+        if(number){
+            sqlWhere += ` AND l2."number" iLIKE '%${number}%'`;
+        }
+        if(assignedPerson){
+            sqlWhere += ` AND l2."assignedPerson" iLIKE '%${assignedPerson}%'`;
+        }
+        if(fromIssuedOn){
+            sqlWhere += ` AND l2."issuedOn" >= ${new Date(fromIssuedOn).getTime()}`;
+        }
+        if(toIssuedOn){
+            sqlWhere += ` AND l2."issuedOn" <= ${new Date(toIssuedOn).getTime()}`;
+        }
+        if(fromExpiredOn){
+            sqlWhere += ` AND l2."expiredOn" >= ${new Date(fromExpiredOn).getTime()}`;
+        }
+        if(toExpiredOn){
+            sqlWhere += ` AND l2."expiredOn" <= ${new Date(toExpiredOn).getTime()}`;
         }
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;

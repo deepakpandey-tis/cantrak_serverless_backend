@@ -13,7 +13,7 @@ const getLicenseNarList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { name, issuedOn, expiredOn, supplierId } = req.body;
+        let { licenseId, permitNumber, fromIssuedOn, toIssuedOn, fromExpiredOn, toExpiredOn, supplierId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -40,15 +40,21 @@ const getLicenseNarList = async (req, res) => {
 
         sqlFrom = ` FROM license_nars ln, suppliers s, users u2`;
 
-        sqlWhere = ` WHERE ln."supplierId" = s.id AND ln."createdBy" = u2.id`;
-        if(name){
-            sqlWhere += ` AND lo."name" iLIKE '%${name}%'`;
+        sqlWhere = ` WHERE ln."licenseId" = ${licenseId} AND ln."supplierId" = s.id AND ln."createdBy" = u2.id`;
+        if(permitNumber){
+            sqlWhere += ` AND ln."permitNumber" iLIKE '%${permitNumber}%'`;
         }
-        if(issuedOn){
-            sqlWhere += ` AND it."date" <= ${new Date(issuedOn).getTime()}`;
+        if(fromIssuedOn){
+            sqlWhere += ` AND ln."issuedOn" >= ${new Date(fromIssuedOn).getTime()}`;
         }
-        if(expiredOn){
-            sqlWhere += ` AND it."date" >= ${new Date(expiredOn).getTime()}`;
+        if(toIssuedOn){
+            sqlWhere += ` AND ln."issuedOn" <= ${new Date(toIssuedOn).getTime()}`;
+        }
+        if(fromExpiredOn){
+            sqlWhere += ` AND ln."expiredOn" >= ${new Date(fromExpiredOn).getTime()}`;
+        }
+        if(toExpiredOn){
+            sqlWhere += ` AND ln."expiredOn" <= ${new Date(toExpiredOn).getTime()}`;
         }
         if(supplierId){
             sqlWhere += ` AND ln."supplierId" = ${supplierId}`;
