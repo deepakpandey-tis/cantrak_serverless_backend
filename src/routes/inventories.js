@@ -21,6 +21,13 @@ router.post('/get-item-from-supplier',
   inventoriesController.getItemFromSupplier
 );
 
+router.post('/add-item-from-import-license',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.addItemFromImportLicense
+);
+
 router.post('/add-item-from-supplier',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

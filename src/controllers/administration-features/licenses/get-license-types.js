@@ -8,7 +8,7 @@ const getLicenseTypes = async (req, res) => {
         result = await knexReader('license_types')
             .select("id", "name")
             .where({ isActive: true })
-            .orderBy([{ column: 'name', order: 'asc' }])
+            .orderBy([{ column: 'id', order: 'asc' }])
 
         return res.status(200).json({
             data: {

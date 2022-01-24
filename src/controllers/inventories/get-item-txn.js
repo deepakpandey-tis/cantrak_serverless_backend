@@ -26,9 +26,11 @@ const getItemTxn = async (req, res) => {
         , its."licenseNo" "supplierLicenseNo", its."internalCode" "supplierInternalCode", its."quality" "supplierQuality", splr.name "supplierName"
         , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
-        , l.number "licenseNumber", inv."invoiceNo", inv."customerId", cust.name "customerName", tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh"
+        , l.number "licenseNumber", ln."permitNumber" "narPermitNumber", ln."issuedOn", ln."expiredOn"
+        , inv."invoiceNo", inv."customerId", cust.name "customerName", tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh"
         `;
         sqlFrom = ` FROM item_txns it LEFT OUTER JOIN licenses l on l.id = it."licenseId"
+        LEFT OUTER JOIN license_nars ln on ln.id = it."licenseNarId"
         LEFT OUTER JOIN item_txn_suppliers its on its."itemTxnId" = it.id
         LEFT OUTER JOIN suppliers splr on splr.id = its."supplierId"
         LEFT OUTER JOIN invoices inv on inv.id = it."invoiceId"

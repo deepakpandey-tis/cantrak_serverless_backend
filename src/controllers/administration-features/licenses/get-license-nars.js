@@ -12,10 +12,10 @@ const getLicenseNars = async (req, res) => {
         sqlSelect = `SELECT l2.*, lt.name "licenseType"
         , (SELECT json_agg(row_to_json(nar.*)) "nars" 
         FROM (
-        SELECT ln.*
-        FROM license_nars ln
-        WHERE ln."licenseId" = l2.id
-        ORDER BY ln.name asc
+        SELECT ln.*, s.name "supplierName"
+        FROM license_nars ln, suppliers s
+        WHERE ln."licenseId" = l2.id AND ln."supplierId" = s.id
+        ORDER BY ln."permitNumber" asc
         ) nar
         )`;
 
