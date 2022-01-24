@@ -28,6 +28,8 @@ const addLicenseNar = require('./add-license-nar');
 const updateLicenseNar = require('./update-license-nar');
 const deleteLicenseNar = require('./delete-license-nar');
 
+const getLicenseNarItems = require('./get-license-nar-items');
+
 module.exports = {
     getLicenseList,
     getLicenses,
@@ -58,4 +60,6 @@ module.exports = {
     addLicenseNar,
     updateLicenseNar,
     deleteLicenseNar,
+
+    getLicenseNarItems,
 };

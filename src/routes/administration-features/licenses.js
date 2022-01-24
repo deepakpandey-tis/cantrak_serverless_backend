@@ -231,4 +231,11 @@ router.post('/delete-license-nar',
   licenseController.deleteLicenseNar
 );
 
+router.post('/get-license-nar-items',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.getLicenseNarItems
+);
+
 module.exports = router;

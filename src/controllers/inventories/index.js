@@ -1,3 +1,4 @@
+const addItemFromImportLicense = require('./add-item-from-import-license');
 const addItemFromSupplier = require('./add-item-from-supplier');
 const importItemFromSupplier = require('./import-item-from-supplier');
 const getItemFromSupplierList = require('./get-item-from-supplier-list');
@@ -23,6 +24,7 @@ const getStorageLocationIssueRegister = require('./get-storage-location-issue-re
 const getStorageLocationIssueRegisterExcel = require('./get-storage-location-issue-register-excel');
 
 module.exports = {
+    addItemFromImportLicense,
     addItemFromSupplier,
     importItemFromSupplier,
     getItemFromSupplierList,
