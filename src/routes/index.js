@@ -63,6 +63,7 @@ const customerRouter = require("./administration-features/customers");
 const licenseRouter = require("./administration-features/licenses");
 const unitOfMeasurementRouter = require("./administration-features/ums");
 const locationRouter = require("./administration-features/locations");
+const subLocationRouter = require("./administration-features/sub-locations");
 const storageLocationRouter = require("./administration-features/storage-locations");
 const processRouter = require("./administration-features/processes");
 const txnTypeRouter = require("./administration-features/txn-types");
@@ -293,6 +294,10 @@ router.use(
 router.use(
   "/administration-features/locations",
   locationRouter
+);
+router.use(
+  "/administration-features/sub-locations",
+  subLocationRouter
 );
 router.use(
   "/administration-features/storage-locations",

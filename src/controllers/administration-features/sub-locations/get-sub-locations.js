@@ -1,6 +1,6 @@
 const knexReader = require('../../../db/knex-reader');
 
-const getLocations = async (req, res) => {
+const getSubLocations = async (req, res) => {
     try {
         let orgId = req.me.orgId;
 
@@ -8,13 +8,13 @@ const getLocations = async (req, res) => {
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
-        sqlSelect = `SELECT l.*`;
+        sqlSelect = `SELECT sl.*`;
 
-        sqlFrom = ` FROM locations l`;
+        sqlFrom = ` FROM sub_locations sl`;
 
-        sqlWhere = ` WHERE l."orgId" = ${orgId} AND l."companyId" = ${payload.companyId} AND l."isActive"`;
+        sqlWhere = ` WHERE sl."orgId" = ${orgId} AND sl."locationId" = ${payload.locationId} AND sl."isActive"`;
 
-        sqlOrderBy = ` ORDER BY l.name asc`;
+        sqlOrderBy = ` ORDER BY sl.name asc`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
         
@@ -24,17 +24,17 @@ const getLocations = async (req, res) => {
             data: {
                 records: selectedRecs.rows
             },
-            message: "Locations!"
+            message: "Sub Locations!"
         });
     } catch (err) {
-        console.log("[controllers][administrationFeatures][locations][getLocations] :  Error", err);
+        console.log("[controllers][administrationFeatures][sub-locations][getSubLocations] :  Error", err);
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
         });
     }
 }
 
-module.exports = getLocations;
+module.exports = getSubLocations;
 
 /**
  */
