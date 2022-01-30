@@ -1,6 +1,23 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../../db/knex-reader");
 
+const TxnTypes ={
+    ReceiveFromSupplier: 11,
+    ReceiveProductFromHarvest: 21,
+    ReceiveWasteFromPlantWaste: 22,
+    ReceiveWaste: 23,                          // Inventory option
+    ReceiveFromProduction: 24,
+    AdjustmentAdd: 41,
+    ReceiveFromTxnType: 11,
+    ReceiveUptoTxnType: 50,
+    IssueForPlantation: 51,
+    IssueForProduction: 54,
+    IssueForSale: 55,
+    AdjustmentMinus: 81,
+    IssueFromTxnType: 51,
+    IssueUptoTxnType: 90,
+};
+
 const getLicenseNar = async (req, res) => {
     try {
         let orgId = req.me.orgId;
@@ -26,6 +43,7 @@ const getLicenseNar = async (req, res) => {
         , (SELECT json_agg(row_to_json(i.*)) "items" 
         FROM (
         SELECT lni.id::text, lni."itemCategoryId"::text, lni."itemId"::text, lni.quantity, lni.quantity "originalQuantity", lni."umId"::text, lni."isActive", ums.name "itemUM"
+        , (SELECT COALESCE(SUM(it.quantity), 0) FROM item_txns it WHERE lni."licenseNarId" = it."licenseNarId" AND lni."itemCategoryId" = it."itemCategoryId" AND lni."itemId" = it."itemId" AND it."txnType" = ${TxnTypes.ReceiveFromSupplier}) "quantityReceived"
         FROM license_nar_items lni, ums
         WHERE lni."licenseNarId" = ln.id AND lni."umId" = ums.id
         ) i

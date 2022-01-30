@@ -14,7 +14,7 @@ router.post('/get-license-list',
   licenseController.getLicenseList
 );
 
-router.get('/get-licenses',
+router.post('/get-licenses',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
