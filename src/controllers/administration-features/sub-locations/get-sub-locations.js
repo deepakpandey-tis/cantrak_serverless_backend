@@ -12,7 +12,7 @@ const getSubLocations = async (req, res) => {
 
         sqlFrom = ` FROM sub_locations sl`;
 
-        sqlWhere = ` WHERE sl."orgId" = ${orgId} AND sl."locationId" = ${payload.locationId} AND sl."isActive"`;
+        sqlWhere = ` WHERE sl."orgId" = ${orgId} AND sl."companyId" = ${payload.companyId} AND sl."locationId" = ${payload.locationId} AND sl."isActive"`;
 
         sqlOrderBy = ` ORDER BY sl.name asc`;
 
