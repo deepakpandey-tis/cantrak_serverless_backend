@@ -10,8 +10,17 @@ const ItemCategory = {
 
 const TxnTypes ={
     ReceiveFromSupplier: 11,
+    ReceiveProductFromHarvest: 21,
+    ReceiveWasteFromPlantWaste: 22,
+    ReceiveWaste: 23,                          // Inventory option
+    ReceiveFromProduction: 24,
+    AdjustmentAdd: 41,
     ReceiveFromTxnType: 11,
     ReceiveUptoTxnType: 50,
+    IssueForPlantation: 51,
+    IssueForProduction: 54,
+    IssueForSale: 55,
+    AdjustmentMinus: 81,
     IssueFromTxnType: 51,
     IssueUptoTxnType: 90,
 };
@@ -29,7 +38,7 @@ const getRawMaterialForPlantList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { itemCategoryId, lotNo, companyId, licenseId, licenseNarId, itemId, strainId, storageLocationId, supplierId } = req.body;
+        let { itemCategoryId, lotNo, companyId, itemId, strainId, storageLocationId, supplierId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -70,12 +79,6 @@ const getRawMaterialForPlantList = async (req, res) => {
         }
         if(companyId){
             sqlWhere += ` AND it."companyId" = ${companyId}`;
-        }
-        if(licenseId){
-            sqlWhere += ` AND it."licenseId" = ${licenseId}`;
-        }
-        if(licenseNarId){
-            sqlWhere += ` AND it."licenseNarId" = ${licenseNarId}`;
         }
         if(itemId){
             sqlWhere += ` AND it."itemId" = ${itemId}`;

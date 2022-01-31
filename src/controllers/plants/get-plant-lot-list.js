@@ -18,12 +18,13 @@ const getPlantLotList = async (req, res) => {
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `lotNo`;
+            sortCol = `"lotNo" desc`;
+            sortOrder = '';
         }
 
-        if(!sortOrder || sortOrder === ''){
-            sortOrder = 'desc';
-        }
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'desc';
+        // }
 
         if(pageNumber < 1){
             pageNumber = 1;
@@ -70,7 +71,7 @@ const getPlantLotList = async (req, res) => {
           AND pl."locationId" = l.id  AND pl."subLocationId" = sl.id AND pl."createdBy" = u2.id
         `;
 
-        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getPlantLotList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

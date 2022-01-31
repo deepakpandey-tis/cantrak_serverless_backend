@@ -9,16 +9,16 @@ const getPlantLotLocations = async (req, res) => {
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
         
-        sqlSelect = `SELECT DISTINCT pl."lotNo", ploc."locationId" "locationId", l.name "locationName"
+        sqlSelect = `SELECT DISTINCT pl."lotNo", ploc."locationId" "locationId", l.name "locationName", ploc."subLocationId" "subLocationId", sl.name "subLocationName"
         `;
 
-        sqlFrom = ` FROM plant_lots pl, plants p, plant_locations ploc, locations l
+        sqlFrom = ` FROM plant_lots pl, plants p, plant_locations ploc, locations l, sub_locations sl
         `;
 
         sqlWhere = ` WHERE pl.id = ${payload.id} AND pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId}`;
         sqlWhere += ` AND pl.id = p."plantLotId" AND p.id = ploc."plantId"`;
         sqlWhere += ` AND ploc.id = (SELECT id FROM plant_locations ploc2 WHERE ploc2."plantId" = p.id ORDER BY id DESC limit 1)`;
-        sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND ploc."locationId" = l.id`;
+        sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND ploc."locationId" = l.id AND ploc."subLocationId" = sl.id`;
 
         sqlOrderBy = ` ORDER BY l.name asc`;
         //console.log('getPlantLotLocations sql: ', sqlSelect + sqlFrom + sqlWhere);
