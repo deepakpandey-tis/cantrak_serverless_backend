@@ -13,7 +13,7 @@ const getLocationTxnList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, fromLocationId, toLocationId, strainId, fromDate, toDate, trackingNumber, growthStageId} = req.body;
+        let { companyId, lotNo, fromLocationId, fromSubLocationId, toLocationId, toSubLocationId, strainId, fromDate, toDate, trackingNumber, growthStageId} = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -25,12 +25,12 @@ const getLocationTxnList = async (req, res) => {
             pageSize = 10;
         }
 
-        sqlSelect = `SELECT plt.*, pl."lotNo", l.name "fromLocationName", l2.name "toLocationName", gs.name "growthStageName"
-        , s."name" "strainName", s2."name" "specieName", c."companyName"
+        sqlSelect = `SELECT plt.*, pl."lotNo", l.name "fromLocationName", sl.name "fromSubLocationName", l2.name "toLocationName", sl2.name "toSubLocationName"
+        , gs.name "growthStageName", s."name" "strainName", s2."name" "specieName", c."companyName"
         `;
 
-        sqlFrom = ` FROM plant_location_txns plt, plant_lots pl, locations l, locations l2, growth_stages gs
-        , strains s, species s2, companies c
+        sqlFrom = ` FROM plant_location_txns plt, plant_lots pl, locations l, sub_locations sl, locations l2, sub_locations sl2
+        , growth_stages gs, strains s, species s2, companies c
         `;
 
         sqlWhere = ` WHERE plt."orgId" = ${orgId}`;
@@ -48,8 +48,14 @@ const getLocationTxnList = async (req, res) => {
         if(fromLocationId){
             sqlWhere += ` AND plt."fromLocationId" = ${fromLocationId}`;
         }
+        if(fromSubLocationId){
+            sqlWhere += ` AND plt."fromSubLocationId" = ${fromSubLocationId}`;
+        }
         if(toLocationId){
             sqlWhere += ` AND plt."toLocationId" = ${toLocationId}`;
+        }
+        if(toSubLocationId){
+            sqlWhere += ` AND plt."toSubLocationId" = ${toSubLocationId}`;
         }
         if(lotNo){
             sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
