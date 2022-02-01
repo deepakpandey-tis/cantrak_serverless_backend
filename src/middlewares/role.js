@@ -53,17 +53,25 @@ const roleMiddleware = {
               .select("id")
               .where({ orgId: req.orgId });
 
-            const resources = await knexReader("organisation_resources_master")
-              .select("resourceId as id")
-              .where({ orgId: req.orgId });
+            const resources = await knexReader("organisation_resources_master as orm")
+              .leftJoin(
+                "resources as r",
+                "r.id",
+                "orm.resourceId"
+              )
+              .select("r.id as id", "r.code")
+              .where({ 'orm.orgId': req.orgId })
+              .where({ 'orm.isAuthorized': true });
 
             userProjectResources = _.uniqBy(resources, "id").map(v => ({
               id: v.id,
+              code: v.code,
               plantations: plantations.map(v => v.id)
             }));
 
             userCompanyResources = _.uniqBy(resources, "id").map(v => ({
               id: v.id,
+              code: v.code,
               companies: companies.map(v => v.id)
             }));
 
@@ -97,17 +105,31 @@ const roleMiddleware = {
                 "team_roles_project_master.roleId",
                 "role_resource_master.roleId"
               )
+              .leftJoin(
+                "resources",
+                "resources.id",
+                "role_resource_master.resourceId"
+              )
               .select([
                 "team_roles_project_master.projectId as projectId",
-                "role_resource_master.resourceId as resourceId"
+                "role_resource_master.resourceId as resourceId",
+                "resources.code as code"
               ]).where({ 'team_users.userId': userId, 'team_users.orgId': req.orgId })//.whereIn('team_users.teamId',teams);
 
-            // console.log(
-            //   "result***********************************************************",
-            //   result
-            // );
+            console.log(
+              "result***********************************************************",
+              result
+            );
 
-            userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, plantations: value.map(a => a.projectId) })).value();
+            let ids = {};
+
+            result.map(e =>{
+              ids[e.resourceId] = e.code
+            });
+            
+            console.log("_.chain(result)", _.chain(result).groupBy("resourceId"));
+
+            userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, code: ids[key], plantations: value.map(a => a.projectId) })).value();
 
             console.log('[middleware][role]: parseUserPermission: userProjectResources (From DB) :: ', userProjectResources);
 

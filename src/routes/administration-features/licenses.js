@@ -10,42 +10,42 @@ const licenseController = require('../../controllers/administration-features/lic
 router.post('/get-license-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   licenseController.getLicenseList
 );
 
-router.get('/get-licenses',
+router.post('/get-licenses',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   licenseController.getLicenses
 );
 
 router.post('/get-license',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   licenseController.getLicense
 );
 
 router.post('/add-license',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   licenseController.addLicense
 );
 
 router.post('/update-license',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   licenseController.updateLicense
 );
 
 router.post('/delete-license',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   licenseController.deleteLicense
 );
 
@@ -53,7 +53,7 @@ router.post('/delete-license',
 router.get('/export-licenses',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   licenseController.exportLicenses
 );
 
@@ -83,7 +83,7 @@ router.post(
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   licenseController.importLicenses
 );
  */
@@ -91,15 +91,151 @@ router.post(
 router.get('/get-license-types',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   licenseController.getLicenseTypes
 );
 
 router.get('/get-license-categories',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   licenseController.getLicenseCategories
+);
+
+
+router.post('/get-license-location-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.getLicenseLocationList
+);
+
+router.get('/get-license-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.getLicenseLocations
+);
+
+router.post('/get-license-location',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.getLicenseLocation
+);
+
+router.post('/add-license-location',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.addLicenseLocation
+);
+
+router.post('/update-license-location',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.updateLicenseLocation
+);
+
+router.post('/delete-license-location',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.deleteLicenseLocation
+);
+
+
+router.post('/get-license-objective-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.getLicenseObjectiveList
+);
+
+router.post('/get-license-objectives',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.getLicenseObjectives
+);
+
+router.post('/get-license-objective',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.getLicenseObjective
+);
+
+router.post('/add-license-objective',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.addLicenseObjective
+);
+
+router.post('/update-license-objective',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.updateLicenseObjective
+);
+
+router.post('/delete-license-objective',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.deleteLicenseObjective
+);
+
+
+router.post('/get-license-nar-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.getLicenseNarList
+);
+
+router.post('/get-license-nars',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.getLicenseNars
+);
+
+router.post('/get-license-nar',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.getLicenseNar
+);
+
+router.post('/add-license-nar',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.addLicenseNar
+);
+
+router.post('/update-license-nar',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.updateLicenseNar
+);
+
+router.post('/delete-license-nar',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.deleteLicenseNar
+);
+
+router.post('/get-license-nar-items',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.getLicenseNarItems
 );
 
 module.exports = router;

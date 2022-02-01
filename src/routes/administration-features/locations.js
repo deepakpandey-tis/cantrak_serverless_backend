@@ -10,42 +10,42 @@ const locationController = require('../../controllers/administration-features/lo
 router.post('/get-location-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   locationController.getLocationList
 );
 
 router.post('/get-locations',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   locationController.getLocations
 );
 
 router.post('/get-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   locationController.getLocation
 );
 
 router.post('/add-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   locationController.addLocation
 );
 
 router.post('/update-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   locationController.updateLocation
 );
 
 router.post('/delete-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   locationController.deleteLocation
 );
 

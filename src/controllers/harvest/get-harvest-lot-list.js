@@ -12,13 +12,13 @@ const getHarvestLotList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, itemId, storageLocationId } = req.body;
+        let { companyId, lotNo, plantLotNo, itemId, storageLocationId, fromDate, toDate, expiryFromDate, expiryToDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `"lotNo"`;
+            sortCol = `lotNo`;
         }
 
         if(!sortOrder || sortOrder === ''){
@@ -35,19 +35,31 @@ const getHarvestLotList = async (req, res) => {
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT hpl.*
-        , it."itemId", it."itemCategoryId", it.quantity "quantity", it."umId" "itemUMId", it."plantsCount" "itemPlantsCount", it.quality "quality", it."storageLocationId"
+        , it."itemId", it."itemCategoryId", it.quantity "quantity", it."umId" "itemUMId", it."plantsCount" "itemPlantsCount", it.quality "quality", it."expiryDate" "expiryDate", it."storageLocationId"
         , itm.name "itemName", sl.name "storageLocationName", um.name "itemUM"
-        , c."companyName", lic.number "licenseNo"
+        , c."companyName", lic.number "licenseNo", pl."lotNo" "plantLotNo", l.name "plantLocation"
         , u2."name" "createdByName"
         `;
 
         sqlFrom = ` FROM harvest_plant_lots hpl, item_txns it, items itm, ums um, companies c, storage_locations sl, licenses lic
-        , users u2
+        , plant_lots pl, locations l, users u2
         `;
 
         sqlWhere = ` WHERE hpl."orgId" = ${orgId} AND hpl."orgId" = it."orgId" AND hpl."companyId" = it."companyId" AND hpl.id = it."harvestPlantLotId"`;
         if(companyId){
             sqlWhere += ` AND hpl."companyId" = ${companyId}`;
+        }
+        if(lotNo){
+            sqlWhere += ` AND hpl."lotNo" iLIKE '%${lotNo}%'`;
+        }
+        if(fromDate){
+            sqlWhere += ` AND hpl."harvestedOn" >= ${new Date(fromDate).getTime()}`;
+        }
+        if(toDate){
+            sqlWhere += ` AND hpl."harvestedOn" <= ${new Date(toDate).getTime()}`;
+        }
+        if(plantLotNo){
+            sqlWhere += ` AND pl."lotNo" iLIKE '%${plantLotNo}%'`;
         }
         if(itemId){
             sqlWhere += ` AND it."itemId" = ${itemId}`;
@@ -55,15 +67,18 @@ const getHarvestLotList = async (req, res) => {
         if(storageLocationId){
             sqlWhere += ` AND it."storageLocationId" = ${storageLocationId}`;
         }
-        if(lotNo){
-            sqlWhere += ` AND hpl."lotNo" iLIKE '%${lotNo}%'`;
+        if(expiryFromDate){
+            sqlWhere += ` AND it."expiryDate" >= ${new Date(expiryFromDate).getTime()}`;
+        }
+        if(expiryToDate){
+            sqlWhere += ` AND it."expiryDate" <= ${new Date(expiryToDate).getTime()}`;
         }
 
-        sqlWhere += ` AND hpl."companyId" = c.id AND hpl."licenseId" = lic.id
+        sqlWhere += ` AND hpl."companyId" = c.id AND hpl."licenseId" = lic.id AND hpl."plantLotId" = pl.id AND pl."locationId" = l.id
           AND it."itemId" = itm.id AND it."storageLocationId" = sl.id AND it."umId" = um.id AND hpl."createdBy" = u2.id
         `;
 
-        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
+        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
         //console.log('getHarvestLotList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

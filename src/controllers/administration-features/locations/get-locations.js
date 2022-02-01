@@ -1,6 +1,6 @@
 const knexReader = require('../../../db/knex-reader');
 
-const getLocation = async (req, res) => {
+const getLocations = async (req, res) => {
     try {
         let orgId = req.me.orgId;
 
@@ -27,14 +27,14 @@ const getLocation = async (req, res) => {
             message: "Locations!"
         });
     } catch (err) {
-        console.log("[controllers][administrationFeatures][locations][getLocation] :  Error", err);
+        console.log("[controllers][administrationFeatures][locations][getLocations] :  Error", err);
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
         });
     }
 }
 
-module.exports = getLocation;
+module.exports = getLocations;
 
 /**
  */

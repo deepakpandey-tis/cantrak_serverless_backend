@@ -42,5 +42,9 @@ router.get('/get-user-access-controls', authMiddleware.isAuthenticated,
 userMiddleware.customerInfo, dashboardController.getUsersAccessControls);
 
 
+/*GET THEME DATA*/
+router.get('/get-theme-config', authMiddleware.isAuthenticated,
+userMiddleware.customerInfo, dashboardController.getOrganisationDetailsForTheme)
+
 
 module.exports = router;

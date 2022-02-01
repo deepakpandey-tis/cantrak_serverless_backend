@@ -13,6 +13,8 @@ const getLocationTxnList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
+        let { companyId, lotNo, fromLocationId, fromSubLocationId, toLocationId, toSubLocationId, strainId, fromDate, toDate, trackingNumber, growthStageId} = req.body;
+
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         if(pageNumber < 1){
@@ -23,16 +25,50 @@ const getLocationTxnList = async (req, res) => {
             pageSize = 10;
         }
 
-        sqlSelect = `SELECT plt.*, pl."lotNo", l.name "fromLocationName", l2.name "toLocationName", gs.name "growthStageName"
-        , s."name" "strainName", s2."name" "specieName", c."companyName"
+        sqlSelect = `SELECT plt.*, pl."lotNo", l.name "fromLocationName", sl.name "fromSubLocationName", l2.name "toLocationName", sl2.name "toSubLocationName"
+        , gs.name "growthStageName", s."name" "strainName", s2."name" "specieName", c."companyName"
         `;
 
-        sqlFrom = ` FROM plant_location_txns plt, plant_lots pl, locations l, locations l2, growth_stages gs
-        , strains s, species s2, companies c
+        sqlFrom = ` FROM plant_location_txns plt, plant_lots pl, locations l, sub_locations sl, locations l2, sub_locations sl2
+        , growth_stages gs, strains s, species s2, companies c
         `;
 
-        sqlWhere = ` WHERE plt."plantLotId" = pl.id AND plt."fromLocationId" = l.id AND plt."toLocationId" = l2.id`;
+        sqlWhere = ` WHERE plt."orgId" = ${orgId}`;
+        sqlWhere += ` AND plt."plantLotId" = pl.id AND plt."fromLocationId" = l.id AND plt."toLocationId" = l2.id`;
         sqlWhere += ` AND plt."growthStageId" = gs.id AND pl."strainId" = s.id AND pl."specieId" = s2.id and pl."companyId" = c.id `;
+        if(trackingNumber){
+            sqlWhere += ` AND plt."id" = ${trackingNumber}`;
+        }
+        if(companyId){
+            sqlWhere += ` AND pl."companyId" = ${companyId}`;
+        }
+        if(strainId){
+            sqlWhere += ` AND pl."strainId" = ${strainId}`;
+        }
+        if(fromLocationId){
+            sqlWhere += ` AND plt."fromLocationId" = ${fromLocationId}`;
+        }
+        if(fromSubLocationId){
+            sqlWhere += ` AND plt."fromSubLocationId" = ${fromSubLocationId}`;
+        }
+        if(toLocationId){
+            sqlWhere += ` AND plt."toLocationId" = ${toLocationId}`;
+        }
+        if(toSubLocationId){
+            sqlWhere += ` AND plt."toSubLocationId" = ${toSubLocationId}`;
+        }
+        if(lotNo){
+            sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
+        }
+        if(fromDate){
+            sqlWhere += ` AND plt."date" >= ${new Date(fromDate).getTime()}`;
+        }
+        if(toDate){
+            sqlWhere += ` AND plt."date" <= ${new Date(toDate).getTime()}`;
+        }
+        if(growthStageId){
+            sqlWhere += ` AND plt."growthStageId" = ${growthStageId}`;
+        }
 
         sqlOrderBy = ` ORDER BY id desc`;
         //console.log('getLocationTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);

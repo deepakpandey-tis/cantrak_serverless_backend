@@ -23,6 +23,7 @@ const organisationsController = {
           organisationName: Joi.string().required(),
           address: Joi.string().required(),
           name: Joi.string().required(),
+          domainName: Joi.string().required(),
           userName: Joi.string().required(),
           email: Joi.string().required(),
           password: Joi.string().required(),
@@ -77,6 +78,7 @@ const organisationsController = {
         let insertData = {
           organisationName: payloadData.organisationName,
           address: payloadData.address,
+          domainName: payloadData.domainName,
           createdAt: currentTime,
           updatedAt: currentTime
         };
@@ -139,6 +141,7 @@ const organisationsController = {
           .into('organisations')
 
 
+/* 2022/01/05 add Org without adding resources, resources added in update option
 
         // Assign Resources to current organisation
         // let resources = req.body.resources;
@@ -172,7 +175,7 @@ const organisationsController = {
             ).insert(insertPayload).transacting(trx).returning(['*'])
           }
         }
-
+ */
         // let insertPayload = resources.map(resource => ({
         //   updatedAt: currentTime,
         //   createdAt: currentTime,
@@ -217,6 +220,7 @@ const organisationsController = {
           organisationName: Joi.string().required(),
           address: Joi.string().required(),
           name: Joi.string().required(),
+          domainName: Joi.string().required(),
           userName: Joi.string().required(),
           email: Joi.string().required(),
           resources: Joi.array().required(),
@@ -243,6 +247,7 @@ const organisationsController = {
         //let insertData = { ...payload, updatedAt: currentTime };
         let insertData = {
           organisationName: payloadData.organisationName,
+          domainName: payloadData.domainName,
           address: payloadData.address,
           updatedAt: currentTime
         };
@@ -289,52 +294,53 @@ const organisationsController = {
         user = insertUser[0];
 
 
-        let adminResources = req.body.resources;
-        let userResource = req.body.userResources;
+        let resources = req.body?.resources;
 
-
-        let a = adminResources, b = userResource
-        let resources = a.concat(b.filter((item) => a.indexOf(item) < 0));
+        // let resources = a.concat(b.filter((item) => a.indexOf(item) < 0));
         // Merges both arrays and gets unique items
+        
         console.log("unique ++ unique", resources);
 
-        let delData = await knex('organisation_resources_master').where({ orgId: payload.id }).del();
-        if (resources.length > 0) {
-          for (let resourceId of resources) {
+        const Parallel = require("async-parallel");
 
-            if (userResource.includes(resourceId)) {
-              console.log("exist in user", resourceId);
-              let insertData = {
-                orgId: payload.id,
-                resourceId: resourceId,
-                createdAt: currentTime,
-                updatedAt: currentTime,
-                userStatus: true
-              }
-              let resourceResult = await knex.insert(insertData).returning(['*'])
-                .transacting(trx).into('organisation_resources_master');
-              resource = resourceResult[0];
-            } else {
-              let insertData = {
-                orgId: payload.id,
-                resourceId: resourceId,
-                createdAt: currentTime,
-                updatedAt: currentTime
-              }
-              let resourceResult = await knex.insert(insertData).returning(['*'])
-                .transacting(trx).into('organisation_resources_master');
-              resource = resourceResult[0];
-            }
+        rows = await Parallel.map(resources, async (pd) => {
+          let updateData = await knex('organisation_resources_master').update({ isShowDashboard: pd.isShowDashboard, isShow: pd.isShow, isAuthorized: pd.isAuthorized }).where({ orgId: payload.id, id: pd.id });
+          return pd;
+        });
 
-          }
-        }
+        // if (resources.length > 0) {
+        //   for (let resourceId of resources) {
+
+        //     if (userResource.includes(resourceId)) {
+        //       console.log("exist in user", resourceId);
+        //       let insertData = {
+        //         updatedAt: currentTime,
+        //         userStatus: true,
+        //         adminStatus: true
+        //       }
+        //       let resourceResult = await knex.update(insertData).where({ orgId: payload.id, resourceId: resourceId }).returning(['*'])
+        //         .transacting(trx).into('organisation_resources_master');
+        //       resource = resourceResult[0];
+        //     } 
+        //     else {
+        //       let insertData = {
+        //         updatedAt: currentTime,
+        //         adminStatus: true
+        //       }
+        //       let resourceResult = await knex.update(insertData).where({ orgId: payload.id, resourceId: resourceId }).returning(['*'])
+        //         .transacting(trx).into('organisation_resources_master');
+        //       resource = resourceResult[0];
+        //     }
+
+        //   }
+        // }
         trx.commit;
 
       });
 
       return res.status(200).json({
         data: {
-          organisation: { ...organisation, ...user, ...resource }
+          organisation: { ...organisation, ...user }
         },
         message: "Organisation details updated successfully."
       });
@@ -635,12 +641,18 @@ const organisationsController = {
         //   .innerJoin('resources', 'organisation_resources_master.resourceId', 'resources.id')
         //   .where({ "organisation_resources_master.orgId": id });
   
-        let resourceResultData = await knex("resources").select('*');
+        let resourceResultData = await knex("resources").select('resources.*').leftJoin('organisation_resources_master', 'organisation_resources_master.resourceId', 'resources.id').where({"resources.isActive": true, "organisation_resources_master.orgId": id}).orderBy("organisation_resources_master.id", 'asc');
         for(resourceResultValue  of resourceResultData){
           console.log("resourceResultValue+++++",resourceResultValue);
           resourceSelected = await knex("organisation_resources_master")
           .where({ "organisation_resources_master.orgId": id, "organisation_resources_master.resourceId": resourceResultValue.id}).first();
           console.log("resourceSelected",resourceSelected);
+
+
+          let userComponentData = await knex("user_component_master").count("components_icon_master.* as count").leftJoin('components_icon_master', 'components_icon_master.componentId', 'user_component_master.id').where({"user_component_master.resourceId": resourceResultValue.id, "user_component_master.isActive": true, "components_icon_master.isActive": true, "components_icon_master.orgId": id }).first();
+
+          console.log("userComponentData",userComponentData);
+
           if(resourceSelected){
             resourceResult.push({
               'adminStatus' : resourceSelected.adminStatus,
@@ -648,7 +660,8 @@ const organisationsController = {
               'orgId' : resourceSelected.orgId,
               'resourceId' : resourceSelected.resourceId,
               'resourceName' : resourceResultValue.resourceName,
-              'userStatus': resourceSelected.userStatus
+              'userStatus': resourceSelected.userStatus,
+              'userComponentCount': userComponentData.count
             })
           }else{
             resourceResult.push({
@@ -657,7 +670,8 @@ const organisationsController = {
               'orgId' : id,
               'resourceId' : resourceResultValue.id,
               'resourceName' : resourceResultValue.resourceName,
-              'userStatus': false
+              'userStatus': false,
+              'userComponentCount': userComponentData.count
             })
           }
           
@@ -685,6 +699,46 @@ const organisationsController = {
         });
       }
     },
+
+  /* GET ORGANISATION DETAILS FOR ADMIN */
+  getOrganisationDetailsForTheme: async (req, res) => {
+
+    try {
+
+      let id = parseInt(req.query.id);
+      let domain = req.query.domain;
+      console.log(req.query);
+      let resourceSelected;
+      let resourceResult = [];
+      let result = [];
+      if(domain){
+      result = await knex("organisations")
+        .select([
+          'organisations.id', 'organisations.organisationName', 'organisations.domainName', 'organisations.themeConfig'
+        ])
+        .where({ 'organisations.domainName': domain });
+      }
+      else{
+        result = await knex("organisations")
+          .select([
+            'organisations.id', 'organisations.organisationName', 'organisations.domainName', 'organisations.themeConfig'
+          ])
+          .where({ 'organisations.id': id });
+      }
+
+      return res.status(200).json({
+        data: {
+          organisationDetails: { ...result[0]}
+        },
+        message: "Organisation Details!."
+      });
+
+    } catch (err) {
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+      });
+    }
+  },
 
   /* GET ORGANISATION DETAILS FOR USER */
   getOrganisationDetailsForUser: async (req, res) => {
@@ -801,6 +855,64 @@ const organisationsController = {
       });
     } catch (err) {
       console.log("[controllers][organisation][organisationLogo] :  Error", err);
+      res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
+      });
+    }
+  },
+
+  updateOrganisationTheme: async (req, res) => {
+    try {
+      let updatePayload = null;
+      let userId = req.me.id;
+      let orgId = req.body.orgId;
+      let id = req.params.id;
+      let payload = req.body;
+
+
+      await knex.transaction(async (trx) => {
+        // payload = _.omit(req.body, [
+        //   "orgLogoUrl"          
+        // ]);
+        
+        // const schema = Joi.object().keys({
+        //   themeConfig: Joi.object().required()
+        // });
+
+        // const result = Joi.validate(payload, schema);
+        // console.log(
+        //   "[controllers][administrationFeatures][updateOrganisationTheme]: JOi Result",
+        //   result
+        // );
+
+        // if (result && result.hasOwnProperty("error") && result.error) {
+        //   return res.status(400).json({
+        //     errors: [
+        //       { code: "VALIDATION_ERROR", message: result.error.message }
+        //     ]
+        //   });
+        // }
+        
+        const currentTime = new Date().getTime();       
+                                   
+        let d = await knex("organisations")
+        .update({
+          ...payload,
+          updatedAt: currentTime
+        })
+        .where({id : id })
+        .returning(["*"]); 
+
+        trx.commit;
+      });
+      res.status(200).json({
+        data: {
+          ...payload
+        },
+        message: "Organisation Theme updated successfully !",
+      });
+    } catch (err) {
+      console.log("[controllers][organisation][updateOrganisationTheme] :  Error", err);
       res.status(500).json({
         errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
       });

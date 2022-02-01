@@ -103,14 +103,14 @@ router.get(
   "/get-company-for-service",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isCMAccessible,
+  resourceAccessMiddleware.isAccessible,
   companyController.getCompanyForService
 );
 router.get(
   "/get-company-list-for-pm",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   companyController.getCompanyListForPm
 )
 module.exports = router;

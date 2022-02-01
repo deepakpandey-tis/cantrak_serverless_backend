@@ -1,17 +1,31 @@
-const express = require('express');
-const router = express.Router();
-
+const { Router } = require("express")
+const path = require("path")
+const router = Router()
+const authMiddleware = require('../middlewares/auth')
+const roleMiddleware = require('../middlewares/role')
+const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddleware');
 const invoiceController = require('../controllers/invoice');
 
-const authMiddleware = require('../middlewares/auth');
-const roleMiddleware = require('../middlewares/role');
-const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddleware');
 
+router.post('/add-invoice',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.addInvoice
+);
 
-/* GET invoice listing. */
+router.post('/get-invoice-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getInvoiceList
+);
 
-router.get('/get-invoice', authMiddleware.isAuthenticated, invoiceController.getInvoiceDetails);
-router.post('/update-invoice', authMiddleware.isAuthenticated, invoiceController.updateInvoice);
-router.post('/get-service-order-invoice', authMiddleware.isAuthenticated, invoiceController.getServiceOrderInvoice);
+router.post('/get-invoice',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getInvoice
+);
 
 module.exports = router;

@@ -7,7 +7,7 @@ const getUMs = async (req, res) => {
 
         result = await knexReader('ums')
             .select("id", "name", "abbreviation")
-            .where({ isActive: true })
+            .where({ isActive: true, orgId: orgId })
             .orderBy('name', 'asc');
 
         return res.status(200).json({

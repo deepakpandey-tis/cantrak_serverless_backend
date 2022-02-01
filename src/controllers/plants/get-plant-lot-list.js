@@ -12,18 +12,19 @@ const getPlantLotList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, locationId, strainId } = req.body;
+        let { companyId, lotNo, locationId, subLocationId, strainId, fromDate, toDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `"lotNo"`;
+            sortCol = `"lotNo" desc`;
+            sortOrder = '';
         }
 
-        if(!sortOrder || sortOrder === ''){
-            sortOrder = 'desc';
-        }
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'desc';
+        // }
 
         if(pageNumber < 1){
             pageNumber = 1;
@@ -36,11 +37,11 @@ const getPlantLotList = async (req, res) => {
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT pl.*
         , s.name "strainName", s2.name "specieName", c."companyName", lic.number "licenseNo"
-        , l.name "locationName", u2."name" "createdByName"
+        , l.name "locationName", sl.name "subLocationName", u2."name" "createdByName"
         `;
 
         sqlFrom = ` FROM plant_lots pl, companies c, strains s, species s2, licenses lic
-        , locations l, users u2
+        , locations l, sub_locations sl, users u2
         `;
 
         sqlWhere = ` WHERE pl."orgId" = ${orgId}`;
@@ -53,12 +54,21 @@ const getPlantLotList = async (req, res) => {
         if(locationId){
             sqlWhere += ` AND pl."locationId" = ${locationId}`;
         }
+        if(subLocationId){
+            sqlWhere += ` AND pl."subLocationId" = ${subLocationId}`;
+        }
         if(lotNo){
             sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
         }
+        if(fromDate){
+            sqlWhere += ` AND pl."plantedOn" >= ${new Date(fromDate).getTime()}`;
+        }
+        if(toDate){
+            sqlWhere += ` AND pl."plantedOn" <= ${new Date(toDate).getTime()}`;
+        }
 
         sqlWhere += ` AND pl."strainId" = s.id AND pl."specieId" = s2.id AND pl."companyId" = c.id AND pl."licenseId" = lic.id
-          AND pl."locationId" = l.id AND pl."createdBy" = u2.id
+          AND pl."locationId" = l.id  AND pl."subLocationId" = sl.id AND pl."createdBy" = u2.id
         `;
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;

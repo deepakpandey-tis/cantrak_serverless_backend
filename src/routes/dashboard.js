@@ -97,7 +97,7 @@ router.post(
     '/get-cm-chart-data',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     dashboardController.getServiceRequestServiceOrderChartData
 )
 
@@ -105,7 +105,7 @@ router.post(
     "/get-service-request-pie-chart-data",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     dashboardController.getServiceRequestPieChartData
 )
 
@@ -113,7 +113,7 @@ router.post(
     "/get-cm-problem-type-chart-data",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     dashboardController.getPieChartForProblemType
 )
 
@@ -121,8 +121,17 @@ router.post(
     "/get-technician-assigned-task-for-barchart",
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
-    resourceAccessMiddleware.isCMAccessible,
+    resourceAccessMiddleware.isAccessible,
     dashboardController.getServiceTaskAssignedToTecnicianChartData
+)
+
+
+router.get(
+    "/get-active-resource-list-with-sub-resource-for-dashboard",
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isAccessible,
+    dashboardController.getActiveResourceListWithSubResourceForDashboard
 )
 
 

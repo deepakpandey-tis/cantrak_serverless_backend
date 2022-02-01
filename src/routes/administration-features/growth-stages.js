@@ -10,42 +10,42 @@ const growthStageController = require('../../controllers/administration-features
 router.post('/get-growth-stage-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   growthStageController.getGrowthStageList
 );
 
 router.post('/get-growth-stages',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   growthStageController.getGrowthStages
 );
 
 router.post('/get-growth-stage',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   growthStageController.getGrowthStage
 );
 
 router.post('/add-growth-stage',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   growthStageController.addGrowthStage
 );
 
 router.post('/update-growth-stage',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   growthStageController.updateGrowthStage
 );
 
 router.post('/delete-growth-stage',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   growthStageController.deleteGrowthStage
 );
 

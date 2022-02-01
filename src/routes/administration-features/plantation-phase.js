@@ -12,7 +12,7 @@ router.post(
   "/add-plantation-phase",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationPhaseController.addPlantationPhase
 );
 
@@ -20,7 +20,7 @@ router.post(
   "/update-plantation-phase",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationPhaseController.updatePlantationPhase
 );
 
@@ -28,7 +28,7 @@ router.post(
   "/view-plantation-phase",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationPhaseController.viewPlantationPhase
 );
 
@@ -36,7 +36,7 @@ router.post(
   "/delete-plantation-phase",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationPhaseController.deletePlantationPhase
 );
 
@@ -56,7 +56,7 @@ router.post(
   "/get-plantation-phase-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationPhaseController.getPlantationPhaseList
 );
 // Export Plantation Phase
@@ -64,7 +64,7 @@ router.get(
   "/export-plantation-phase",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationPhaseController.exportPlantationPhase
 );
 
@@ -106,7 +106,7 @@ router.post(
   // upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationPhaseController.importPlantationData
 );
 

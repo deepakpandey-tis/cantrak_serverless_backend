@@ -1,15 +1,9 @@
 const knex = require("../../db/knex");
+const knexReader = require("../../db/knex-reader");
 const Joi = require("@hapi/joi");
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
-const Moment = require("moment");
-const MomentRange = require("moment-range");
-const moment = MomentRange.extendMoment(Moment);
+const moment = require("moment-timezone");
 
-const uuidv4 = require("uuid/v4");
-var jwt = require("jsonwebtoken");
 const _ = require("lodash");
-const { orWhere, select } = require("../../db/knex");
 
 const dashboardController = {
   getDashboardData: async (req, res) => {
@@ -836,6 +830,56 @@ const dashboardController = {
             message: err.message,
           },
         ],
+      });
+    }
+  },
+
+  /* GET ORGANISATION DETAILS FOR ADMIN */
+  getOrganisationDetailsForTheme: async (req, res) => {
+
+    try {
+
+      let id = req.orgId || parseInt(req.query.id);
+
+      let domain = req.query.domain;
+      console.log(req.query);
+      console.log("******** res **********",req);
+
+      let result;
+
+      if (domain) {
+        result = await knexReader("organisations")
+          .select([
+            'organisations.id', 'organisations.organisationName', 'organisations.domainName', 'organisations.themeConfig'
+          ])
+          .where({ 'organisations.domainName': domain }).first();
+      } else {
+        result = await knexReader("organisations")
+          .select([
+            'organisations.id', 'organisations.organisationName', 'organisations.domainName', 'organisations.themeConfig'
+          ])
+          .where({ 'organisations.id': id }).first();
+      }
+
+      if (!result?.themeConfig || result.themeConfig == '' || Object.keys(result.themeConfig).length <= 0) {
+        result = await knexReader("organisations")
+          .select([
+            'organisations.id', 'organisations.organisationName', 'organisations.domainName', 'organisations.themeConfig'
+          ])
+          .where({ 'organisations.id': 1 }).first();
+      }
+
+      return res.status(200).json({
+        data: {
+          organisationDetails: { ...result }
+        },
+        message: "Organisation Details!."
+      });
+
+    } catch (err) {
+      console.error("[controllers][dashboard][getOrganisationDetailsForTheme] :  Error",err);
+      return res.status(500).json({
+        errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
       });
     }
   },

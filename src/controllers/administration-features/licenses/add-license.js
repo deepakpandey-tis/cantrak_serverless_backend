@@ -10,17 +10,17 @@ const addLicense = async (req, res) => {
         const payload = req.body;
 
         let insertedRecord = [];
+        let insertedItemRecords = [];
 
         const schema = Joi.object().keys({
+            companyId: Joi.string().required(),
             number: Joi.string().required(),
             issuedOn: Joi.date().required(),
             expiredOn: Joi.date().required(),
-            primaryHolder: Joi.string().required(),
-            subHolder: Joi.string().required(),
-            locationName: Joi.string().required(),
-            location: Joi.string().required(),
+            assignedPerson: Joi.string().required(),
             licenseTypeId: Joi.string().required(),
-            licenseCategoryId: Joi.string().required(),
+            licenseObjectiveIds: Joi.array().required(),
+            items: Joi.array().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -57,29 +57,71 @@ const addLicense = async (req, res) => {
         }
         */
 
-        let currentTime = new Date().getTime();
-        let insertData = {
-            orgId: orgId,
-            ...payload,
-            issuedOn: new Date(payload.issuedOn).getTime(),
-            expiredOn: new Date(payload.expiredOn).getTime(),
-            createdBy: userId,
-            createdAt: currentTime,
-            updatedBy: userId,
-            updatedAt: currentTime,
-        };
-        console.log('License insert record: ', insertData);
+        await knex.transaction(async (trx) => {
 
-        const insertResult = await knex
-            .insert(insertData)
-            .returning(["*"])
-            .into('licenses');
+            let currentTime = new Date().getTime();
+            
+            let insertData = {
+                orgId: orgId,
+                companyId: payload.companyId,
+                number: payload.number,
+                issuedOn: new Date(payload.issuedOn).getTime(),
+                expiredOn: new Date(payload.expiredOn).getTime(),
+                assignedPerson: payload.assignedPerson,
+                licenseTypeId: payload.licenseTypeId,
+                licenseObjectiveIds: payload.licenseObjectiveIds,
+                createdBy: userId,
+                createdAt: currentTime,
+                updatedBy: userId,
+                updatedAt: currentTime,
+            };
+            console.log('License insert record: ', insertData);
+    
+            const insertResult = await knex
+                .insert(insertData)
+                .returning(["*"])
+                .into('licenses');
+    
+            insertedRecord = insertResult[0];
 
-        insertedRecord = insertResult[0];
+            let item;
+            let itemRecNo;
+
+            itemRecNo = 0;
+            for (let rec of payload.items) {
+                item = {
+                    orgId: orgId,
+                    companyId: payload.companyId,
+                    licenseId: insertedRecord.id,
+                    itemCategoryId: rec.itemCategoryId,
+                    itemId: rec.itemId,
+                    quantity: rec.quantity,
+                    umId: rec.umId,
+                    createdBy: userId,
+                    createdAt: currentTime,
+                    updatedBy: userId,
+                    updatedAt: currentTime,
+                };
+                console.log('item: ', item);
+
+                itemRecNo += 1;
+                const insertResult = await knex
+                    .insert(item)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("license_items");
+
+                insertedItemRecords[itemRecNo] = insertResult[0];
+            }
+
+            trx.commit;
+        });
+
 
         return res.status(200).json({
             data: {
-                record: insertedRecord
+                record: insertedRecord,
+                items: insertedItemRecords
             },
             message: 'License added successfully.'
         });
@@ -87,7 +129,7 @@ const addLicense = async (req, res) => {
         console.log("[controllers][administration-features][licenses][addLicense] :  Error", err);
         if (err.code == 23505){            // unique_violation
             res.status(500).json({
-                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: 'License for Primary Holder, Sub Holder and Number already exists.' }]
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: 'License for Assigne Person and Number already exists.' }]
             });
         }
         else{

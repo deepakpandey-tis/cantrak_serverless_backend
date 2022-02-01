@@ -10,8 +10,17 @@ const ItemCategory = {
 
 const TxnTypes ={
     ReceiveFromSupplier: 11,
+    ReceiveProductFromHarvest: 21,
+    ReceiveWasteFromPlantWaste: 22,
+    ReceiveWaste: 23,                          // Inventory option
+    ReceiveFromProduction: 24,
+    AdjustmentAdd: 41,
     ReceiveFromTxnType: 11,
     ReceiveUptoTxnType: 50,
+    IssueForPlantation: 51,
+    IssueForProduction: 54,
+    IssueForSale: 55,
+    AdjustmentMinus: 81,
     IssueFromTxnType: 51,
     IssueUptoTxnType: 90,
 };

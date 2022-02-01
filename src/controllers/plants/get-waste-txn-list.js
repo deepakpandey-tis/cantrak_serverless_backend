@@ -13,6 +13,8 @@ const getWasteTxnList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
+        let { companyId, lotNo, locationId, strainId, fromDate, toDate, trackingNumber, growthStageId} = req.body;
+
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         if(pageNumber < 1){
@@ -31,8 +33,33 @@ const getWasteTxnList = async (req, res) => {
         , strains s, species s2, companies c, growth_stages gs
         `;
 
-        sqlWhere = ` WHERE pwt."growthStageId" = gs.id`;
+        sqlWhere = ` WHERE pwt."orgId" = ${orgId}`;
+        sqlWhere += ` AND pwt."growthStageId" = gs.id`;
         sqlWhere += ` AND pwt."plantLotId" = pl.id AND pl."strainId" = s.id AND pl."specieId" = s2.id AND pl."locationId" = l.id AND pwt."companyId" = c.id`;
+        if(trackingNumber){
+            sqlWhere += ` AND pwt."id" = ${trackingNumber}`;
+        }
+        if(companyId){
+            sqlWhere += ` AND pwt."companyId" = ${companyId}`;
+        }
+        if(strainId){
+            sqlWhere += ` AND pl."strainId" = ${strainId}`;
+        }
+        if(locationId){
+            sqlWhere += ` AND pl."locationId" = ${locationId}`;
+        }
+        if(lotNo){
+            sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
+        }
+        if(fromDate){
+            sqlWhere += ` AND pwt."date" >= ${new Date(fromDate).getTime()}`;
+        }
+        if(toDate){
+            sqlWhere += ` AND pwt."date" <= ${new Date(toDate).getTime()}`;
+        }
+        if(growthStageId){
+            sqlWhere += ` AND pwt."growthStageId" = ${growthStageId}`;
+        }
 
         sqlOrderBy = ` ORDER BY id desc`;
         //console.log('getWasteTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);

@@ -24,7 +24,7 @@ router.get(
   "/get-team-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPMAccessible,
+  resourceAccessMiddleware.isAccessible,
   teamsController.getTeamList
 );
 router.post(

@@ -2,7 +2,6 @@ const express = require('express');
 const sls = require('serverless-http');
 const createError = require('http-errors');
 const path = require('path');
-// const i18n = require('i18n');
 const indexRouter = require('./routes/index');
 
 const knex = require('../src/db/knex');
@@ -58,26 +57,6 @@ app.use(async (req, res, next) => {
   next();
 });
 
-
-// i18n
-// i18n.configure({
-//   locales: ['en', 'et'],
-//   defaultLocale: 'en',
-//   cookie: 'lang',
-//   objectNotation: true,
-//   queryParameter: 'lang',
-//   directory: path.join(__dirname, 'i18n'),
-//   //updateFiles: true
-// });
-// app.use(i18n.init);
-// app.get('/en', function (req, res) {
-//     // res.cookie('lang', 'en', { maxAge: 900000, httpOnly: false });
-//     // res.redirect('back');
-// });
-// app.get('/et', function (req, res) {
-//     // res.cookie('lang', 'et', { maxAge: 900000, httpOnly: false });
-//     // res.redirect('back');
-// });
 
 
 /**

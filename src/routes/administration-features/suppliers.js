@@ -10,49 +10,49 @@ const supplierController = require('../../controllers/administration-features/su
 router.post('/get-supplier-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   supplierController.getSupplierList
 );
 
 router.get('/get-suppliers',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   supplierController.getSuppliers
 );
 
 router.post('/get-supplier',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   supplierController.getSupplier
 );
 
 router.post('/add-supplier',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   supplierController.addSupplier
 );
 
 router.post('/update-supplier',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   supplierController.updateSupplier
 );
 
 router.post('/delete-supplier',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   supplierController.deleteSupplier
 );
 
 router.get('/get-supplier-types',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   supplierController.getSupplierTypes
 );
 
@@ -60,7 +60,7 @@ router.get('/get-supplier-types',
 router.get('/export-suppliers',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   supplierController.exportSuppliers
 );
 
@@ -90,7 +90,7 @@ router.post(
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   supplierController.importSuppliers
 );
  */

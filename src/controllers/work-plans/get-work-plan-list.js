@@ -14,7 +14,8 @@ const getWorkPlanList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { name, companyId, plantationId } = req.body;
+        let { name, companyId } = req.body;
+        // let { name, companyId, plantationId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -37,14 +38,17 @@ const getWorkPlanList = async (req, res) => {
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT wpm.*
-        , u2."name" "createdByName", c."companyName", p.name "plantationName"
+        , u2."name" "createdByName", c."companyName"
         `;
+        // , u2."name" "createdByName", c."companyName", p.name "plantationName"
 
-        sqlFrom = ` FROM work_plan_master wpm, users u2, companies c, plantations p
+        sqlFrom = ` FROM work_plan_master wpm
+        , users u2, companies c
         `;
+        // LEFT JOIN plantations p ON wpm."plantationId" = p.id
 
         sqlWhere = ` WHERE wpm."orgId" = ${orgId}`;
-        sqlWhere += ` AND wpm."createdBy" = u2.id AND wpm."companyId" = c.id AND wpm."plantationId" = p.id 
+        sqlWhere += ` AND wpm."createdBy" = u2.id AND wpm."companyId" = c.id
         `;
 
         if(name && name != ''){
@@ -55,9 +59,9 @@ const getWorkPlanList = async (req, res) => {
             sqlWhere += ` AND wpm."companyId" = ${companyId}`;
         }
 
-        if(plantationId && plantationId != ''){
-            sqlWhere += ` AND wpm."plantationId" = ${plantationId}`;
-        }
+        // if(plantationId && plantationId != ''){
+        //     sqlWhere += ` AND wpm."plantationId" = ${plantationId}`;
+        // }
 
         sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
         //console.log('getWorkPlanList sql: ', sqlSelect + sqlFrom + sqlWhere);

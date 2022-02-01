@@ -10,15 +10,29 @@ const harvestController = require('../controllers/harvest');
 router.post('/add-harvest',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   harvestController.addHarvest
 );
 
 router.post('/get-harvest-lot-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   harvestController.getHarvestLotList
+);
+
+router.post('/get-harvest-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getHarvestList
+);
+
+router.post('/get-harvest-lot',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getHarvestLot
 );
 
 module.exports = router;

@@ -22,9 +22,17 @@ const getLicense = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT l2.*, lt.name "licenseType", lc.name "licenseCategory"`;
-        sqlFrom = ` FROM licenses l2, license_types lt, license_categories lc `;
-        sqlWhere = ` WHERE l2.id = ${payload.id} AND l2."orgId" = ${orgId} AND l2."licenseTypeId" = lt.id AND l2."licenseCategoryId" = lc.id`;
+        sqlSelect = `SELECT l2.*, lt.name "licenseType"
+        , (SELECT json_agg(row_to_json(i.*)) "items" 
+        FROM (
+        SELECT li.id::text, li."itemCategoryId"::text, li."itemId"::text, li.quantity, li."umId"::text, li."isActive", it.name, ums.name "itemUM"
+        , (SELECT sum(quantity) FROM license_nar_items lni WHERE li."itemCategoryId" = lni."itemCategoryId" and li."itemId" = lni."itemId") "quantityReceived"
+        FROM license_items li, items it, ums
+        WHERE li."licenseId" = l2.id AND li."itemId" = it.id AND li."umId" = ums.id
+        ) i
+        )`;
+        sqlFrom = ` FROM licenses l2, license_types lt `;
+        sqlWhere = ` WHERE l2.id = ${payload.id} AND l2."orgId" = ${orgId} AND l2."licenseTypeId" = lt.id`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 

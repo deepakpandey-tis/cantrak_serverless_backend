@@ -28,11 +28,11 @@ const imageHelper = {
                 'signatureVersion':'v4'
             });
             let uploadURL = await s3.getSignedUrl("putObject", s3Params);
-            if (process.env.IS_OFFLINE) {
-                uploadURL = uploadURL
-                    .replace("https://", "http://")
-                    .replace(".com", ".com:8000");
-            }
+            // if (process.env.IS_OFFLINE) {
+            //     uploadURL = uploadURL
+            //         .replace("https://", "http://")
+            //         .replace(".com", ".com:8000");
+            // }
 
             let scheme = uploadURL.split("/")[0];
             let bucketUrl = uploadURL.split("/")[2];

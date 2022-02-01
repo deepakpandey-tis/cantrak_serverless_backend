@@ -14,18 +14,19 @@ const getLotPlantList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { id, locationId, plantSerial } = req.body;
+        let { id, locationId, subLocationId, plantSerial } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'plantSerial';
+            sortCol = `"plantSerial" desc`;
+            sortOrder = '';
         }
 
-        if(!sortOrder || sortOrder === ''){
-            sortOrder = 'desc';
-        }
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'desc';
+        // }
 
         if(pageNumber < 1){
             pageNumber = 1;
@@ -37,22 +38,25 @@ const getLotPlantList = async (req, res) => {
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT pl.*, p.id "plantId", p."plantSerial", p."isActive" "plantIsActive", p."isWaste" "plantIsWaste", p."isDestroy" "plantIsDestroy", p."isEndOfLife" "plantIsEndOfLife"
-        , ploc.id "plantLocationId", l.name "plantLocationName", pgs."growthStageId" "plantGrowthStageId", pgs."startDate" "plantGrowthStageDate", gs.name "plantGrowthStageName"
+        , ploc.id "plantLocationId", l.name "plantLocationName", sl.name "plantSubLocationName", pgs."growthStageId" "plantGrowthStageId", pgs."startDate" "plantGrowthStageDate", gs.name "plantGrowthStageName"
         , s.name "strainName", s2.name "specieName"
         `;
 
-        sqlFrom = ` FROM plant_lots pl, plants p, plant_locations ploc, plant_growth_stages pgs, locations l, growth_stages gs
+        sqlFrom = ` FROM plant_lots pl, plants p, plant_locations ploc, plant_growth_stages pgs, locations l, sub_locations sl, growth_stages gs
         , strains s, species s2
         `;
 
-        sqlWhere = ` WHERE pl.id = ${id} AND pl."orgId" = ${orgId} AND pl.id = p."plantLotId" AND p."isActive" AND NOT p."isWaste"`;
+        sqlWhere = ` WHERE pl.id = ${id} AND pl."orgId" = ${orgId} AND pl.id = p."plantLotId" AND p."isActive"`;
         sqlWhere += ` AND p.id = ploc."plantId" AND ploc.id = (select id from plant_locations ploc2 where ploc2."plantId" = p.id order by id desc limit 1)`;
         sqlWhere += ` AND p.id = pgs."plantId" AND pgs.id = (select id from plant_growth_stages pgs2 where pgs2."plantId" = p.id order by id desc limit 1)`;
-        sqlWhere += ` AND ploc."locationId" = l.id AND pgs."growthStageId" = gs.id`;
+        sqlWhere += ` AND ploc."locationId" = l.id AND ploc."subLocationId" = sl.id AND pgs."growthStageId" = gs.id`;
         sqlWhere += ` AND pl."strainId" = s.id AND pl."specieId" = s2.id`;
 
         if(locationId && locationId != ''){
             sqlWhere += ` AND ploc."locationId" = ${locationId}`;
+        }
+        if(subLocationId){
+            sqlWhere += ` AND ploc."subLocationId" = ${subLocationId}`;
         }
 
         if(plantSerial && plantSerial != ''){
@@ -69,7 +73,7 @@ const getLotPlantList = async (req, res) => {
             sqlWhere += ` AND p2."plantedOn" <= ${edt}`;
         }
  */
-        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getLotPlantList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

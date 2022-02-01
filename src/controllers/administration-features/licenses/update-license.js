@@ -10,18 +10,18 @@ const updateLicense = async (req, res) => {
         const payload = req.body;
 
         let insertedRecord = [];
+        let insertedItemRecords = [];
 
         const schema = Joi.object().keys({
             id: Joi.string().required(),
+            companyId: Joi.string().required(),
             number: Joi.string().required(),
             issuedOn: Joi.date().required(),
             expiredOn: Joi.date().required(),
-            primaryHolder: Joi.string().required(),
-            subHolder: Joi.string().required(),
-            locationName: Joi.string().required(),
-            location: Joi.string().required(),
+            assignedPerson: Joi.string().required(),
             licenseTypeId: Joi.string().required(),
-            licenseCategoryId: Joi.string().required(),
+            licenseObjectiveIds: Joi.array().required(),
+            items: Joi.array().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -59,28 +59,89 @@ const updateLicense = async (req, res) => {
         }
         */
 
-        let currentTime = new Date().getTime();
-        let insertData = {
-            orgId: orgId,
-            ...payload,
-            issuedOn: new Date(payload.issuedOn).getTime(),
-            expiredOn: new Date(payload.expiredOn).getTime(),
-            updatedBy: userId,
-            updatedAt: currentTime,
-        };
-        console.log('License insert record: ', insertData);
+        await knex.transaction(async (trx) => {
 
-        const insertResult = await knex
-            .update(insertData)
-            .where({ id: payload.id, orgId: req.orgId })
-            .returning(["*"])
-            .into('licenses');
+            let currentTime = new Date().getTime();
+            let insertData = {
+                companyId: payload.companyId,
+                number: payload.number,
+                issuedOn: new Date(payload.issuedOn).getTime(),
+                expiredOn: new Date(payload.expiredOn).getTime(),
+                assignedPerson: payload.assignedPerson,
+                licenseTypeId: payload.licenseTypeId,
+                licenseObjectiveIds: payload.licenseObjectiveIds,
+                updatedBy: userId,
+                updatedAt: currentTime,
+            };
+            console.log('License update record: ', insertData);
+    
+            const insertResult = await knex
+                .update(insertData)
+                .where({ id: payload.id, orgId: req.orgId })
+                .returning(["*"])
+                .into('licenses');
+    
+            insertedRecord = insertResult[0];
 
-        insertedRecord = insertResult[0];
+            let insertItem;
+            let item;
+            let itemRecNo;
+
+            itemRecNo = 0;
+            for (let rec of payload.items) {
+                if(rec.id){
+                    item = {
+                        companyId: payload.companyId,
+                        itemCategoryId: rec.itemCategoryId,
+                        itemId: rec.itemId,
+                        quantity: rec.quantity,
+                        umId: rec.umId,
+                        updatedBy: userId,
+                        updatedAt: currentTime,
+                    };
+                    console.log('item: ', item);
+
+                    insertItem = await knex
+                    .update(item)
+                    .where({ id: rec.id, orgId: req.orgId })
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into('license_items');
+                }
+                else {
+                    item = {
+                        orgId: orgId,
+                        companyId: payload.companyId,
+                        licenseId: payload.id,
+                        itemCategoryId: rec.itemCategoryId,
+                        itemId: rec.itemId,
+                        quantity: rec.quantity,
+                        umId: rec.umId,
+                        createdBy: userId,
+                        createdAt: currentTime,
+                        updatedBy: userId,
+                        updatedAt: currentTime,
+                    };
+                    console.log('item: ', item);
+
+                    insertItem = await knex
+                    .insert(item)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("license_items");
+                }
+
+                itemRecNo += 1;
+                insertedItemRecords[itemRecNo] = insertItem[0];
+            }
+    
+            trx.commit;
+        });
 
         return res.status(200).json({
             data: {
-                record: insertedRecord
+                record: insertedRecord,
+                items: insertedItemRecords
             },
             message: 'License updated successfully.'
         });

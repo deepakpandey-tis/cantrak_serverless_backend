@@ -10,7 +10,7 @@ router.post(
   "/add-plantation-group",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationGroupController.addPlantationGroup
 );
 
@@ -18,7 +18,7 @@ router.post(
   "/update-plantation-group",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationGroupController.updatePlantationGroup
 );
 
@@ -26,7 +26,7 @@ router.post(
   "/view-plantation-group",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationGroupController.viewPlantationGroup
 );
 
@@ -34,7 +34,7 @@ router.post(
   "/delete-plantation-group",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationGroupController.deletePlantationGroup
 );
 
@@ -48,7 +48,7 @@ router.post(
   "/get-plantation-group-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationGroupController.getPlantationGroupList
 );
 
@@ -56,7 +56,7 @@ router.get(
   "/export-plantation-group",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationGroupController.exportPlantationGroup
 );
 
@@ -64,7 +64,7 @@ router.get(
   "/get-plantation-group-all-list",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationGroupController.getPlantationGroupAllList
 );
 
@@ -95,7 +95,7 @@ router.post(
   upload.single("file"),
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationGroupController.importPlantationGroupData
 );
 
@@ -124,7 +124,7 @@ router.post(
   "/get-plantation-groups-for-company",
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isPropertySetupAccessible,
+  resourceAccessMiddleware.isAccessible,
   plantationGroupController.getPlantationGroupsForCompany
 );
 

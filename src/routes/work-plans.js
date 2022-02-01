@@ -10,84 +10,84 @@ const workPlanController = require('../controllers/work-plans');
 router.post('/get-work-plan-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.getWorkPlanList
 );
 
 /* router.get('/get-work-plans',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.getWorkPlans
 );
  */
 router.post('/get-work-plan',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.getWorkPlan
 );
 
 router.post('/add-work-plan',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.addWorkPlan
 );
 
 router.post('/update-work-plan',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.updateWorkPlan
 );
 
 router.post('/delete-work-plan',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.deleteWorkPlan
 );
 
 router.post('/add-work-plan-schedule',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.addWorkPlanSchedule
 );
 
 router.post('/get-work-order',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.getWorkOrder
 );
 
 router.post('/get-work-plan-work-order-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.getWorkPlanWorkOrderList
 );
 
 router.post('/update-work-order-date',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.updateWorkOrderDate
 );
 
 router.post('/cancel-work-order',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.cancelWorkOrder
 );
 
 router.post('/update-work-order-tasks-status',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
-  resourceAccessMiddleware.isAssetAccessible,
+  resourceAccessMiddleware.isAccessible,
   workPlanController.updateWorkOrderTasksStatus
 );
 
