@@ -109,6 +109,8 @@ custom:
     dev: dev
     stage: stage
     prod: prod
+  efsAccessPoint: fsap-065866bda3f6405f1
+  localMountPath: /mnt/efs
   lambdaInsights:
     defaultLambdaInsights: true #enables Lambda Insights for all functions
   
@@ -195,3 +197,13 @@ functions:
       - schedule:
           rate: rate(1 hour)
           enabled: true
+
+
+resources:
+  extensions:
+    # Name of function <longJobsProcessor>
+    LongJobsProcessorLambdaFunction:
+      Properties:
+        FileSystemConfigs:
+          - Arn: 'arn:aws:elasticfilesystem:${self:provider.region}:${self:custom.awsAccountId}:access-point/${self:custom.efsAccessPoint}'
+            LocalMountPath: '${self:custom.localMountPath}'
