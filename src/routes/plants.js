@@ -133,4 +133,11 @@ router.post('/get-waste-txn',
   plantController.getWasteTxn
 );
 
+router.post('/generate-pdf-of-plants',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.generatePdfOfPlants
+);
+
 module.exports = router;
