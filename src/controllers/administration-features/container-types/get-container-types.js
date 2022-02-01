@@ -7,7 +7,7 @@ const getContainerTypes = async (req, res) => {
 
         result = await knexReader('container_types')
             .select("id", "name")
-            .where({ isActive: true })
+            .where({ isActive: true, orgId: orgId })
             .orderBy([{ column: 'name', order: 'asc' }])
 
         return res.status(200).json({

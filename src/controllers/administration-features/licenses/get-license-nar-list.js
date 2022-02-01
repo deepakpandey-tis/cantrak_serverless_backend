@@ -41,7 +41,7 @@ const getLicenseNarList = async (req, res) => {
 
         sqlFrom = ` FROM license_nars ln, suppliers s, users u2`;
 
-        sqlWhere = ` WHERE ln."licenseId" = ${licenseId} AND ln."supplierId" = s.id AND ln."createdBy" = u2.id`;
+        sqlWhere = ` WHERE ln."orgId" = ${orgId} AND ln."licenseId" = ${licenseId} AND ln."supplierId" = s.id AND ln."createdBy" = u2.id`;
         if(permitNumber){
             sqlWhere += ` AND ln."permitNumber" iLIKE '%${permitNumber}%'`;
         }
