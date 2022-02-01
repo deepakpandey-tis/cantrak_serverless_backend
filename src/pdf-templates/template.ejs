@@ -1,88 +1,21 @@
 <div style="width: 100% !important; position: relative;">
-  <div style="width: 150px; position: absolute; top: 0; right: 50; text-align: center;">
-    <h6 style="margin: 0px; padding: 0px;">
-      <span style="color: #F44439;">ห้ องชุดเลขที่ / Unit No</span>
-    </h6>
-    <% for (var i = 0; i < propertyOwner.houseId.length;  i++ ) { %>
-    <h6 style="margin: 0px; padding: 0px; padding-bottom: 3px;">
-      <span><%= propertyOwner.houseId[i] %></span>
-    </h6>
-    <% } %>
-  </div>
-  <table style="width: 100%; margin-top: 20px;">
-    <tr>
-      <td style="text-align: center; padding-bottom: 15px;">
-        <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">วาระ / Agenda : </span
-          ><span> <%= agenda.agendaNo  %></span>
-        </h6>
-      </td>
-    </tr>
-    <!-- <tr>
-      <td style="text-align: center; padding-bottom: 15px;">
-        <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">Company Name (Th)</span>
-        </h6>
-      </td>
-    </tr> -->
-    <tr>
-      <td style="text-align: center; padding-bottom: 15px;">
-        <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;"><%= agmDetails.companyName %></span>
-        </h6>
-      </td>
-    </tr>
-    <tr>
-      <td style="text-align: center; padding-bottom: 15px;">
-        <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">ใบลงคะแนน / Voting sheet</span>
-        </h6>
-      </td>
-    </tr>
-    <tr>
-      <td style="text-align: center; padding-bottom: 15px;">
-        <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">วันที่ : </span
-          ><span><%= agmDetails.formattedDate %></span> / 
-          <span style="color: #F44439;">Date : </span
-            ><span><%= agmDetails.formattedDate %></span>
-        </h6>
-      </td>
-    </tr>
-  </table>
-  <table style="width: 100%; margin-top: 20px;">
-    <tr>
-      <td style=" padding-bottom: 15px;">
-        <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">วาระที่ <%= agenda.agendaNo  %>: </span
-          ><span><%= agenda.agendaName  %></span>
-        </h6>
-      </td>
-    </tr>
-    <tr>
-      <td style=" padding-bottom: 15px;">
-        <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">Agenda <%= agenda.agendaNo  %>: </span
-          ><span><%= agenda.agendaNameThai  %></span>
-        </h6>
-      </td>
-    </tr>
-  </table>
-  <% if(agenda.choices.length <= 3){ %>
-  <table style="width: 100%; margin-top: 10px;">
+  <% if(agenda.plants.length <= 3){ %>
+  <table style="width: 100%; margin-top: 0px;">
     <tr>
       <td style="padding: 0px 10px;">
         <table style="width: 100%;">
-          <% for (var i = 0; i < agenda.choices.length;  i++ ) { %>
+          <% for (var i = 0; i < agenda.plants.length;  i++ ) { %>
           <tr>
             <td>
               <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
             </td>
             <td>
-              <small><%= agenda.choices[i].choiceValue %> / <%= agenda.choices[i].choiceValueThai %></small>
+              <small><%= agenda.plants[i].plantId %></small>
+              <br>
+              <small><%= moment(Number(agenda.plants[i].createdAt)).format('DD/MM/YYYY') %></small>
             </td>
             <td style="text-align: right; padding-top: 30px; padding-bottom: 30px;"">
-              <img src="<%= agenda.choices[i].qrCode %>" alt="qr-code" width="120px">
+              <img src="<%= agenda.plants[i].qrCode %>" alt="qr-code" width="120px">
             </td>
           </tr>
           <% } %>
@@ -90,12 +23,12 @@
       </td>
     </tr>
   </table>
-  <% }else if(agenda.choices.length > 3 && agenda.choices.length <= 5){ %>
-    <table style="width: 100%; margin-top: 10px;">
+  <% }else if(agenda.plants.length > 3 && agenda.plants.length <= 5){ %>
+    <table style="width: 100%; margin-top: 0px;">
       <tr>
         <td style="padding: 0px 10px;">
           <table style="width: 100%;">
-            <% for (var i = 0; i < agenda.choices.length;  i++ ) { %>
+            <% for (var i = 0; i < agenda.plants.length;  i++ ) { %>
            
             <% if(i == 0 || i % 2 == 0){ var c = 1; %>
             <tr style="margin-top: 20px; margin-bottom: 20px;">
@@ -108,10 +41,12 @@
                       <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
                     </td>
                     <td style="padding-bottom: 30px; padding-top: 30px;">
-                      <small><%= agenda.choices[i].choiceValue %> / <%= agenda.choices[i].choiceValueThai %></small>
+                      <small><%= agenda.plants[i].plantId %></small>
+                      <br>
+                      <small><%= moment(Number(agenda.plants[i].createdAt)).format('DD/MM/YYYY') %></small>
                     </td>
                     <td style="text-align: right; padding-top: 30px; padding-bottom: 30px;">
-                      <img src="<%= agenda.choices[i].qrCode %>" alt="qr-code" width="100px">
+                      <img src="<%= agenda.plants[i].qrCode %>" alt="qr-code" width="100px">
                     </td>
                     
                   </tr>
@@ -128,37 +63,35 @@
       </tr>
     </table>
   <%  }else{ %>
-    <table style="width: 100%; margin-top: 10px;">
+    <table style="width: 100%; margin-top: 0px;">
       <tr>
         <td style="padding: 0px 10px;">
           <table style="width: 100%;">
-            <% for (var i = 0; i < agenda.choices.length;  i++ ) { %>
+            <% for (var i = 0; i < agenda.plants.length;  i++ ) { %>
            
-            <% if(i == 0 || i % 3 == 0){ var c = 1; %>
-            <tr style="margin-top: 20px; margin-bottom: 20px;">
+            <% if(i == 0 || i % 4 == 0){ var c = 1; %>
+            <tr style="margin-top: 10px; margin-bottom: 10px;">
             <% } %>
 
               <td>
                 <table>
                   <tr>
-                    <td style="text-align: center;">
-                      <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto;"></div>
+                    <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
+                      <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
+                      <img src="<%= agenda.plants[i].qrCode %>" alt="qr-code" width="135px">
                     </td>
                   </tr>
                   <tr>
-                    <td style="text-align: center; padding-top: 10px;">
-                      <img src="<%= agenda.choices[i].qrCode %>" alt="qr-code" width="120px">
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align: center; padding-bottom: 30px; padding-top: 10px;">
-                      <small><%= agenda.choices[i].choiceValue %> / <%= agenda.choices[i].choiceValueThai %></small>
+                    <td style="text-align: center; padding-bottom: 20px; padding-top: 0px;">
+                      <small><%= agenda.plants[i].plantId %></small>
+                      <br>
+                      <small><%= moment(Number(agenda.plants[i].createdAt)).format('DD/MM/YYYY') %></small>
                     </td>
                   </tr>
                 </table>
               </td>
 
-            <% if(c == 3){ %>
+            <% if(c == 4){ %>
             </tr>
             <% }else{ c++;} %>
 
@@ -168,63 +101,4 @@
       </tr>
     </table>
   <% } %>
-  <table style="width: 100%; margin-top: 10px;">
-    <tr>
-      <td colspan="3" style=" padding-bottom: 5px;">
-        <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">ในฐานะ / In capacity of</span>
-        </h6>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding: 0px 10px;">
-        <table style="width: 100%;">
-          <tr>
-            <td>
-              <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
-            </td>
-            <td>
-              <small style="padding: 0px; margin: 0px;">เจ้ าของห้ องชุด / Co-owner</small>
-            </td>
-            <td style="text-align: right;">
-              <small style="padding: 0px; margin: 0px;">ลงชื่อ / Sign _____________________</small>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <div style="width: 10px; height: 10px; border: 1px solid gray;"></div>
-            </td>
-            <td>
-              <small style="padding: 0px; margin: 0px;">ตัวแทน / Proxy</small>
-            </td>
-            <td style="text-align: right;">
-              <small style="padding: 0px; margin: 0px;">(_____________________)</small>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-  <table style="width: 100%; margin-top: 10px;">
-    <tr>
-      <td style="padding-top: 10px;">
-        <!-- <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">ห้ องชุดเลขที่ / Unit No : </span
-          ><span><%= propertyOwner.houseId %></span>
-        </h6> -->
-        <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">อัตาส่วนกรรมสิทธิ์ / Actual Ownership Ratio : </span
-          ><span><%= propertyOwner.actualOwnershipRatio %></span>
-        </h6>
-      </td>
-    </tr>
-    <!-- <tr>
-      <td style="text-align: left; padding-top: 10px;">
-        <h6 style="margin: 0px; padding: 0px;">
-          <span style="color: #F44439;">อัตาส่วนกรรมสิทธิ์ /Total Ownership Ratio : </span
-          ><span><%= propertyOwner.ownershipRatio %></span>
-        </h6>
-      </td>
-    </tr> -->
-  </table>
 </div>
