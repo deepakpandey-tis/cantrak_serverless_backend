@@ -415,7 +415,7 @@ const plantsHelper = {
         
                     console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: lot pdf data", plantsData)
         
-                    let htmlContents = await ejs.renderFile(templatePath, { moment, plantsLots });
+                    let htmlContents = await ejs.renderFile(templatePath, { moment, plantsLot: plantsLots });
         
                     let filename = `plant-${plantId}-lot-${plantsLot.lotNo}.pdf`;
         
@@ -436,14 +436,7 @@ const plantsHelper = {
     
             } catch (err) {
                 console.error("[helpers][plants][generatePlantsDocumentOnEFSv2]: Inner Loop: Error", err);
-                if (err.list && Array.isArray(err.list)) {
-                    err.list.forEach(item => {
-                    console.error(`[helpers][plants][generatePlantsDocumentOnEFSv2]: Inner Loop Each Error:`, item);
-                    for (var it of item.list) {
-                        console.error(`[helpers][plants][generatePlantsDocumentOnEFSv2]: Inner Loop Each Error:`, it.message);
-                    }
-                    });
-                }
+                
                 throw new Error(err);
             }
         
