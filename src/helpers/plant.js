@@ -413,7 +413,7 @@ const plantsHelper = {
 
                     let plantsLots = {...plantsLot, plants: plantsData}
         
-                    console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: lot pdf data", plantsData)
+                    console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: lot pdf data", plantsLots)
         
                     let htmlContents = await ejs.renderFile(templatePath, { moment, plantsLot: plantsLots });
         
