@@ -14,6 +14,7 @@ const changeLocation = async (req, res) => {
     let insertedRecord = [];
 
     const schema = Joi.object().keys({
+        companyId: Joi.number().required(),
         date: Joi.date().required(),
         plantLotId: Joi.number().required(),
         growthStageId: Joi.number().required(),
@@ -41,7 +42,7 @@ const changeLocation = async (req, res) => {
 
     try {
 
-         const {selectedPlantIds, ...txnHeader} = req.body;
+        const {selectedPlantIds, ...txnHeader} = req.body;
         const selectedPIds = JSON.parse(selectedPlantIds);
         const allPlants = selectedPIds.find(r => r.id == 0);
 
