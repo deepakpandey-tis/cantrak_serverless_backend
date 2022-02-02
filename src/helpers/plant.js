@@ -302,9 +302,9 @@ const plantsHelper = {
             // let orgId = orgId;
             let userId = requestedBy.id;
 
-            let payload = req.body;
-            let sortCol = payload.sortBy;
-            let sortOrder = payload.orderBy;
+            let payload;
+            let sortCol = null;
+            let sortOrder = null;
 
             let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
