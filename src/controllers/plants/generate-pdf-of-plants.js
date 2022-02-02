@@ -1,11 +1,12 @@
 const knexReader = require('../../db/knex-reader');
+const redisHelper = require('../../helpers/redis');
 
 const generatePdfOfPlants = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
 
-        let { id } = req.body;
+        let { id, pdfType } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere;
 
@@ -19,11 +20,13 @@ const generatePdfOfPlants = async (req, res) => {
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
 
+        await redisHelper.removeKey(`plant-${selectedRecs.rows[0].id}-lot-${selectedRecs.rows[0].lotNo}-qr-docs-link`);
+
         const queueHelper = require("../../helpers/queue");
         await queueHelper.addToQueue(
           {
             plantId: id,
-            name: 'ct:plants:id',
+            pdfType,
             data: {
               plantsLot: selectedRecs.rows,
             },
