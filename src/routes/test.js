@@ -185,7 +185,7 @@ router.get("/print-registration", (req, res) => {
     plants: [
       {
         id: '1103',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -194,7 +194,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1104',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -203,7 +203,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1105',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -212,7 +212,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1106',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -221,7 +221,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1107',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -230,7 +230,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1108',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -239,7 +239,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1109',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -248,7 +248,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1110',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -257,7 +257,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1111',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -266,7 +266,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1103',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -275,7 +275,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1104',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -284,7 +284,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1105',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -293,7 +293,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1106',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -302,7 +302,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1107',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -311,7 +311,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1108',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -320,7 +320,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1109',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -329,7 +329,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1110',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
@@ -338,7 +338,7 @@ router.get("/print-registration", (req, res) => {
       },
       {
         id: '1111',
-        serialNo: '001-22-02-000002',
+        plantSerial: '001-22-02-000002',
         isActive: true,
         plantedOn: '1639638355938',
         updatedAt: '1639638355938',
