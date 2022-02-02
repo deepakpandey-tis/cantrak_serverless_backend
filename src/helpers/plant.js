@@ -285,7 +285,7 @@ const wasBrowserKilled = async (browser) => {
 
 
 const plantsHelper = {
-    generatePlantsDocumentOnEFSv2: async ({ plantId, data, orgId, requestedBy }) => {
+    generatePlantsDocumentOnEFSv2: async ({ plantId, pdfType, data, orgId, requestedBy }) => {
 
         let browser = null;
         let bucketName = process.env.S3_BUCKET_NAME;
@@ -415,7 +415,7 @@ const plantsHelper = {
         
                     console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: lot pdf data", plantsLots)
         
-                    let htmlContents = await ejs.renderFile(templatePath, { moment, plantsLot: plantsLots });
+                    let htmlContents = await ejs.renderFile(templatePath, { moment, plantsLot: plantsLots, pdfType });
         
                     let filename = `plant-${plantId}-lot-${plantsLot.lotNo}.pdf`;
         
@@ -423,7 +423,8 @@ const plantsHelper = {
                     html: htmlContents,
                     data: {
                         moment, 
-                        plantsLots
+                        plantsLots,
+                        pdfType
                     },
                     s3BasePath: basePath,
                     filename: filename,
@@ -496,7 +497,7 @@ const plantsHelper = {
             });
         
             console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: s3FileDownloadUrl:", s3FileDownloadUrl);
-            await redisHelper.setValueWithExpiry(`plant-${plantId}-lot-${data.plantsLot[0].lotNo}-qr-docs-link`, { s3Url: s3FileDownloadUrl }, 2 * 60 * 60);
+            await redisHelper.setValueWithExpiry(`plant-${plantId}-lot-${data.plantsLot[0].lotNo}-qr-docs-link`, { s3Url: s3FileDownloadUrl, requestedBy, requestedAt: new Date().getTime() }, 2 * 60 * 60);
         
         
             let sender = requestedBy;
