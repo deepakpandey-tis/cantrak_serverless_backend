@@ -95,7 +95,7 @@ const getItemTxnList = async (req, res) => {
         `;
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
-        //console.log('getItemTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);
+        console.log('getItemTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;

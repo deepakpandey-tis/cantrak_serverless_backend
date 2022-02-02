@@ -26,7 +26,7 @@ const getLicense = async (req, res) => {
         , (SELECT json_agg(row_to_json(i.*)) "items" 
         FROM (
         SELECT li.id::text, li."itemCategoryId"::text, li."itemId"::text, li.quantity, li."umId"::text, li."isActive", it.name, ums.name "itemUM"
-        , (SELECT sum(quantity) FROM license_nar_items lni WHERE li."itemCategoryId" = lni."itemCategoryId" and li."itemId" = lni."itemId") "quantityReceived"
+        , (SELECT sum(quantity) FROM license_nars ln, license_nar_items lni WHERE ln."licenseId" = l2.id AND lni."licenseNarId" = ln.id AND li."itemCategoryId" = lni."itemCategoryId" and li."itemId" = lni."itemId") "quantityReceived"
         FROM license_items li, items it, ums
         WHERE li."licenseId" = l2.id AND li."itemId" = it.id AND li."umId" = ums.id
         ) i
