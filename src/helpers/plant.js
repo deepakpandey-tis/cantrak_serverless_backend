@@ -355,7 +355,7 @@ const plantsHelper = {
             var selectedRecs = await knexReader.raw(sqlStr);
             //console.log('selectedRecs: ', selectedRecs);
 
-            const plantsData = selectedRecs.rows;
+            let plantsData = selectedRecs.rows;
     
             const Parallel = require("async-parallel");
     
