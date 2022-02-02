@@ -89,7 +89,8 @@ provider:
     SOCKET_ENDPOINT: wss://k0l99tstv9.execute-api.ap-southeast-1.amazonaws.com/production
     # CDN_URL: resources.servicemind.asia
     REDIS_HOST: pg888-redis.kdebs8.ng.0001.apse1.cache.amazonaws.com
-    REDIS_PORT: 6379
+    REDIS_PORT: 6379,
+    MNT_DIR: ${self:custom.localMountPath}
   vpc:
     securityGroupIds:
       - sg-03ab4859828983c2a

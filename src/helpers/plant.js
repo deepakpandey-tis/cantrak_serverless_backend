@@ -302,9 +302,9 @@ const plantsHelper = {
             // let orgId = orgId;
             let userId = requestedBy.id;
 
-            let payload = req.body;
-            let sortCol = payload.sortBy;
-            let sortOrder = payload.orderBy;
+            let payload;
+            let sortCol = null;
+            let sortOrder = null;
 
             let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -355,7 +355,7 @@ const plantsHelper = {
             var selectedRecs = await knexReader.raw(sqlStr);
             //console.log('selectedRecs: ', selectedRecs);
 
-            const plantsData = selectedRecs.rows;
+            let plantsData = selectedRecs.rows;
     
             const Parallel = require("async-parallel");
     
@@ -371,7 +371,7 @@ const plantsHelper = {
             console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Base Directory (For Docs)....", basePath);
         
             // First Clean all files from the base directory....
-            console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Cleaning basepath directory for AGM....", plantId);
+            console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Cleaning basepath directory for Plants....", plantId);
             await fs.remove(basePath);
             console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: basepath Directory cleaned....", basePath);
         
@@ -385,7 +385,7 @@ const plantsHelper = {
             let sheetsToPrepare = [];
         
             // Read HTML Template
-            const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
+            const templatePath = path.join(__dirname, '..', 'pdf-templates', 'plants-qr-template.ejs');
             console.log('[helpers][plants][generatePlantsDocumentOnEFSv2]: PDF Template Path:', templatePath);
 
             try {
@@ -413,9 +413,9 @@ const plantsHelper = {
 
                     let plantsLots = {...plantsLot, plants: plantsData}
         
-                    console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: lot pdf data", plantsData)
+                    console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: lot pdf data", plantsLots)
         
-                    let htmlContents = await ejs.renderFile(templatePath, { moment, plantsLots });
+                    let htmlContents = await ejs.renderFile(templatePath, { moment, plantsLot: plantsLots });
         
                     let filename = `plant-${plantId}-lot-${plantsLot.lotNo}.pdf`;
         
@@ -520,7 +520,7 @@ const plantsHelper = {
                 notificationPayload,
                 ['IN_APP']
             );
-            console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Successfull Voting Doc Generated - Annoncement Send to:", receiver.email);
+            console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Successfull QR Doc Generated - Pdf Send to:", receiver.email);
     
         } catch (err) {
     
