@@ -91,6 +91,13 @@ router.post('/get-plant-lot-locations',
   plantController.getPlantLotLocations
 );
 
+router.post('/get-plant-lot-sub-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotSubLocations
+);
+
 router.post('/get-growth-stage-txn-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

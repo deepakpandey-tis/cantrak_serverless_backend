@@ -6,7 +6,28 @@ const getGrowthStages = async (req, res) => {
         let orgId = req.me.orgId;
         let { specieId } = req.body;
 
-        result = await knexReader('growth_stages')
+        let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
+
+        sqlSelect = `SELECT gs.*`;
+
+        sqlFrom = ` FROM growth_stages gs`;
+
+        sqlWhere = ` WHERE gs."orgId" = ${orgId} AND gs."specieId" = ${specieId} AND gs."isActive"`;
+
+        sqlOrderBy = ` ORDER BY gs."listOrder" asc`;
+
+        sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
+        
+        var selectedRecs = await knexReader.raw(sqlStr);
+
+        return res.status(200).json({
+            data: {
+                records: selectedRecs.rows
+            },
+            message: "Growth Stages!"
+        });
+
+/*         result = await knexReader('growth_stages')
             .select("id", "name", "specieId")
             .where({ isActive: true, orgId: orgId, specieId: specieId })
             .orderBy([{ column: 'listOrder', order: 'asc' }])
@@ -17,6 +38,7 @@ const getGrowthStages = async (req, res) => {
             },
             message: "Growth Stages List!"
         });
+ */
     } catch (err) {
         console.log("[controllers][administrationFeatures][growth-stages][getGrowthStages] :  Error", err);
         res.status(500).json({
