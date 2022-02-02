@@ -28,11 +28,25 @@ router.post('/add-item-from-import-license',
   inventoriesController.addItemFromImportLicense
 );
 
+router.post('/update-item-from-import-license',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.updateItemFromImportLicense
+);
+
 router.post('/add-item-from-supplier',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   inventoriesController.addItemFromSupplier
+);
+
+router.post('/update-item-from-supplier',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.updateItemFromSupplier
 );
 
 router.post('/import-item-from-supplier',

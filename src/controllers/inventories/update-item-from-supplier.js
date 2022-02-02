@@ -25,7 +25,7 @@ const TxnTypes ={
     IssueUptoTxnType: 90,
 };
 
-const addItemFromSupplier = async (req, res) => {
+const updateItemFromSupplier = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -36,6 +36,7 @@ const addItemFromSupplier = async (req, res) => {
         let insertedSupplier = [];
 
         const schema = Joi.object().keys({
+            id: Joi.number().required(),
             companyId: Joi.number().required(),
             date: Joi.date().required(),
             itemCategoryId: Joi.number().integer().required(),
@@ -46,6 +47,7 @@ const addItemFromSupplier = async (req, res) => {
             specieId: Joi.number().required(),
             strainId: Joi.number().required(),
             storageLocationId: Joi.number().required(),
+            itemTxnSupplierId: Joi.number().required(),
             supplierId: Joi.number().required(),
             supplierLotNo: Joi.string().allow([null, '']).required(),
             supplierInternalCode: Joi.string().allow([null, '']).required(),
@@ -55,7 +57,7 @@ const addItemFromSupplier = async (req, res) => {
 
         const result = Joi.validate(payload, schema);
         console.log(
-            "[controllers][inventories][addItemFromSupplier]: JOi Result",
+            "[controllers][inventories][updateItemFromSupplier]: JOi Result",
             result
         );
 
@@ -72,7 +74,6 @@ const addItemFromSupplier = async (req, res) => {
             let currentTime = new Date().getTime();
 
             let insertData = {
-                orgId: orgId,
                 companyId: payload.companyId,
                 txnType: TxnTypes.ReceiveFromSupplier,
                 date: new Date(payload.date).getTime(),
@@ -84,15 +85,14 @@ const addItemFromSupplier = async (req, res) => {
                 quantity: payload.quantity,
                 umId: payload.umId,
                 storageLocationId: payload.storageLocationId,
-                createdBy: userId,
-                createdAt: currentTime,
                 updatedBy: userId,
                 updatedAt: currentTime,
             };
-            console.log('txn insert record: ', insertData);
+            console.log('txn update record: ', insertData);
 
             const insertResult = await knex
-                .insert(insertData)
+                .update(insertData)
+                .where({ id: payload.id, orgId: orgId })
                 .returning(["*"])
                 .transacting(trx)
                 .into("item_txns");
@@ -100,19 +100,18 @@ const addItemFromSupplier = async (req, res) => {
             insertedRecord = insertResult[0];
 
             insertData = {
-                orgId: orgId,
                 companyId: payload.companyId,
-                itemTxnId: insertedRecord.id,
                 supplierId: payload.supplierId,
                 lotNo: payload.supplierLotNo,
                 internalCode: payload.supplierInternalCode,
                 licenseNo: payload.supplierLicenseNo,
                 quality: payload.supplierQuality,
             };
-            console.log('txn supplier insert record: ', insertData);
+            console.log('txn supplier update record: ', insertData);
 
             const insertSupplier = await knex
-                .insert(insertData)
+                .update(insertData)
+                .where({ id: payload.itemTxnSupplierId, itemTxnId: payload.id, orgId: orgId })
                 .returning(["*"])
                 .transacting(trx)
                 .into("item_txn_suppliers");
@@ -127,10 +126,10 @@ const addItemFromSupplier = async (req, res) => {
                 txn: insertedRecord,
                 supplier: insertedSupplier
             },
-            message: 'Item from supplier added successfully.'
+            message: 'Item from supplier updated successfully.'
         });
     } catch (err) {
-        console.log("[controllers][inventories][addItemFromSupplier] :  Error", err);
+        console.log("[controllers][inventories][updateItemFromSupplier] :  Error", err);
         //trx.rollback
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -138,7 +137,7 @@ const addItemFromSupplier = async (req, res) => {
     }
 }
 
-module.exports = addItemFromSupplier;
+module.exports = updateItemFromSupplier;
 
 /**
  * 2021/11/29:  column imported added

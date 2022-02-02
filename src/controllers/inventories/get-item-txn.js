@@ -1,6 +1,23 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../db/knex-reader");
 
+const TxnTypes ={
+    ReceiveFromSupplier: 11,
+    ReceiveProductFromHarvest: 21,
+    ReceiveWasteFromPlantWaste: 22,
+    ReceiveWaste: 23,                          // Inventory option
+    ReceiveFromProduction: 24,
+    AdjustmentAdd: 41,
+    ReceiveFromTxnType: 11,
+    ReceiveUptoTxnType: 50,
+    IssueForPlantation: 51,
+    IssueForProduction: 54,
+    IssueForSale: 55,
+    AdjustmentMinus: 81,
+    IssueFromTxnType: 51,
+    IssueUptoTxnType: 90,
+};
+
 const getItemTxn = async (req, res) => {
     try {
         let orgId = req.me.orgId;
@@ -28,6 +45,9 @@ const getItemTxn = async (req, res) => {
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
         , l.number "licenseNumber", ln."permitNumber" "narPermitNumber", ln."issuedOn", ln."expiredOn"
         , inv."invoiceNo", inv."customerId", cust.name "customerName", tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh"
+        , (SELECT coalesce(sum(quantity), 0) FROM item_txns txn WHERE txn."orgId" = it."orgId" AND txn."companyId" = it."companyId"
+           AND txn."lotNo" = it."lotNo"
+           AND txn."txnType" >= ${TxnTypes.IssueFromTxnType} AND txn."txnType" <= ${TxnTypes.IssueUptoTxnType}) "issuedQuantity"
         `;
         sqlFrom = ` FROM item_txns it LEFT OUTER JOIN licenses l on l.id = it."licenseId"
         LEFT OUTER JOIN license_nars ln on ln.id = it."licenseNarId"
