@@ -905,7 +905,7 @@ router.get("/print-registration", async (req, res) => {
 
   // await plantsHelper.generatePlantsDocumentOnEFSv2({ plantId: 10, data: {plantsLot: plData}, orgId, requestedBy });
 
-  res.render(templatePath, { moment, plantsLot, pdfType: '2x3' });
+  res.render(templatePath, { moment, plantsLot, pdfType: '3x3' });
   //res.status(500).json({id:req.query.id, id:req.query.id, type:req.query.type});
 });
 
