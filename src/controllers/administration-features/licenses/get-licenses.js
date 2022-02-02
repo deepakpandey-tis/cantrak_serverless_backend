@@ -15,10 +15,9 @@ const getLicenses = async (req, res) => {
 
         sqlFrom = ` FROM licenses l, license_types lt `;
 
-        sqlWhere = ` WHERE l."orgId" = ${orgId} AND l."isActive" AND l."licenseTypeId" = lt.id`;
-        if(companyId){
-            sqlWhere += ` AND l."companyId" = ${companyId}`;
-        }
+        sqlWhere = ` WHERE l."orgId" = ${orgId} AND l."isActive" AND l."licenseTypeId" = lt.id
+         AND l."companyId" = ${companyId}
+        `;
 
         if(licenseTypeId){
             sqlWhere += ` AND l."licenseTypeId" = ${licenseTypeId}`;

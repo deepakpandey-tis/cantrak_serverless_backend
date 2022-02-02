@@ -17,6 +17,16 @@ const getLocationTxnList = async (req, res) => {
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
+        // Setting default values, if not passed
+        if(!sortCol || sortCol === ''){
+            sortCol = `"id" desc`;
+            sortOrder = '';
+        }
+
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'desc';
+        // }
+
         if(pageNumber < 1){
             pageNumber = 1;
         }
@@ -34,10 +44,10 @@ const getLocationTxnList = async (req, res) => {
         `;
 
         sqlWhere = ` WHERE plt."orgId" = ${orgId}`;
-        sqlWhere += ` AND plt."plantLotId" = pl.id AND plt."fromLocationId" = l.id AND plt."toLocationId" = l2.id`;
+        sqlWhere += ` AND plt."plantLotId" = pl.id AND plt."fromLocationId" = l.id AND plt."fromSubLocationId" = sl.id AND plt."toLocationId" = l2.id AND plt."toSubLocationId" = sl2.id`;
         sqlWhere += ` AND plt."growthStageId" = gs.id AND pl."strainId" = s.id AND pl."specieId" = s2.id and pl."companyId" = c.id `;
         if(trackingNumber){
-            sqlWhere += ` AND plt."id" = ${trackingNumber}`;
+            sqlWhere += ` AND plt."txnId" = ${trackingNumber}`;
         }
         if(companyId){
             sqlWhere += ` AND pl."companyId" = ${companyId}`;
@@ -70,7 +80,7 @@ const getLocationTxnList = async (req, res) => {
             sqlWhere += ` AND plt."growthStageId" = ${growthStageId}`;
         }
 
-        sqlOrderBy = ` ORDER BY id desc`;
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getLocationTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

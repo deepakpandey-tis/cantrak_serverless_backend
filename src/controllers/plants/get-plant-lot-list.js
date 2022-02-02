@@ -12,7 +12,7 @@ const getPlantLotList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, locationId, subLocationId, strainId, fromDate, toDate } = req.body;
+        let { companyId, lotNo, locationId, subLocationId, strainId, licenseId, fromDate, toDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -56,6 +56,9 @@ const getPlantLotList = async (req, res) => {
         }
         if(subLocationId){
             sqlWhere += ` AND pl."subLocationId" = ${subLocationId}`;
+        }
+        if(licenseId){
+            sqlWhere += ` AND pl."licenseId" = ${licenseId}`;
         }
         if(lotNo){
             sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
