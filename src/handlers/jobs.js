@@ -166,20 +166,20 @@ module.exports.longJobsProcessor = async (event, context) => {
   }
 
 
-  if (messageType == 'AGM_PREPARE_VOTING_DOCUMENT') {
+  if (messageType == 'PLANT_TO_SCAN') {
 
-    console.log('[handlers][longJobsProcessor]: Data For AGM Voting Doc Prepare:', recordData);
+    console.log('[handlers][longJobsProcessor]: Data For Plants Doc Prepare:', recordData);
 
-    const agmHelper = require('../helpers/agm');
+    const plantHelper = require('../helpers/plant');
 
-    const { agmId, agendaId, data, orgId, requestedBy } = recordData;
+    const { plantId, data, orgId, requestedBy } = recordData;
 
-    if (agmId) {
+    if (plantId) {
       // await agmHelper.generateVotingDocument({ agmId, data, orgId, requestedBy });
-      await agmHelper.generateVotingDocumentOnEFSv2({ agmId, agendaId, data, orgId, requestedBy });
+      await plantHelper.generatePlantsDocumentOnEFSv2({ plantId, data, orgId, requestedBy });
     } else {
-      console.log('[handlers][longJobsProcessor]', 'AGM Id not found. Hence Voting Documents can not be generated.');
-      throw Error('AGM Id not found. Hence Voting Documents can not be generated.');
+      console.log('[handlers][longJobsProcessor]', 'Plant Id not found. Hence Plants Documents can not be generated.');
+      throw Error('Plant Id not found. Hence Plants Documents can not be generated.');
     }
 
     console.log('[handlers][longJobsProcessor]: Task Completed.....');
