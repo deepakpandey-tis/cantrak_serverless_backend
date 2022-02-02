@@ -1,5 +1,7 @@
 const addItemFromImportLicense = require('./add-item-from-import-license');
+const updateItemFromImportLicense = require('./update-item-from-import-license');
 const addItemFromSupplier = require('./add-item-from-supplier');
+const updateItemFromSupplier = require('./update-item-from-supplier');
 const importItemFromSupplier = require('./import-item-from-supplier');
 const getItemFromSupplierList = require('./get-item-from-supplier-list');
 const getItemFromSupplier = require('./get-item-from-supplier');
@@ -25,7 +27,9 @@ const getStorageLocationIssueRegisterExcel = require('./get-storage-location-iss
 
 module.exports = {
     addItemFromImportLicense,
+    updateItemFromImportLicense,
     addItemFromSupplier,
+    updateItemFromSupplier,
     importItemFromSupplier,
     getItemFromSupplierList,
     getItemFromSupplier,
