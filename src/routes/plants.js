@@ -91,6 +91,13 @@ router.post('/get-plant-lot-locations',
   plantController.getPlantLotLocations
 );
 
+router.post('/get-plant-lot-sub-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotSubLocations
+);
+
 router.post('/get-growth-stage-txn-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -131,6 +138,13 @@ router.post('/get-waste-txn',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   plantController.getWasteTxn
+);
+
+router.post('/generate-pdf-of-plants',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.generatePdfOfPlants
 );
 
 module.exports = router;
