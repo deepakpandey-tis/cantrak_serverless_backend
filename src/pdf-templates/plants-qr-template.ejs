@@ -1,0 +1,39 @@
+<div style="width: 100% !important; position: relative;">
+    <table style="width: 100%;">
+      <tr>
+        <td style="padding: 0px 10px;" align="center">
+          <table style="width: 100%;">
+            <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+           
+            <% if(i == 0 || i % 2 == 0){ var c = 1; %>
+            <tr style="margin-top: 10px; margin-bottom: 10px;">
+            <% } %>
+
+              <td style="margin: 10px 0 !important;">
+                <table style="width: 100%; margin-top: 70px; margin-bottom: 75px;">
+                  <tr>
+                    <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
+                      <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
+                      <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="300px">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="text-align: center; padding-bottom: 20px; padding-top: 0px;">
+                      <small style="font-weight: bold;">S No.: <%= plantsLot.plants[i].plantSerial %></small>
+                      <br>
+                      <small style="font-weight: bold;">Planted On: <%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+
+            <% if(c == 2){ %>
+            </tr>
+            <% }else{ c++;} %>
+
+            <% } %>
+          </table>
+        </td>
+      </tr>
+    </table>
+</div>

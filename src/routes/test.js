@@ -162,7 +162,7 @@ router.get("/print-registration", (req, res) => {
   // Read HTML Template
   const templatePath = path.join(global.appRoot,
     "pdf-templates",
-    "template.ejs"
+    "plants-qr-template.ejs"
   );
 
   console.log("=== templatePath ===", templatePath);
