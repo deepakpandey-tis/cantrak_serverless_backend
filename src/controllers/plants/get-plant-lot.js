@@ -1,5 +1,6 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../db/knex-reader");
+const redisHelper = require('../../helpers/redis');
 
 const getPlantLot = async (req, res) => {
     try {
@@ -40,9 +41,12 @@ const getPlantLot = async (req, res) => {
 
         var additionalAttributes = await knexReader.raw(sqlStr); */
 
+        let plantsQrDocDownloadUrl = await redisHelper.getValue(`plant-${selectedRecs.rows[0].id}-lot-${selectedRecs.rows[0].lotNo}-qr-docs-link`);
+
         return res.status(200).json({
             data: {
                 record: selectedRecs.rows[0],
+                plantsQrDocDownloadUrl: plantsQrDocDownloadUrl
                 // additionalAttributes: additionalAttributes.rows
             },
             message: "Plant lot detail!"

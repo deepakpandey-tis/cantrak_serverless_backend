@@ -371,7 +371,7 @@ const plantsHelper = {
             console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Base Directory (For Docs)....", basePath);
         
             // First Clean all files from the base directory....
-            console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Cleaning basepath directory for AGM....", plantId);
+            console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Cleaning basepath directory for Plants....", plantId);
             await fs.remove(basePath);
             console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: basepath Directory cleaned....", basePath);
         
@@ -385,7 +385,7 @@ const plantsHelper = {
             let sheetsToPrepare = [];
         
             // Read HTML Template
-            const templatePath = path.join(__dirname, '..', 'pdf-templates', 'template.ejs');
+            const templatePath = path.join(__dirname, '..', 'pdf-templates', 'plants-qr-template.ejs');
             console.log('[helpers][plants][generatePlantsDocumentOnEFSv2]: PDF Template Path:', templatePath);
 
             try {
@@ -436,7 +436,14 @@ const plantsHelper = {
     
             } catch (err) {
                 console.error("[helpers][plants][generatePlantsDocumentOnEFSv2]: Inner Loop: Error", err);
-                
+                if (err.list && Array.isArray(err.list)) {
+                    err.list.forEach(item => {
+                    console.error(`[helpers][plants][generatePlantsDocumentOnEFSv2]: Inner Loop Each Error:`, item);
+                    for (var it of item.list) {
+                        console.error(`[helpers][plants][generatePlantsDocumentOnEFSv2]: Inner Loop Each Error:`, it.message);
+                    }
+                    });
+                }
                 throw new Error(err);
             }
         
@@ -513,7 +520,7 @@ const plantsHelper = {
                 notificationPayload,
                 ['IN_APP']
             );
-            console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Successfull Voting Doc Generated - Annoncement Send to:", receiver.email);
+            console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Successfull QR Doc Generated - Pdf Send to:", receiver.email);
     
         } catch (err) {
     
