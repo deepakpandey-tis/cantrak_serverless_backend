@@ -22,7 +22,8 @@ const getPlant = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT p.*, pl."companyId", pl."specieId", pl."strainId", pl."supplierId", pl."licenseId", pl."locationId"
+        sqlSelect = `SELECT p.*, pl."lotNo", pl."plantedOn", pl."plantsCount", pl."companyId", pl."specieId", pl."strainId", pl."supplierId"
+        , pl."licenseId", pl."locationId", pl."subLocationId"
         `;
         sqlFrom = ` FROM plants p, plant_lots pl `;
         sqlWhere = ` WHERE p.id = ${payload.id} AND p."orgId" = ${orgId} AND p."plantLotId" = pl.id`;
