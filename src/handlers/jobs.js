@@ -172,11 +172,11 @@ module.exports.longJobsProcessor = async (event, context) => {
 
     const plantHelper = require('../helpers/plant');
 
-    const { plantId, data, orgId, requestedBy } = recordData;
+    const { plantId, pdfType, data, orgId, requestedBy } = recordData;
 
     if (plantId) {
       // await agmHelper.generateVotingDocument({ agmId, data, orgId, requestedBy });
-      await plantHelper.generatePlantsDocumentOnEFSv2({ plantId, data, orgId, requestedBy });
+      await plantHelper.generatePlantsDocumentOnEFSv2({ plantId, pdfType, data, orgId, requestedBy });
     } else {
       console.log('[handlers][longJobsProcessor]', 'Plant Id not found. Hence Plants Documents can not be generated.');
       throw Error('Plant Id not found. Hence Plants Documents can not be generated.');

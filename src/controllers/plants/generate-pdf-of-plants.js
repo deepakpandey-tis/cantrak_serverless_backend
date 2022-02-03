@@ -1,11 +1,12 @@
 const knexReader = require('../../db/knex-reader');
+const redisHelper = require('../../helpers/redis');
 
 const generatePdfOfPlants = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
 
-        let { id } = req.body;
+        let { id, pdfType } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere;
 
@@ -19,11 +20,13 @@ const generatePdfOfPlants = async (req, res) => {
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
 
+        await redisHelper.removeKey(`plant-${selectedRecs.rows[0].id}-lot-${selectedRecs.rows[0].lotNo}-qr-docs-link`);
+
         const queueHelper = require("../../helpers/queue");
         await queueHelper.addToQueue(
           {
             plantId: id,
-            name: 'ct:plants:id',
+            pdfType,
             data: {
               plantsLot: selectedRecs.rows,
             },
@@ -45,7 +48,7 @@ const generatePdfOfPlants = async (req, res) => {
         return res.status(200).json({
             data: selectedRecs.rows[0],
             message:
-              "We are preparing QR Code for this Plant`s Lot. Please wait for few minutes. Once generated we will notify you via App Notification & Email",
+              "System is preparing QR code for selected plant list. Please wait for few minutes. Once prepared you will notified via Email & App notifications.",
         });
     } catch (err) {
         console.log("[controllers][plants][getLotPlantList] :  Error", err);
