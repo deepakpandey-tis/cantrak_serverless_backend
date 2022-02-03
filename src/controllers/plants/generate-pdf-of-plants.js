@@ -48,7 +48,7 @@ const generatePdfOfPlants = async (req, res) => {
         return res.status(200).json({
             data: selectedRecs.rows[0],
             message:
-              "We are preparing QR Code for this Plant`s Lot. Please wait for few minutes. Once generated we will notify you via App Notification & Email",
+              "System is preparing QR code for selected plant list. Please wait for few minutes. Once prepared you will notified via Email & App notifications.",
         });
     } catch (err) {
         console.log("[controllers][plants][getLotPlantList] :  Error", err);

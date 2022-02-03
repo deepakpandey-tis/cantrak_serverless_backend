@@ -519,7 +519,7 @@ const plantsHelper = {
                 sender,
                 receiver,
                 notificationPayload,
-                ['IN_APP']
+                ['IN_APP', 'WEB_PUSH', 'SOCKET_NOTIFY']
             );
             console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Successfull QR Doc Generated - Pdf Send to:", receiver.email);
     
