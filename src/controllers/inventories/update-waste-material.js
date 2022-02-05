@@ -25,7 +25,7 @@ const TxnTypes ={
     IssueUptoTxnType: 90,
 };
 
-const addWasteMaterial = async (req, res) => {
+const updateWasteMaterial = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -35,6 +35,7 @@ const addWasteMaterial = async (req, res) => {
         let insertedRecord = [];
 
         const schema = Joi.object().keys({
+            id: Joi.number().required(),
             companyId: Joi.string().required(),
             date: Joi.date().required(),
             itemCategoryId: Joi.number().integer().required(),
@@ -44,11 +45,13 @@ const addWasteMaterial = async (req, res) => {
             specieId: Joi.string().required(),
             strainId: Joi.string().required(),
             storageLocationId: Joi.string().required(),
+            refNo: Joi.string().allow([null, '']).required(),
+            refDate: Joi.date().allow([null]).optional(),
         });
 
         const result = Joi.validate(payload, schema);
         console.log(
-            "[controllers][inventories][addWasteMaterial]: JOi Result",
+            "[controllers][inventories][updateWasteMaterial]: JOi Result",
             result
         );
 
@@ -65,7 +68,6 @@ const addWasteMaterial = async (req, res) => {
             let currentTime = new Date().getTime();
 
             let insertData = {
-                orgId: orgId,
                 companyId: payload.companyId,
                 txnType: TxnTypes.ReceiveWaste,
                 date: new Date(payload.date).getTime(),
@@ -76,15 +78,16 @@ const addWasteMaterial = async (req, res) => {
                 quantity: payload.quantity,
                 umId: payload.umId,
                 storageLocationId: payload.storageLocationId,
-                createdBy: userId,
-                createdAt: currentTime,
+                refNo: payload.refNo,
+                refDate: payload.refDate ? new Date(payload.refDate).getTime() : null,
                 updatedBy: userId,
                 updatedAt: currentTime,
             };
-            console.log('waste txn insert record: ', insertData);
+            console.log('waste txn update record: ', insertData);
 
             const insertResult = await knex
-                .insert(insertData)
+                .update(insertData)
+                .where({ id: payload.id, orgId: orgId })
                 .returning(["*"])
                 .transacting(trx)
                 .into("item_txns");
@@ -98,10 +101,10 @@ const addWasteMaterial = async (req, res) => {
             data: {
                 txn: insertedRecord,
             },
-            message: 'Waste material added successfully.'
+            message: 'Waste material updated successfully.'
         });
     } catch (err) {
-        console.log("[controllers][inventories][addWasteMaterial] :  Error", err);
+        console.log("[controllers][inventories][updateWasteMaterial] :  Error", err);
         //trx.rollback
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -109,7 +112,7 @@ const addWasteMaterial = async (req, res) => {
     }
 }
 
-module.exports = addWasteMaterial;
+module.exports = updateWasteMaterial;
 
 /**
  */

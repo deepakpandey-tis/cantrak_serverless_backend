@@ -6,6 +6,7 @@ const importItemFromSupplier = require('./import-item-from-supplier');
 const getItemFromSupplierList = require('./get-item-from-supplier-list');
 const getItemFromSupplier = require('./get-item-from-supplier');
 const addWasteMaterial = require('./add-waste-material');
+const updateWasteMaterial = require('./update-waste-material');
 const importWasteMaterial = require('./import-waste-material');
 const getWasteMaterialList = require('./get-waste-material-list');
 const getWasteMaterial = require('./get-waste-material');
@@ -34,6 +35,7 @@ module.exports = {
     getItemFromSupplierList,
     getItemFromSupplier,
     addWasteMaterial,
+    updateWasteMaterial,
     importWasteMaterial,
     getWasteMaterialList,
     getWasteMaterial,
