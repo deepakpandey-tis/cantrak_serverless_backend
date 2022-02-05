@@ -50,7 +50,7 @@ const getLocationTxnList = async (req, res) => {
             sqlWhere += ` AND plt."txnId" = ${trackingNumber}`;
         }
         if(companyId){
-            sqlWhere += ` AND pl."companyId" = ${companyId}`;
+            sqlWhere += ` AND plt."companyId" = ${companyId}`;
         }
         if(strainId){
             sqlWhere += ` AND pl."strainId" = ${strainId}`;

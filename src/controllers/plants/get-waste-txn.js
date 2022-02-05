@@ -23,18 +23,18 @@ const getWasteTxn = async (req, res) => {
         }
 
         sqlSelect = `SELECT pwt.*, pl."lotNo" "plantLotNo", i.name "itemName", it.quantity, it."umId" "itemUMId", um.name "itemUM", um."abbreviation" "itemUMAbbreviation"
-        , s."name" "strainName", s2."name" "specieName", sl.name "storageLocation", c."companyName", l.name "locationName", gs."name" "growthStageName"
+        , s."name" "strainName", s2."name" "specieName", sl.name "storageLocation", c."companyName", l.name "locationName", sl2.name "subLocationName", gs."name" "growthStageName"
         , rm.description "reason"
         `;
 
-        sqlFrom = ` FROM plant_waste_txns pwt, plant_lots pl, item_txns it, items i, ums um, locations l
+        sqlFrom = ` FROM plant_waste_txns pwt, plant_lots pl, item_txns it, items i, ums um, locations l, sub_Locations sl2
         , strains s, species s2, companies c, growth_stages gs, storage_locations sl, remarks_master rm
         `;
 
         sqlWhere = ` WHERE pwt.id = ${payload.id} AND pwt."orgId" = ${orgId}`;
         sqlWhere += ` AND pwt."plantLotId" = pl.id`;
         sqlWhere += ` AND pwt."orgId" = it."orgId" AND pwt."companyId" = it."companyId" AND pwt."plantLotId" = it."plantLotId" AND pwt."id" = it."plantWasteTxnId"`;
-        sqlWhere += ` AND pwt."growthStageId" = gs.id AND pl."strainId" = s.id AND pl."specieId" = s2.id AND pl."locationId" = l.id AND pwt."companyId" = c.id`;
+        sqlWhere += ` AND pwt."growthStageId" = gs.id AND pl."strainId" = s.id AND pl."specieId" = s2.id AND pwt."locationId" = l.id AND pwt."subLocationId" = sl2.id AND pwt."companyId" = c.id`;
         sqlWhere += ` AND it."itemId" = i.id AND it."umId" = um.id AND it."storageLocationId" = sl.id`;
         sqlWhere += ` AND pwt."orgId" = rm."orgId" AND rm."entityId" = pwt.id AND rm."entityType" = 'plant_waste_txn_entry'`;
 
