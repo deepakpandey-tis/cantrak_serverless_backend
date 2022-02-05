@@ -510,7 +510,10 @@ const plantsHelper = {
                     title: 'Plants Lot - QR Generated',
                     description: `Plants Lot - QR Generated for Plants: "${data.plantsLot[0].lotNo}"`,
                     url: `/admin/plants/lot-plant-list/${data.plantsLot[0].id}`,
-                    orgData: orgData
+                    orgData: orgData,
+                    s3Url: s3FileDownloadUrl,
+                    requestedBy,
+                    requestedAt: new Date().getTime()
                 }
             };
         

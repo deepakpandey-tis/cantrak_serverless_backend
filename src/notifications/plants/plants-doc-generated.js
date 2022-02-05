@@ -150,13 +150,16 @@ const plantsDocGeneratedNotification = {
             orgId: sender.orgId,
             senderId: sender.id,
             receiverId: receiver.id,
-            channel: 'socket-notification',
+            channel: 'palnts-qr-code-notification',
             payload: {
                 subject: title,
                 body: description + `from ${sender.name}`,
                 icon: icons,
                 image: images,
                 extraData: {
+                    s3Url: data.payload.s3Url,
+                    requestedBy: data.payload.requestedBy,
+                    requestedAt: data.payload.requestedAt,
                     dateOfArrival: Date.now(),
                     url: url,
                     primaryKey: Date.now()
