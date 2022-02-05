@@ -9,9 +9,16 @@ let ENDPOINT = process.env.SOCKET_ENDPOINT;
 async function sendMessage(connectionId, body) {
   try {
 
+    console.log('[socket][sendMessage]: ENDPOINT:', ENDPOINT);
+
+    if(ENDPOINT.indexOf('wss://') > -1) {
+      ENDPOINT = ENDPOINT.replace(/wss:/,"https:")
+    }
+    console.log('[socket][sendMessage]: ENDPOINT After https check:', ENDPOINT);
+
     const apig = new AWS.ApiGatewayManagementApi({
       // apiVersion: '2018-11-29',
-      endpoint: ENDPOINT
+      endpoint: `${ENDPOINT}`
     });
 
     body = JSON.stringify(body);
