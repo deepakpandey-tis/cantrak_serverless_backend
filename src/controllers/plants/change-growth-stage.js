@@ -15,10 +15,12 @@ const changeGrowthStage = async (req, res) => {
 
     const schema = Joi.object().keys({
         date: Joi.date().required(),
-        plantLotId: Joi.string().required(),
-        locationId: Joi.string().required(),
-        fromGrowthStageId: Joi.string().required(),
-        toGrowthStageId: Joi.string().required(),
+        companyId: Joi.number().required(),
+        plantLotId: Joi.number().required(),
+        locationId: Joi.number().required(),
+        subLocationId: Joi.number().required(),
+        fromGrowthStageId: Joi.number().required(),
+        toGrowthStageId: Joi.number().required(),
         totalPlants: Joi.number().integer().required(),
 //        selectedPlantIds: Joi.array().required(),
     });
@@ -46,8 +48,10 @@ const changeGrowthStage = async (req, res) => {
         let currentTime = new Date().getTime();
         let insertData = {
             orgId: orgId,
+            companyId: payload.companyId,
             plantLotId: payload.plantLotId,
             locationId: payload.locationId,
+            subLocationId: payload.subLocationId,
             date: new Date(payload.date).getTime(),
             fromGrowthStageId: payload.fromGrowthStageId,
             toGrowthStageId: payload.toGrowthStageId,
@@ -73,7 +77,7 @@ const changeGrowthStage = async (req, res) => {
             sqlSelect = ` SELECT ${orgId}, p.id, ${insertedRecord.id}, ${payload.toGrowthStageId}, ${new Date(payload.date).getTime()}`;
             sqlFrom = ` FROM plants p, plant_lots pl, plant_locations ploc`;
             sqlWhere = ` WHERE pl.id = ${payload.plantLotId} AND p."plantLotId" = pl.id and p.id = ploc."plantId"`;
-            sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND ploc."locationId" = ${payload.locationId}`;
+            sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND ploc."locationId" = ${payload.locationId} AND ploc."subLocationId" = ${payload.subLocationId}`;
 
             sqlStr = sqlInsert + sqlSelect + sqlFrom + sqlWhere;
 

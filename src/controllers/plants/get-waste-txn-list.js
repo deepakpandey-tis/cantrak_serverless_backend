@@ -13,9 +13,19 @@ const getWasteTxnList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, locationId, strainId, fromDate, toDate, trackingNumber, growthStageId} = req.body;
+        let { companyId, lotNo, locationId, subLocationId, strainId, fromDate, toDate, trackingNumber, growthStageId} = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
+
+        // Setting default values, if not passed
+        if(!sortCol || sortCol === ''){
+            sortCol = `"id" desc`;
+            sortOrder = '';
+        }
+
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'desc';
+        // }
 
         if(pageNumber < 1){
             pageNumber = 1;
@@ -26,18 +36,18 @@ const getWasteTxnList = async (req, res) => {
         }
 
         sqlSelect = `SELECT pwt.*, pl."lotNo" "plantLotNo"
-        , s."name" "strainName", s2."name" "specieName", c."companyName", l.name "locationName", gs."name" "growthStageName"
+        , s."name" "strainName", s2."name" "specieName", c."companyName", l.name "locationName", sl.name "subLocationName", gs."name" "growthStageName"
         `;
 
-        sqlFrom = ` FROM plant_waste_txns pwt, plant_lots pl, locations l
+        sqlFrom = ` FROM plant_waste_txns pwt, plant_lots pl, locations l, sub_locations sl
         , strains s, species s2, companies c, growth_stages gs
         `;
 
         sqlWhere = ` WHERE pwt."orgId" = ${orgId}`;
         sqlWhere += ` AND pwt."growthStageId" = gs.id`;
-        sqlWhere += ` AND pwt."plantLotId" = pl.id AND pl."strainId" = s.id AND pl."specieId" = s2.id AND pl."locationId" = l.id AND pwt."companyId" = c.id`;
+        sqlWhere += ` AND pwt."plantLotId" = pl.id AND pl."strainId" = s.id AND pl."specieId" = s2.id AND pwt."locationId" = l.id AND pwt."subLocationId" = sl.id AND pwt."companyId" = c.id`;
         if(trackingNumber){
-            sqlWhere += ` AND pwt."id" = ${trackingNumber}`;
+            sqlWhere += ` AND pwt."txnId" = ${trackingNumber}`;
         }
         if(companyId){
             sqlWhere += ` AND pwt."companyId" = ${companyId}`;
@@ -46,7 +56,10 @@ const getWasteTxnList = async (req, res) => {
             sqlWhere += ` AND pl."strainId" = ${strainId}`;
         }
         if(locationId){
-            sqlWhere += ` AND pl."locationId" = ${locationId}`;
+            sqlWhere += ` AND pwt."locationId" = ${locationId}`;
+        }
+        if(subLocationId){
+            sqlWhere += ` AND pwt."subLocationId" = ${subLocationId}`;
         }
         if(lotNo){
             sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
@@ -61,7 +74,7 @@ const getWasteTxnList = async (req, res) => {
             sqlWhere += ` AND pwt."growthStageId" = ${growthStageId}`;
         }
 
-        sqlOrderBy = ` ORDER BY id desc`;
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getWasteTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;

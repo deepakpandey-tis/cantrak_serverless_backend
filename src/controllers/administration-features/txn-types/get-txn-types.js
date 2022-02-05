@@ -8,7 +8,7 @@ const getTxnTypes = async (req, res) => {
         result = await knexReader('txn_types')
             .select("id", "nameEn", "nameTh")
             .where({ isActive: true })
-            .orderBy('id', 'asc', 'nameEn', 'asc');
+            .orderBy('id', 'asc');
 
         return res.status(200).json({
             data: {

@@ -53,6 +53,8 @@ const updateItemFromSupplier = async (req, res) => {
             supplierInternalCode: Joi.string().allow([null, '']).required(),
             supplierLicenseNo: Joi.string().allow([null, '']).required(),
             supplierQuality: Joi.string().allow([null, '']).required(),
+            refNo: Joi.string().allow([null, '']).required(),
+            refDate: Joi.date().allow([null]).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -85,6 +87,8 @@ const updateItemFromSupplier = async (req, res) => {
                 quantity: payload.quantity,
                 umId: payload.umId,
                 storageLocationId: payload.storageLocationId,
+                refNo: payload.refNo,
+                refDate: payload.refDate ? new Date(payload.refDate).getTime() : null,
                 updatedBy: userId,
                 updatedAt: currentTime,
             };
