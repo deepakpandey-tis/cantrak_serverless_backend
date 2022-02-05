@@ -401,7 +401,7 @@ const plantsHelper = {
                             plantSerial: plant.plantSerial,
                             lotNo: plant.lotNo,
                             plantedOn: plant.plantedOn,
-                            id: plant.id
+                            id: plant.plantId
                         };
                         let qrString = JSON.stringify(qrCodeObj);
                         // console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Qr String: ", qrString);
