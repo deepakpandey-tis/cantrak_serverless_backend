@@ -19,6 +19,7 @@ const getStorageLocationLedger = require('./get-storage-location-ledger');
 const getStockLedger = require('./get-stock-ledger');
 const getStockSummary = require('./get-stock-summary');
 const getItemTxnList = require('./get-item-txn-list');
+const exportItemTxnListToExcel = require('./export-item-txn-list-to-excel');
 const getItemTxn = require('./get-item-txn');
 const getStockStatus = require('./get-stock-status');
 const getStorageLocationReceiptRegister = require('./get-storage-location-receipt-register');
@@ -48,6 +49,7 @@ module.exports = {
     getStockLedger,
     getStockSummary,
     getItemTxnList,
+    exportItemTxnListToExcel,
     getItemTxn,
     getStockStatus,
     getStorageLocationReceiptRegister,
