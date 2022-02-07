@@ -51,6 +51,7 @@ const addItemFromImportLicense = async (req, res) => {
             supplierId: Joi.number().required(),
             refNo: Joi.string().allow([null, '']).required(),
             refDate: Joi.date().allow([null]).optional(),
+            additionalAttributes: Joi.array().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -88,6 +89,7 @@ const addItemFromImportLicense = async (req, res) => {
                 storageLocationId: payload.storageLocationId,
                 refNo: payload.refNo,
                 refDate: payload.refDate ? new Date(payload.refDate).getTime() : null,
+                additionalAttributes: payload.additionalAttributes,
                 createdBy: userId,
                 createdAt: currentTime,
                 updatedBy: userId,
