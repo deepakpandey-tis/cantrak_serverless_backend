@@ -44,6 +44,9 @@ const addWasteMaterial = async (req, res) => {
             specieId: Joi.string().required(),
             strainId: Joi.string().required(),
             storageLocationId: Joi.string().required(),
+            refNo: Joi.string().allow([null, '']).required(),
+            refDate: Joi.date().allow([null]).optional(),
+            additionalAttributes: Joi.array().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -76,6 +79,9 @@ const addWasteMaterial = async (req, res) => {
                 quantity: payload.quantity,
                 umId: payload.umId,
                 storageLocationId: payload.storageLocationId,
+                refNo: payload.refNo,
+                refDate: payload.refDate ? new Date(payload.refDate).getTime() : null,
+                additionalAttributes: payload.additionalAttributes,
                 createdBy: userId,
                 createdAt: currentTime,
                 updatedBy: userId,

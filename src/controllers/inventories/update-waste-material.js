@@ -47,6 +47,7 @@ const updateWasteMaterial = async (req, res) => {
             storageLocationId: Joi.string().required(),
             refNo: Joi.string().allow([null, '']).required(),
             refDate: Joi.date().allow([null]).optional(),
+            additionalAttributes: Joi.array().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -80,6 +81,7 @@ const updateWasteMaterial = async (req, res) => {
                 storageLocationId: payload.storageLocationId,
                 refNo: payload.refNo,
                 refDate: payload.refDate ? new Date(payload.refDate).getTime() : null,
+                additionalAttributes: payload.additionalAttributes,
                 updatedBy: userId,
                 updatedAt: currentTime,
             };
