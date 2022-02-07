@@ -90,6 +90,7 @@ const addPlant = async (req, res) => {
                 subLocationId: payload.subLocationId,
                 plantedOn: new Date(payload.plantedOn).getTime(),
                 plantsCount: payload.plantsCount,
+                additionalAttributes: payload.additionalAttributes,
                 createdBy: userId,
                 createdAt: currentTime,
                 updatedBy: userId,
@@ -104,7 +105,7 @@ const addPlant = async (req, res) => {
 
             insertedRecord = insertResult[0];
 
-            // Additional Attributes
+/*             // Additional Attributes
             let additionalAttribute;
             let insertedAdditionalRecords = [];
             let additionalRecNo;
@@ -132,7 +133,7 @@ const addPlant = async (req, res) => {
 
                 insertedAdditionalRecords[additionalRecNo] = insertResult[0];
             }
-
+ */
             // Issue Txn
             insertData = {
                 orgId: orgId,

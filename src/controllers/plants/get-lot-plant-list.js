@@ -14,7 +14,7 @@ const getLotPlantList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { id, locationId, subLocationId, plantSerial } = req.body;
+        let { id, locationId, subLocationId, fromPlantSerial, uptoPlantSerial } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -59,9 +59,16 @@ const getLotPlantList = async (req, res) => {
             sqlWhere += ` AND ploc."subLocationId" = ${subLocationId}`;
         }
 
-        if(plantSerial && plantSerial != ''){
-            sqlWhere += ` AND p."plantSerial" iLIKE '%${plantSerial}%'`;
+        if(uptoPlantSerial && uptoPlantSerial != ''){
+            if(fromPlantSerial && fromPlantSerial != ''){
+                sqlWhere += ` AND p."plantSerial" >= '${fromPlantSerial}'`;
+            }
+            sqlWhere += ` AND p."plantSerial" <= '${uptoPlantSerial}'`;
         }
+        else if(fromPlantSerial && fromPlantSerial != ''){
+            sqlWhere += ` AND p."plantSerial" iLIKE '%${fromPlantSerial}%'`;
+        }
+
 
 /*         if(fromDate && fromDate != ''){
             sdt = new Date(fromDate).getTime()
