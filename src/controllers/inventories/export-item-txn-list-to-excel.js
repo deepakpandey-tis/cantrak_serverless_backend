@@ -22,7 +22,7 @@ const exportItemTxnListToExcel = async (req, res) => {
         // let pageSize = reqData.per_page || 10;
         // let pageNumber = reqData.current_page || 1;
 
-        let { itemCategoryId, lotNo, companyId, itemId, strainId, storageLocationId, supplierId, txnType, fromDate, toDate } = req.body;
+        let { fileName, itemCategoryId, lotNo, companyId, itemId, strainId, storageLocationId, supplierId, txnType, fromDate, toDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -115,50 +115,43 @@ const exportItemTxnListToExcel = async (req, res) => {
 
         let data = selectedRecs.rows;
 
-        let fileName = "Raw material";
-        
-        let header = {
-            lotNo: "Lot No.",
-            itemName: "Item",
-            imported: "Imported?",
-            quantity: "Quantity",
-            itemUM: "UoM",
-            strainName: "Strain",
-            txnTypeEn: "Transaction Type",
-            storageLocation: "Store",
-            companyName: "Company",
-            date:"Date",
-            txnId: "Transaction ID",
-            createdByName: "Created By"
-        }
+        // let fileName = "Raw material";
 
         let excelHeader = [
             { header: "Lot No.", key: "lotNo", width: 20 },
             { header: "Item", key: "itemName", width: 20 },
-            { header: "Imported?", key: "imported", width: 20 },
-            { header: "Quantity", key: "quantity", width: 20 },
-            { header: "UoM", key: "itemUM", width: 20 },
-            { header: "Strain", key: "strainName", width: 20 },
+            { header: "Imported?", key: "imported", width: 15 },
+            { header: "Quantity", key: "quantity", width: 15 },
+            { header: "UoM", key: "itemUM", width: 15 },
+            { header: "Strain", key: "strainName", width: 30 },
             { header: "Transaction Type", key: "txnTypeEn", width: 20 },
             { header: "Store", key: "storageLocation", width: 20 },
             { header: "Company", key: "companyName", width: 20 },
-            { header: "Date", key: "date", width: 20 },
-            { header: "Transaction ID", key: "txnId", width: 20 },
+            { header: "Date", key: "date", width: 15 },
+            { header: "Transaction ID", key: "txnId", width: 15 },
             { header: "Created By", key: "createdByName", width: 20 }
         ]
 
+        let tmpData = {};
+        let keys = [...excelHeader];
+        keys = keys?.map(r => { tmpData[r.key] = ""; return r.key});
+        console.log("==== keys ===", keys, tmpData);
+
+
+
         // let header = excelHeader.filter(r => r.key);
 
-        let headerKeys = Object.keys(header);
-        let headerValue = Object.values(header);
         let excelData = [];
 
-        if(headerKeys && headerKeys?.length > 0){
+        if(keys && keys?.length > 0){
             data?.map(e =>{
 
-                let tempData = {...header};
+                let tempData = {...tmpData};
                 
-                headerKeys?.forEach(r => {
+                keys?.forEach(r => {
+
+                    // return tempData[r] = e[r];
+
                     if(e[r] != null){
                         if(r == 'date'){
                             return tempData[r] = moment(Number(e[r])).format('DD/MM/YYYY');
@@ -172,6 +165,9 @@ const exportItemTxnListToExcel = async (req, res) => {
                         }
                         else if(r == 'quantity'){
                             return tempData[r] = e[r].toFixed(4);
+                        }
+                        else if(r == 'strainName'){
+                            return tempData[r] = e[r] +' ('+ e?.specieName+')';
                         }
                         else{
                             return tempData[r] = e[r];
@@ -187,8 +183,6 @@ const exportItemTxnListToExcel = async (req, res) => {
 
             });
         }
-
-        console.log(header);
 
         
         var generatedExcelRes = await excelHelper.generateExcel(excelHeader, excelData, fileName, req.me);
@@ -213,7 +207,7 @@ const exportItemTxnListToExcel = async (req, res) => {
         //console.log(result.data)
         if(generatedExcelRes?.status){
             return res.status(200).json({
-                data: result.data
+                ...result.data
             });
         }
         else{
