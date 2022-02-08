@@ -13,7 +13,7 @@ const s3Uploader = {
         return new Promise(async (resolve, reject) => {
 
             try {
-                const uploadBuffer = fs.readFileSync(localFilePath, 'utf8');
+                const uploadBuffer = fs.readFileSync(localFilePath);
 
                 const params = {
                     Bucket: bucketName,
@@ -59,6 +59,20 @@ const s3Uploader = {
             } catch (err) {
                 reject(err);
             }
+        });
+    },
+
+    getSignedUrl: (s3FilePath, expiryTime = (8 * 60 * 60)) =>{
+        const bucketName = process.env.S3_BUCKET_NAME;
+        console.log("[helpers][s3Helper][getSignedUrl]: Bucket Name :", bucketName);
+
+        const s3 = new AWS.S3();
+
+        return new Promise((resolve, reject) => {
+            s3.getSignedUrl('getObject', { Bucket: bucketName, Key: s3FilePath, Expires: expiryTime }, (err, url) => {
+            if (err) reject(err)
+            else resolve(url)
+            });
         });
     }
 }

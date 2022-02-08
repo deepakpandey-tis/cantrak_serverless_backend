@@ -4,22 +4,20 @@ const AWS = require("aws-sdk");
 
 
 const excelHelper = {
-    generateExcel: async (header, data, fileName, requestedBy, environment = 'local') => {
+    generateExcel: async (header, data, fileName, requestedBy) => {
+        const environment = process.env.ENV;
+        console.log("=== environment ===",environment);
 
         let bucketName = process.env.S3_BUCKET_NAME;
         // const mountPathRoot = process.env.MNT_DIR;
-        const mountPathRoot = environment == 'production'? process.env.MNT_DIR :'./tmp';
+        const mountPathRoot = environment != 'dev'? '/tmp' :'./tmp';
         const fs = require('fs-extra');
 
 
-        const basePath = mountPathRoot + "/Excel/";
+        const basePath = mountPathRoot + "/exports/excel/";
         console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Base Directory (For Docs)....", basePath);
 
 
-        // First Clean all files from the base directory....
-        await fs.remove(basePath);
-        console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: basepath Directory cleaned....", basePath);
-    
         //Ensure that directory is created...
         await fs.ensureDir(basePath);
         console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: basepath Directory Created/Ensured....", basePath);
@@ -31,19 +29,17 @@ const excelHelper = {
         worksheet.columns = header;
 
         worksheet.addRows(data);
-        
-        const excelFile = basePath +fileName +'-'+ new Date().getTime() +".xlsx";
+        const newFileName = fileName +'-'+ new Date().getTime() +".xlsx";
+        const excelFile = basePath + newFileName;
         await workbook.xlsx.writeFile(excelFile);
 
 
-        const s3 = new AWS.S3();
+        const s3Helper = require('./s3Helper');
+        const s3FilePath = 'exports/excel/' + newFileName;
+
+        await s3Helper.uploadLocalFile(excelFile, s3FilePath);
         
-        let s3FileDownloadUrl = await new Promise((resolve, reject) => {
-            s3.getSignedUrl('getObject', { Bucket: bucketName, Key: excelFile, Expires: 2 * 60 * 60 }, (err, url) => {
-            if (err) reject(err)
-            else resolve(url)
-            });
-        });
+        let s3FileDownloadUrl = await s3Helper.getSignedUrl(s3FilePath);
 
         return({url: s3FileDownloadUrl, status: true});
     },

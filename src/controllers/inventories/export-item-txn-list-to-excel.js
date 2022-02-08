@@ -11,7 +11,6 @@ const TxnTypes ={
 const exportItemTxnListToExcel = async (req, res) => {
     try {
 
-        const environment = req.app.get('env');
         let orgId = req.me.orgId;
         let userId = req.me.id;
 
@@ -191,7 +190,8 @@ const exportItemTxnListToExcel = async (req, res) => {
 
         console.log(header);
 
-        var generatedExcelRes = await excelHelper.generateExcel(excelHeader, excelData, fileName, req.me, environment);
+        
+        var generatedExcelRes = await excelHelper.generateExcel(excelHeader, excelData, fileName, req.me);
 
         console.log("*********");
         console.log("*********");
