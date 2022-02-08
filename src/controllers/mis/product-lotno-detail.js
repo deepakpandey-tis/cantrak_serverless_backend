@@ -156,6 +156,7 @@ const getProductLotNoDetail = async (req, res) => {
         SELECT p.*
         FROM plants p 
         WHERE p."plantLotId" = pl.id AND p."isActive" AND NOT p."isWaste" AND NOT p."isDestroy"
+        ORDER BY p."plantSerial"
         ) p
         )`;
 
