@@ -19,7 +19,7 @@ const getItemTxnList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { itemCategoryId, lotNo, companyId, itemId, strainId, storageLocationId, supplierId, txnType, fromDate, toDate } = req.body;
+        let {isExport, itemCategoryId, lotNo, companyId, itemId, strainId, storageLocationId, supplierId, txnType, fromDate, toDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -42,9 +42,11 @@ const getItemTxnList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT it.*, its.id "itemTxnSupplierId", its."supplierId", its."lotNo" "supplierLotNo"
+        sqlSelect = `SELECT it.*, to_char(to_timestamp(it.date/1000)::date, 'dd/mm/yyyy') "dateStr"
+        , CASE WHEN it.quantity < 0 THEN TRUNC((-1 * it.quantity::numeric), 4) ELSE TRUNC(it.quantity::numeric, 4) END "quantityStr"
+        , CASE WHEN it."imported" THEN 'Yes' ELSE 'No' END "importedStr", its.id "itemTxnSupplierId", its."supplierId", its."lotNo" "supplierLotNo"
         , its."licenseNo" "supplierLicenseNo", its."internalCode" "supplierInternalCode", its."quality" "supplierQuality", splr.name "supplierName"
-        , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
+        , s.name "strainName", s2.name "specieName", CONCAT(s.name, ' (', s2.name, ')') "strainSpecieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
         , l.number "licenseNumber", ln."permitNumber" "narPermitNumber", tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh"
         `;
@@ -97,13 +99,26 @@ const getItemTxnList = async (req, res) => {
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         console.log('getItemTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
-        sqlStr  = `WITH Main_CTE AS (`;
-        sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
-        sqlStr += `, Count_CTE AS (SELECT COUNT(*) AS "total" FROM Main_CTE)`;     // To get the total number of records
-        sqlStr += ` SELECT * FROM Main_CTE, Count_CTE`;
+        if(!isExport){
+            sqlStr  = `WITH Main_CTE AS (`;
+        }
+        else {
+            sqlStr  = ``;
+        }
+
+        sqlStr += sqlSelect + sqlFrom + sqlWhere;
+
+        if(!isExport){
+            sqlStr += `), Count_CTE AS (SELECT COUNT(*) AS "total" FROM Main_CTE)`;     // To get the total number of records
+            sqlStr += ` SELECT * FROM Main_CTE, Count_CTE`;
+        }
+
         sqlStr += sqlOrderBy;
-        sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
-        sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
+
+        if(!isExport){
+            sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
+            sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
+        }
 
         //console.log('getItemTxnList: ', sqlStr);
         

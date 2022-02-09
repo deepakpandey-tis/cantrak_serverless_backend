@@ -158,7 +158,16 @@ const getProductLotNoDetail = async (req, res) => {
         WHERE p."plantLotId" = pl.id AND p."isActive" AND NOT p."isWaste" AND NOT p."isDestroy"
         ORDER BY p."plantSerial"
         ) p
-        )`;
+        )
+        , (SELECT json_agg(row_to_json(p.*)) "wastePlants" 
+        FROM (
+        SELECT p.*
+        FROM plants p 
+        WHERE p."plantLotId" = pl.id AND p."isActive" AND p."isWaste"
+        ORDER BY p."plantSerial"
+        ) p
+        )
+        `;
 
         sqlFrom = ` FROM plant_lots pl, licenses l, locations l2
         , items i2, item_categories ic , ums u2, item_txns it2, storage_locations sl2, suppliers s 
