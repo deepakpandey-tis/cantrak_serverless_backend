@@ -15,12 +15,12 @@ const excelHelper = {
 
 
         const basePath = mountPathRoot + "/exports/excel/";
-        console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Base Directory (For Docs)....", basePath);
+        console.log("[helpers][excel][generateExcel]: Base Directory (For Docs)....", basePath);
 
 
         //Ensure that directory is created...
         await fs.ensureDir(basePath);
-        console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: basepath Directory Created/Ensured....", basePath);
+        console.log("[helpers][excel][generateExcel]: basepath Directory Created/Ensured....", basePath);
 
 
         let workbook = new excel.Workbook();
@@ -29,6 +29,9 @@ const excelHelper = {
         worksheet.columns = header;
 
         worksheet.addRows(data);
+        worksheet.getRow(1).font = {
+            bold: true
+        }
         const newFileName = fileName +'-'+ new Date().getTime() +".xlsx";
         const excelFile = basePath + newFileName;
         await workbook.xlsx.writeFile(excelFile);
