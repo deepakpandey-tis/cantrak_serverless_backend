@@ -52,6 +52,8 @@ const updateLicenseNar = async (req, res) => {
                     item = {
                         itemCategoryId: rec.itemCategoryId,
                         itemId: rec.itemId,
+                        specieId: rec.specieId,
+                        strainId: rec.strainId,
                         quantity: rec.quantity,
                         umId: rec.umId,
                         updatedBy: userId,
@@ -72,6 +74,8 @@ const updateLicenseNar = async (req, res) => {
                         licenseNarId: payload.id,
                         itemCategoryId: rec.itemCategoryId,
                         itemId: rec.itemId,
+                        specieId: rec.specieId,
+                        strainId: rec.strainId,
                         quantity: rec.quantity,
                         umId: rec.umId,
                         createdBy: userId,

@@ -70,6 +70,8 @@ const addLicenseNar = async (req, res) => {
                     licenseNarId: insertedRecord.id,
                     itemCategoryId: rec.itemCategoryId,
                     itemId: rec.itemId,
+                    specieId: rec.specieId,
+                    strainId: rec.strainId,
                     quantity: rec.quantity,
                     umId: rec.umId,
                     createdBy: userId,
