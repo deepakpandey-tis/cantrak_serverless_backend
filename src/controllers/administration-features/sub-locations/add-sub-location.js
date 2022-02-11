@@ -34,7 +34,7 @@ const addSubLocation = async (req, res) => {
         // Check already exists
         const alreadyExists = await knex('sub_locations')
             .where('name', 'iLIKE', payload.name.trim())
-            .where({ orgId: req.orgId });
+            .where({ orgId: req.orgId, locationId: payload.locationId });
 
         console.log(
             "[controllers][administration-features][sub-locations][addSubLocation]: ",
