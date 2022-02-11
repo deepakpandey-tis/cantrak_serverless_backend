@@ -35,7 +35,7 @@ const updateSubLocation = async (req, res) => {
         // Check already exists
         const alreadyExists = await knex("sub_locations")
             .where('name', 'iLIKE', payload.name.trim())
-            .where({ orgId: req.orgId })
+            .where({ orgId: req.orgId, locationId: payload.locationId })
             .whereNot({ id: payload.id });
 
         console.log(
