@@ -25,10 +25,13 @@ const getLicense = async (req, res) => {
         sqlSelect = `SELECT l2.*, lt.name "licenseType"
         , (SELECT json_agg(row_to_json(i.*)) "items" 
         FROM (
-        SELECT li.id::text, li."itemCategoryId"::text, li."itemId"::text, li.quantity, li."umId"::text, li."isActive", it.name, ums.name "itemUM"
-        , (SELECT sum(quantity) FROM license_nars ln, license_nar_items lni WHERE ln."licenseId" = l2.id AND lni."licenseNarId" = ln.id AND li."itemCategoryId" = lni."itemCategoryId" and li."itemId" = lni."itemId") "quantityReceived"
-        FROM license_items li, items it, ums
+        SELECT li.id::text, li."itemCategoryId"::text, li."itemId"::text, li."specieId"::text, li."strainId"::text, li.quantity, li."umId"::text, li."isActive", it.name, ums.name "itemUM", sp.name "specieName", st.name "strainName"
+        , (SELECT coalesce(sum(quantity), 0) FROM license_nars ln, license_nar_items lni WHERE ln."licenseId" = l2.id AND lni."licenseNarId" = ln.id AND li."id" = lni."licenseItemId" AND li."itemCategoryId" = lni."itemCategoryId" and li."itemId" = lni."itemId") "quantityReceived"
+        FROM items it, ums, license_items li
+        LEFT JOIN species sp on sp.id = li."specieId"
+        LEFT JOIN strains st on st.id = li."strainId"
         WHERE li."licenseId" = l2.id AND li."itemId" = it.id AND li."umId" = ums.id
+        ORDER BY li.id
         ) i
         )`;
         sqlFrom = ` FROM licenses l2, license_types lt `;

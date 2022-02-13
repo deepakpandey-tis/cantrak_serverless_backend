@@ -13,13 +13,13 @@ const updateLicense = async (req, res) => {
         let insertedItemRecords = [];
 
         const schema = Joi.object().keys({
-            id: Joi.string().required(),
-            companyId: Joi.string().required(),
+            id: Joi.number().required(),
+            companyId: Joi.number().required(),
             number: Joi.string().required(),
             issuedOn: Joi.date().required(),
             expiredOn: Joi.date().required(),
             assignedPerson: Joi.string().required(),
-            licenseTypeId: Joi.string().required(),
+            licenseTypeId: Joi.number().required(),
             licenseObjectiveIds: Joi.array().required(),
             items: Joi.array().required(),
         });
@@ -94,6 +94,8 @@ const updateLicense = async (req, res) => {
                         companyId: payload.companyId,
                         itemCategoryId: rec.itemCategoryId,
                         itemId: rec.itemId,
+                        specieId: rec.specieId,
+                        strainId: rec.strainId,
                         quantity: rec.quantity,
                         umId: rec.umId,
                         updatedBy: userId,

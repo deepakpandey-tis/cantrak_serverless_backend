@@ -42,10 +42,11 @@ const getLicenseNar = async (req, res) => {
         sqlSelect = `SELECT ln.*, s.name "supplierName"
         , (SELECT json_agg(row_to_json(i.*)) "items" 
         FROM (
-        SELECT lni.id::text, lni."itemCategoryId"::text, lni."itemId"::text, lni."specieId"::text, lni."strainId"::text, lni.quantity, lni.quantity "originalQuantity", lni."umId"::text, lni."isActive", ums.name "itemUM"
-        , (SELECT COALESCE(SUM(it.quantity), 0) FROM item_txns it WHERE lni."licenseNarId" = it."licenseNarId" AND lni."itemCategoryId" = it."itemCategoryId" AND lni."itemId" = it."itemId" AND lni."specieId" = it."specieId" AND lni."strainId" = it."strainId" AND it."txnType" = ${TxnTypes.ReceiveFromSupplier}) "quantityReceived"
+        SELECT lni.id::text, lni."licenseItemId"::text, lni."itemCategoryId"::text, lni."itemId"::text, lni."specieId"::text, lni."strainId"::text, lni.quantity, lni.quantity "originalQuantity", lni."umId"::text, lni."isActive", ums.name "itemUM"
+        , (SELECT COALESCE(SUM(it.quantity), 0) FROM item_txns it WHERE lni."licenseNarId" = it."licenseNarId" AND lni."id" = it."licenseNarItemId"AND lni."itemCategoryId" = it."itemCategoryId" AND lni."itemId" = it."itemId" AND lni."specieId" = it."specieId" AND lni."strainId" = it."strainId" AND it."txnType" = ${TxnTypes.ReceiveFromSupplier}) "quantityReceived"
         FROM license_nar_items lni, ums
         WHERE lni."licenseNarId" = ln.id AND lni."umId" = ums.id
+        ORDER BY lni.id
         ) i
         )`;
         sqlFrom = ` FROM license_nars ln, suppliers s `;

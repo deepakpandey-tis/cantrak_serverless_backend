@@ -12,9 +12,15 @@ const TxnTypes ={
     ReceiveFromSupplier: 11,
     ReceiveProductFromHarvest: 21,
     ReceiveWasteFromPlantWaste: 22,
+    ReceiveWaste: 23,                          // Inventory option
+    ReceiveFromProduction: 24,
+    AdjustmentAdd: 41,
     ReceiveFromTxnType: 11,
     ReceiveUptoTxnType: 50,
     IssueForPlantation: 51,
+    IssueForProduction: 54,
+    IssueForSale: 55,
+    AdjustmentMinus: 81,
     IssueFromTxnType: 51,
     IssueUptoTxnType: 90,
 };
@@ -38,6 +44,7 @@ const addHarvest = async (req, res) => {
             plantsCount: Joi.number().integer().required(),
             specieId: Joi.string().required(),
             strainId: Joi.string().required(),
+            isFinalHarvest: Joi.bool().required(),
             harvestedProducts: Joi.array().required(),
             harvestedWastes: Joi.array().required(),
         });
@@ -167,6 +174,7 @@ const addHarvest = async (req, res) => {
                 insertedWasteRecords[wasteRecNo] = insertResult[0];
             }
 
+/*          plant lot can be harvested more than once. isFinalHarvest column added to mark final / last harvest   
             // Update Plant Lot with harvestPlantLotId
             plantLotResult = await knex
               .update({ harvestPlantLotId: insertedRecord.id })
@@ -174,7 +182,16 @@ const addHarvest = async (req, res) => {
               .returning(["*"])
               .transacting(trx)
               .into("plant_lots");
-            ownerList = plantLotResult[0];
+ */
+            // Update Plant Lot with isFinalHarvest
+            plantLotResult = await knex
+              .update({ isFinalHarvest: payload.isFinalHarvest })
+              .where("id", payload.plantLotId)
+              .returning(["*"])
+              .transacting(trx)
+              .into("plant_lots");
+
+            // ownerList = plantLotResult[0];
 
             trx.commit;
         });
