@@ -12,7 +12,8 @@ const getLicenseNars = async (req, res) => {
         sqlSelect = `SELECT l2.*, lt.name "licenseType"
         , (SELECT json_agg(row_to_json(nar.*)) "nars" 
         FROM (
-        SELECT ln.*, s.name "supplierName"
+        SELECT ln.id::text, ln."orgId"::text, ln."licenseId"::text, ln."permitNumber", ln."supplierId"::text, ln."issuedOn"
+        , ln."expiredOn", ln."isActive", ln."createdBy", ln."createdAt", ln."updatedBy", ln."updatedAt", s.name "supplierName"
         FROM license_nars ln, suppliers s
         WHERE ln."licenseId" = l2.id AND ln."supplierId" = s.id
         ORDER BY ln."permitNumber" asc

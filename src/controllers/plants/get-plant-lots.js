@@ -26,12 +26,14 @@ const getPlantLots = async (req, res) => {
 
         sqlFrom = ` FROM plant_lots pl, companies c, strains s, species s2, locations l, licenses lic`;
 
-        sqlWhere = ` WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND pl."harvestPlantLotId" is null`;
+        // Allowed more than one harvest of a plant lot pl."harvestPlantLotId" is therefore no longer needed and "isFinalHarvest" added and checked when final / last  harvest is done
+        // sqlWhere = ` WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND pl."harvestPlantLotId" is null`;
+        sqlWhere = ` WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND NOT pl."isFinalHarvest"`;
         sqlWhere += ` AND pl."locationId" = l.id AND pl."companyId" = c.id AND pl."strainId" = s.id and pl."specieId" = s2.id AND pl."licenseId" = lic.id`;
 
         sqlOrderBy  = ` ORDER BY pl."lotNo" desc`;
 
-        sqlStr = sqlSelect + sqlFrom + sqlWhere;
+        sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
 
         var selectedRecs = await knexReader.raw(sqlStr);
 

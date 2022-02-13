@@ -12,8 +12,8 @@ const addLicenseNar = async (req, res) => {
         let insertedItemRecords = [];
 
         const schema = Joi.object().keys({
-            licenseId: Joi.string().required(),
-            supplierId: Joi.string().required(),
+            licenseId: Joi.number().required(),
+            supplierId: Joi.number().required(),
             permitNumber: Joi.string().required(),
             issuedOn: Joi.date().required(),
             expiredOn: Joi.date().required(),
@@ -68,6 +68,7 @@ const addLicenseNar = async (req, res) => {
                 item = {
                     orgId: orgId,
                     licenseNarId: insertedRecord.id,
+                    licenseItemId: rec.licenseItemId,
                     itemCategoryId: rec.itemCategoryId,
                     itemId: rec.itemId,
                     specieId: rec.specieId,

@@ -12,9 +12,9 @@ const updateLicenseNar = async (req, res) => {
         let insertedItemRecords = [];
 
         const schema = Joi.object().keys({
-            id: Joi.string().required(),
-            licenseId: Joi.string().required(),
-            supplierId: Joi.string().required(),
+            id: Joi.number().required(),
+            licenseId: Joi.number().required(),
+            supplierId: Joi.number().required(),
             permitNumber: Joi.string().required(),
             issuedOn: Joi.date().required(),
             expiredOn: Joi.date().required(),
@@ -50,6 +50,7 @@ const updateLicenseNar = async (req, res) => {
             for (let rec of payload.itemArray) {
                 if(rec.id){
                     item = {
+                        licenseItemId: rec.licenseItemId,
                         itemCategoryId: rec.itemCategoryId,
                         itemId: rec.itemId,
                         specieId: rec.specieId,
@@ -72,6 +73,7 @@ const updateLicenseNar = async (req, res) => {
                     item = {
                         orgId: orgId,
                         licenseNarId: payload.id,
+                        licenseItemId: rec.licenseItemId,
                         itemCategoryId: rec.itemCategoryId,
                         itemId: rec.itemId,
                         specieId: rec.specieId,
