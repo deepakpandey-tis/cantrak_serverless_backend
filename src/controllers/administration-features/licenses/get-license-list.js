@@ -13,13 +13,13 @@ const getLicenseList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, number, assignedPerson, licenseTypeId, fromIssuedOn, toIssuedOn, fromExpiredOn, toExpiredOn } = req.body;
+        let { companyId, number, assignedPerson, licenseTypeId, fromIssuedOn, toIssuedOn, fromExpiredOn, toExpiredOn, statusId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'number asc';
+            sortCol = 'number desc';
             sortOrder = '';
         }
 
@@ -37,6 +37,7 @@ const getLicenseList = async (req, res) => {
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT l2.*, lt.name "licenseType", c2."companyName", u2."name" "createdByName"
+        , (select max("revisionNumber") from licenses l where l."number" = l2."number") "lastRevisionNumber"
         `;
 
         sqlFrom = ` FROM licenses l2, license_types lt, companies c2, users u2`;
@@ -66,6 +67,14 @@ const getLicenseList = async (req, res) => {
         }
         if(toExpiredOn){
             sqlWhere += ` AND l2."expiredOn" <= ${new Date(toExpiredOn).getTime()}`;
+        }
+        if(statusId){
+            if(statusId == 1){
+                sqlWhere += ` AND l2."isActive"`;
+            }
+            else {
+                sqlWhere += ` AND NOT l2."isActive"`;
+            }
         }
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;

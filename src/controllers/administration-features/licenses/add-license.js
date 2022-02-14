@@ -15,6 +15,7 @@ const addLicense = async (req, res) => {
         const schema = Joi.object().keys({
             companyId: Joi.number().required(),
             number: Joi.string().required(),
+            revisionNumber: Joi.number().required(),
             issuedOn: Joi.date().required(),
             expiredOn: Joi.date().required(),
             assignedPerson: Joi.string().required(),
@@ -65,6 +66,7 @@ const addLicense = async (req, res) => {
                 orgId: orgId,
                 companyId: payload.companyId,
                 number: payload.number,
+                revisionNumber: payload.revisionNumber,
                 issuedOn: new Date(payload.issuedOn).getTime(),
                 expiredOn: new Date(payload.expiredOn).getTime(),
                 assignedPerson: payload.assignedPerson,
@@ -131,7 +133,7 @@ const addLicense = async (req, res) => {
         console.log("[controllers][administration-features][licenses][addLicense] :  Error", err);
         if (err.code == 23505){            // unique_violation
             res.status(500).json({
-                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: 'License for Assigne Person and Number already exists.' }]
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: 'License for Assigned Person and Number already exists.' }]
             });
         }
         else{
