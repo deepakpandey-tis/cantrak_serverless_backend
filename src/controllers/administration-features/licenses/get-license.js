@@ -23,6 +23,7 @@ const getLicense = async (req, res) => {
         }
 
         sqlSelect = `SELECT l2.*, lt.name "licenseType"
+        , (select max("revisionNumber") from licenses l where l."number" = l2."number") "lastRevisionNumber"
         , (SELECT json_agg(row_to_json(i.*)) "items" 
         FROM (
         SELECT li.id::text, li."itemCategoryId"::text, li."itemId"::text, li."specieId"::text, li."strainId"::text, li.quantity, li."umId"::text, li."isActive", it.name, ums.name "itemUM", sp.name "specieName", st.name "strainName"
