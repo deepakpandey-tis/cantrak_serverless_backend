@@ -34,6 +34,24 @@ const addLicenseNar = async (req, res) => {
             });
         }
 
+        // Check already exists
+        const alreadyExists = await knex('license_nars')
+            .where('permitNumber', 'iLIKE', payload.permitNumber.trim())
+            .where({ orgId: req.orgId, licenseId: payload.licenseId });
+
+        console.log(
+            "[controllers][administration-features][licenses][addLicenseNar]: ",
+            alreadyExists
+        );
+
+        if (alreadyExists && alreadyExists.length) {
+            return res.status(400).json({
+                errors: [
+                    { code: "VALIDATION_ERROR", message: "Permit Number already exist!" }
+                ]
+            });
+        }
+
 
         await knex.transaction(async (trx) => {
 

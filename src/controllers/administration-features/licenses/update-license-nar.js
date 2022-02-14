@@ -21,6 +21,39 @@ const updateLicenseNar = async (req, res) => {
             itemArray: Joi.array().required(),
         });
 
+        const result = Joi.validate(payload, schema);
+        console.log(
+            "[controllers][administration-features][licenses][addLicenseNar]: JOi Result",
+            result
+        );
+
+        if (result && result.hasOwnProperty("error") && result.error) {
+            return res.status(400).json({
+                errors: [
+                    { code: "VALIDATION_ERROR", message: result.error.message }
+                ]
+            });
+        }
+
+        // Check already exists
+        const alreadyExists = await knex("license_nars")
+            .where('permitNumber', 'iLIKE', payload.permitNumber.trim())
+            .where({ orgId: req.orgId, licenseId: payload.licenseId })
+            .whereNot({ id: payload.id });
+
+        console.log(
+            "[controllers][administration-features][licenses][updateLicenseNar]: ",
+            alreadyExists
+        );
+
+        if (alreadyExists && alreadyExists.length) {
+            return res.status(400).json({
+                errors: [
+                    { code: "VALIDATION_ERROR", message: "Permit Number already exist!" }
+                ]
+            });
+        }
+
         await knex.transaction(async (trx) => {
 
             let currentTime = new Date().getTime();
