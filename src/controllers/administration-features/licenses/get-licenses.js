@@ -23,7 +23,7 @@ const getLicenses = async (req, res) => {
             sqlWhere += ` AND l."licenseTypeId" = ${licenseTypeId}`;
         }
 
-        sqlOrderBy = ` ORDER BY l."issuedOn" asc`;
+        sqlOrderBy = ` ORDER BY l.number desc, l."revisionNumber" desc`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
         
