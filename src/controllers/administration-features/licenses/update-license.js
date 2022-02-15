@@ -1,13 +1,15 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../../db/knex');
 const knexReader = require("../../../db/knex-reader");
+const _ = require("lodash");
 
 const updateLicense = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
 
-        const payload = req.body;
+        const payload = _.omit(req.body, ['selectedFiles']);
+        const selectedFiles = req.body?.selectedFiles;
 
         let insertedRecord = [];
         let insertedItemRecords = [];
@@ -88,6 +90,8 @@ const updateLicense = async (req, res) => {
             let itemRecNo;
 
             itemRecNo = 0;
+            let licanceId = insertedRecord.id;
+
             for (let rec of payload.items) {
                 if(rec.id){
                     item = {
@@ -135,6 +139,33 @@ const updateLicense = async (req, res) => {
 
                 itemRecNo += 1;
                 insertedItemRecords[itemRecNo] = insertItem[0];
+            }
+
+
+            if(insertedRecord && insertedRecord?.id > 0){
+                const Parallel = require("async-parallel");
+
+                const deletedFiles = await knex.del().from('files').where({ "entityId": insertedRecord.id })
+
+                await Parallel.map(selectedFiles, async (pd) => {
+
+                    let insertDataForFiles = {
+                        "entityId": licanceId,
+                        "entityType": "licenses",
+                        "s3Url": pd.s3Url,
+                        title: pd.title,
+                        "name": pd.name,
+                        "orgId": orgId,
+                        createdAt: currentTime,
+                        updatedAt: currentTime
+                    }
+
+                    const insertResultForFiles = await knex
+                        .insert(insertDataForFiles)
+                        .transacting(trx)
+                        .into("files");
+
+                });
             }
     
             trx.commit;
