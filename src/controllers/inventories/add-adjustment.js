@@ -44,7 +44,7 @@ const addAdjustment = async (req, res) => {
             strainId: Joi.string().allow(null).required(),
             umId: Joi.string().required(),
             storageLocationId: Joi.string().required(),
-            expiryDate: Joi.string().required(),
+            expiryDate: Joi.date().allow(null).required(),
             lotNo: Joi.string().required(),
             quantity: Joi.number().required(),
             remark: Joi.string().required(),
