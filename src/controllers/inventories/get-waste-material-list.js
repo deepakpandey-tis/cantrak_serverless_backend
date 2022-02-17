@@ -76,7 +76,7 @@ const getWasteMaterialList = async (req, res) => {
         }
 
         sqlWhere += ` AND it."itemId" = i2.id AND it."strainId" = s.id AND it."specieId" = s2.id AND it."companyId" = c.id AND it."umId" = ums.id
-          AND it."storageLocationId" = sl.id AND it."itemCategoryId" = ic.id AND it."umId" = ums.id AND tt.id = it."txnType" AND it."createdBy" = u2.id
+          AND it."storageLocationId" = sl.id AND it."itemCategoryId" = ic.id AND it."umId" = ums.id AND tt.id = it."txnType" AND tt."subId" = it."subId" AND it."createdBy" = u2.id
         `;
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;

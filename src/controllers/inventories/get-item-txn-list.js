@@ -48,14 +48,14 @@ const getItemTxnList = async (req, res) => {
         , its."licenseNo" "supplierLicenseNo", its."internalCode" "supplierInternalCode", its."quality" "supplierQuality", splr.name "supplierName"
         , s.name "strainName", s2.name "specieName", CONCAT(s.name, ' (', s2.name, ')') "strainSpecieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
-        , l.number "licenseNumber", ln."permitNumber" "narPermitNumber", tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh"
+        , l.number "licenseNumber", ln."permitNumber" "narPermitNumber", tt."name" "txnTypeName"
         `;
 
         sqlFrom = ` FROM item_txns it LEFT OUTER JOIN licenses l on l.id = it."licenseId"
         LEFT OUTER JOIN license_nars ln on ln.id = it."licenseNarId"
         LEFT OUTER JOIN item_txn_suppliers its on its."itemTxnId" = it.id
         LEFT OUTER JOIN suppliers splr on splr.id = its."supplierId"
-        LEFT OUTER JOIN txn_types tt on tt.id = it."txnType"
+        LEFT OUTER JOIN txn_types tt on tt.id = it."txnType" AND tt."subId" = it."subId"
         , companies c, strains s, species s2, items i2, ums
         , storage_locations sl, item_categories ic, users u2
         `;

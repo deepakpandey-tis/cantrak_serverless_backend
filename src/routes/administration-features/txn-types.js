@@ -13,4 +13,11 @@ router.get('/get-txn-types',
   TxnTypeController.getTxnTypes
 );
 
+router.post('/get-txn-sub-types',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  TxnTypeController.getTxnSubTypes
+);
+
 module.exports = router;

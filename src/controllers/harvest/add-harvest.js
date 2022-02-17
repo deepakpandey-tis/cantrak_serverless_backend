@@ -94,13 +94,16 @@ const addHarvest = async (req, res) => {
             // Receive Products
             let product;
             let productRecNo;
+            let txnId;
 
+            txnId = null;
             productRecNo = 0;
             for (let rec of payload.harvestedProducts) {
                 product = {
                     orgId: orgId,
                     companyId: payload.companyId,
                     txnType: TxnTypes.ReceiveProductFromHarvest,
+                    txnId: txnId,
                     date: new Date(payload.harvestedOn).getTime(),
                     itemCategoryId: ItemCategory.Product,
                     itemId: rec.itemId,
@@ -131,6 +134,9 @@ const addHarvest = async (req, res) => {
                     .into("item_txns");
 
                 insertedProductRecords[productRecNo] = insertResult[0];
+                if(productRecNo == 1){
+                    txnId = insertedProductRecords[productRecNo].txnId;
+                }
             }
 
             // Receive Wastes
@@ -143,6 +149,7 @@ const addHarvest = async (req, res) => {
                     orgId: orgId,
                     companyId: payload.companyId,
                     txnType: TxnTypes.ReceiveProductFromHarvest,
+                    txnId: txnId,
                     date: new Date(payload.harvestedOn).getTime(),
                     itemCategoryId: ItemCategory.WasteMaterial,
                     itemId: rec.itemId,
@@ -172,6 +179,10 @@ const addHarvest = async (req, res) => {
                     .into("item_txns");
 
                 insertedWasteRecords[wasteRecNo] = insertResult[0];
+                if(productRecNo < 1){
+                    //  No product, only waste
+                    txnId = insertedWasteRecords[wasteRecNo].txnId;
+                }
             }
 
 /*          plant lot can be harvested more than once. isFinalHarvest column added to mark final / last harvest   

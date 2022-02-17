@@ -18,7 +18,7 @@ const getStorageLocationIssueRegisterExcel = async (req, res) => {
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlGroupBy, sqlOrderBy;
 
         sqlSelect = `SELECT ic."name" "itemCategory", sl."name" "storageLocation", i."name" "itemName", u.name "UoM"
-        , tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh", to_char(to_timestamp(it.date/1000), 'DD/MM/YYYY') date, it."txnId", it."lotNo", (it.quantity * -1) "quantity"
+        , tt."name" "txnTypeName", to_char(to_timestamp(it.date/1000), 'DD/MM/YYYY') date, it."txnId", it."lotNo", (it.quantity * -1) "quantity"
         `;
 
         sqlFrom = ` FROM item_txns it, item_categories ic, items i, storage_locations sl, txn_types tt, ums u`;
@@ -47,7 +47,7 @@ const getStorageLocationIssueRegisterExcel = async (req, res) => {
             sqlWhere += ` AND it."storageLocationId" = ${storageLocationId}`;
         }
 
-        sqlWhere += ` AND it."itemCategoryId" = ic.id AND it."itemId" = i.id AND it."storageLocationId" = sl.id AND it."txnType" = tt.id AND it."umId" = u.id`;
+        sqlWhere += ` AND it."itemCategoryId" = ic.id AND it."itemId" = i.id AND it."storageLocationId" = sl.id AND it."txnType" = tt.id AND tt."subId" = it."subId" AND it."umId" = u.id`;
 
         // sqlOrderBy = ` ORDER BY sl."name", ic."name", i."name", it."date", it."txnType" , it."txnId"`;
         sqlOrderBy = ` ORDER BY sl."name", it."date", it."txnId"`;
