@@ -42,9 +42,12 @@ const getLicense = async (req, res) => {
 
         var selectedRecs = await knexReader.raw(sqlStr);
 
+        const uploadedFiles = await knexReader('files').where({ "entityId": Number(payload.id), "entityType": "licenses" });
+
         return res.status(200).json({
             data: {
                 record: selectedRecs.rows[0],
+                uploadedFiles
             },
             message: "License detail!"
         });

@@ -14,7 +14,7 @@ const getStorageLocationReceiptRegister = async (req, res) => {
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlGroupBy, sqlOrderBy;
 
         sqlSelect = `SELECT ic."name" "itemCategory", sl."name" "storageLocation", i."name" "itemName", u.name "UoM"
-        , tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh"
+        , tt."name" "txnTypeName"
         , it."storageLocationId", it.date, it."txnId", it."lotNo", it.quantity
         `;
         // , it.*
@@ -45,7 +45,7 @@ const getStorageLocationReceiptRegister = async (req, res) => {
             sqlWhere += ` AND it."storageLocationId" = ${storageLocationId}`;
         }
 
-        sqlWhere += ` AND it."itemCategoryId" = ic.id AND it."itemId" = i.id AND it."storageLocationId" = sl.id AND it."txnType" = tt.id AND it."umId" = u.id`;
+        sqlWhere += ` AND it."itemCategoryId" = ic.id AND it."itemId" = i.id AND it."storageLocationId" = sl.id AND it."txnType" = tt.id AND tt."subId" = it."subId" AND it."umId" = u.id`;
 
         // sqlOrderBy = ` ORDER BY sl."name", ic."name", i."name", it."date", it."txnType" , it."txnId"`;
         sqlOrderBy = ` ORDER BY sl."name", it."date", it."txnId"`;

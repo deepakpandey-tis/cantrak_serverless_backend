@@ -44,7 +44,7 @@ const getItemTxn = async (req, res) => {
         , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
         , l.number "licenseNumber", ln."permitNumber" "narPermitNumber", ln."issuedOn", ln."expiredOn"
-        , inv."invoiceNo", inv."customerId", cust.name "customerName", tt."nameEn" "txnTypeEn", tt."nameTh" "txnTypeTh"
+        , inv."invoiceNo", inv."customerId", cust.name "customerName", tt."name" "txnTypeName"
         , (SELECT coalesce(sum(quantity), 0) FROM item_txns txn WHERE txn."orgId" = it."orgId" AND txn."companyId" = it."companyId"
            AND txn."lotNo" = it."lotNo"
            AND txn."txnType" >= ${TxnTypes.IssueFromTxnType} AND txn."txnType" <= ${TxnTypes.IssueUptoTxnType}) "issuedQuantity"
@@ -60,7 +60,7 @@ const getItemTxn = async (req, res) => {
         `;
         sqlWhere = ` WHERE it.id = ${payload.id} AND it."orgId" = ${orgId}`;
         sqlWhere += ` AND it."itemId" = i2.id AND it."strainId" = s.id AND it."specieId" = s2.id AND it."companyId" = c.id
-          AND it."umId" = ums.id AND tt.id = it."txnType"
+          AND it."umId" = ums.id AND tt.id = it."txnType" AND tt."subId" = it."subId"
           AND it."storageLocationId" = sl.id AND it."itemCategoryId" = ic.id AND it."umId" = ums.id AND it."createdBy" = u2.id
         `;
 

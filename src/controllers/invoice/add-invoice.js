@@ -144,11 +144,16 @@ const addInvoice = async (req, res) => {
 
                 //  Issue Item Txn
                 let itemNo;
+                let txnId;
+
+                txnId = null;
+                itemNo = 0;
                 for (let lotRec of rec.lotNos){
                     item = {
                         orgId: orgId,
                         companyId: payload.companyId,
                         txnType: TxnTypes.IssueForSale,
+                        txnId: txnId,
                         date: new Date(payload.invoiceOn).getTime(),
                         itemCategoryId: rec.itemCategoryId,
                         itemId: rec.itemId,
@@ -177,6 +182,9 @@ const addInvoice = async (req, res) => {
                         .into("item_txns");
     
                     insertedItemRecords[itemNo] = insertResult[0];
+                    if(itemNo == 1){
+                        txnId = insertedItemRecords[itemNo].txnId;
+                    }
     
                 }
             }
