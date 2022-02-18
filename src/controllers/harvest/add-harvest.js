@@ -45,6 +45,7 @@ const addHarvest = async (req, res) => {
             specieId: Joi.string().required(),
             strainId: Joi.string().required(),
             isFinalHarvest: Joi.bool().required(),
+            selectedPlantIds: Joi.array().required(),
             harvestedProducts: Joi.array().required(),
             harvestedWastes: Joi.array().required(),
         });
@@ -73,6 +74,8 @@ const addHarvest = async (req, res) => {
                 plantLotId: payload.plantLotId,
                 licenseId: payload.licenseId,
                 plantsCount: payload.plantsCount,
+                isFinalHarvest: payload.isFinalHarvest,
+                plantIds: payload.selectedPlantIds,
                 harvestedOn: new Date(payload.harvestedOn).getTime(),
                 specieId: payload.specieId,
                 strainId: payload.strainId,
