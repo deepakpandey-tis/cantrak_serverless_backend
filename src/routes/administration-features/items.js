@@ -42,6 +42,13 @@ router.post('/update-item',
   itemController.updateItem
 );
 
+router.post('/toggle-item-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  itemController.toggleItem
+);
+
 router.post('/delete-item',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

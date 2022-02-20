@@ -42,6 +42,13 @@ router.post('/update-location',
   locationController.updateLocation
 );
 
+router.post('/toggle-location-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  locationController.toggleLocationStatus
+);
+
 router.post('/delete-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

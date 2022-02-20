@@ -42,7 +42,14 @@ router.post('/update-container-type',
   containerTypeController.updateContainerType
 );
 
-router.post('/toggle-container-type',
+router.post('/toggle-container-type-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  containerTypeController.toggleContainerTypeStatus
+);
+
+router.post('/delete-container-type',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,

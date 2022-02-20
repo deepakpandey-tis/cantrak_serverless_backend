@@ -6,17 +6,18 @@ const deleteSubLocation = async (req, res) => {
         let orgId = req.me.orgId;
         let userId = req.me.id;
 
-        let sqlResult;
-        let message;
-
         const payload = req.body;
+
+        let sqlStr;
+
         const schema = Joi.object().keys({
+            companyId: Joi.number().required(),
             id: Joi.number().required(),
         });
 
         const result = Joi.validate(payload, schema);
         console.log(
-            "[controllers][administration-features][sub-locations]deleteSubLocation: JOi Result",
+            "[controllers][administration-features][locations][deleteSubLocation]: JOi Result",
             result
         );
 
@@ -28,36 +29,39 @@ const deleteSubLocation = async (req, res) => {
             });
         }
 
-        let currentTime = new Date().getTime();
-        let check = await knex('sub_locations').select('isActive').where({ id: payload.id, orgId: orgId }).first();
-        if (check.isActive) {
-            sqlResult = await knex
-              .update({ isActive: false, updatedBy: userId, updatedAt: currentTime })
-              .where({ id: payload.id, orgId: req.orgId })
-              .returning(["*"])
-              .into('sub_locations');
-              message = "Sub Location de-activated successfully!"
-          } else {
-            sqlResult = await knex
-              .update({ isActive: true, updatedBy: userId, updatedAt: currentTime })
-              .where({ id: payload.id, orgId: req.orgId })
-              .returning(["*"])
-              .into('sub_locations');
-              message = "Sub Location activated successfully!"
-          }
+        //  Delete record
+        sqlStr = `DELETE FROM sub_locations WHERE "id" = ${payload.id} AND "orgId" = ${orgId} AND "companyId" = ${payload.companyId}`;
+
+        var deletedRecs = await knex.raw(sqlStr);
+        // console.log('deleted recs: ', deletedRecs);
+
+        if(deletedRecs && deletedRecs.rowCount < 1){
+            return res.status(400).json({
+                errors: [
+                    { code: "VALIDATION_ERROR", message: "Error in deleting Sub Growing Location record!" }
+                ]
+            });
+        }
 
         return res.status(200).json({
             data: {
-                record: sqlResult[0]
+                record: deletedRecs
             },
-            message: message
+            message: 'Sub Growing Location deleted successfully.'
         });
     } catch (err) {
-        console.log("[controllers][administration-features][sub-locations][deleteSubLocation] :  Error", err);
-        //trx.rollback
-        res.status(500).json({
-            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
-        });
+        console.log("[controllers][administration-features][locations][deleteSubLocation] :  Error", err);
+        if (err.code == 23503){            // foreign key violation
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: 'Sub growing location record cannot be deleted because it is already in use.' }]
+            });
+        }
+        else{
+            //trx.rollback
+            res.status(500).json({
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+            });
+        }
     }
 }
 

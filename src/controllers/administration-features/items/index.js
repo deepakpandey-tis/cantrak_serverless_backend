@@ -4,6 +4,7 @@ const getItem = require('./get-item');
 const addItem = require('./add-item');
 const updateItem = require('./update-item');
 const deleteItem = require('./delete-item');
+const toggleItem = require('./toggle-item');
 const getItemCategories = require('./get-item-categories');
 
 module.exports = {
@@ -13,5 +14,6 @@ module.exports = {
     getItem,
     updateItem,
     deleteItem,
+    toggleItem,
     getItemCategories,
 };

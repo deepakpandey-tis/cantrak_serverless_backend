@@ -45,6 +45,13 @@ router.post('/toggle-um',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
+  unitOfMeasurementController.toggleUM
+);
+
+router.post('/delete-um',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
   unitOfMeasurementController.deleteUM
 );
 
