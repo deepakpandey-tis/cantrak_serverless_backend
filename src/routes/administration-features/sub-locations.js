@@ -42,6 +42,13 @@ router.post('/update-sub-location',
   subLocationController.updateSubLocation
 );
 
+router.post('/toggle-sub-location-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  subLocationController.toggleSubLocationStatus
+);
+
 router.post('/delete-sub-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

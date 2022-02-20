@@ -42,6 +42,13 @@ router.post('/update-storage-location',
   storageLocationController.updateStorageLocation
 );
 
+router.post('/toggle-storage-location-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  storageLocationController.toggleStorageLocationStatus
+);
+
 router.post('/delete-storage-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

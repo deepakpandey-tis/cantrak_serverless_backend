@@ -45,7 +45,7 @@ const updateUM = async (req, res) => {
         if (alreadyExists && alreadyExists.length) {
             return res.status(400).json({
                 errors: [
-                    { code: "VALIDATION_ERROR", message: "UM already exist!" }
+                    { code: "VALIDATION_ERROR", message: "UoM already exist!" }
                 ]
             });
         }
@@ -72,7 +72,7 @@ const updateUM = async (req, res) => {
             data: {
                 record: insertedRecord
             },
-            message: 'UM updated successfully.'
+            message: 'UoM updated successfully.'
         });
     } catch (err) {
         console.log("[controllers][administration-features][ums][updateUM] :  Error", err);
