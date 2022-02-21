@@ -42,6 +42,13 @@ router.post('/update-strain',
   strainController.updateStrain
 );
 
+router.post('/toggle-strain-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  strainController.toggleStrain
+);
+
 router.post('/delete-strain',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

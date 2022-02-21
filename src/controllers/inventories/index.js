@@ -21,6 +21,7 @@ const getStockSummary = require('./get-stock-summary');
 const getItemTxnList = require('./get-item-txn-list');
 const exportItemTxnListToExcel = require('./export-item-txn-list-to-excel');
 const getItemTxn = require('./get-item-txn');
+const getReceiveWasteFromAdjMinusTxn = require('./get-receive-waste-from-adj-minus-txn');
 const getStockStatus = require('./get-stock-status');
 const getStorageLocationReceiptRegister = require('./get-storage-location-receipt-register');
 const getStorageLocationReceiptRegisterExcel = require('./get-storage-location-receipt-register-excel');
@@ -51,6 +52,7 @@ module.exports = {
     getItemTxnList,
     exportItemTxnListToExcel,
     getItemTxn,
+    getReceiveWasteFromAdjMinusTxn,
     getStockStatus,
     getStorageLocationReceiptRegister,
     getStorageLocationReceiptRegisterExcel,

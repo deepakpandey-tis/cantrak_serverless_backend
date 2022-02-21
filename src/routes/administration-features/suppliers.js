@@ -42,6 +42,13 @@ router.post('/update-supplier',
   supplierController.updateSupplier
 );
 
+router.post('/toggle-supplier-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  supplierController.toggleSupplier
+);
+
 router.post('/delete-supplier',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
