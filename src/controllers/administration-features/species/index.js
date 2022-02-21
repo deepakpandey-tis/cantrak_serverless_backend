@@ -4,6 +4,7 @@ const getSpecie = require('./get-specie');
 const addSpecie = require('./add-specie');
 const updateSpecie = require('./update-specie');
 const deleteSpecie = require('./delete-specie');
+const toggleSpecie = require('./toggle-specie');
 const exportSpecies = require('./export-species');
 const importSpecies = require('./import-species');
 
@@ -14,6 +15,7 @@ module.exports = {
     getSpecie,
     updateSpecie,
     deleteSpecie,
+    toggleSpecie,
     exportSpecies,
     importSpecies,
 };

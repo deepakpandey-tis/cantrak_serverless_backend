@@ -42,6 +42,13 @@ router.post('/update-specie',
   specieController.updateSpecie
 );
 
+router.post('/toggle-specie-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  specieController.toggleSpecie
+);
+
 router.post('/delete-specie',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

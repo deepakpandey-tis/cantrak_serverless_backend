@@ -26,7 +26,7 @@ const TxnTypes ={
 };
 
 const TxnSubTypes ={
-    AdjustmentAddWasteTxn: 91,
+    ReceiveWasteFromAdjustmentMinusTxn: 91,
     AdjustmentMinusWasteTxn: 91,
 };
 
@@ -119,7 +119,7 @@ const addAdjustment = async (req, res) => {
             console.log('add adjustment insertedRecord and txnId: ', insertedRecords[0], txnId);
 
             //  Add Waste txn
-            if(payload.subId == TxnSubTypes.AdjustmentMinusWasteTxn){
+            if(payload.subId == TxnSubTypes.ReceiveWasteFromAdjustmentMinusTxn){
                 let insertData = {
                     orgId: orgId,
                     companyId: payload.companyId,

@@ -3,6 +3,7 @@ const getStrains = require('./get-strains');
 const getStrain = require('./get-strain');
 const addStrain = require('./add-strain');
 const updateStrain = require('./update-strain');
+const toggleStrain = require('./toggle-strain');
 const deleteStrain = require('./delete-strain');
 
 module.exports = {
@@ -11,5 +12,6 @@ module.exports = {
     addStrain,
     getStrain,
     updateStrain,
+    toggleStrain,
     deleteStrain,
 };

@@ -42,6 +42,13 @@ router.post('/update-growth-stage',
   growthStageController.updateGrowthStage
 );
 
+router.post('/toggle-growth-stage-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  growthStageController.toggleGrowthStage
+);
+
 router.post('/delete-growth-stage',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

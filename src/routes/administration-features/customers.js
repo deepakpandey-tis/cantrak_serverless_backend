@@ -42,6 +42,13 @@ router.post('/update-customer',
   customerController.updateCustomer
 );
 
+router.post('/toggle-customer-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  customerController.toggleCustomer
+);
+
 router.post('/delete-customer',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

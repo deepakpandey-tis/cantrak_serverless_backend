@@ -168,6 +168,13 @@ router.post('/get-item-txn',
   inventoriesController.getItemTxn
 );
 
+router.post('/get-receive-waste-from-adj-minus-txn',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getReceiveWasteFromAdjMinusTxn
+);
+
 router.post('/get-stock-status',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

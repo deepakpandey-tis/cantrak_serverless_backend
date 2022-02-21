@@ -45,6 +45,13 @@ router.post('/toggle-process',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
+  processController.toggleProcess
+);
+
+router.post('/delete-process',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
   processController.deleteProcess
 );
 
