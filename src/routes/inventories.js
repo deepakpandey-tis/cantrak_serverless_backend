@@ -210,4 +210,11 @@ router.post('/get-storage-location-issue-register-excel',
   inventoriesController.getStorageLocationIssueRegisterExcel
 );
 
+router.post('/get-storage-location-adjustment-register',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getStorageLocationAdjustmentRegister
+);
+
 module.exports = router;

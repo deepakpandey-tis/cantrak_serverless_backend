@@ -27,6 +27,7 @@ const getStorageLocationReceiptRegister = require('./get-storage-location-receip
 const getStorageLocationReceiptRegisterExcel = require('./get-storage-location-receipt-register-excel');
 const getStorageLocationIssueRegister = require('./get-storage-location-issue-register');
 const getStorageLocationIssueRegisterExcel = require('./get-storage-location-issue-register-excel');
+const getStorageLocationAdjustmentRegister = require('./get-storage-location-adjustment-register');
 
 module.exports = {
     addItemFromImportLicense,
@@ -58,4 +59,5 @@ module.exports = {
     getStorageLocationReceiptRegisterExcel,
     getStorageLocationIssueRegister,
     getStorageLocationIssueRegisterExcel,
+    getStorageLocationAdjustmentRegister,
 };
