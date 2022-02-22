@@ -171,6 +171,26 @@ const addAdjustment = async (req, res) => {
                 .transacting(trx)
                 .into("remarks_master");
 
+            //  Also add Remark for Waste txn
+            if(payload.subId == TxnSubTypes.ReceiveWasteFromAdjustmentMinusTxn){
+                let insertData = {
+                    entityId: insertedRecords[1].id,
+                    entityType: "adjustment_txn_entry",
+                    description: payload.remark,
+                    orgId: req.orgId,
+                    createdBy: req.me.id,
+                    createdAt: currentTime,
+                    updatedAt: currentTime,
+                };
+                console.log('Adjustment Txn reason record: ', insertData);
+
+                const insertRemarkResult = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("remarks_master");
+            }
+
             trx.commit;
         });
 

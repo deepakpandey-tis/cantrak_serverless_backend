@@ -87,7 +87,7 @@ const getStockLedger = async (req, res) => {
             , coalesce(recs.opening, 0) opening, 0 receipt, 0 issue, coalesce(recs.opening, 0) closing FROM items i LEFT JOIN (
             ${sqlSelectItemsOpening}
             ) recs
-            ON i.id = recs."itemId"
+            ON i."itemCategoryId" = recs."itemId" AND i.id = recs."itemId"
             LEFT JOIN item_categories ic ON i."itemCategoryId" = ic.id
             LEFT JOIN ums ON i."umId" = ums.id
             , storage_locations sl
