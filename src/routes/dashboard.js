@@ -1,3 +1,40 @@
+const { Router } = require("express")
+const path = require("path")
+const router = Router()
+const authMiddleware = require('../middlewares/auth')
+const roleMiddleware = require('../middlewares/role')
+const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddleware');
+const dashboardController = require('../controllers/dashboard/index');
+
+
+router.get(
+    "/get-active-resource-with-sub-resource",
+    authMiddleware.isAuthenticated,
+    roleMiddleware.parseUserPermission,
+    resourceAccessMiddleware.isAccessible,
+    dashboardController.getActiveResourceWithSubResource
+)
+
+
+router.post('/get-import-license-statistics',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  dashboardController.getImportLicenseStatistics
+);
+
+router.post('/get-cultivation-license-statistics',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  dashboardController.getCultivationLicenseStatistics
+);
+
+
+module.exports = router;
+
+
+/* 
 const { Router } = require('express')
 
 const router = Router()
@@ -8,28 +45,28 @@ const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddlewar
 
 router.get('/top-asset-problem', dashboardController.getTopAssetProblem)
 
-/*GET DASHBOARD CARD DATA */
+/*GET DASHBOARD CARD DATA *
 router.post('/get-card-data', authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
     dashboardController.getDashboardData)
 
-/*GET CURRENT DATE SERVICE APPOINTMENT LIST */
+/*GET CURRENT DATE SERVICE APPOINTMENT LIST *
 router.post('/get-current-date-service-appointment-list', authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
     dashboardController.getCurrentDateServiceAppointmentList)
 
 
-/*GET CURRENT DATE SURVEY APPOINTMENT LIST */
+/*GET CURRENT DATE SURVEY APPOINTMENT LIST *
 router.post('/get-current-date-survey-appointment-list', authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
     dashboardController.getCurrentDateSurveyAppointmentList)
 
-/*GET CURRENT DATE SCHEDULE WORK ORDER LIST */
+/*GET CURRENT DATE SCHEDULE WORK ORDER LIST *
 router.post('/get-schedule-work-order-list', authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
     dashboardController.getScheduleWorkOrderList)
 
-/*GET START DATE END DATE TOTAL SERVICE REQUIEST AND TOTAL SERVICE ORDER */
+/*GET START DATE END DATE TOTAL SERVICE REQUIEST AND TOTAL SERVICE ORDER *
 router.post('/get-start-end-service-request-service-order', authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
     dashboardController.getServiceRequestServiceOrderBwDates)
@@ -64,14 +101,14 @@ router.get('/get-allow-all-company-list',
     dashboardController.getAllowAllCompanyList
 );
 
-/*GET SERVICE REQUEST DATA BY PROBLEM TYPE FOR CHART */
+/*GET SERVICE REQUEST DATA BY PROBLEM TYPE FOR CHART *
 router.post('/get-service-request-by-problem-type-chart-data',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
     dashboardController.getServiceRequestByProblemTypeChartdata
 )
 
-/*GET SERVICE REQUEST DATA BY PRIORITY  FOR CHART */
+/*GET SERVICE REQUEST DATA BY PRIORITY  FOR CHART *
 router.post('/get-service-request-by-priority-chart-data',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
@@ -79,7 +116,7 @@ router.post('/get-service-request-by-priority-chart-data',
 )
 
 
-/*GET SERVICE REQUEST DATA BY MONTH PRIORITY  FOR CHART */
+/*GET SERVICE REQUEST DATA BY MONTH PRIORITY  FOR CHART *
 router.post('/get-service-request-by-month-priority-chart-data',
     authMiddleware.isAuthenticated,
     roleMiddleware.parseUserPermission,
@@ -139,3 +176,4 @@ router.get(
 
 module.exports = router;
 
+ */
