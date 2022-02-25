@@ -18,6 +18,8 @@ const wasteEntry = require('./waste-entry');
 const getWasteTxnList = require('./get-waste-txn-list');
 const getWasteTxn = require('./get-waste-txn');
 const generatePdfOfPlants = require('./generate-pdf-of-plants');
+const getWastePlantCount = require('./get-waste-plant-count');
+const getTotalPlants = require('./get-total-plants');
 
 module.exports = {
     getLotPlantList,
@@ -40,4 +42,6 @@ module.exports = {
     getWasteTxnList,
     getWasteTxn,
     generatePdfOfPlants,
+    getWastePlantCount,
+    getTotalPlants,
 };
