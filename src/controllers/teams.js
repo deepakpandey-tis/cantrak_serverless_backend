@@ -31,7 +31,7 @@ const teamsController = {
             let vendorTeam;
             await knex.transaction(async (trx) => {
                 const teamsPayload = req.body;
-                const payload = _.omit(req.body, ['roleProjectData'], ['roleId'], 'projectId', ['userIds'], ['vendorIds'],'filterTerm')
+                const payload = _.omit(req.body, ['roleProjectData'], ['roleId'], 'locationId', ['userIds'], ['vendorIds'],'filterTerm')
 
                 console.log('[controllers][teams][addNewTeam]', teamsPayload);
 
@@ -81,14 +81,14 @@ const teamsController = {
                     for (let i = 0; i < roleProjectData.length; i++) {
 
 
-                        if (roleProjectData[i].projectId && roleProjectData[i].roleId) {
+                        if (roleProjectData[i].locationId && roleProjectData[i].roleId) {
 
                             //for (let role of roleProjectData[i].roleId) {
 
                             let insertObject = {
                                 teamId: teamsData.teamId,
                                 roleId: roleProjectData[i].roleId,
-                                projectId: roleProjectData[i].projectId,
+                                locationId: roleProjectData[i].locationId,
                                 orgId: orgId,
                                 createdAt: currentTime,
                                 updatedAt: currentTime
@@ -98,7 +98,7 @@ const teamsController = {
                             let checkProject = await knex.from('team_roles_project_master').where({
                                 teamId: teamsData.teamId,
                                 roleId: roleProjectData[i].roleId,
-                                projectId: roleProjectData[i].projectId,
+                                locationId: roleProjectData[i].locationId,
                                 orgId: orgId,
                                 createdBy: req.me.id
                             });
@@ -196,7 +196,7 @@ const teamsController = {
             let vendorTeam;
             await knex.transaction(async (trx) => {
                 const upTeamsPayload = req.body;
-                const payload = _.omit(req.body, ['roleId'], 'projectId', ['userIds'], ['roleProjectData'], ['vendorIds'],'filterTerm')
+                const payload = _.omit(req.body, ['roleId'], 'locationId', ['userIds'], ['roleProjectData'], ['vendorIds'],'filterTerm')
                 console.log('[controllers][teams][updateTeams] : Request Body', upTeams);
 
                 // validate keys
@@ -255,7 +255,7 @@ const teamsController = {
                             let insertObject = {
                                 teamId: upTeamsPayload.teamId,
                                 roleId: roleProjectData[i].roleId,
-                                projectId: 0,
+                                locationId: roleProjectData[i].locationId,
                                 orgId: orgId,
                                 createdAt: currentTime,
                                 updatedAt: currentTime
@@ -264,8 +264,8 @@ const teamsController = {
 
                             let checkProject = await knex.from('team_roles_project_master').where({
                                 teamId: upTeamsPayload.teamId,
-                                roleId: roleProjectData[i].roleId,
-                                projectId: 0,
+                                roleId: roleProjectData[i].locationId,
+                                locationId: roleProjectData[i].locationId,
                                 orgId: orgId
                             });
 
@@ -473,7 +473,7 @@ const teamsController = {
         try {
             let updateUser = null;
             let orgId = req.orgId
-            const { teamId, userIds, projectId, roleId } = req.body;
+            const { teamId, userIds, locationId, roleId } = req.body;
             console.log('[controllers][teams][updateroles]: UpdateUserRole', userIds, teamId);
 
             // get User Id List
@@ -636,7 +636,7 @@ const teamsController = {
 
                 knex("teams")
                     .leftJoin("team_roles_project_master", "teams.teamId", "team_roles_project_master.teamId")
-                    .leftJoin("projects", "team_roles_project_master.projectId", "projects.id")
+                    .leftJoin("projects", "team_roles_project_master.locationId", "projects.id")
                     .leftJoin("companies", "projects.companyId", "companies.id")
                     .leftJoin("users", "teams.createdBy", "users.id")
                     .leftJoin("organisation_roles", "team_roles_project_master.roleId", "organisation_roles.id")
@@ -774,10 +774,12 @@ const teamsController = {
             let teamId = req.query.teamId;
             let teamResult = null;
             let userResult = null;
-            let projectResult = null;
+            let locationResult = null;
             let vendorResult = null;
 
-            [teamResult, userResult, projectResult, vendorResult] = await Promise.all([
+            console.log("==== GROWINGLOCATION ====", req.GROWINGLOCATION);
+
+            [teamResult, userResult, locationResult, vendorResult] = await Promise.all([
 
                 knex('teams').select([
                     'teams.teamId',
@@ -799,14 +801,14 @@ const teamsController = {
                     .where({ 'team_users.teamId': teamId }).returning('*'),
 
                 knex('team_roles_project_master')
-                    .leftJoin('projects', 'team_roles_project_master.projectId', 'projects.id')
+                    .leftJoin('locations', 'team_roles_project_master.locationId', 'locations.id')
                     .leftJoin('organisation_roles', 'team_roles_project_master.roleId', 'organisation_roles.id')
                     .select([
-                        'team_roles_project_master.projectId',
+                        'team_roles_project_master.locationId',
                         'team_roles_project_master.roleId',
-                        'projects.projectName',
+                        'locations.name as locationName',
                         'organisation_roles.name as roleName',
-                        'projects.project as projectCode'
+                        'locations.description as locationDescription'
                     ])
                     .where({ 'team_roles_project_master.teamId': teamId }).returning('*'),
                 knex('assigned_vendors')
@@ -816,15 +818,15 @@ const teamsController = {
             ])
 
 
-            let projectUpdateDetails = _.compact(projectResult.map((value, key) => ({ roleId: value.roleId, projectId: value.projectId })))
+            let locationsUpdateDetails = _.compact(locationResult.map((value, key) => ({ roleId: value.roleId, locationId: value.locationId })))
 
             let vendorIds = vendorResult.map(v => v.userId)
 
-            //            let projectUpdateDetails = _.chain(projectResult).groupBy("projectId").map((value, key) => ({ roleId: value.map(a => a.roleId), projectId: key })).value();
+            //            let projectUpdateDetails = _.chain(projectResult).groupBy("locationId").map((value, key) => ({ roleId: value.map(a => a.roleId), locationId: key })).value();
 
             res.status(200).json({
                 data: {
-                    teamDetails: { ...teamResult[0], usersData: userResult, projectData: projectResult, projectUpdateDetails: projectUpdateDetails, vendorIds: vendorIds, vendorData: vendorResult },
+                    teamDetails: { ...teamResult[0], usersData: userResult, locationData: locationResult, locationsUpdateDetails: locationsUpdateDetails, vendorIds: vendorIds, vendorData: vendorResult },
                 },
                 message: "Team Details Successfully"
             })
@@ -927,12 +929,12 @@ const teamsController = {
 
 
                             /**GET PROJECT ID OPEN */
-                            let projectId = null;
+                            let locationId = null;
                             if (teamData.D) {
                                 let projectData = await knex('projects').select('id').where({ project: teamData.D.toUpperCase(), orgId: req.orgId });
 
                                 if (projectData && projectData.length) {
-                                    projectId = projectData[0].id
+                                    locationId = projectData[0].id
                                 }
                             }
                             /**GET PROJECT ID CLOSE */
@@ -968,16 +970,16 @@ const teamsController = {
                                 }
                                 let teamId = resultData[0].teamId;
 
-                                if (projectId && roleId) {
+                                if (locationId && roleId) {
                                     let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                        .where({ teamId: teamId, projectId: projectId, orgId: req.orgId, roleId: roleId })
+                                        .where({ teamId: teamId, locationId: locationId, orgId: req.orgId, roleId: roleId })
 
                                     if (!checkRoleMaster.length) {
 
                                         let insertProjectData = {
                                             orgId: req.orgId,
                                             teamId: teamId,
-                                            projectId: projectId,
+                                            locationId: locationId,
                                             createdAt: currentTime,
                                             updatedAt: currentTime,
                                             roleId: roleId,
@@ -1000,16 +1002,16 @@ const teamsController = {
                             } else {
 
 
-                                if (projectId && roleId) {
+                                if (locationId && roleId) {
 
 
                                     let checkRoleMaster = await knex('team_roles_project_master').select("id")
-                                        .where({ teamId: checkExist[0].teamId, projectId: projectId, orgId: req.orgId, roleId: roleId })
+                                        .where({ teamId: checkExist[0].teamId, locationId: locationId, orgId: req.orgId, roleId: roleId })
                                     if (!checkRoleMaster.length) {
                                         let insertProjectData = {
                                             orgId: req.orgId,
                                             teamId: checkExist[0].teamId,
-                                            projectId: projectId,
+                                            locationId: locationId,
                                             createdAt: currentTime,
                                             updatedAt: currentTime,
                                             roleId: roleId,
@@ -1081,7 +1083,7 @@ const teamsController = {
             let teamPayload = req.body;
 
             const schema = Joi.object().keys({
-                projectId: Joi.number().required(),
+                locationId: Joi.number().required(),
                 resourceId: Joi.number().required()
             })
             const result = Joi.validate(teamPayload, schema);
@@ -1110,7 +1112,7 @@ const teamsController = {
                     'teams.teamName',
                     'teams.teamId'
                 ])
-                .where({ 'team_roles_project_master.projectId': teamPayload.projectId, 'teams.isActive': true })
+                .where({ 'team_roles_project_master.locationId': teamPayload.locationId, 'teams.isActive': true })
                 .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
 
             res.status(200).json({
@@ -1131,7 +1133,7 @@ const teamsController = {
     },
     getAssignedTeamByMultipleProjects: async (req, res) => {
         try {
-            let projectId = req.body
+            let locationId = req.body
             let orgId = req.orgId
 
             let teams = await knex("team_roles_project_master")
@@ -1139,7 +1141,7 @@ const teamsController = {
                 .select(['teams.teamName',
                     'teams.teamId'
                 ])
-                .whereIn("team_roles_project_master.projectId", projectId)
+                .whereIn("team_roles_project_master.locationId", locationId)
                 .distinct()
 
             res.status(200).json({
@@ -1216,7 +1218,7 @@ const teamsController = {
                                 'teams.teamName',
                                 'teams.teamId'
                             ])
-                            .where({ 'team_roles_project_master.projectId': sr.projectId, 'teams.isActive': true })
+                            .where({ 'team_roles_project_master.locationId': sr.locationId, 'teams.isActive': true })
                             .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
 
                         return res.status(200).json({
@@ -1252,7 +1254,7 @@ const teamsController = {
                                 'teams.teamName',
                                 'teams.teamId'
                             ])
-                            .where({ 'team_roles_project_master.projectId': so.projectId, 'teams.isActive': true })
+                            .where({ 'team_roles_project_master.locationId': so.locationId, 'teams.isActive': true })
                             .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
 
                         return res.status(200).json({
@@ -1287,7 +1289,7 @@ const teamsController = {
                                 'teams.teamName',
                                 'teams.teamId'
                             ])
-                            .where({ 'team_roles_project_master.projectId': so.projectId, 'teams.isActive': true })
+                            .where({ 'team_roles_project_master.locationId': so.locationId, 'teams.isActive': true })
                             .whereIn("team_roles_project_master.roleId", roleIds).returning('*')
 
                         return res.status(200).json({

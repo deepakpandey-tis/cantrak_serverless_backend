@@ -52,6 +52,8 @@ router.post(
 router.get(
   "/get-team-details",
   authMiddleware.isAuthenticated,
+  // roleMiddleware.parseUserPermission,
+  // resourceAccessMiddleware.isAccessible,
   teamsController.getTeamDetails
 );
 router.post(

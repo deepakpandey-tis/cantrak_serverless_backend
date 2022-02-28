@@ -34,18 +34,24 @@ const roleMiddleware = {
 
 
         const plantationsKey = `user_role_parse_permission-plantations-${userId}`;
+        const locationsKey = `user_role_parse_permission-locations-${userId}`;
         const companieskey = `user_role_parse_permission-companies-${userId}`;
 
-        let userProjectResources = await redisHelper.getValue(plantationsKey);
+        let userPlantationResources = await redisHelper.getValue(plantationsKey);
+        let userGrowingLocationsResources = await redisHelper.getValue(locationsKey);
         let userCompanyResources = await redisHelper.getValue(companieskey);
 
         if (req.orgAdmin) {
 
           console.log('[middleware][role]: parseUserPermission:', "User is orgAdmin");
 
-          if (!userProjectResources || !userCompanyResources) {
+          if (!userPlantationResources || !userCompanyResources || !userGrowingLocationsResources) {
             // get all the plantations of this admin
             const plantations = await knexReader("plantations")
+              .select("id")
+              .where({ orgId: req.orgId });
+
+            const locations = await knexReader("locations")
               .select("id")
               .where({ orgId: req.orgId });
 
@@ -63,11 +69,19 @@ const roleMiddleware = {
               .where({ 'orm.orgId': req.orgId })
               .where({ 'orm.isAuthorized': true });
 
-            userProjectResources = _.uniqBy(resources, "id").map(v => ({
+            userPlantationResources = _.uniqBy(resources, "id").map(v => ({
               id: v.id,
               code: v.code,
               plantations: plantations.map(v => v.id)
             }));
+
+            userGrowingLocationsResources = _.uniqBy(resources, "id").map(v => ({
+              id: v.id,
+              code: v.code,
+              locations: locations.map(v => v.id)
+            }));
+
+            // userGrowingLocationsResources = locations.map(v => v.id);
 
             userCompanyResources = _.uniqBy(resources, "id").map(v => ({
               id: v.id,
@@ -76,24 +90,32 @@ const roleMiddleware = {
             }));
 
             console.log('[middleware][role]: parseUserPermission: userCompanyResources (From DB) :: ', userCompanyResources);
-            console.log('[middleware][role]: parseUserPermission: userProjectResources (From DB) :: ', userProjectResources);
-            await redisHelper.setValueWithExpiry(plantationsKey, userProjectResources, 180);
+            console.log('[middleware][role]: parseUserPermission: userPlantationResources (From DB) :: ', userPlantationResources);
+            console.log('[middleware][role]: parseUserPermission: userGrowingLocationsResources (From DB) :: ', userGrowingLocationsResources);
+            await redisHelper.setValueWithExpiry(plantationsKey, userPlantationResources, 180);
+            await redisHelper.setValueWithExpiry(locationsKey, userGrowingLocationsResources, 180);
             await redisHelper.setValueWithExpiry(companieskey, userCompanyResources, 180);
           }
 
-          if (userProjectResources.length === 0) {
+          if (userPlantationResources.length === 0) {
             return next(createError(403))
           }
 
+
+          console.log('[middleware][role]: parseUserPermission: userCompanyResources (From Redis) :: ', userCompanyResources);
+          console.log('[middleware][role]: parseUserPermission: userPlantationResources (From Redis) :: ', userPlantationResources);
+          console.log('[middleware][role]: parseUserPermission: userGrowingLocationsResources (From Redis) :: ', userGrowingLocationsResources);
+
           req.userCompanyResources = userCompanyResources;
-          req.userPlantationResources = userProjectResources;
+          req.userGrowingLocationsResources = userGrowingLocationsResources;
+          req.userPlantationResources = userPlantationResources;
         }
 
         if (req.orgUser) {
 
           console.log('[middleware][role]: parseUserPermission:', "User is orgUser");
 
-          if (!userProjectResources) {
+          if (!userPlantationResources || !userGrowingLocationsResources) {
             const result = await knexReader("team_users")
               .innerJoin(
                 "team_roles_project_master",
@@ -111,7 +133,7 @@ const roleMiddleware = {
                 "role_resource_master.resourceId"
               )
               .select([
-                "team_roles_project_master.projectId as projectId",
+                "team_roles_project_master.locationId as locationId",
                 "role_resource_master.resourceId as resourceId",
                 "resources.code as code"
               ]).where({ 'team_users.userId': userId, 'team_users.orgId': req.orgId })//.whereIn('team_users.teamId',teams);
@@ -129,22 +151,26 @@ const roleMiddleware = {
             
             console.log("_.chain(result)", _.chain(result).groupBy("resourceId"));
 
-            userProjectResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, code: ids[key], plantations: value.map(a => a.projectId) })).value();
+            userPlantationResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, code: ids[key], plantations: value.map(a => a.locationId) })).value();
+            userGrowingLocationsResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, code: ids[key], locations: value.map(a => a.locationId) })).value();
 
-            console.log('[middleware][role]: parseUserPermission: userProjectResources (From DB) :: ', userProjectResources);
+            console.log('[middleware][role]: parseUserPermission: userPlantationResources (From DB) :: ', userPlantationResources);
+            console.log('[middleware][role]: parseUserPermission: userGrowingLocationsResources (From DB) :: ', userGrowingLocationsResources);
 
-            await redisHelper.setValueWithExpiry(plantationsKey, userProjectResources, 180);
+            await redisHelper.setValueWithExpiry(plantationsKey, userPlantationResources, 180);
+            await redisHelper.setValueWithExpiry(locationsKey, userGrowingLocationsResources, 180);
           }
 
-          if (userProjectResources.length === 0) {
+          if (userPlantationResources.length === 0) {
             return next(createError(403))
           }
 
-          req.userPlantationResources = userProjectResources;
+          req.userPlantationResources = userPlantationResources;
+          req.userGrowingLocationsResources = userGrowingLocationsResources;
         }
 
         // console.log('[middleware][role]: parseUserPermission: userCompanyResources (From REDIS) :: ', userCompanyResources);
-        // console.log('[middleware][role]: parseUserPermission: userProjectResources (From REDIS) :: ', userProjectResources);
+        // console.log('[middleware][role]: parseUserPermission: userPlantationResources (From REDIS) :: ', userPlantationResources);
 
         next();
       }
