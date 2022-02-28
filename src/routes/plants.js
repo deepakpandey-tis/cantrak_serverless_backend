@@ -147,4 +147,18 @@ router.post('/generate-pdf-of-plants',
   plantController.generatePdfOfPlants
 );
 
+router.post('/get-waste-plant-count',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getWastePlantCount
+);
+
+router.post('/get-total-plants',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getTotalPlants
+);
+
 module.exports = router;

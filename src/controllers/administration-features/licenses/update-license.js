@@ -24,6 +24,7 @@ const updateLicense = async (req, res) => {
             assignedPerson: Joi.string().required(),
             licenseTypeId: Joi.number().required(),
             licenseObjectiveIds: Joi.array().required(),
+            quantity: Joi.number().required(),
             items: Joi.array().required(),
         });
 
@@ -74,6 +75,7 @@ const updateLicense = async (req, res) => {
                 assignedPerson: payload.assignedPerson,
                 licenseTypeId: payload.licenseTypeId,
                 licenseObjectiveIds: payload.licenseObjectiveIds,
+                quantity: payload.quantity,
                 updatedBy: userId,
                 updatedAt: currentTime,
             };
