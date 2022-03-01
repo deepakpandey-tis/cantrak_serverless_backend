@@ -74,6 +74,8 @@ const getWasteTxnList = async (req, res) => {
             sqlWhere += ` AND pwt."growthStageId" = ${growthStageId}`;
         }
 
+        sqlWhere += ` AND pwt."locationId" IN (${req.GROWINGLOCATION})`;
+
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getWasteTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);
 

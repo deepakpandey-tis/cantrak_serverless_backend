@@ -173,7 +173,7 @@ const entranceController = {
                 if (login.user.isOrgAdmin) {
                     console.log("this is orgAdmin");
                     // get all the projects of this admin
-                    const projects = await knexReader("projects")
+                    const locations = await knexReader("locations")
                         .select("id")
                         .where({ orgId });
                     const companies = await knexReader("companies")
@@ -184,12 +184,12 @@ const entranceController = {
                     )
                         .select("resourceId as id")
                         .where({ orgId });
-                    const userProjectResources = _.uniqBy(
+                    const userLocationsResources = _.uniqBy(
                         resources,
                         "id"
                     ).map(v => ({
                         id: v.id,
-                        projects: projects.map(v => v.id)
+                        locations: locations.map(v => v.id)
                     }));
                     const userCompanyResources = _.uniqBy(
                         resources,
@@ -200,8 +200,8 @@ const entranceController = {
                     }));
                     //console.log(mappedProjects)
                     login.user.userCompanyResources = userCompanyResources;
-                    login.user.userProjectResources = userProjectResources;
-                    // console.log(userCompanyResources, userProjectResources);
+                    login.user.userLocationsResources = userLocationsResources;
+                    // console.log(userCompanyResources, userLocationsResources);
                 }
 
                 if (login.user.isOrgUser) {
@@ -217,7 +217,7 @@ const entranceController = {
                             "role_resource_master.roleId"
                         )
                         .select([
-                            "team_roles_project_master.projectId as projectId",
+                            "team_roles_project_master.locationId as locationId",
                             "role_resource_master.resourceId as resourceId"
                         ])
                         .where({
@@ -226,17 +226,17 @@ const entranceController = {
                             "team_roles_project_master.orgId": orgId
                         });
 
-                    // let userProjectResources = result;
+                    // let userLocationsResources = result;
                     console.log('Result: ', result);
 
-                    let userProjectResources = _.chain(result)
+                    let userLocationsResources = _.chain(result)
                         .groupBy("resourceId")
                         .map((value, key) => ({
                             id: key,
-                            projects: value.map(a => a.projectId)
+                            locations: value.map(a => a.locationId)
                         }))
                         .value();
-                    login.user.userProjectResources = userProjectResources;
+                    login.user.userLocationsResources = userLocationsResources;
 
                 }
 

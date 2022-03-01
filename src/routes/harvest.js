@@ -35,4 +35,55 @@ router.post('/get-harvest-lot',
   harvestController.getHarvestLot
 );
 
+
+router.post('/get-plant-lots',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getPlantLots
+);
+
+router.post('/get-plant-lot-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getPlantLotLocations
+);
+
+router.post('/get-plant-lot-sub-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getPlantLotSubLocations
+);
+
+router.post('/get-lot-plant-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getLotPlantList
+);
+
+
+router.get('/get-companies',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getCompanies
+);
+
+router.post('/get-items',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getItems
+);
+
+router.post('/get-storage-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getStorageLocations
+);
+
 module.exports = router;

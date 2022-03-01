@@ -60,20 +60,21 @@ const strainRouter = require("./administration-features/strains");
 const itemRouter = require("./administration-features/items");
 const supplierRouter = require("./administration-features/suppliers");
 const customerRouter = require("./administration-features/customers");
-const licenseRouter = require("./administration-features/licenses");
 const unitOfMeasurementRouter = require("./administration-features/ums");
 const locationRouter = require("./administration-features/locations");
 const subLocationRouter = require("./administration-features/sub-locations");
 const storageLocationRouter = require("./administration-features/storage-locations");
 const processRouter = require("./administration-features/processes");
 const txnTypeRouter = require("./administration-features/txn-types");
+const licenseRouter = require("./licenses");
 const inventoryRouter = require("./inventories");
 const harvestRouter = require("./harvest");
 const productionRouter = require("./production");
 const invoiceRouter = require("./invoice");
+const reportsRouter = require("./reports");
 const misRouter = require("./mis");
 const userCustomisationRouter = require("./user-customisation");
-const reportRouter = require("./administration-features/reports");
+// const reportRouter = require("./administration-features/reports");
 
 
 //const partCategoryRouter = require("./administration-features/part-category");
@@ -288,10 +289,6 @@ router.use(
   customerRouter
 );
 router.use(
-  "/administration-features/licenses",
-  licenseRouter
-);
-router.use(
   "/administration-features/locations",
   locationRouter
 );
@@ -316,6 +313,10 @@ router.use(
   txnTypeRouter
 );
 router.use(
+  "/license",
+  licenseRouter
+);
+router.use(
   "/inventories",
   inventoryRouter
 );
@@ -332,6 +333,10 @@ router.use(
   invoiceRouter
 );
 router.use(
+  "/reports", 
+  reportsRouter
+);
+router.use(
   "/mis", 
   misRouter
 );
@@ -339,10 +344,11 @@ router.use(
   "/user-customisation", 
   userCustomisationRouter
 );
-router.use(
-  "/administration-features/reports", 
-  reportRouter
-);
+
+// router.use(
+//   "/administration-features/reports", 
+//   reportRouter
+// );
   
 
 

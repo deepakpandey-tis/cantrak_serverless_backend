@@ -461,7 +461,7 @@ const peopleController = {
                 .leftJoin("team_users", "users.id", "team_users.userId")
                 .leftJoin("teams", "team_users.teamId", "teams.teamId")
                 .leftJoin("team_roles_project_master", "team_users.teamId", "team_roles_project_master.teamId")
-                .leftJoin('projects', 'team_roles_project_master.projectId', 'projects.id')
+                .leftJoin('locations', 'team_roles_project_master.locationId', 'locations.id')
                 .leftJoin('organisation_roles', 'team_roles_project_master.roleId', 'organisation_roles.id')
                 .select([
                     "users.id as userId",
@@ -470,9 +470,9 @@ const peopleController = {
                     "users.mobileNo",
                     "users.email",
                     "organisations.organisationName",
-                    'team_roles_project_master.projectId',
+                    'team_roles_project_master.locationId',
                     'team_roles_project_master.roleId',
-                    'projects.projectName',
+                    'locations.name as locationName',
                     'organisation_roles.name as roleName',
                     "teams.teamId",
                     "teams.teamName",

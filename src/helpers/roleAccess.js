@@ -5,8 +5,8 @@ const moment = require("moment-timezone");
 
 
 const roleAccessHelper = {
-  getAllUsers: async ({ projectId, resourceId, orgId }) => {
-    console.log("[getAllUsers][payload]", projectId, resourceId, orgId)
+  getAllUsers: async ({ locationId, resourceId, orgId }) => {
+    console.log("[getAllUsers][payload]", locationId, resourceId, orgId)
 
     try {
       let users = await knex
@@ -24,7 +24,7 @@ const roleAccessHelper = {
         )
         .select(["users.*"])
         .where({
-            "team_roles_project_master.projectId":projectId,
+            "team_roles_project_master.locationId":locationId,
             "role_resource_master.resourceId":resourceId,
             "users.orgId":orgId,
             "users.isActive":true

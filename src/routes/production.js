@@ -35,4 +35,47 @@ router.post('/get-production-lot',
   productionController.getProductionLot
 );
 
+router.post('/get-item-available-lotnos',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  productionController.getItemAvailableLotNos
+);
+
+
+router.get('/get-companies',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  productionController.getCompanies
+);
+
+router.get('/get-item-categories',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  productionController.getItemCategories
+);
+
+router.post('/get-items',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  productionController.getItems
+);
+
+router.post('/get-storage-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  productionController.getStorageLocations
+);
+
+router.get('/get-processes',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  productionController.getProcesses
+);
+
 module.exports = router;

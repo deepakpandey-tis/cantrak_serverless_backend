@@ -28,4 +28,55 @@ router.post('/get-invoice',
   invoiceController.getInvoice
 );
 
+
+router.get('/get-companies',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getCompanies
+);
+
+router.get('/get-item-categories',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getItemCategories
+);
+
+router.post('/get-items',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getItems
+);
+
+router.post('/get-storage-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getStorageLocations
+);
+
+router.get('/get-customers',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getCustomers
+);
+
+router.post('/get-item-available-lotnos',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getItemAvailableLotNos
+);
+
+
+router.post('/get-licenses',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getLicenses
+);
+
 module.exports = router;

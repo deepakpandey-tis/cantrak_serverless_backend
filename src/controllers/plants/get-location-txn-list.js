@@ -80,6 +80,8 @@ const getLocationTxnList = async (req, res) => {
             sqlWhere += ` AND plt."growthStageId" = ${growthStageId}`;
         }
 
+        sqlWhere += ` AND plt."fromLocationId" IN (${req.GROWINGLOCATION}) AND plt."toLocationId" IN (${req.GROWINGLOCATION})`;
+
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getLocationTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);
 

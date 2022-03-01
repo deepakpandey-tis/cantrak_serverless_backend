@@ -19,7 +19,7 @@ const resourceAccessMiddleware = {
       return next();
     }
 
-    console.log("==== userPlantationResources ===", req.userPlantationResources);
+    console.log("==== userGrowingLocationsResources ===", req.userGrowingLocationsResources);
 
     let uriData = req.originalUrl.split('/');
 
@@ -35,10 +35,13 @@ const resourceAccessMiddleware = {
 
       console.log("=== code ===", code);
 
-      let keys = req.userPlantationResources.map(v => v.code);
+      let keys = req.userGrowingLocationsResources.map(v => v.code);
       if (keys.includes(code)) {
+        let GROWINGLOCATION = req.userGrowingLocationsResources.filter(v => v.code == code)[0]?.locations;
         console.log('[middleware][resourceAccessMiddleware]: isAccessible: ', true);
         setAccessibleProjects(req, 1);
+        console.log("==== GROWINGLOCATION ====", GROWINGLOCATION);
+        req.GROWINGLOCATION = GROWINGLOCATION;
         return next();
       } else {
         console.log('[middleware][resourceAccessMiddleware]: isAccessible: ', false);

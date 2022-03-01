@@ -76,6 +76,8 @@ const getGrowthStageTxnList = async (req, res) => {
             sqlWhere += ` AND pgst."toGrowthStageId" = ${toGrowthStageId}`;
         }
 
+        sqlWhere += ` AND pgst."locationId" IN (${req.GROWINGLOCATION})`;
+
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getGrowthStageTxnList sql: ', sqlSelect + sqlFrom + sqlWhere);
 

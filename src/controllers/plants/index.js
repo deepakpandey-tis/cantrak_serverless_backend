@@ -21,6 +21,20 @@ const generatePdfOfPlants = require('./generate-pdf-of-plants');
 const getWastePlantCount = require('./get-waste-plant-count');
 const getTotalPlants = require('./get-total-plants');
 
+const getRawMaterialForPlantList = require('./get-raw-material-for-plant-list');
+
+const getCompanies = require('./masters/get-companies');
+const getContainerTypes = require('./masters/get-container-types');
+const getItems = require('./masters/get-items');
+const getLicenses = require('./masters/get-licenses');
+const getLocations = require('./masters/get-locations');
+const getSpecies = require('./masters/get-species');
+const getStrains = require('./masters/get-strains');
+const getSubLocations = require('./masters/get-sub-locations');
+const getGrowthStages = require('./masters/get-growth-stages');
+const getStorageLocations = require('./masters/get-storage-locations');
+
+
 module.exports = {
     getLotPlantList,
     getPlantLot,
@@ -44,4 +58,17 @@ module.exports = {
     generatePdfOfPlants,
     getWastePlantCount,
     getTotalPlants,
+
+    getRawMaterialForPlantList,
+
+    getCompanies,
+    getContainerTypes,
+    getItems,
+    getLicenses,
+    getLocations,
+    getSpecies,
+    getStrains,
+    getSubLocations,
+    getGrowthStages,
+    getStorageLocations,
 };

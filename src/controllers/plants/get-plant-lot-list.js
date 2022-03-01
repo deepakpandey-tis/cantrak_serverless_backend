@@ -70,6 +70,7 @@ const getPlantLotList = async (req, res) => {
             sqlWhere += ` AND pl."plantedOn" <= ${new Date(toDate).getTime()}`;
         }
 
+        sqlWhere += ` AND pl."locationId" IN (${req.GROWINGLOCATION})`;
         sqlWhere += ` AND pl."strainId" = s.id AND pl."specieId" = s2.id AND pl."companyId" = c.id AND pl."licenseId" = lic.id
           AND pl."locationId" = l.id  AND pl."subLocationId" = sl.id AND pl."createdBy" = u2.id
         `;

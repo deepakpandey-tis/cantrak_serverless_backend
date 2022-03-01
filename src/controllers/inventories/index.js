@@ -10,7 +10,7 @@ const updateWasteMaterial = require('./update-waste-material');
 const importWasteMaterial = require('./import-waste-material');
 const getWasteMaterialList = require('./get-waste-material-list');
 const getWasteMaterial = require('./get-waste-material');
-const getRawMaterialForPlantList = require('./get-raw-material-for-plant-list');
+// const getRawMaterialForPlantList = require('./get-raw-material-for-plant-list');
 const getInventoryItemsList = require('./get-inventory-items-list');
 const getItemAvailableLotNos = require('./get-item-available-lotnos');
 const getItemLotList = require('./get-item-lot-list');
@@ -29,6 +29,21 @@ const getStorageLocationIssueRegister = require('./get-storage-location-issue-re
 const getStorageLocationIssueRegisterExcel = require('./get-storage-location-issue-register-excel');
 const getStorageLocationAdjustmentRegister = require('./get-storage-location-adjustment-register');
 
+const getCompanies = require('./masters/get-companies');
+const getUMs = require('./masters/get-ums');
+const getItemCategories = require('./masters/get-item-categories');
+const getItems = require('./masters/get-items');
+const getSpecies = require('./masters/get-species');
+const getStrains = require('./masters/get-strains');
+const getSuppliers = require('./masters/get-suppliers');
+const getStorageLocations = require('./masters/get-storage-locations');
+const getTxnTypes = require('./masters/get-txn-types');
+const getTxnSubTypes = require('./masters/get-txn-sub-types');
+
+const getLicenses = require('./licenses/get-licenses');
+const getLicenseNars = require('./licenses/get-license-nars');
+const getLicenseNarItems = require('./licenses/get-license-nar-items');
+
 module.exports = {
     addItemFromImportLicense,
     updateItemFromImportLicense,
@@ -42,7 +57,7 @@ module.exports = {
     importWasteMaterial,
     getWasteMaterialList,
     getWasteMaterial,
-    getRawMaterialForPlantList,
+    // getRawMaterialForPlantList,
     getInventoryItemsList,
     getItemAvailableLotNos,
     getItemLotList,
@@ -60,4 +75,19 @@ module.exports = {
     getStorageLocationIssueRegister,
     getStorageLocationIssueRegisterExcel,
     getStorageLocationAdjustmentRegister,
+
+    getCompanies,
+    getUMs,
+    getItemCategories,
+    getItems,
+    getSpecies,
+    getStrains,
+    getSuppliers,
+    getStorageLocations,
+    getTxnTypes,
+    getTxnSubTypes,
+
+    getLicenses,
+    getLicenseNars,
+    getLicenseNarItems,
 };

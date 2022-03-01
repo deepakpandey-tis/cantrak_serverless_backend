@@ -332,7 +332,7 @@ const allUsersController = {
                             "role_resource_master.roleId"
                         )
                         .select([
-                            "team_roles_project_master.projectId as projectId",
+                            "team_roles_project_master.locationId as locationId",
                             "role_resource_master.resourceId as resourceId"
                         ])
                         .where({
@@ -348,7 +348,7 @@ const allUsersController = {
                         .groupBy("resourceId")
                         .map((value, key) => ({
                             id: key,
-                            projects: value.map(a => a.projectId)
+                            locations: value.map(a => a.locationId)
                         }))
                         .value();
                     login.user.userProjectResources = userProjectResources;
