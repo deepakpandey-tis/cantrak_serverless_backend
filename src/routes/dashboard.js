@@ -30,6 +30,42 @@ router.post('/get-cultivation-license-statistics',
   dashboardController.getCultivationLicenseStatistics
 );
 
+router.post('/get-waste-plant-count',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  dashboardController.getWastePlantCount
+);
+
+router.post('/get-total-plants',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  dashboardController.getTotalPlants
+);
+
+
+router.get('/get-companies',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  dashboardController.getCompanies
+);
+
+router.post('/get-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  dashboardController.getLocations
+);
+
+router.post('/get-sub-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  dashboardController.getSubLocations
+);
+
 
 module.exports = router;
 

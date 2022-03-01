@@ -98,13 +98,13 @@ router.post('/import-waste-material',
   inventoriesController.importWasteMaterial
 );
 
-router.post('/get-raw-material-for-plant-list',
+/* router.post('/get-raw-material-for-plant-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   inventoriesController.getRawMaterialForPlantList
 );
-
+ */
 router.post('/get-item-available-lotnos',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -215,6 +215,99 @@ router.post('/get-storage-location-adjustment-register',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   inventoriesController.getStorageLocationAdjustmentRegister
+);
+
+
+router.post('/get-licenses',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getLicenses
+);
+
+router.post('/get-license-nars',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getLicenseNars
+);
+
+router.post('/get-license-nar-items',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getLicenseNarItems
+);
+
+
+router.get('/get-companies',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getCompanies
+);
+
+router.get('/get-ums',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getUMs
+);
+
+router.get('/get-item-categories',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getItemCategories
+);
+
+router.post('/get-items',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getItems
+);
+
+router.post('/get-species',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getSpecies
+);
+
+router.post('/get-strains',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getStrains
+);
+
+router.get('/get-suppliers',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getSuppliers
+);
+
+router.post('/get-storage-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getStorageLocations
+);
+
+router.get('/get-txn-types',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getTxnTypes
+);
+
+router.post('/get-txn-sub-types',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getTxnSubTypes
 );
 
 module.exports = router;
