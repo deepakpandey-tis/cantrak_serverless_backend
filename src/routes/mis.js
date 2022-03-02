@@ -7,6 +7,13 @@ const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddlewar
 const misController = require('../controllers/mis');
 
 
+router.post('/get-batch-lotnos',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  misController.getBatchLotNos
+);
+
 router.post('/get-product-lotno-detail',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

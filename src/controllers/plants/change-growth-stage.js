@@ -22,7 +22,7 @@ const changeGrowthStage = async (req, res) => {
         fromGrowthStageId: Joi.number().required(),
         toGrowthStageId: Joi.number().required(),
         totalPlants: Joi.number().integer().required(),
-//        selectedPlantIds: Joi.array().required(),
+        selectedPlantIds: Joi.array().required(),
     });
 
     const result = Joi.validate(payload, schema);
@@ -41,9 +41,9 @@ const changeGrowthStage = async (req, res) => {
 
     try {
 
-/*         const {selectedPlantIds, ...txnHeader} = req.body;
+        const {selectedPlantIds, ...txnHeader} = req.body;
         const selectedPIds = JSON.parse(selectedPlantIds);
-        const allPlants = selectedPIds.find(r => r.id == 0); */
+        const allPlants = selectedPIds.find(r => r.id == 0);
 
         let currentTime = new Date().getTime();
         let insertData = {
@@ -73,27 +73,35 @@ const changeGrowthStage = async (req, res) => {
             insertedRecord = insertResult[0];
 
             //  Growth Stage Records
-            sqlInsert = `INSERT INTO plant_growth_stages ("orgId", "plantId", "plantGrowthStageTxnId", "growthStageId", "startDate")`;
+            if(allPlants){
+                sqlInsert = `INSERT INTO plant_growth_stages ("orgId", "plantId", "plantGrowthStageTxnId", "growthStageId", "startDate")`;
+                sqlSelect = ` SELECT ${orgId}, p.id, ${insertedRecord.id}, ${payload.toGrowthStageId}, ${new Date(payload.date).getTime()}`;
+                sqlFrom = ` FROM plants p, plant_lots pl, plant_locations ploc`;
+                sqlWhere = ` WHERE pl.id = ${payload.plantLotId} AND p."plantLotId" = pl.id and p.id = ploc."plantId"`;
+                sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND ploc."locationId" = ${payload.locationId} AND ploc."subLocationId" = ${payload.subLocationId}`;
+
+                sqlStr = sqlInsert + sqlSelect + sqlFrom + sqlWhere;
+            } else {
+                sqlInsert = `INSERT INTO plant_growth_stages ("orgId", "plantId", "plantGrowthStageTxnId", "growthStageId", "startDate")`;
+                sqlSelect = ` SELECT ${orgId}, p.id, ${insertedRecord.id}, ${payload.toGrowthStageId}, ${new Date(payload.date).getTime()}`;
+                sqlFrom = ` FROM jsonb_to_recordset('${selectedPlantIds}') as p(id bigint)`;
+
+                sqlStr = sqlInsert + sqlSelect + sqlFrom;
+            }
+
+
+/*             sqlInsert = `INSERT INTO plant_growth_stages ("orgId", "plantId", "plantGrowthStageTxnId", "growthStageId", "startDate")`;
             sqlSelect = ` SELECT ${orgId}, p.id, ${insertedRecord.id}, ${payload.toGrowthStageId}, ${new Date(payload.date).getTime()}`;
             sqlFrom = ` FROM plants p, plant_lots pl, plant_locations ploc`;
             sqlWhere = ` WHERE pl.id = ${payload.plantLotId} AND p."plantLotId" = pl.id and p.id = ploc."plantId"`;
             sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND ploc."locationId" = ${payload.locationId} AND ploc."subLocationId" = ${payload.subLocationId}`;
 
             sqlStr = sqlInsert + sqlSelect + sqlFrom + sqlWhere;
+ */
+            console.log('Change Growth Stage Detail insert sql: ', sqlStr);
 
             await knex.raw(sqlStr);
 
-/*             if(allPlants){
-                console.log('ALL PLANTS');
-            } else {
-                sqlInsert = `INSERT INTO plant_growth_stages ("orgId", "plantId", "plantTxnId", "growthStageId", "startDate")`;
-                sqlInsert += ` SELECT ${orgId}, plant.id, ${insertedRecord.id}, ${txnHeader.toGrowthStageId}, ${new Date(txnHeader.date).getTime()}`;
-                sqlInsert += ` FROM jsonb_to_recordset('${selectedPlantIds}') as plant(id bigint)`;
-                console.log('SELECTED PLANTS: ', sqlInsert);
-            }
-
-            await knex.raw(sqlInsert); */
-  
             trx.commit;
         });
 

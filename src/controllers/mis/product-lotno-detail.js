@@ -1,5 +1,12 @@
 const knexReader = require('../../db/knex-reader');
 
+const BatchTypes ={
+    Production: 1,
+    Harvest: 2,
+    Plants: 3,
+    RawMaterial: 4,
+};
+
 const getProductLotNoDetail = async (req, res) => {
     try {
         let orgId = req.me.orgId;
@@ -8,12 +15,27 @@ const getProductLotNoDetail = async (req, res) => {
 
         let reqData = req.query;
 
-        let { companyId, lotNo } = req.body;
+        let { companyId, batchTypeId, lotNo } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
         let validProductionLotNo, validHarvestLotNo, validPlantLotNo, validRawMaterialLotNo, lotNoDetail, result;
         let validProductionHarvestLotNo, validHarvestPlantLotNo;
 
+
+        var productionOutputDetail = { rows: [] };
+        var productionInputDetail = { rows: [] };
+        var selectedHarvestRecs = { rows: [] };
+        var selectedPlantLotRecs = { rows: [] };
+        var selectedRawMaterialLotRecs = { rows: [] };
+
+        validProductionLotNo = false;
+        validHarvestLotNo = false;
+        validProductionHarvestLotNo = false;
+        validPlantLotNo = false;
+        validHarvestPlantLotNo = false;
+        validRawMaterialLotNo = false;
+
+    if(batchTypeId == BatchTypes.Production){
 
         //  if lotNo is a production_lot number
         //  1a. Production Output Items of product lotNo; child is Production 'Output Items'
@@ -44,7 +66,8 @@ const getProductLotNoDetail = async (req, res) => {
 
         //console.log('getProductLotNoDetail: ', sqlStr);
         
-        var productionOutputDetail = await knexReader.raw(sqlStr);
+        // var productionOutputDetail = await knexReader.raw(sqlStr);
+        productionOutputDetail = await knexReader.raw(sqlStr);
         // console.log('productionOutputDetail: ', productionOutputDetail);
 
 
@@ -76,11 +99,16 @@ const getProductLotNoDetail = async (req, res) => {
 
         //console.log('getProductLotNoDetail: ', sqlStr);
         
-        var productionInputDetail = await knexReader.raw(sqlStr);
+        // var productionInputDetail = await knexReader.raw(sqlStr);
+        productionInputDetail = await knexReader.raw(sqlStr);
         // console.log('productionInputDetail: ', productionInputDetail);
 
         //  Whether lotNo is of Production
         validProductionLotNo = productionInputDetail.rows.length > 0;
+
+    }
+
+    if(validProductionLotNo || batchTypeId == BatchTypes.Harvest){
 
         //  2. Harvest detail of item used in production
         sqlSelect = `SELECT hpl.*, it.*, i."name" "itemName", i.gtin "itemGtin", ic.name "itemCategoryName", u."name"  "itemUM", u.abbreviation "itemUMAbbreviation", sl.name "itemStorageLocation"
@@ -91,7 +119,7 @@ const getProductLotNoDetail = async (req, res) => {
         `;
 
         /* */
-        var selectedHarvestRecs = { rows: [] };
+        // var selectedHarvestRecs = { rows: [] };
 
         validHarvestLotNo = false;
         validProductionHarvestLotNo = false;
@@ -147,6 +175,10 @@ const getProductLotNoDetail = async (req, res) => {
         }
         /* */
 
+    }
+
+
+    if(validProductionLotNo || validProductionHarvestLotNo || validHarvestLotNo || batchTypeId == BatchTypes.Plants){
 
         //  3. Plant detail of harvested item used in production
         sqlSelect = `SELECT pl.*, CONCAT('Planted: ', pl."plantsCount", ' Plants') "cardHeading", l."number" "licenseNumber", l2."name" "plantLocation"
@@ -174,7 +206,7 @@ const getProductLotNoDetail = async (req, res) => {
         `;
 
         /* */
-        var selectedPlantLotRecs = { rows: [] };
+        // var selectedPlantLotRecs = { rows: [] };
 
         validPlantLotNo = false;
         validHarvestPlantLotNo = false;
@@ -267,8 +299,12 @@ const getProductLotNoDetail = async (req, res) => {
         }
         /* */
 
+    }
+
+    if(batchTypeId == BatchTypes.RawMaterial){
+
         //  4. lotNo neither of Production nor of Harvest nor of Plant Lot, is if of Raw Material?
-        var selectedRawMaterialLotRecs = { rows: [] };
+        // var selectedRawMaterialLotRecs = { rows: [] };
 
         validRawMaterialLotNo = false;
 
@@ -299,47 +335,49 @@ const getProductLotNoDetail = async (req, res) => {
             validRawMaterialLotNo = selectedRawMaterialLotRecs.rows.length > 0;
         }
 
-            lotNoDetail = {};
+    }
+    
+        lotNoDetail = {};
 
-            /* */
-            let productionOutput = [{...productionOutputDetail.rows[0]}];
-            let data = [{}];
-            
-            if(validProductionLotNo){
-                data = productionInputDetail.rows;
-            }
-            else if(validHarvestLotNo){
-                data[0].child = selectedHarvestRecs.rows;
-                data[0].treeLabel = 'Harvest'
-            }
-            else if(validPlantLotNo){
-                data[0].child = selectedPlantLotRecs.rows;
-                data[0].treeLabel = 'Plants'
-            }
-            else if(validRawMaterialLotNo){
-                data[0].child = selectedRawMaterialLotRecs.rows;
-                data[0].treeLabel = 'Raw Material'
-            }
-            /* */
+        /* */
+        let productionOutput = [{...productionOutputDetail.rows[0]}];
+        let data = [{}];
+        
+        if(validProductionLotNo){
+            data = productionInputDetail.rows;
+        }
+        else if(validHarvestLotNo){
+            data[0].child = selectedHarvestRecs.rows;
+            data[0].treeLabel = 'Harvest'
+        }
+        else if(validPlantLotNo){
+            data[0].child = selectedPlantLotRecs.rows;
+            data[0].treeLabel = 'Plants'
+        }
+        else if(validRawMaterialLotNo){
+            data[0].child = selectedRawMaterialLotRecs.rows;
+            data[0].treeLabel = 'Raw Material'
+        }
+        /* */
 
-            lotNoDetail = {
-                productionOutput: productionOutput,
-                data: data,
+        lotNoDetail = {
+            productionOutput: productionOutput,
+            data: data,
 
-                productionInputDetail: productionInputDetail.rows,
-                productionOutputDetail: productionOutputDetail.rows,
-                harvestDetail: selectedHarvestRecs.rows,
-                plantLotDetail: selectedPlantLotRecs.rows,
-                rawMaterialLotDetail: selectedRawMaterialLotRecs.rows,
-            };
-            console.log('lotNoDetail: ', lotNoDetail);
+            productionInputDetail: productionInputDetail.rows,
+            productionOutputDetail: productionOutputDetail.rows,
+            harvestDetail: selectedHarvestRecs.rows,
+            plantLotDetail: selectedPlantLotRecs.rows,
+            rawMaterialLotDetail: selectedRawMaterialLotRecs.rows,
+        };
+        console.log('lotNoDetail: ', lotNoDetail);
 
-            result = {
-                data: {
-                    records: lotNoDetail,
-                    message: "Product Lot No. Detail!"
-                }
-            }            
+        result = {
+            data: {
+                records: lotNoDetail,
+                message: "Product Lot No. Detail!"
+            }
+        }            
 
         //console.log(result.data)
 
