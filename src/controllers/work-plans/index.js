@@ -11,6 +11,11 @@ const updateWorkOrderDate = require('./update-work-order-date');
 const cancelWorkOrder = require('./cancel-work-order');
 const updateWorkOrderTasksStatus = require('./update-work-order-tasks-status');
 
+const getCompanies = require('./masters/get-companies');
+const getLocations = require('./masters/get-locations');
+const getLocationList = require('./masters/get-location-list');
+const getSubLocations = require('./masters/get-sub-locations');
+
 module.exports = {
     getWorkPlanList,
 //    getWorkPlans,
@@ -24,4 +29,9 @@ module.exports = {
     updateWorkOrderDate,
     cancelWorkOrder,
     updateWorkOrderTasksStatus,
+
+    getCompanies,
+    getLocations,
+    getLocationList,
+    getSubLocations
 };
