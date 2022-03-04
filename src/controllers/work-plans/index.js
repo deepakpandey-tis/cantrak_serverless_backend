@@ -15,6 +15,7 @@ const getCompanies = require('./masters/get-companies');
 const getLocations = require('./masters/get-locations');
 const getLocationList = require('./masters/get-location-list');
 const getSubLocations = require('./masters/get-sub-locations');
+const getLocationsSubLocations = require('./masters/get-locations-sub-locations');
 
 module.exports = {
     getWorkPlanList,
@@ -33,5 +34,6 @@ module.exports = {
     getCompanies,
     getLocations,
     getLocationList,
-    getSubLocations
+    getSubLocations,
+    getLocationsSubLocations,
 };
