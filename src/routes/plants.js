@@ -14,6 +14,13 @@ router.post('/get-lot-plant-list',
   plantController.getLotPlantList
 );
 
+router.post('/get-observations-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getObservationsList
+);
+
 router.get('/get-plants',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

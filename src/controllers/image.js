@@ -87,7 +87,7 @@ const imageController = {
         });
       }
 
-      const uploadedImageTags = await knex('image_tags').insert(payload).returning(['*']);
+      const uploadedImageTags = await knex('image_tags').insert({ ...payload, orgId: req?.me?.orgId }).returning(['*']);
       return res.status(200).json({
         data: uploadedImageTags,
         message: 'Image Tags uploaded!'

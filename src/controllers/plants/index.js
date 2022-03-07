@@ -33,7 +33,7 @@ const getStrains = require('./masters/get-strains');
 const getSubLocations = require('./masters/get-sub-locations');
 const getGrowthStages = require('./masters/get-growth-stages');
 const getStorageLocations = require('./masters/get-storage-locations');
-
+const getObservationsList = require('./get-observations-list');
 
 module.exports = {
     getLotPlantList,
@@ -71,4 +71,5 @@ module.exports = {
     getSubLocations,
     getGrowthStages,
     getStorageLocations,
+    getObservationsList
 };
