@@ -8,7 +8,7 @@ const getWorkPlan = async (req, res) => {
 
         let payload = req.body;
 
-        let sqlStr, sqlSelect, sqlFrom, sqlWhere;
+        let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         const schema = Joi.object().keys({
             id: Joi.string().required()
@@ -43,7 +43,7 @@ const getWorkPlan = async (req, res) => {
         var workPlanTasks = await knexReader.raw(sqlStr);
 
         //  Get Work Plan Selected Locations
-        //  Checking if All Locations selected
+/*         //  Checking if All Locations selected
         const allLocations = selectedRecs.rows[0].locationIds.find(r => r.id == 0);
 
         sqlSelect = `SELECT l.id, l.name`;
@@ -58,8 +58,15 @@ const getWorkPlan = async (req, res) => {
             sqlWhere += ` SELECT location.id from work_plan_master wpm , jsonb_to_recordset(wpm."locationIds") as location(id bigint) where wpm.id = ${payload.id}`;
             sqlWhere += `)`;
         }
+ */
 
-        sqlStr = sqlSelect + sqlFrom + sqlWhere;
+        sqlSelect = `SELECT l.id, l.name, sl.id "subLocationId", sl.name "subLocationName"`;
+        sqlFrom = ` FROM locations l, sub_locations sl`;
+        sqlWhere = ` WHERE l."orgId" = ${orgId} AND l."companyId" = ${selectedRecs.rows[0].companyId} AND l.id = sl."locationId"`;
+        sqlWhere += ` AND sl.id IN (SELECT UNNEST(string_to_array(regexp_replace(location."subLocationId", '[\\[ \\]]', '', 'g'), ',')::bigint[]) FROM work_plan_master wpm , jsonb_to_recordset(wpm."locationIds") as location(id bigint, "subLocationId" varchar) where wpm.id = ${payload.id})`;
+        sqlOrderBy = ` ORDER BY l.name, sl.name`;
+
+        sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
 
         var workPlanLocations = await knexReader.raw(sqlStr);
 

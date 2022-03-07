@@ -38,15 +38,15 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT wps.*
         , wpsal."id" "workOrderId", wpsal."displayId", wpsal."name", wpsal."locationId", wpsal."workOrderDate", wpsal."isOverdue", wpsal."status", wpsal."frequencyTag"
-        , l."name" "locationName"
+        , l."name" "locationName", sl."name" "subLocationName"
         `;
 
-        sqlFrom = ` FROM work_plan_schedules wps, work_plan_schedule_assign_locations wpsal, locations l
+        sqlFrom = ` FROM work_plan_schedules wps, work_plan_schedule_assign_locations wpsal, locations l, sub_locations sl
         `;
 
         sqlWhere = ` WHERE wps."orgId" = ${orgId} AND wps."workPlanMasterId" = ${id}`;
 
-        sqlWhere += ` AND wpsal."workPlanScheduleId" = wps.id AND wpsal."workOrderDate" <= ${workOrderDate} AND wpsal."locationId" = l.id`;
+        sqlWhere += ` AND wpsal."workPlanScheduleId" = wps.id AND wpsal."workOrderDate" <= ${workOrderDate} AND wpsal."locationId" = l.id AND wpsal."subLocationId" = sl.id`;
         if(locationId){
             sqlWhere += ` AND wpsal."locationId" = ${locationId}`;
         }
@@ -63,7 +63,7 @@ const getWorkPlanWorkOrderList = async (req, res) => {
             sqlWhere += ` AND wpsal."status" in ${str}`;
         }
 
-        sqlOrderBy = ` ORDER BY "workOrderDate" desc, "displayId" desc, "locationName" asc, name asc`;
+        sqlOrderBy = ` ORDER BY "workOrderDate" desc, "displayId" desc, "locationName" asc, "subLocationName" asc, name asc`;
         //sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
         //console.log('getWorkPlanWorkOrderList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
