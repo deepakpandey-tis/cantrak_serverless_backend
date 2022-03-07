@@ -22,13 +22,14 @@ const getWorkOrder = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT wpsa.*, c."companyName", l.name "locationName"`;
+        sqlSelect = `SELECT wpsa.*, c."companyName", l.name "locationName", sl.name "subLocationName"`;
 
-        sqlFrom = ` FROM work_plan_schedule_assign_locations wpsa, companies c, locations l`;
+        sqlFrom = ` FROM work_plan_schedule_assign_locations wpsa, companies c, locations l, sub_locations sl`;
 
         sqlWhere = ` WHERE wpsa.id = ${payload.id} AND wpsa."orgId" = ${orgId}`;
         sqlWhere += ` AND wpsa."companyId" = c.id AND wpsa."orgId" = c."orgId"`;
         sqlWhere += ` AND wpsa."locationId" = l.id AND wpsa."orgId" = l."orgId"`;
+        sqlWhere += ` AND wpsa."subLocationId" = sl.id AND wpsa."orgId" = sl."orgId"`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 
