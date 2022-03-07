@@ -120,4 +120,11 @@ router.post('/get-sub-locations',
   workPlanController.getSubLocations
 );
 
+router.post('/get-locations-sub-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  workPlanController.getLocationsSubLocations
+);
+
 module.exports = router;
