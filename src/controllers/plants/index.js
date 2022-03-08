@@ -12,8 +12,10 @@ const checkLotNameExists = require('./check-lot-name-exists');
 const getPlantLotLocations = require('./get-plant-lot-locations');
 const getPlantLotSubLocations = require('./get-plant-lot-sub-locations');
 const getGrowthStageTxnList = require('./get-growth-stage-txn-list');
+const getGrowthStageTxn = require('./get-growth-stage-txn');
 const changeLocation = require('./change-location');
 const getLocationTxnList = require('./get-location-txn-list');
+const getLocationTxn = require('./get-location-txn');
 const wasteEntry = require('./waste-entry');
 const getWasteTxnList = require('./get-waste-txn-list');
 const getWasteTxn = require('./get-waste-txn');
@@ -33,7 +35,9 @@ const getStrains = require('./masters/get-strains');
 const getSubLocations = require('./masters/get-sub-locations');
 const getGrowthStages = require('./masters/get-growth-stages');
 const getStorageLocations = require('./masters/get-storage-locations');
+
 const getObservationsList = require('./get-observations-list');
+const getImages = require('./get-images');
 
 module.exports = {
     getLotPlantList,
@@ -50,8 +54,10 @@ module.exports = {
     getPlantLotLocations,
     getPlantLotSubLocations,
     getGrowthStageTxnList,
+    getGrowthStageTxn,
     changeLocation,
     getLocationTxnList,
+    getLocationTxn,
     wasteEntry,
     getWasteTxnList,
     getWasteTxn,
@@ -71,5 +77,7 @@ module.exports = {
     getSubLocations,
     getGrowthStages,
     getStorageLocations,
-    getObservationsList
+
+    getObservationsList,
+    getImages,
 };
