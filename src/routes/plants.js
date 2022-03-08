@@ -14,6 +14,13 @@ router.post('/get-lot-plant-list',
   plantController.getLotPlantList
 );
 
+router.post('/get-observations-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getObservationsList
+);
+
 router.get('/get-plants',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -105,6 +112,13 @@ router.post('/get-growth-stage-txn-list',
   plantController.getGrowthStageTxnList
 );
 
+router.post('/get-growth-stage-txn',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getGrowthStageTxn
+);
+
 router.post('/change-location',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -117,6 +131,13 @@ router.post('/get-location-txn-list',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   plantController.getLocationTxnList
+);
+
+router.post('/get-location-txn',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getLocationTxn
 );
 
 router.post('/waste-entry',
@@ -167,6 +188,13 @@ router.post('/get-raw-material-for-plant-list',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   plantController.getRawMaterialForPlantList
+);
+
+router.post('/get-images',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getImages
 );
 
 

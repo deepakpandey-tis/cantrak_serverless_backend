@@ -23,6 +23,7 @@ const changeGrowthStage = async (req, res) => {
         toGrowthStageId: Joi.number().required(),
         totalPlants: Joi.number().integer().required(),
         selectedPlantIds: Joi.array().required(),
+        remark: Joi.string().allow(null).allow('').required(),
     });
 
     const result = Joi.validate(payload, schema);
@@ -101,6 +102,26 @@ const changeGrowthStage = async (req, res) => {
             console.log('Change Growth Stage Detail insert sql: ', sqlStr);
 
             await knex.raw(sqlStr);
+
+            //  Optional Remark
+            if(payload.remark && payload.remark.trim() != ''){
+                insertData = {
+                    entityId: insertedRecord.id,
+                    entityType: "plant_change_growth_stage",
+                    description: payload.remark.trim(),
+                    orgId: req.orgId,
+                    createdBy: req.me.id,
+                    createdAt: currentTime,
+                    updatedAt: currentTime,
+                };
+                console.log('Plant change growth stage record: ', insertData);
+
+                const insertRemarkResult = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("remarks_master");
+            }
 
             trx.commit;
         });

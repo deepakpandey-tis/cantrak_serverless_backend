@@ -24,6 +24,7 @@ const changeLocation = async (req, res) => {
         toSubLocationId: Joi.number().required(),
         totalPlants: Joi.number().integer().required(),
         selectedPlantIds: Joi.array().required(),
+        remark: Joi.string().allow(null).allow('').required(),
     });
 
     const result = Joi.validate(payload, schema);
@@ -42,7 +43,7 @@ const changeLocation = async (req, res) => {
 
     try {
 
-        const {selectedPlantIds, ...txnHeader} = req.body;
+        const {selectedPlantIds, remark, ...txnHeader} = req.body;
         const selectedPIds = JSON.parse(selectedPlantIds);
         const allPlants = selectedPIds.find(r => r.id == 0);
 
@@ -103,6 +104,26 @@ const changeLocation = async (req, res) => {
 
             await knex.raw(sqlInsert); */
   
+            //  Optional Remark
+            if(payload.remark && payload.remark.trim() != ''){
+                insertData = {
+                    entityId: insertedRecord.id,
+                    entityType: "plant_change_location",
+                    description: payload.remark.trim(),
+                    orgId: req.orgId,
+                    createdBy: req.me.id,
+                    createdAt: currentTime,
+                    updatedAt: currentTime,
+                };
+                console.log('Plant change location record: ', insertData);
+
+                const insertRemarkResult = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("remarks_master");
+            }
+
             trx.commit;
         });
 
