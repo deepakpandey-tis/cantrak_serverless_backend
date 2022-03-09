@@ -28,7 +28,7 @@ const getLocationTxn = async (req, res) => {
         `;
 
         sqlFrom = ` FROM plant_location_txns plt
-        LEFT JOIN remarks_master rm ON pgst.id = rm."entityId" and rm."entityType" = 'plant_change_location'
+        LEFT JOIN remarks_master rm ON plt.id = rm."entityId" and rm."entityType" = 'plant_change_location'
         , plant_lots pl, locations l, sub_locations sl, locations l2, sub_locations sl2
         , growth_stages gs, strains s, species s2, companies c
         `;
