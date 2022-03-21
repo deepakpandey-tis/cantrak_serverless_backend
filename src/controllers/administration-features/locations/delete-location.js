@@ -43,6 +43,7 @@ const deleteLocation = async (req, res) => {
         }
  */
 
+/* 2022/03/21 Sub Growing Location part of Growing Location Form, Deleting Growing Location also deletes Sub Growing Locations
         //  Delete record
         sqlStr = `DELETE FROM locations WHERE "id" = ${payload.id} AND "orgId" = ${orgId} AND "companyId" = ${payload.companyId}`;
 
@@ -56,10 +57,30 @@ const deleteLocation = async (req, res) => {
                 ]
             });
         }
+ */
+
+        let deletedLocation;
+        let deletedSubLocations;
+        await knex.transaction(async (trx) => {
+            // First delete sub growing locations
+            deletedSubLocations = await knex('sub_locations')
+                .delete()
+                .where({ locationId: payload.id, orgId: orgId, companyId: payload.companyId })
+                .returning(["*"])
+                .transacting(trx)
+
+            // Now delete growing locations
+            deletedLocation = await knex('locations')
+                .delete()
+                .where({ id: payload.id, orgId: orgId, companyId: payload.companyId })
+                .returning(["*"])
+                .transacting(trx)
+        });
 
         return res.status(200).json({
             data: {
-                record: deletedRecs
+                locationRecord: deletedLocation,
+                subLocationRecords: deletedSubLocations
             },
             message: 'Growing Location deleted successfully.'
         });
