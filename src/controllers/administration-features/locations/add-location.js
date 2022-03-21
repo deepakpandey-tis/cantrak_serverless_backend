@@ -10,11 +10,14 @@ const addLocation = async (req, res) => {
         const payload = req.body;
 
         let insertedRecord = [];
+        let insertedSubLocationRecords = [];
+        let subLocationRecNo;
 
         const schema = Joi.object().keys({
             name: Joi.string().required(),
             description: Joi.string().allow("").required(),
             companyId: Joi.string().required(),
+            subLocations: Joi.array().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -49,6 +52,7 @@ const addLocation = async (req, res) => {
             });
         }
 
+/* 2022/03/21 Sub Growing Location part of Growing Location Form
         let currentTime = new Date().getTime();
         let insertData = {
             orgId: orgId,
@@ -67,12 +71,69 @@ const addLocation = async (req, res) => {
             .into('locations');
 
         insertedRecord = insertResult[0];
+ */
+
+        await knex.transaction(async (trx) => {
+
+            let currentTime = new Date().getTime();
+
+            let insertData = {
+                orgId: orgId,
+                companyId: payload.companyId,
+                name: payload.name.trim(),
+                description: payload.description,
+                createdBy: userId,
+                createdAt: currentTime,
+                updatedBy: userId,
+                updatedAt: currentTime,
+            };
+            console.log('Location insert record: ', insertData);
+
+            const insertResult = await knex
+                .insert(insertData)
+                .returning(["*"])
+                .transacting(trx)
+                .into('locations');
+
+            insertedRecord = insertResult[0];
+
+            // Sub Growing Locations
+            let subLocation;
+
+            subLocationRecNo = 0;
+            for (let rec of payload.subLocations) {
+                subLocation = {
+                    orgId: orgId,
+                    companyId: payload.companyId,
+                    locationId: insertedRecord.id,
+                    name: rec.name.trim(),
+                    description: rec.description,
+                    createdBy: userId,
+                    createdAt: currentTime,
+                    updatedBy: userId,
+                    updatedAt: currentTime,
+                };
+                console.log('sub location: ', subLocation);
+
+                const insertResult = await knex
+                    .insert(subLocation)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into('sub_locations');
+
+                insertedSubLocationRecords[subLocationRecNo] = insertResult[0];
+                subLocationRecNo += 1;
+            }
+
+            trx.commit;
+        });
 
         return res.status(200).json({
             data: {
-                record: insertedRecord
+                record: insertedRecord,
+                subLocations: insertedSubLocationRecords,
             },
-            message: 'Location added successfully.'
+            message: `Growing location with ${subLocationRecNo} sub growing location(s) added successfully.`
         });
     } catch (err) {
         console.log("[controllers][administration-features][locations][addLocation] :  Error", err);
