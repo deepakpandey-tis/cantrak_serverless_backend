@@ -37,6 +37,10 @@ const getLocationList = async (req, res) => {
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT l.*, c."companyName"
         , u2."name" "createdByName"
+        , false "expanded", (SELECT json_agg(row_to_json(sl.*)) "subLocations"
+        FROM (
+        SELECT * FROM sub_locations sl WHERE sl."locationId" = l.id ORDER BY sl.name ) sl
+        )
         `;
 
         sqlFrom = ` FROM locations l, companies c, users u2`;
