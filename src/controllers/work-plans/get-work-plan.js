@@ -23,7 +23,7 @@ const getWorkPlan = async (req, res) => {
         }
 
         //
-        sqlSelect = `SELECT wpm.*, c."companyName", l.name "locationName"`;
+        sqlSelect = `SELECT wpm.*, c."companyName", c."logoFile", l.name "locationName"`;
         sqlFrom = ` FROM work_plan_master wpm, companies c, locations l`;
         sqlWhere = ` WHERE wpm."orgId" = ${orgId} and wpm.id = ${payload.id} `;
         sqlWhere += ` AND wpm."companyId" = c.id AND wpm."orgId" = c."orgId"`;
