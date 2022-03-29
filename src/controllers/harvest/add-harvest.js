@@ -35,6 +35,7 @@ const addHarvest = async (req, res) => {
         let insertedRecord = [];
         let insertedProductRecords = [];
         let insertedWasteRecords = [];
+        let sqlStr;
 
         const schema = Joi.object().keys({
             companyId: Joi.string().required(),
@@ -139,6 +140,17 @@ const addHarvest = async (req, res) => {
                 insertedProductRecords[productRecNo] = insertResult[0];
                 if(productRecNo == 1){
                     txnId = insertedProductRecords[productRecNo].txnId;
+                }
+
+                //  Add Product's plants weight txns
+                if(rec.plantsWeight.length > 0){
+                    sqlStr = `INSERT INTO harvest_product_plants_weight ("orgId", "companyId", "harvestPlantLotId", "itemId", "itemTxnId", "plantId", "plantWeight")
+                    SELECT ${orgId}, ${payload.companyId}, ${insertedRecord.id}, ${rec.itemId}, ${insertedProductRecords[productRecNo].id}
+                    , x."plantId", coalesce(x."plantWeight", 0) FROM json_to_recordset('${JSON.stringify(rec.plantsWeight)}') as x("plantId" bigint, "plantWeight" float)
+                    `;
+        
+                    console.log('plant weight sql: ', sqlStr);
+                    var insertedRecs = await knex.raw(sqlStr).transacting(trx);
                 }
             }
 

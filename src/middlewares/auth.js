@@ -4,6 +4,12 @@ const createError = require('http-errors');
 var jwt = require('jsonwebtoken');
 const redisHelper = require('../helpers/redis');
 
+const moment = require('moment-timezone');
+
+const isValidTimezone = (timezone) => {
+    return moment.tz.zone(timezone) != null;
+}
+
 
 const authMiddleware = {
 
@@ -27,6 +33,12 @@ const authMiddleware = {
 
                 req.id = decodedTokenData.id;
                 req.orgId = decodedTokenData.orgId;
+                req.timezone = decodedTokenData.timezone;
+
+                if(!req.timezone || !isValidTimezone(req.timezone)) {
+                    req.timezone = 'Asia/Bangkok'
+                }
+                moment.tz.setDefault(req.timezone);
 
                 let currentUser = await knexReader('users').where({ id: decodedTokenData.id }).first();
 
