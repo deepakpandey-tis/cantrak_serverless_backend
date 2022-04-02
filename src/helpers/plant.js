@@ -396,11 +396,8 @@ const plantsHelper = {
         
                     plantsData = await Parallel.map(plantsData, async (plant) => {
                         let qrCodeObj = {
-                            qrName: 'CT:PLANTS:LOTS',
-                            // ownerIds: pd.id,       // For now commenting ownerIds
-                            plantSerial: plant.plantSerial,
-                            lotNo: plant.lotNo,
-                            plantedOn: plant.plantedOn,
+                            qn: 'CT:PLANT:ID',     // For now commenting ownerIds
+                            oid: orgId,
                             id: plant.plantId
                         };
                         let qrString = JSON.stringify(qrCodeObj);
