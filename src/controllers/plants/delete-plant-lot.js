@@ -37,10 +37,10 @@ const deletePlantLot = async (req, res) => {
         wasteCount = locationChangeCount = growthStageChangeCount = harvestCount = 0;
         if(payload.confirm != "confirm"){
             //  Check whether child records exist
-            const wasteSql = `SELECT coalesce(sum(pwt."totalPlants"), 0) "wasteCount" FROM plant_waste_txns pwt WHERE "plantLotId" = ${payload.id};`;
-            const locationSql = `SELECT coalesce(sum(plt."totalPlants"), 0) "locationChangeCount" FROM plant_location_txns plt WHERE "plantLotId" = ${payload.id};`;
-            const growthSql = `SELECT coalesce(sum(pgst."totalPlants"), 0) "growthStageChangeCount" FROM plant_growth_stage_txns pgst WHERE pgst."plantLotId" = ${payload.id};`;
-            const harvestSql = `SELECT coalesce(sum(hpl."plantsCount"), 0) "harvestCount" FROM harvest_plant_lots hpl WHERE hpl."plantLotId" = ${payload.id};`;
+            const wasteSql = `SELECT coalesce(sum(pwt."totalPlants"), 0) "wasteCount" FROM plant_waste_txns pwt WHERE "plantLotId" = ${payload.id} AND "orgId" = ${orgId};`;
+            const locationSql = `SELECT coalesce(sum(plt."totalPlants"), 0) "locationChangeCount" FROM plant_location_txns plt WHERE "plantLotId" = ${payload.id} AND "orgId" = ${orgId};`;
+            const growthSql = `SELECT coalesce(sum(pgst."totalPlants"), 0) "growthStageChangeCount" FROM plant_growth_stage_txns pgst WHERE pgst."plantLotId" = ${payload.id} AND "orgId" = ${orgId};`;
+            const harvestSql = `SELECT coalesce(sum(hpl."plantsCount"), 0) "harvestCount" FROM harvest_plant_lots hpl WHERE hpl."plantLotId" = ${payload.id} AND "orgId" = ${orgId};`;
 
             let wCount, lChangeCount, gStageChangeCount, hCount;
 
@@ -66,7 +66,7 @@ const deletePlantLot = async (req, res) => {
 
         if(!childRecords){
             //  Delete plant lot record
-            sqlStr = `DELETE FROM plant_lots WHERE id = ${payload.id}`;
+            sqlStr = `DELETE FROM plant_lots WHERE id = ${payload.id} AND "orgId" = ${orgId}`;
             deletedRecord = await knex.raw(sqlStr);
 
             message = `Plant lot deleted successfully.`
