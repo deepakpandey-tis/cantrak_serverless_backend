@@ -35,7 +35,7 @@ const getImportLicenseStatistics = async (req, res) => {
         , (SELECT json_agg(row_to_json(o.*)) nars
         FROM (SELECT ln2."permitNumber" , coalesce(sum(lni.quantity), 0) "totalNarQuantity"
         FROM license_nar_items lni , license_nars ln2 , licenses l2
-        WHERE l2.number = l."number" and ln2."licenseId" = l2.id and l2."isActive" and ln2."isActive" and ln2."id" = lni."licenseNarId"
+        WHERE l2.number = l."number" and ln2."licenseId" = l2.id and l2."isActive" and ln2."isActive" and ln2."id" = lni."licenseNarId" and lni."licenseItemId" = li.id
         GROUP BY l2."number", ln2."permitNumber") o
         )
         `;
@@ -48,7 +48,7 @@ const getImportLicenseStatistics = async (req, res) => {
 
         sqlWhere += `  AND li."licenseId" = l.id AND l."licenseTypeId" = ${LicenseType.Import} AND l."licenseTypeId" = lt.id`;
 
-        sqlGroupBy  = ` GROUP BY l."number", lt."name"`;
+        sqlGroupBy  = ` GROUP BY l."number", lt."name", li."id"`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlGroupBy;
 

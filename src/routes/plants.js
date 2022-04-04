@@ -42,6 +42,13 @@ router.post('/add-plant',
   plantController.addPlant
 );
 
+router.post('/delete-plant-lot',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.deletePlantLot
+);
+
 router.post('/delete-plant',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
