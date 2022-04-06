@@ -86,4 +86,18 @@ router.post('/get-storage-locations',
   harvestController.getStorageLocations
 );
 
+router.post('/get-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getLocations
+);
+
+router.post('/get-sub-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getSubLocations
+);
+
 module.exports = router;

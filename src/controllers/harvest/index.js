@@ -11,6 +11,8 @@ const getLotPlantList = require('./plants/get-lot-plant-list');
 const getCompanies = require('./masters/get-companies');
 const getItems = require('./masters/get-items');
 const getStorageLocations = require('./masters/get-storage-locations');
+const getLocations = require('./masters/get-locations');
+const getSubLocations = require('./masters/get-sub-locations');
 
 module.exports = {
     addHarvest,
@@ -26,4 +28,6 @@ module.exports = {
     getCompanies,
     getItems,
     getStorageLocations,
+    getLocations,
+    getSubLocations,
 };

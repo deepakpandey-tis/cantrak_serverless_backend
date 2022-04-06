@@ -6,6 +6,7 @@ const getPlant = require('./get-plant');
 const addPlant = require('./add-plant');
 const deletePlantLot = require('./delete-plant-lot');
 const deletePlant = require('./delete-plant');
+const updatePlantedDate = require('./update-planted-date');
 const getPlantLotList = require('./get-plant-lot-list');
 const getPlantExistingGrowthStages = require('./get-plant-existing-growth-stages');
 const changeGrowthStage = require('./change-growth-stage');
@@ -49,6 +50,7 @@ module.exports = {
     getPlant,
     deletePlantLot,
     deletePlant,
+    updatePlantedDate,
     getPlantLotList,
     getPlantExistingGrowthStages,
     changeGrowthStage,

@@ -46,6 +46,7 @@ const addHarvest = async (req, res) => {
             specieId: Joi.string().required(),
             strainId: Joi.string().required(),
             isFinalHarvest: Joi.bool().required(),
+            isEntireLot: Joi.bool().required(),
             selectedPlantIds: Joi.array().required(),
             harvestedProducts: Joi.array().required(),
             harvestedWastes: Joi.array().required(),
@@ -76,6 +77,7 @@ const addHarvest = async (req, res) => {
                 licenseId: payload.licenseId,
                 plantsCount: payload.plantsCount,
                 isFinalHarvest: payload.isFinalHarvest,
+                isEntireLot: payload.isEntireLot,
                 plantIds: payload.selectedPlantIds,
                 harvestedOn: new Date(payload.harvestedOn).getTime(),
                 specieId: payload.specieId,
@@ -210,12 +212,14 @@ const addHarvest = async (req, res) => {
               .into("plant_lots");
  */
             // Update Plant Lot with isFinalHarvest
-            plantLotResult = await knex
-              .update({ isFinalHarvest: payload.isFinalHarvest })
-              .where("id", payload.plantLotId)
-              .returning(["*"])
-              .transacting(trx)
-              .into("plant_lots");
+            if(payload.isEntireLot){
+                plantLotResult = await knex
+                .update({ isFinalHarvest: payload.isFinalHarvest })
+                .where("id", payload.plantLotId)
+                .returning(["*"])
+                .transacting(trx)
+                .into("plant_lots");
+            }
 
             // ownerList = plantLotResult[0];
 
