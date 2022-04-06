@@ -23,7 +23,8 @@ const getPlantLot = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT pl.*, c."companyName", s.name "strainName", s2.name "specieName", lic.number "licenseNo", l.name "locationName", sl.name "subLocationName"`;
+        sqlSelect = `SELECT pl.*, c."companyName", s.name "strainName", s2.name "specieName", lic.number "licenseNo", l.name "locationName", sl.name "subLocationName"
+        , (select count(p.id)::int from plants p where p."plantLotId" = pl.id and p."isWaste") "wastePlants"`;
         sqlFrom = ` FROM plant_lots pl, companies c, strains s, species s2, locations l, sub_locations sl, licenses lic`;
         sqlWhere = ` WHERE pl.id = ${payload.id} AND pl."orgId" = ${orgId} `;
         sqlWhere += ` AND pl."locationId" = l.id AND pl."subLocationId" = sl.id AND pl."companyId" = c.id AND pl."strainId" = s.id and pl."specieId" = s2.id AND pl."licenseId" = lic.id`;

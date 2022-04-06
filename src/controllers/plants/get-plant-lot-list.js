@@ -38,6 +38,7 @@ const getPlantLotList = async (req, res) => {
         sqlSelect = `SELECT pl.*
         , s.name "strainName", s2.name "specieName", c."companyName", lic.number "licenseNo"
         , l.name "locationName", sl.name "subLocationName", u2."name" "createdByName"
+        , (select count(p.id)::int from plants p where p."plantLotId" = pl.id and p."isWaste") "wastePlants"
         `;
 
         sqlFrom = ` FROM plant_lots pl, companies c, strains s, species s2, licenses lic

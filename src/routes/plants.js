@@ -56,6 +56,13 @@ router.post('/delete-plant',
   plantController.deletePlant
 );
 
+router.post('/update-planted-date',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.updatePlantedDate
+);
+
 router.post('/get-plant-lot-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

@@ -14,7 +14,7 @@ const getLotPlantList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { id, locationId, subLocationId, fromPlantSerial, uptoPlantSerial } = req.body;
+        let { id, locationId, subLocationId, fromPlantSerial, uptoPlantSerial, getAllPlants } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -83,13 +83,21 @@ const getLotPlantList = async (req, res) => {
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getLotPlantList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
-        sqlStr  = `WITH Main_CTE AS (`;
-        sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
-        sqlStr += `, Count_CTE AS (SELECT COUNT(*) AS "total" FROM Main_CTE)`;     // To get the total number of records
-        sqlStr += ` SELECT * FROM Main_CTE, Count_CTE`;
-        sqlStr += sqlOrderBy;
-        sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
-        sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
+        if(getAllPlants){
+            sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
+        }
+        else {
+            //  Paging used
+
+            sqlStr  = `WITH Main_CTE AS (`;
+            sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
+            sqlStr += `, Count_CTE AS (SELECT COUNT(*) AS "total" FROM Main_CTE)`;     // To get the total number of records
+            sqlStr += ` SELECT * FROM Main_CTE, Count_CTE`;
+            sqlStr += sqlOrderBy;
+            sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
+            sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
+
+        }
 
         //console.log('getLotPlantList: ', sqlStr);
         
