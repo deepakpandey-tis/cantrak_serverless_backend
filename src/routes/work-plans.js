@@ -127,4 +127,18 @@ router.post('/get-locations-sub-locations',
   workPlanController.getLocationsSubLocations
 );
 
+router.post('/add-work-order-task-remark',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  workPlanController.addWorkOrderTaskRemark
+);
+
+router.post('/update-work-order-task-remark',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  workPlanController.updateWorkOrderTaskRemark
+);
+
 module.exports = router;

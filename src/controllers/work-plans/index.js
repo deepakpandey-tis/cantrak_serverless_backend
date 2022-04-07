@@ -10,6 +10,8 @@ const getWorkPlanWorkOrderList = require('./get-work-plan-work-order-list');
 const updateWorkOrderDate = require('./update-work-order-date');
 const cancelWorkOrder = require('./cancel-work-order');
 const updateWorkOrderTasksStatus = require('./update-work-order-tasks-status');
+const addWorkOrderTaskRemark = require('./add-work-order-task-remark');
+const updateWorkOrderTaskRemark = require('./update-work-order-task-remark');
 
 const getCompanies = require('./masters/get-companies');
 const getLocations = require('./masters/get-locations');
@@ -30,6 +32,8 @@ module.exports = {
     updateWorkOrderDate,
     cancelWorkOrder,
     updateWorkOrderTasksStatus,
+    addWorkOrderTaskRemark,
+    updateWorkOrderTaskRemark,
 
     getCompanies,
     getLocations,

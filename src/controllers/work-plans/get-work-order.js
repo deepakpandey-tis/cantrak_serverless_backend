@@ -37,7 +37,11 @@ const getWorkOrder = async (req, res) => {
 
         //  Get Work Order Tasks
         sqlSelect = `SELECT wpslt.*`;
+        sqlSelect += `, rm.id "rmId", rm."entityId" "rmEntityId", rm."description" "rmDescription"`;
+        sqlSelect += `, i.id "imgId", i."entityId" "imgEntityId", i."s3Url" "imgs3Url"`;
         sqlFrom = ` FROM work_plan_schedule_location_tasks wpslt`;
+        sqlFrom += ` LEFT JOIN remarks_master rm ON wpslt.id = rm."entityId" AND rm."entityType" = 'work_order_task'`;
+        sqlFrom += ` LEFT JOIN images i ON wpslt.id = i."entityId" AND i."entityType" = 'work_order_task'`;
         sqlWhere = ` WHERE wpslt."orgId" = ${orgId} and wpslt."workPlanScheduleAssignLocationId" = ${payload.id} `;
         sqlOrderBy = ` ORDER BY wpslt.id asc`;
 
