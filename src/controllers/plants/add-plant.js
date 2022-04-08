@@ -179,7 +179,7 @@ const addPlant = async (req, res) => {
             console.log('plant insert record: ', insertData);
 
             const insertPayload = { ...insertData };
-            ret = await knex.raw('select plants_save(?)', JSON.stringify(insertPayload));
+            ret = await knex.raw('select plants_save(?)', JSON.stringify(insertPayload)).transacting(trx);
             console.log(`[Return]: `, ret);
 
             trx.commit;
