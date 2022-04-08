@@ -1,3 +1,4 @@
+const { boolean } = require('@hapi/joi');
 const knexReader = require('../../db/knex-reader');
 
 const BatchTypes ={
@@ -5,6 +6,23 @@ const BatchTypes ={
     Harvest: 2,
     Plants: 3,
     RawMaterial: 4,
+};
+
+const TxnTypes ={
+    ReceiveFromSupplier: 11,
+    ReceiveProductFromHarvest: 21,
+    ReceiveWasteFromPlantWaste: 22,
+    ReceiveWaste: 23,                          // Inventory option
+    ReceiveFromProduction: 24,
+    AdjustmentAdd: 41,
+    ReceiveFromTxnType: 11,
+    ReceiveUptoTxnType: 50,
+    IssueForPlantation: 51,
+    IssueForProduction: 54,
+    IssueForSale: 55,
+    AdjustmentMinus: 81,
+    IssueFromTxnType: 51,
+    IssueUptoTxnType: 90,
 };
 
 const getProductLotNoDetail = async (req, res) => {
@@ -22,6 +40,11 @@ const getProductLotNoDetail = async (req, res) => {
         let validProductionHarvestLotNo, validHarvestPlantLotNo;
 
 
+        //  to get above lot nos, if exists
+        var productionLotNos = { rows: [] };
+        let hasProductionLotNos = false;
+        //
+
         var productionOutputDetail = { rows: [] };
         var productionInputDetail = { rows: [] };
         var selectedHarvestRecs = { rows: [] };
@@ -35,7 +58,23 @@ const getProductLotNoDetail = async (req, res) => {
         validHarvestPlantLotNo = false;
         validRawMaterialLotNo = false;
 
-    if(batchTypeId == BatchTypes.Production){
+    if(batchTypeId == BatchTypes.Harvest){
+        //  get production lot nos of selected harvest lot no
+        sqlSelect = `SELECT array_agg(DISTINCT pl."lotNo") "lotNos"`;
+        sqlFrom = ` FROM production_lots pl , item_txns it`;
+        sqlWhere = ` WHERE it."productionLotId" is NOT NULL and it."lotNo" = '${lotNo}'`;
+        sqlWhere += ` AND pl.id = it."productionLotId" AND it."txnType" = ${TxnTypes.IssueForProduction}`;
+
+        sqlStr = sqlSelect + sqlFrom + sqlWhere;
+        console.log('get productionLotNos sql: ', sqlStr);
+
+        productionLotNos = await knexReader.raw(sqlStr);
+        console.log('productionLotNos: ', productionLotNos.rows[0]);
+
+        hasProductionLotNos = productionLotNos.rows.length > 0;
+    }
+
+    if(batchTypeId == BatchTypes.Production || hasProductionLotNos){
 
         //  if lotNo is a production_lot number
         //  1a. Production Output Items of product lotNo; child is Production 'Output Items'
@@ -54,7 +93,16 @@ const getProductLotNoDetail = async (req, res) => {
         sqlFrom = ` FROM production_lots pl, processes p, companies c
         `;
 
-        sqlWhere = ` WHERE pl."orgId" = ${orgId} AND pl."lotNo" = '${lotNo}'`;
+        // sqlWhere = ` WHERE pl."orgId" = ${orgId} AND pl."lotNo" = '${lotNo}'`;
+        sqlWhere = ` WHERE pl."orgId" = ${orgId}`;
+        if(batchTypeId == BatchTypes.Production){
+            sqlWhere += ` AND pl."lotNo" = '${lotNo}'`;
+        }
+        else {
+            //  hasProductionLotNos
+            sqlWhere += ` AND pl."lotNo" = ANY('{${productionLotNos.rows[0].lotNos}}')`;
+        }
+
         sqlWhere += ` AND pl."processId" = p.id AND pl."companyId" = c.id`;
         if(companyId){
             sqlWhere += ` AND pl."companyId" = ${companyId}`;

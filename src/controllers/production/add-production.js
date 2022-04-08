@@ -134,9 +134,18 @@ const addProduction = async (req, res) => {
             // Issue Items
             let item;
             let itemRecNo;
+            let specieId, strainId;
 
+            specieId = 0;
+            strainId = 0;
             itemRecNo = 0;
             for (let rec of payload.inputItems) {
+                if(specieId == 0 && rec.specieId != 0){
+                    //  save ids to set in output item
+                    specieId = rec.specieId;
+                    strainId = rec.strainId;
+                }
+
                 item = {
                     orgId: orgId,
                     companyId: payload.companyId,
@@ -144,8 +153,8 @@ const addProduction = async (req, res) => {
                     date: new Date(payload.productionOn).getTime(),
                     itemCategoryId: rec.itemCategoryId,
                     itemId: rec.itemId,
-                    specieId: payload.specieId,
-                    strainId: payload.strainId,
+                    specieId: rec.specieId,
+                    strainId: rec.strainId,
                     quantity: (rec.quantity * -1),
                     umId: rec.umId,
                     expiryDate: rec.expiryDate,
@@ -183,8 +192,8 @@ const addProduction = async (req, res) => {
                     date: new Date(payload.productionOn).getTime(),
                     itemCategoryId: rec.itemCategoryId,
                     itemId: rec.itemId,
-                    specieId: payload.specieId,
-                    strainId: payload.strainId,
+                    specieId: specieId,
+                    strainId: strainId,
                     quantity: rec.quantity,
                     umId: rec.umId,
                     expiryDate: new Date(rec.expiryDate).getTime(),
