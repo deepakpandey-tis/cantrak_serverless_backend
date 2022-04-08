@@ -5,6 +5,7 @@ const addStorageLocation = require('./add-storage-location');
 const updateStorageLocation = require('./update-storage-location');
 const toggleStorageLocationStatus = require('./toggle-storage-location-status');
 const deleteStorageLocation = require('./delete-storage-location');
+const importStorageLocations = require('./import-storage-locations');
 
 module.exports = {
     getStorageLocationList,
@@ -14,4 +15,5 @@ module.exports = {
     updateStorageLocation,
     toggleStorageLocationStatus,
     deleteStorageLocation,
+    importStorageLocations,
 };

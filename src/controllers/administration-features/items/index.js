@@ -6,6 +6,7 @@ const updateItem = require('./update-item');
 const deleteItem = require('./delete-item');
 const toggleItem = require('./toggle-item');
 const getItemCategories = require('./get-item-categories');
+const importItems = require('./import-items');
 
 module.exports = {
     getItemList,
@@ -16,4 +17,5 @@ module.exports = {
     deleteItem,
     toggleItem,
     getItemCategories,
+    importItems,
 };

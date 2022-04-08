@@ -56,4 +56,11 @@ router.post('/delete-storage-location',
   storageLocationController.deleteStorageLocation
 );
 
+router.post('/import-storage-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  storageLocationController.importStorageLocations
+);
+
 module.exports = router;

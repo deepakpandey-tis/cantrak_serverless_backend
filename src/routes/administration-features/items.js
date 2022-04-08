@@ -63,4 +63,11 @@ router.get('/get-item-categories',
   itemController.getItemCategories
 );
 
+router.post('/import-items',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  itemController.importItems
+);
+
 module.exports = router;
