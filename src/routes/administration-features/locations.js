@@ -56,4 +56,11 @@ router.post('/delete-location',
   locationController.deleteLocation
 );
 
+router.post('/import-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  locationController.importLocations
+);
+
 module.exports = router;

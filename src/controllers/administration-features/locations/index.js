@@ -5,6 +5,7 @@ const addLocation = require('./add-location');
 const updateLocation = require('./update-location');
 const toggleLocationStatus = require('./toggle-location-status');
 const deleteLocation = require('./delete-location');
+const importLocations = require('./import-locations');
 
 module.exports = {
     getLocationList,
@@ -14,4 +15,5 @@ module.exports = {
     updateLocation,
     toggleLocationStatus,
     deleteLocation,
+    importLocations,
 };

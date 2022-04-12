@@ -39,12 +39,12 @@ const getProductLotNoDetail = async (req, res) => {
         let validProductionLotNo, validHarvestLotNo, validPlantLotNo, validRawMaterialLotNo, lotNoDetail, result;
         let validProductionHarvestLotNo, validHarvestPlantLotNo;
 
-
+/* 
         //  to get above lot nos, if exists
         var productionLotNos = { rows: [] };
         let hasProductionLotNos = false;
         //
-
+ */
         var productionOutputDetail = { rows: [] };
         var productionInputDetail = { rows: [] };
         var selectedHarvestRecs = { rows: [] };
@@ -58,6 +58,7 @@ const getProductLotNoDetail = async (req, res) => {
         validHarvestPlantLotNo = false;
         validRawMaterialLotNo = false;
 
+/* 
     if(batchTypeId == BatchTypes.Harvest){
         //  get production lot nos of selected harvest lot no
         sqlSelect = `SELECT array_agg(DISTINCT pl."lotNo") "lotNos"`;
@@ -73,8 +74,10 @@ const getProductLotNoDetail = async (req, res) => {
 
         hasProductionLotNos = productionLotNos.rows.length > 0;
     }
+ */    
 
-    if(batchTypeId == BatchTypes.Production || hasProductionLotNos){
+    // if(batchTypeId == BatchTypes.Production || hasProductionLotNos){
+    if(batchTypeId == BatchTypes.Production){
 
         //  if lotNo is a production_lot number
         //  1a. Production Output Items of product lotNo; child is Production 'Output Items'
@@ -93,7 +96,8 @@ const getProductLotNoDetail = async (req, res) => {
         sqlFrom = ` FROM production_lots pl, processes p, companies c
         `;
 
-        // sqlWhere = ` WHERE pl."orgId" = ${orgId} AND pl."lotNo" = '${lotNo}'`;
+        sqlWhere = ` WHERE pl."orgId" = ${orgId} AND pl."lotNo" = '${lotNo}'`;
+/* 
         sqlWhere = ` WHERE pl."orgId" = ${orgId}`;
         if(batchTypeId == BatchTypes.Production){
             sqlWhere += ` AND pl."lotNo" = '${lotNo}'`;
@@ -102,7 +106,7 @@ const getProductLotNoDetail = async (req, res) => {
             //  hasProductionLotNos
             sqlWhere += ` AND pl."lotNo" = ANY('{${productionLotNos.rows[0].lotNos}}')`;
         }
-
+ */
         sqlWhere += ` AND pl."processId" = p.id AND pl."companyId" = c.id`;
         if(companyId){
             sqlWhere += ` AND pl."companyId" = ${companyId}`;
