@@ -56,4 +56,11 @@ router.post('/delete-sub-location',
   subLocationController.deleteSubLocation
 );
 
+router.post('/import-sub-locations',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  subLocationController.importSubLocations
+);
+
 module.exports = router;

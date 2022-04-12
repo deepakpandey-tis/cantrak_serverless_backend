@@ -5,6 +5,7 @@ const addSubLocation = require('./add-sub-location');
 const updateSubLocation = require('./update-sub-location');
 const toggleSubLocationStatus = require('./toggle-sub-location-status');
 const deleteSubLocation = require('./delete-sub-location');
+const importSubLocations = require('./import-sub-locations');
 
 module.exports = {
     getSubLocationList,
@@ -14,4 +15,5 @@ module.exports = {
     updateSubLocation,
     toggleSubLocationStatus,
     deleteSubLocation,
+    importSubLocations,
 };
