@@ -26,6 +26,7 @@ const getWastePlantCount = require('./get-waste-plant-count');
 const getTotalPlants = require('./get-total-plants');
 
 const getRawMaterialForPlantList = require('./get-raw-material-for-plant-list');
+const getLocationSubLocationPlantLots = require('./get-location-sublocation-plant-lots');
 
 const getCompanies = require('./masters/get-companies');
 const getContainerTypes = require('./masters/get-container-types');
@@ -70,6 +71,7 @@ module.exports = {
     getTotalPlants,
 
     getRawMaterialForPlantList,
+    getLocationSubLocationPlantLots,
 
     getCompanies,
     getContainerTypes,

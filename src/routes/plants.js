@@ -282,4 +282,11 @@ router.post('/get-storage-locations',
   plantController.getStorageLocations
 );
 
+router.post('/get-location-sublocation-plantlots',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getLocationSubLocationPlantLots
+);
+
 module.exports = router;
