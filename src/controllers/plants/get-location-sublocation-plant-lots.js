@@ -11,12 +11,9 @@ const getLocationSubLocationPlantLots = async (req, res) => {
         let sqlStr;
 
         sqlStr = `select l.*`;
-        sqlStr += `, (select json_agg(sl.*) "subLocations" from sub_locations sl where sl."locationId" = l.id) "subLocations"`;
-        sqlStr += ` from locations l`;
-        sqlStr += ` select l.*`;
         sqlStr += `, (select json_agg(row_to_json(sl1.*)) "subLocations"`;
         sqlStr += ` from (`;
-        sqlStr += `select sl.*`;
+        sqlStr += ` select sl.*`;
         sqlStr += `, (select json_agg(row_to_json(pl1.*)) "plantLots" from (select pl.*, (select count(p.id)::int from plants p where p."plantLotId" = pl.id and p."isWaste") "wastePlants", s2."name" "specieName", s."name" "strainName" from plant_lots pl, species s2 , strains s where pl."orgId" = sl."orgId"and pl."companyId" = sl."companyId" and pl."locationId" = sl."locationId" and pl."subLocationId" = sl.id and pl."isActive" and not pl."isFinalHarvest" and pl."specieId" = s2.id and pl."strainId" = s.id) "pl1")`;
         sqlStr += ` from sub_locations sl where sl."locationId" = l.id`;
         sqlStr += `) sl1)`;
