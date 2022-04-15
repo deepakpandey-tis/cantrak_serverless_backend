@@ -340,6 +340,7 @@ const getProductLotNoDetail = async (req, res) => {
 
                             //  get plant's raw material
                             var plantLotRawMaterialRecs;
+                            let sqlStr, sqlSelect, sqlFrom, sqlWhere;
                             for (const rec1 of rec.child[0].data){
                                 sqlStr = `SELECT json_agg(row_to_json(fnl.*)) "data" FROM (`;
                                 sqlStr += `SELECT json_agg(row_to_json(d.*)) "data", 'Raw Material' "treeLabel", d."receivedOn" "date" FROM (`;
