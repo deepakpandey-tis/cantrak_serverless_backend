@@ -3,6 +3,9 @@ const addListComponentColumnsTemplate = require('./add-list-component-columns-te
 const getUserListComponentColumns = require('./get-user-list-component-columns');
 const addUserListComponentColumns = require('./add-user-list-component-columns');
 const updateUserListComponentColumns = require('./update-user-list-component-columns');
+const addUserChartPrefresences = require('./add-user-chart-prefrences');
+const getUserChartPrefrenceDetails = require('./get-user-chart-prefrence-details');
+
 
 module.exports = {
     getListComponentColumnsTemplates,
@@ -10,4 +13,6 @@ module.exports = {
     getUserListComponentColumns,
     addUserListComponentColumns,
     updateUserListComponentColumns,
+    addUserChartPrefresences,
+    getUserChartPrefrenceDetails
 };
