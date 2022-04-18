@@ -56,4 +56,11 @@ router.post('/delete-growth-stage',
   growthStageController.deleteGrowthStage
 );
 
+router.post('/update-growth-stage-list-order',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  growthStageController.updateGrowthStageListOrder
+);
+
 module.exports = router;
