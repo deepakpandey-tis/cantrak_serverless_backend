@@ -9,6 +9,8 @@ const addUserChartPrefresences = async (req, res) => {
 
         const payload = req.body;
 
+        delete payload.chartPrefrence;
+
         let insertedRecord = [];
 
         const schema = Joi.object().keys({
