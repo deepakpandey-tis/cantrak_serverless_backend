@@ -14,7 +14,8 @@ const addGrowthStage = async (req, res) => {
         const schema = Joi.object().keys({
             specieId: Joi.string().required(),
             name: Joi.string().required(),
-            listOrder: Joi.number().integer().required()
+            noOfDays: Joi.number().integer().required(),
+            listOrder: Joi.number().integer().required(),
         });
 
         const result = Joi.validate(payload, schema);

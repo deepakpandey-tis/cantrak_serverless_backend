@@ -139,7 +139,8 @@ const addProduction = async (req, res) => {
             specieId = 0;
             strainId = 0;
             itemRecNo = 0;
-            for (let rec of payload.inputItems) {
+
+/*             for (let rec of payload.inputItems) {
                 if(specieId == 0 && rec.specieId != 0){
                     //  save ids to set in output item
                     specieId = rec.specieId;
@@ -177,6 +178,55 @@ const addProduction = async (req, res) => {
                     .into("item_txns");
 
                 insertedIssueRecords[itemRecNo] = insertResult[0];
+            }
+ */
+
+            for (const rec of payload.inputItems) {
+                for (const lot of rec.lotNos) {
+                    if(+lot.quantity == 0){
+                        //  Ignore
+                        continue;
+                    }
+
+                    if(specieId == 0 && lot.specieId != 0){
+                        //  save ids to set in output item
+                        specieId = lot.specieId;
+                        strainId = lot.strainId;
+                    }
+
+                    item = {
+                        orgId: orgId,
+                        companyId: payload.companyId,
+                        txnType: TxnTypes.IssueForProduction,
+                        date: new Date(payload.productionOn).getTime(),
+                        itemCategoryId: rec.itemCategoryId,
+                        itemId: rec.itemId,
+                        specieId: lot.specieId,
+                        strainId: lot.strainId,
+                        quantity: (+lot.quantity * -1),
+                        umId: rec.umId,
+                        expiryDate: lot.expiryDate,
+                        // quality: rec.quality,
+                        storageLocationId: lot.storageLocationId,
+                        productionLotId: insertedRecord.id,
+                        lotNo: lot.lotNo,
+                        createdBy: userId,
+                        createdAt: currentTime,
+                        updatedBy: userId,
+                        updatedAt: currentTime,
+                    };
+                    console.log('item: ', item);
+
+                    itemRecNo += 1;
+                    const insertResult = await knex
+                        .insert(item)
+                        .returning(["*"])
+                        .transacting(trx)
+                        .into("item_txns");
+    
+                    insertedIssueRecords[itemRecNo] = insertResult[0];
+    
+                }
             }
 
             // Receive Items

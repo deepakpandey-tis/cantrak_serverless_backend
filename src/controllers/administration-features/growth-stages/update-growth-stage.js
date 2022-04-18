@@ -15,6 +15,7 @@ const updateGrowthStage = async (req, res) => {
             id: Joi.number().integer().required(),
             specieId: Joi.string().required(),
             name: Joi.string().required(),
+            noOfDays: Joi.number().integer().required(),
             listOrder: Joi.number().integer().required()
         });
 

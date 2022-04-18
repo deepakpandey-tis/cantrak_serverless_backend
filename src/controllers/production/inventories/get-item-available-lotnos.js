@@ -24,7 +24,7 @@ const getItemAvailableLotNos = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT it."itemCategoryId", it."itemId", it."lotNo", it."storageLocationId", it."specieId" , it."strainId"
+/*         sqlSelect = `SELECT it."itemCategoryId", it."itemId", it."lotNo", it."storageLocationId", it."specieId" , it."strainId"
         , it."expiryDate", sum(it.quantity) "quantity"
         `;
 
@@ -40,6 +40,27 @@ const getItemAvailableLotNos = async (req, res) => {
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlGroupBy + `)`;
         sqlStr += ` SELECT * FROM Main_CTE WHERE quantity > 0`;
+        sqlStr += sqlOrderBy;
+ */
+
+
+        sqlSelect = `SELECT it."itemCategoryId", it."itemId", it."lotNo", it."storageLocationId", it."specieId" , it."strainId"
+        , it."expiryDate", sum(case when it.quantity > 0 then it.quantity end) "lotQuantity"
+        , coalesce(sum(case when it.quantity < 0 then (-1 * it.quantity) end), 0) "alreadyIssued"
+        `;
+
+        sqlFrom = ` FROM item_txns it`;
+
+        sqlWhere = ` WHERE it."companyId" = ${payload.companyId} AND it."itemCategoryId" = ${payload.itemCategoryId} AND it."itemId" = ${payload.itemId}`;
+
+        sqlGroupBy = ` GROUP BY it."itemCategoryId", it."itemId", it."lotNo", it."storageLocationId", it."specieId" , it."strainId", it."expiryDate"`;
+        sqlOrderBy  = ` ORDER BY "lotNo" ASC`;      //  ASC to show older lots first
+
+        // sqlStr  = sqlSelect + sqlFrom + sqlWhere + sqlGroupBy + sqlOrderBy;
+
+        sqlStr  = `WITH Main_CTE AS (`;
+        sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlGroupBy + `)`;
+        sqlStr += ` SELECT *, ("lotQuantity" - "alreadyIssued") quantity FROM Main_CTE WHERE ("lotQuantity" - "alreadyIssued") > 0`;
         sqlStr += sqlOrderBy;
 
         var selectedRecs = await knexReader.raw(sqlStr);
