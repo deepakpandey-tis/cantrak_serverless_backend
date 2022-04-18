@@ -5,6 +5,7 @@ const addGrowthStage = require('./add-growth-stage');
 const updateGrowthStage = require('./update-growth-stage');
 const toggleGrowthStage = require('./toggle-growth-stage');
 const deleteGrowthStage = require('./delete-growth-stage');
+const updateGrowthStageListOrder = require('./update-growth-stage-list-order');
 
 module.exports = {
     getGrowthStageList,
@@ -14,4 +15,5 @@ module.exports = {
     updateGrowthStage,
     toggleGrowthStage,
     deleteGrowthStage,
+    updateGrowthStageListOrder,
 };
