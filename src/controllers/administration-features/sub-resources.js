@@ -160,7 +160,10 @@ const SubResourcesController = {
                 componentNameTh: Joi.string().required().min(1).max(255),
                 resourceId: Joi.string().required().min(1).max(255),
                 orderBy: Joi.number().required().min(1),
-                uri: Joi.string().required().min(1).max(255)
+                uri: Joi.string().required().min(1).max(255),
+                badgeName: Joi.string().required().min(1).max(255).allow(null),
+                badgeBgColor: Joi.string().required().min(1).max(255).allow(null),
+                badgeColor: Joi.string().required().min(1).max(255).allow(null),
             });
 
             const result = schema.validate(payload);
@@ -244,7 +247,10 @@ const SubResourcesController = {
                 componentNameTh: Joi.string().required().min(1).max(255),
                 resourceId: Joi.string().required().min(1).max(255),
                 orderBy: Joi.number().required().min(1),
-                uri: Joi.string().required().min(1).max(255)
+                uri: Joi.string().required().min(1).max(255),
+                badgeName: Joi.string().required().min(1).max(255).allow(null),
+                badgeBgColor: Joi.string().required().min(1).max(255).allow(null),
+                badgeColor: Joi.string().required().min(1).max(255).allow(null),
             });
 
             const result = schema.validate(payload);

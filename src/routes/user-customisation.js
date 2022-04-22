@@ -42,4 +42,14 @@ router.post('/update-user-list-component-columns',
   userCustomisationController.updateUserListComponentColumns
 );
 
+router.post('/add-user-chart-prefrences',
+  authMiddleware.isAuthenticated,
+  userCustomisationController.addUserChartPrefresences
+);
+
+router.get('/get-user-chart-prefrence-details/:companyId',
+  authMiddleware.isAuthenticated,
+  userCustomisationController.getUserChartPrefrenceDetails
+);
+
 module.exports = router;
