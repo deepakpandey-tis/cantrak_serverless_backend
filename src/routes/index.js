@@ -117,6 +117,8 @@ const subResourcesRouter = require("./administration-features/sub-resources");
 const themeRouter = require("./theme");
 const superadminTenantRouter = require('./superadmin/tenant');
 
+const cropCyclePlanRouter = require("./crop-cycle-plan");
+
 
 
 /* GET home page. */
@@ -423,5 +425,6 @@ router.use("/db-migration",dbMigrationRouter);
 
 router.use("/superadmin/tenant", superadminTenantRouter);
 
+router.use("/crop-cycle-plan", cropCyclePlanRouter);
 
 module.exports = router;
