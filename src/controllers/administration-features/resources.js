@@ -140,7 +140,10 @@ const resourcesController = {
                 resourceNameTh: Joi.string().required().min(1).max(255),
                 code: Joi.string().required().min(1).max(255),
                 orderBy: Joi.number().required().min(1),
-                iconCode: Joi.string().required().min(1).max(255)
+                iconCode: Joi.string().required().min(1).max(255),
+                badgeName: Joi.string().required().min(1).max(255).allow(null),
+                badgeBgColor: Joi.string().required().min(1).max(255).allow(null),
+                badgeColor: Joi.string().required().min(1).max(255).allow(null),
             });
 
             const result = schema.validate(payload);
@@ -222,7 +225,10 @@ const resourcesController = {
                 resourceName: Joi.string().required().min(1).max(255),
                 resourceNameTh: Joi.string().required().min(1).max(255),
                 orderBy: Joi.number().required().min(1),
-                iconCode: Joi.string().required().min(1).max(255)
+                iconCode: Joi.string().required().min(1).max(255),
+                badgeName: Joi.string().required().min(1).max(255).allow(null),
+                badgeBgColor: Joi.string().required().min(1).max(255).allow(null),
+                badgeColor: Joi.string().required().min(1).max(255).allow(null),
             });
 
             const result = schema.validate(payload);
@@ -381,7 +387,7 @@ const resourcesController = {
             console.log('[controllers][v1][Resource][getResourceListWithSubResource]');
             
             const resourcesDetails = await knex
-            .select("orm.id","orm.resourceId","r.resourceName","r.resourceNameTh","r.code","r.iconCode","orm.isAuthorized","orm.isShow","orm.isShowDashboard")
+            .select("orm.id","orm.resourceId","r.resourceName","r.resourceNameTh","r.code","r.iconCode", "r.badgeName", "r.badgeBgColor", "r.badgeColor", "orm.isAuthorized","orm.isShow","orm.isShowDashboard")
             .from('organisation_resources_master as orm')
             .leftJoin("resources as r","r.id","orm.resourceId")
             .where("orm.orgId", id)
@@ -445,7 +451,7 @@ const resourcesController = {
             console.log('[controllers][v1][Resource][getResourceListWithSubResource]', id);
             
             const resourcesDetails = await knex
-            .select("orm.id","orm.orderBy","orm.resourceId","r.resourceName","r.resourceNameTh","r.code", "r.uri", "r.iconCode","orm.icon as iconFromOrg","orm.isAuthorized","orm.isShow","orm.isShowDashboard")
+            .select("orm.id","orm.orderBy","orm.resourceId","r.resourceName","r.resourceNameTh","r.code", "r.uri", "r.iconCode", "r.badgeName", "r.badgeBgColor", "r.badgeColor", "orm.icon as iconFromOrg","orm.isAuthorized","orm.isShow","orm.isShowDashboard")
             .from('organisation_resources_master as orm')
             .leftJoin("resources as r","r.id","orm.resourceId")
             .where("orm.orgId", id)
@@ -514,7 +520,7 @@ const resourcesController = {
             console.log('[controllers][v1][Resource][getResourceListWithSubResource]', id);
             
             const resourcesDetails = await knex
-            .select("orm.id","orm.orderBy","orm.resourceId","r.resourceName","r.resourceNameTh","r.code", "r.uri", "r.iconCode","orm.icon as iconFromOrg","orm.isAuthorized","orm.isShow","orm.isShowDashboard")
+            .select("orm.id","orm.orderBy","orm.resourceId","r.resourceName","r.resourceNameTh","r.code", "r.uri", "r.iconCode", "r.badgeName", "r.badgeBgColor", "r.badgeColor", "orm.icon as iconFromOrg","orm.isAuthorized","orm.isShow","orm.isShowDashboard")
             .from('organisation_resources_master as orm')
             .leftJoin("resources as r","r.id","orm.resourceId")
             .where("orm.orgId", id)
