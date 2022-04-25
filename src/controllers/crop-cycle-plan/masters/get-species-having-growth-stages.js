@@ -6,7 +6,7 @@ const getSpeciesHavingGrowthStages = async (req, res) => {
         let orgId = req.me.orgId;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
-
+ 
         sqlSelect = `SELECT DISTINCT s."id", s."name"
         `;
 
