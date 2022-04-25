@@ -71,6 +71,13 @@ router.post('/get-sub-locations',
   cropCyclePlanController.getSubLocations
 );
 
+router.post('/get-species-having-growth-stages',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  cropCyclePlanController.getSpeciesHavingGrowthStages
+);
+
 router.post('/get-species',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

@@ -9,6 +9,7 @@ const getCompanies = require('./masters/get-companies');
 const getLocations = require('./masters/get-locations');
 const getSubLocations = require('./masters/get-sub-locations');
 const getSpecies = require('./masters/get-species');
+const getSpeciesHavingGrowthStages = require('./masters/get-species-having-growth-stages');
 const getStrains = require('./masters/get-strains');
 const getGrowthStages = require('./masters/get-growth-stages');
 
@@ -26,6 +27,7 @@ module.exports = {
     getCompanies,
     getLocations,
     getSubLocations,
+    getSpeciesHavingGrowthStages,
     getSpecies,
     getStrains,
     getGrowthStages,
