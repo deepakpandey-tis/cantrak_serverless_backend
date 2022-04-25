@@ -26,7 +26,7 @@ const getCropCyclePlan = async (req, res) => {
         sqlStr += `, (SELECT json_agg(row_to_json(ccpd1.*)) "cropCyclePlanDetail"`;
         sqlStr += ` FROM (`;
         sqlStr += ` SELECT ccpd.*, pl."plantsCount", pl."plantedOn"`;
-        sqlStr += `, (SELECT json_agg(row_to_json(ccpdgs1.*)) "cropCyclePlanDetailGS" FROM (SELECT ccpdgs.* FROM crop_cycle_plan_detail_gs ccpdGS WHERE ccpdGS."cropCyclePlanDetailId" = ccpd."id") "ccpdgs1")`;
+        sqlStr += `, (SELECT json_agg(row_to_json(ccpdgs1.*)) "cropCyclePlanDetailGS" FROM (SELECT ccpdgs.* FROM crop_cycle_plan_detail_gs ccpdGS WHERE ccpdGS."cropCyclePlanDetailId" = ccpd."id" ORDER BY ccpdGS."listOrder") "ccpdgs1")`;
         sqlStr += ` FROM crop_cycle_plan_detail ccpd LEFT JOIN plant_lots pl ON ccpd."plantLotId" = pl."id" WHERE ccpd."cropCyclePlanId" = ccp.id`;
         sqlStr += `) ccpd1)`;
         sqlStr += ` FROM crop_cycle_plans ccp`;
