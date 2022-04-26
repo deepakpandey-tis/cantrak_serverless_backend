@@ -36,7 +36,7 @@ const getPlantLotGrowthStages = async (req, res) => {
         sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
         sqlStr += ` ) pgs3`;
 
-        // console.log('get plant lot growth stages: ', sqlStr);
+        console.log('get plant lot growth stages: ', sqlStr);
 
         var selectedRecs = await knexReader.raw(sqlStr);
 

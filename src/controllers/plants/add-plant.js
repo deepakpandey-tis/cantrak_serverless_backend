@@ -53,6 +53,7 @@ const addPlant = async (req, res) => {
             growthStageId: Joi.number().integer().required(),
             plantedOn: Joi.date().required(),
             plantsCount: Joi.number().integer().required(),
+            refCode: Joi.string().allow('').allow(null).required(),
             additionalAttributes: Joi.array().required(),
         });
 
@@ -90,6 +91,7 @@ const addPlant = async (req, res) => {
                 subLocationId: payload.subLocationId,
                 plantedOn: new Date(payload.plantedOn).getTime(),
                 plantsCount: payload.plantsCount,
+                refCode: payload.refCode,
                 additionalAttributes: payload.additionalAttributes,
                 createdBy: userId,
                 createdAt: currentTime,

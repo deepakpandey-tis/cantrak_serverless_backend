@@ -31,6 +31,7 @@ const importItems = async (req, res) => {
                     name: rec.name,
                     umId: rec.umId,
                     description: rec.description,
+                    refCode: rec.refCode,
                     gtin: rec.gtin,
                     createdBy: userId,
                     createdAt: currentTime,
