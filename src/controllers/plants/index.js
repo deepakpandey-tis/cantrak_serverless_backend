@@ -42,6 +42,8 @@ const getStorageLocations = require('./masters/get-storage-locations');
 const getObservationsList = require('./get-observations-list');
 const getImages = require('./get-images');
 
+const getGrowingFacilityPlantsAge = require('./growing-facility/get-growing-facility-plants-age');
+
 module.exports = {
     getLotPlantList,
     getPlantLot,
@@ -86,4 +88,6 @@ module.exports = {
 
     getObservationsList,
     getImages,
+
+    getGrowingFacilityPlantsAge,
 };
