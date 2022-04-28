@@ -289,4 +289,11 @@ router.post('/get-location-sublocation-plantlots',
   plantController.getLocationSubLocationPlantLots
 );
 
+router.post('/get-growing-facility-plants-age',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getGrowingFacilityPlantsAge
+);
+
 module.exports = router;
