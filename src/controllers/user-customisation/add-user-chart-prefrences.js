@@ -42,10 +42,13 @@ const addUserChartPrefresences = async (req, res) => {
 
         let currentTime = new Date().getTime();
 
-        let cureentData = knexReader().where({orgId, userId, companyId: payload.companyId}).first();
+        let currentData = await knexReader('user_chart_prefrences').where({orgId, userId, companyId: payload.companyId}).first();
+
+        console.log("===== currentData ====", currentData);
+
         let msg;
         
-        if(cureentData){
+        if(currentData){
             let insertData = {
                 orgId: orgId,
                 userId: userId,
