@@ -4,6 +4,7 @@ const getCropCyclePlan = require('./get-crop-cycle-plan');
 const addCropCyclePlan = require('./add-crop-cycle-plan');
 const updateCropCyclePlan = require('./update-crop-cycle-plan');
 const updateCropCyclePlanPlantDetail = require('./update-crop-cycle-plan-plant-detail');
+const getCropCycleCalendarDetail = require('./get-crop-cycle-calendar-detail');
 
 const getCompanies = require('./masters/get-companies');
 const getLocations = require('./masters/get-locations');
@@ -23,6 +24,7 @@ module.exports = {
     addCropCyclePlan,
     updateCropCyclePlan,
     updateCropCyclePlanPlantDetail,
+    getCropCycleCalendarDetail,
 
     getCompanies,
     getLocations,
