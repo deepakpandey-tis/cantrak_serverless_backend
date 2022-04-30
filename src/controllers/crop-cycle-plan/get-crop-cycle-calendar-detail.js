@@ -16,7 +16,7 @@ const getCropCycleCalendarDetail = async (req, res) => {
         AND ccpd."plantLotId" = pl.id AND ccpd."locationId" = l.id AND ccpd."subLocationId" = sl.id 
         ORDER BY l."name" , sl."name" , ccpd."startDate" DESC
         `;
-        if(growingLocationIds[0] != 0){
+        if(growingLocationIds && growingLocationIds?.length){
             sqlPlantsAge += ` AND ccpd."locationId" IN (${growingLocationIds})`
         }
 
