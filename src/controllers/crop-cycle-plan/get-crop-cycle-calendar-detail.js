@@ -58,10 +58,12 @@ const getCropCycleCalendarDetail = async (req, res) => {
         sqlCropCyclePlanPlantGrowthStages = `, cropCyclePlanPlantLotGrowthStages
         AS (
             SELECT pgs3.* ,
-            lead(pgs3."startDate") over (partition by pgs3."lotNo" ORDER BY pgs3."startDate") "endDate"
+            case when lead(pgs3."startDate") over (partition by pgs3."plantLotNo" order by pgs3."startDate") is null then (select case when "isFinalHarvest" then (select hpl."harvestedOn" from harvest_plant_lots hpl where hpl."plantLotId" = pgs3."plantLotId" order by hpl.id desc limit 1) else null end from plant_lots pl2 where pl2.id = pgs3."plantLotId") else
+            lead(pgs3."startDate") over (partition by pgs3."plantLotNo" order by pgs3."startDate") end  "endDate"
+            -- lead(pgs3."startDate") over (partition by pgs3."lotNo" ORDER BY pgs3."startDate") "endDate"
             FROM
             (
-                SELECT distinct pl.id , pl."lotNo", gs."listOrder" , gs."name" , pgs."startDate" "startDate"
+                SELECT distinct pl.id "plantLotId", pl."lotNo" "plantLotNo", gs."listOrder" , gs."name" , pgs."startDate" "startDate"
                 FROM plant_lots pl , plants p , plant_growth_stages pgs , growth_stages gs , cropCyclePlans ccps
                 WHERE pl.id  = ccps."cropCyclePlanDetailPlantLotId" AND pl.id = p."plantLotId" AND pgs."plantId" = p.id AND pgs."growthStageId" = gs.id
                 AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id ORDER BY id desc limit 1)
@@ -76,7 +78,7 @@ const getCropCycleCalendarDetail = async (req, res) => {
         SELECT json_agg(row_to_json(ags.*)) "actualGrowthStages"
         FROM (
             SELECT ccps.*
-            , (SELECT json_agg(row_to_json(ccpdg1.*))  FROM (SELECT * FROM cropCyclePlanPlantLotGrowthStages ccpplgs WHERE ccpplgs."id" = ccps."cropCyclePlanDetailPlantLotId") "ccpdg1") "growthStages"
+            , (SELECT json_agg(row_to_json(ccpdg1.*))  FROM (SELECT * FROM cropCyclePlanPlantLotGrowthStages ccpplgs WHERE ccpplgs."plantLotId" = ccps."cropCyclePlanDetailPlantLotId") "ccpdg1") "growthStages"
             FROM cropCyclePlans ccps
         ) ags
         `;
