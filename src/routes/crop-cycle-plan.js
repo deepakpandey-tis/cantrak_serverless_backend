@@ -49,6 +49,13 @@ router.post('/update-crop-cycle-plan-plant-detail',
   cropCyclePlanController.updateCropCyclePlanPlantDetail
 );
 
+router.post('/get-crop-cycle-calendar-detail',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  cropCyclePlanController.getCropCycleCalendarDetail
+);
+
 
 router.get('/get-companies',
   authMiddleware.isAuthenticated,
