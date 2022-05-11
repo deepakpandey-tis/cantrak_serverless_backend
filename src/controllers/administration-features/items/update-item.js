@@ -37,9 +37,16 @@ const updateItem = async (req, res) => {
 
         // Check already exists
         const alreadyExists = await knexReader("items")
-            .where('name', 'iLIKE', payload.name.trim())
             .where({ orgId: req.orgId })
-            .whereNot({ id: payload.id });
+            .where({itemCategoryId: payload.itemCategoryId})
+            .whereNot({ id: payload.id })
+            .where((qb) => {
+                qb.where('name', 'iLIKE', payload.name.trim())
+                // .andWhere({itemCategoryId: payload.itemCategoryId})
+                if(payload.refCode){
+                    qb.orWhere('refCode', 'iLIKE', payload.refCode.trim())
+                }
+            });
 
         console.log(
             "[controllers][administration-features][items][updateItem]: ",
@@ -49,7 +56,7 @@ const updateItem = async (req, res) => {
         if (alreadyExists && alreadyExists.length) {
             return res.status(400).json({
                 errors: [
-                    { code: "VALIDATION_ERROR", message: "Item already exist!" }
+                    { code: "VALIDATION_ERROR", message: "Item already exist with same name or reference code!" }
                 ]
             });
         }
@@ -59,6 +66,7 @@ const updateItem = async (req, res) => {
             orgId: orgId,
             ...payload,
             name: payload.name.trim(),
+            refCode: payload.refCode ? payload.refCode.trim() : null,
             updatedBy: userId,
             updatedAt: currentTime,
         };
