@@ -71,7 +71,7 @@ provider:
     DB_USER: pg888
     DB_PASS: su99yTIS#2021
     DB_NAME: pg888
-    DB_HOST: pg888-db-cluster-instance-1.cvlfqh5yw9tp.ap-southeast-1.rds.amazonaws.com
+    DB_HOST: db-writer.cantrak.tech
     DB_PORT: 5432
     SITE_URL: https://d1m3726mxf0335.cloudfront.net
     ORIGIN_URL: https://5dec4xg2n8.execute-api.ap-southeast-1.amazonaws.com/production

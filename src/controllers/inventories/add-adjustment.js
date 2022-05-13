@@ -26,6 +26,7 @@ const TxnTypes ={
 };
 
 const TxnSubTypes ={
+    AdjustmentStoreTxn: 2,              // -ve Adjustment issue from Store A to Store B OR +ve Adjustment reeive into Store A from Store B
     ReceiveWasteFromAdjustmentMinusTxn: 91,
     AdjustmentMinusWasteTxn: 91,
 };
@@ -56,8 +57,9 @@ const addAdjustment = async (req, res) => {
             remark: Joi.string().required(),
             wasteItemId: Joi.number().allow(null).required(),
             wasteItemQty: Joi.number().required(),
-            wasteItemUMId: Joi.number().required(),
-            wasteItemStorageLocationId: Joi.number().required(),
+            wasteItemUMId: Joi.number().allow(null).required(),
+            wasteItemStorageLocationId: Joi.number().allow(null).required(),
+            otherStorageLocationId: Joi.number().allow(null).required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -118,8 +120,8 @@ const addAdjustment = async (req, res) => {
 
             console.log('add adjustment insertedRecord and txnId: ', insertedRecords[0], txnId);
 
-            //  Add Waste txn
             if(payload.subId == TxnSubTypes.ReceiveWasteFromAdjustmentMinusTxn){
+                //  Add Waste txn
                 let insertData = {
                     orgId: orgId,
                     companyId: payload.companyId,
@@ -152,6 +154,41 @@ const addAdjustment = async (req, res) => {
 
                 insertedRecords[1] = insertResult[0];
             }
+            else
+            if(payload.subId == TxnSubTypes.AdjustmentStoreTxn){
+                //  Add Store Adjustment txn
+                let insertData = {
+                    orgId: orgId,
+                    companyId: payload.companyId,
+                    txnType: payload.quantity > 0 ? TxnTypes.AdjustmentMinus : TxnTypes.AdjustmentAdd,  // issue (-ve) from store is receive (+ve) into other store
+                    txnId: txnId,
+                    subId: payload.subId,
+                    date: new Date(payload.date).getTime(),
+                    itemCategoryId: payload.itemCategoryId,
+                    itemId: payload.itemId,
+                    specieId: payload.specieId,
+                    strainId: payload.strainId,
+                    quantity: payload.quantity * -1,
+                    umId: payload.umId,
+                    expiryDate: payload.expiryDate,
+                    // quality: payload.quality,
+                    storageLocationId: payload.otherStorageLocationId,
+                    licenseId: payload.licenseId,
+                    // lotNo: payload.lotNo,        Store adjustment create new lotNo
+                    createdBy: userId,
+                    createdAt: currentTime,
+                    updatedBy: userId,
+                    updatedAt: currentTime,
+                    };
+
+                let insertResult = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("item_txns");
+
+                insertedRecords[1] = insertResult[0];
+            }
 
             //  Mandatory reason
             insertData = {
@@ -171,8 +208,28 @@ const addAdjustment = async (req, res) => {
                 .transacting(trx)
                 .into("remarks_master");
 
-            //  Also add Remark for Waste txn
             if(payload.subId == TxnSubTypes.ReceiveWasteFromAdjustmentMinusTxn){
+                //  Also add Remark for Waste txn
+                let insertData = {
+                    entityId: insertedRecords[1].id,
+                    entityType: "adjustment_txn_entry",
+                    description: payload.remark,
+                    orgId: req.orgId,
+                    createdBy: req.me.id,
+                    createdAt: currentTime,
+                    updatedAt: currentTime,
+                };
+                console.log('Adjustment Txn reason record: ', insertData);
+
+                const insertRemarkResult = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("remarks_master");
+            }
+            else
+            if(payload.subId == TxnSubTypes.AdjustmentStoreTxn){
+                //  Also add Remark for Store Adjustment txn
                 let insertData = {
                     entityId: insertedRecords[1].id,
                     entityType: "adjustment_txn_entry",
