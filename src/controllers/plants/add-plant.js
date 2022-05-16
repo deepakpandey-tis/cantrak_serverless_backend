@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const ItemCategory = {
     RawMaterial: 1,
@@ -34,6 +37,7 @@ const addPlant = async (req, res) => {
 
         let insertedRecord = [];
         let insertedIssueTxn = [];
+        let retStatus;
 
         const schema = Joi.object().keys({
             companyId: Joi.number().required(),
@@ -181,14 +185,37 @@ const addPlant = async (req, res) => {
             console.log('plant insert record: ', insertData);
 
             const insertPayload = { ...insertData };
-            ret = await knex.raw('select plants_save(?)', JSON.stringify(insertPayload)).transacting(trx);
-            console.log(`[Return]: `, ret);
+            retStatus = await knex.raw('select plants_save(?)', JSON.stringify(insertPayload)).transacting(trx);
+            console.log(`[Return]: `, retStatus);
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.Plant,
+                entityActionId: EntityActions.Add,
+                description: `${req.me.name} added plant lot '${insertedRecord.lotNo}' containing ${insertedRecord.plantsCount} plants on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });
 
         return res.status(200).json({
-            data: ret.rows,
+            // data: ret.rows,
+            data: {
+                plant_lot: insertedRecord,
+                plants: retStatus.rows
+            },
             message: 'Plants added successfully.'
         });
     } catch (err) {

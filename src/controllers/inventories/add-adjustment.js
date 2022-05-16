@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const ItemCategory = {
     RawMaterial: 1,
@@ -60,6 +63,7 @@ const addAdjustment = async (req, res) => {
             wasteItemUMId: Joi.number().allow(null).required(),
             wasteItemStorageLocationId: Joi.number().allow(null).required(),
             otherStorageLocationId: Joi.number().allow(null).required(),
+            itemName: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -247,6 +251,47 @@ const addAdjustment = async (req, res) => {
                     .transacting(trx)
                     .into("remarks_master");
             }
+
+            let entity;
+            let entityType;
+            if(insertedRecords[0].itemCategoryId == ItemCategory.RawMaterial){
+                entity = `Raw Material adjustment '${payload.itemName}'`;
+                entityType = EntityTypes.RawMaterial;
+            }
+            else
+            if(insertedRecords[0].itemCategoryId == ItemCategory.Product){
+                entity = `Product adjustment '${payload.itemName}'`;
+                entityType = EntityTypes.Product;
+            }
+            else
+            if(insertedRecords[0].itemCategoryId == ItemCategory.FinishedGoods){
+                entity = `Finished Good adjustment '${payload.itemName}'`;
+                entityType = EntityTypes.FinishedGood;
+            }
+            else
+            if(insertedRecords[0].itemCategoryId == ItemCategory.WasteMaterial){
+                entity = `Waste Material adjustment '${payload.itemName}'`;
+                entityType = EntityTypes.WasteMaterial;
+            }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecords[0].orgId,
+                companyId: insertedRecords[0].companyId,
+                entityId: insertedRecords[0].id,
+                entityTypeId: entityType,
+                entityActionId: EntityActions.Add,
+                description: `${req.me.name} added ${entity} lot number '${insertedRecords[0].lotNo}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

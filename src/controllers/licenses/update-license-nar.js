@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const updateLicenseNar = async (req, res) => {
     try {
@@ -12,6 +15,7 @@ const updateLicenseNar = async (req, res) => {
         let insertedItemRecords = [];
 
         const schema = Joi.object().keys({
+            companyId: Joi.number().required(),
             id: Joi.number().required(),
             licenseId: Joi.number().required(),
             supplierId: Joi.number().required(),
@@ -78,8 +82,10 @@ const updateLicenseNar = async (req, res) => {
             let insertItem;
             let item;
             let itemRecNo;
+            let itemRecNew, itemRecOld;
 
             itemRecNo = 0;
+            itemRecNew = itemRecOld = 0;
             for (let rec of payload.itemArray) {
                 if(rec.id){
                     item = {
@@ -101,6 +107,8 @@ const updateLicenseNar = async (req, res) => {
                     .returning(["*"])
                     .transacting(trx)
                     .into('license_nar_items');
+
+                    itemRecOld += 1;
                 }
                 else {
                     item = {
@@ -125,11 +133,32 @@ const updateLicenseNar = async (req, res) => {
                     .returning(["*"])
                     .transacting(trx)
                     .into("license_nar_items");
+
+                    itemRecNew += 1;
                 }
 
                 itemRecNo += 1;
                 insertedItemRecords[itemRecNo] = insertItem[0];
             }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: payload.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.LicenseNar,
+                entityActionId: EntityActions.Edit,
+                description: `${req.me.name} changed license nar '${insertedRecord.permitNumber}' with ${itemRecOld} existing and ${itemRecNew} new items on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
     
             trx.commit;
         });

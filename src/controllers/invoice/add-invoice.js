@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const ItemCategory = {
     RawMaterial: 1,
@@ -44,6 +47,7 @@ const addInvoice = async (req, res) => {
             creditDays: Joi.number().allow(0).required(),
             dueDate: Joi.date().required(),
             invoiceItems: Joi.array().required(),
+            customerName: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -133,7 +137,6 @@ const addInvoice = async (req, res) => {
                 };
                 console.log('invoice item: ', item);
 
-                recNo += 1;
                 const insertResult = await knex
                     .insert(item)
                     .returning(["*"])
@@ -141,6 +144,7 @@ const addInvoice = async (req, res) => {
                     .into("invoice_items");
 
                 insertedInvoiceItemRecords[recNo] = insertResult[0];
+                recNo += 1;
 
                 //  Issue Item Txn
                 let itemNo;
@@ -174,7 +178,6 @@ const addInvoice = async (req, res) => {
                     };
                     console.log('item: ', item);
 
-                    itemNo += 1;
                     const insertResult = await knex
                         .insert(item)
                         .returning(["*"])
@@ -182,12 +185,32 @@ const addInvoice = async (req, res) => {
                         .into("item_txns");
     
                     insertedItemRecords[itemNo] = insertResult[0];
-                    if(itemNo == 1){
+                    if(itemNo == 0){
                         txnId = insertedItemRecords[itemNo].txnId;
                     }
+                    itemNo += 1;
     
                 }
             }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.Invoice,
+                entityActionId: EntityActions.Add,
+                description: `${req.me.name} issued invoice '${insertedRecord.invoiceNo}' to '${payload.customerName}' containing ${recNo} item(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

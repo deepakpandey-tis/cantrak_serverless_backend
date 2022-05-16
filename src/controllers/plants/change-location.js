@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const changeLocation = async (req, res) => {
     let orgId = req.me.orgId;
@@ -25,6 +28,7 @@ const changeLocation = async (req, res) => {
         totalPlants: Joi.number().integer().required(),
         selectedPlantIds: Joi.array().required(),
         remark: Joi.string().allow(null).allow('').required(),
+        plantLotNo: Joi.string().required(),
     });
 
     const result = Joi.validate(payload, schema);
@@ -43,7 +47,7 @@ const changeLocation = async (req, res) => {
 
     try {
 
-        const {selectedPlantIds, remark, ...txnHeader} = req.body;
+        const {selectedPlantIds, remark, plantLotNo, ...txnHeader} = req.body;
         const selectedPIds = JSON.parse(selectedPlantIds);
         const allPlants = selectedPIds.find(r => r.id == 0);
 
@@ -91,7 +95,7 @@ const changeLocation = async (req, res) => {
 
             console.log('Change Location Detail insert sql: ', sqlStr);
 
-            await knex.raw(sqlStr);
+            await knex.raw(sqlStr).transacting(trx);
 
 /*             if(allPlants){
                 console.log('ALL PLANTS');
@@ -123,6 +127,25 @@ const changeLocation = async (req, res) => {
                     .transacting(trx)
                     .into("remarks_master");
             }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.PlantChangeLocation,
+                entityActionId: EntityActions.Edit,
+                description: `${req.me.name} changed location of ${insertedRecord.totalPlants} plant(s) of plant lot '${payload.plantLotNo}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

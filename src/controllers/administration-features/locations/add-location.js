@@ -1,6 +1,9 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../../db/knex');
 const knexReader = require("../../../db/knex-reader");
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../../helpers/user-activity-constants');
 
 const addLocation = async (req, res) => {
     try {
@@ -52,26 +55,26 @@ const addLocation = async (req, res) => {
             });
         }
 
-/* 2022/03/21 Sub Growing Location part of Growing Location Form
-        let currentTime = new Date().getTime();
-        let insertData = {
-            orgId: orgId,
-            ...payload,
-            name: payload.name.trim(),
-            createdBy: userId,
-            createdAt: currentTime,
-            updatedBy: userId,
-            updatedAt: currentTime,
-        };
-        console.log('Location insert record: ', insertData);
-
-        const insertResult = await knex
-            .insert(insertData)
-            .returning(["*"])
-            .into('locations');
-
-        insertedRecord = insertResult[0];
- */
+        /* 2022/03/21 Sub Growing Location part of Growing Location Form
+                let currentTime = new Date().getTime();
+                let insertData = {
+                    orgId: orgId,
+                    ...payload,
+                    name: payload.name.trim(),
+                    createdBy: userId,
+                    createdAt: currentTime,
+                    updatedBy: userId,
+                    updatedAt: currentTime,
+                };
+                console.log('Location insert record: ', insertData);
+        
+                const insertResult = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .into('locations');
+        
+                insertedRecord = insertResult[0];
+         */
 
         await knex.transaction(async (trx) => {
 
@@ -104,7 +107,7 @@ const addLocation = async (req, res) => {
             for (let rec of payload.subLocations) {
                 subLocation = {
                     orgId: orgId,
-                    companyId: payload.companyId,
+                    companyId: insertedRecord.companyId,
                     locationId: insertedRecord.id,
                     name: rec.name.trim(),
                     description: rec.description,
@@ -124,6 +127,25 @@ const addLocation = async (req, res) => {
                 insertedSubLocationRecords[subLocationRecNo] = insertResult[0];
                 subLocationRecNo += 1;
             }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.GrowingLocation,
+                entityActionId: EntityActions.Add,
+                description: `${req.me.name} added growing location '${insertedRecord.name}' and ${subLocationRecNo} sub growing location(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

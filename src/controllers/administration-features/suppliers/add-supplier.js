@@ -1,6 +1,9 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../../db/knex');
 const knexReader = require("../../../db/knex-reader");
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../../helpers/user-activity-constants');
 
 const addSupplier = async (req, res) => {
     try {
@@ -50,23 +53,48 @@ const addSupplier = async (req, res) => {
             });
         }
 
-        let currentTime = new Date().getTime();
-        let insertData = {
-            orgId: orgId,
-            ...payload,
-            createdBy: userId,
-            createdAt: currentTime,
-            updatedBy: userId,
-            updatedAt: currentTime,
-        };
-        console.log('Supplier insert record: ', insertData);
+        await knex.transaction(async (trx) => {
 
-        const insertResult = await knex
-            .insert(insertData)
-            .returning(["*"])
-            .into('suppliers');
+            let currentTime = new Date().getTime();
+            let insertData = {
+                orgId: orgId,
+                ...payload,
+                createdBy: userId,
+                createdAt: currentTime,
+                updatedBy: userId,
+                updatedAt: currentTime,
+            };
+            console.log('Supplier insert record: ', insertData);
 
-        insertedRecord = insertResult[0];
+            const insertResult = await knex
+                .insert(insertData)
+                .returning(["*"])
+                .transacting(trx)
+                .into('suppliers');
+
+            insertedRecord = insertResult[0];
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: null,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.Supplier,
+                entityActionId: EntityActions.Add,
+                description: `${req.me.name} added supplier '${insertedRecord.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
+
+            trx.commit;
+        });
 
         return res.status(200).json({
             data: {

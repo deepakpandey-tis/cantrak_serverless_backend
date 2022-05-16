@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const ItemCategory = {
     RawMaterial: 1,
@@ -92,6 +95,47 @@ const importItemFromSupplier = async (req, res) => {
                 insertedSupplier[insertedRecNo] = insertSupplier[0];
                 insertedRecNo += 1;
             }
+
+            let entity;
+            let entityType;
+            if(itemCategoryId == ItemCategory.RawMaterial){
+                entity = 'Raw Material';
+                entityType = EntityTypes.RawMaterial;
+            }
+            else
+            if(itemCategoryId == ItemCategory.Product){
+                entity = 'Product';
+                entityType = EntityTypes.Product;
+            }
+            else
+            if(itemCategoryId == ItemCategory.FinishedGoods){
+                entity = 'Finished Good';
+                entityType = EntityTypes.FinishedGood;
+            }
+            else
+            if(itemCategoryId == ItemCategory.WasteMaterial){
+                entity = 'Waste Material';
+                entityType = EntityTypes.WasteMaterial;
+            }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord[0].orgId,
+                companyId: insertedRecord[0].companyId,
+                entityId: insertedRecord[0].id,
+                entityTypeId: entityType,
+                entityActionId: EntityActions.Import,
+                description: `${req.me.name} imported ${insertedRecNo} ${entity} items on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

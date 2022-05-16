@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../../helpers/user-activity-constants');
 
 const deleteLocation = async (req, res) => {
     try {
@@ -9,10 +12,13 @@ const deleteLocation = async (req, res) => {
         const payload = req.body;
 
         let sqlStr;
+        let deletedLocation;
+        let deletedSubLocations;
 
         const schema = Joi.object().keys({
             companyId: Joi.number().required(),
             id: Joi.number().required(),
+            name: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -59,9 +65,10 @@ const deleteLocation = async (req, res) => {
         }
  */
 
-        let deletedLocation;
-        let deletedSubLocations;
         await knex.transaction(async (trx) => {
+
+            let currentTime = new Date().getTime();
+
             // First delete sub growing locations
             deletedSubLocations = await knex('sub_locations')
                 .delete()
@@ -69,12 +76,35 @@ const deleteLocation = async (req, res) => {
                 .returning(["*"])
                 .transacting(trx)
 
+            // console.log('deleted sublocations: ', deletedSubLocations);
+
             // Now delete growing locations
             deletedLocation = await knex('locations')
                 .delete()
                 .where({ id: payload.id, orgId: orgId, companyId: payload.companyId })
                 .returning(["*"])
                 .transacting(trx)
+
+            //  Log user activity
+            let userActivity = {
+                orgId: orgId,
+                companyId: payload.companyId,
+                entityId: payload.id,
+                entityTypeId: EntityTypes.GrowingLocation,
+                entityActionId: EntityActions.Delete,
+                description: `${req.me.name} deleted growing location '${payload.name}' and its ${deletedSubLocations.length} sub growing location(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
+
+            trx.commit;
         });
 
         return res.status(200).json({

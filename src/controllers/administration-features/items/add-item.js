@@ -1,6 +1,9 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../../db/knex');
 const knexReader = require("../../../db/knex-reader");
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../../helpers/user-activity-constants');
 
 const addItem = async (req, res) => {
     try {
@@ -59,25 +62,50 @@ const addItem = async (req, res) => {
             });
         }
 
-        let currentTime = new Date().getTime();
-        let insertData = {
-            orgId: orgId,
-            ...payload,
-            name: payload.name.trim(),
-            refCode: payload.refCode ? payload.refCode.trim() : null,
-            createdBy: userId,
-            createdAt: currentTime,
-            updatedBy: userId,
-            updatedAt: currentTime,
-        };
-        console.log('Item insert record: ', insertData);
+        await knex.transaction(async (trx) => {
 
-        const insertResult = await knex
-            .insert(insertData)
-            .returning(["*"])
-            .into('items');
+            let currentTime = new Date().getTime();
+            let insertData = {
+                orgId: orgId,
+                ...payload,
+                name: payload.name.trim(),
+                refCode: payload.refCode ? payload.refCode.trim() : null,
+                createdBy: userId,
+                createdAt: currentTime,
+                updatedBy: userId,
+                updatedAt: currentTime,
+            };
+            console.log('Item insert record: ', insertData);
 
-        insertedRecord = insertResult[0];
+            const insertResult = await knex
+                .insert(insertData)
+                .returning(["*"])
+                .transacting(trx)
+                .into('items');
+
+            insertedRecord = insertResult[0];
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: null,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.Item,
+                entityActionId: EntityActions.Add,
+                description: `${req.me.name} added item '${insertedRecord.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if(ret.error){
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
+
+            trx.commit;
+        });
 
         return res.status(200).json({
             data: {

@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const ItemCategory = {
     RawMaterial: 1,
@@ -50,6 +53,7 @@ const addHarvest = async (req, res) => {
             selectedPlantIds: Joi.array().required(),
             harvestedProducts: Joi.array().required(),
             harvestedWastes: Joi.array().required(),
+            plantLotNo: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -222,6 +226,33 @@ const addHarvest = async (req, res) => {
             }
 
             // ownerList = plantLotResult[0];
+
+            let entity;
+            if(insertedRecord.isFinalHarvest){
+                entity = 'final harvested';
+            }
+            else {
+                entity = 'partially harvested';
+            }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.Harvest,
+                entityActionId: EntityActions.Add,
+                description: `${req.me.name} ${entity} ${insertedRecord.plantsCount} plant(s) of plant lot '${payload.plantLotNo}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });
