@@ -2,6 +2,9 @@ const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
 // const knexReader = require("../../../db/knex-reader");
 const _ = require("lodash");
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const addLicense = async (req, res) => {
     try {
@@ -149,6 +152,25 @@ const addLicense = async (req, res) => {
 
                 });
             }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.License,
+                entityActionId: EntityActions.Add,
+                description: `${req.me.name} added license '${insertedRecord.number}' and ${itemRecNo} license item(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

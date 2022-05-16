@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const ItemCategory = {
     RawMaterial: 1,
@@ -126,6 +129,47 @@ const updateItemFromImportLicense = async (req, res) => {
                 .into("item_txn_suppliers");
 
             insertedSupplier = insertSupplier[0];
+
+            let entity;
+            let entityType;
+            if(insertedRecord.itemCategoryId == ItemCategory.RawMaterial){
+                entity = 'imported raw material lot number';
+                entityType = EntityTypes.RawMaterial;
+            }
+            else
+            if(insertedRecord.itemCategoryId == ItemCategory.Product){
+                entity = 'imported product lot number';
+                entityType = EntityTypes.Product;
+            }
+            else
+            if(insertedRecord.itemCategoryId == ItemCategory.FinishedGoods){
+                entity = 'imported finished good lot number';
+                entityType = EntityTypes.FinishedGood;
+            }
+            else
+            if(insertedRecord.itemCategoryId == ItemCategory.WasteMaterial){
+                entity = 'imported waste material lot number';
+                entityType = EntityTypes.WasteMaterial;
+            }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: entityType,
+                entityActionId: EntityActions.Edit,
+                description: `${req.me.name} changed ${entity} '${insertedRecord.lotNo}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

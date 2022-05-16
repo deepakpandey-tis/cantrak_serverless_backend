@@ -1,6 +1,9 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../../db/knex');
 const knexReader = require("../../../db/knex-reader");
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../../helpers/user-activity-constants');
 
 const updateLocation = async (req, res) => {
     try {
@@ -12,7 +15,7 @@ const updateLocation = async (req, res) => {
         let deletingSubLocationName = '';
         let insertedRecord = [];
         let insertedSubLocationRecords = [];
-        let subLocationRecNo;
+        let subLocationRecNo, subLocationsNew, subLocationsOld;
 
         const schema = Joi.object().keys({
             id: Joi.string().required(),
@@ -111,6 +114,7 @@ const updateLocation = async (req, res) => {
             let subLocation;
 
             subLocationRecNo = 0;
+            subLocationsNew = subLocationsOld = 0;
             for (let rec of payload.subLocations) {
                 if(!rec.id){
                     // New sub growing location
@@ -135,6 +139,7 @@ const updateLocation = async (req, res) => {
 
                     insertedSubLocationRecords[subLocationRecNo] = insertResult[0];
                     subLocationRecNo += 1;
+                    subLocationsNew += 1;
                 }
                 else {
                     // Existing sub growing location
@@ -155,8 +160,28 @@ const updateLocation = async (req, res) => {
 
                     insertedSubLocationRecords[subLocationRecNo] = insertResult[0];
                     subLocationRecNo += 1;
+                    subLocationsOld += 1;
                 }
             }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.GrowingLocation,
+                entityActionId: EntityActions.Edit,
+                description: `${req.me.name} changed growing location '${insertedRecord.name}' with ${subLocationsOld} existing and  ${subLocationsNew} new sub growing locations on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

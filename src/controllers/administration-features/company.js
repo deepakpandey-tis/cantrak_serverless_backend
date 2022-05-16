@@ -14,6 +14,9 @@ const fs = require("fs");
 // const request = require("request");
 const path = require("path");
 
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
+
 const companyController = {
   addCompany: async (req, res) => {
     try {
@@ -77,16 +80,16 @@ const companyController = {
         }
 
         /*CHECK DUPLICATE VALUES OPEN */
-/*      2022/01/06 companyId is now generated in procedure 
-        let existValue = await knex('companies')
-          .where({ companyId: payload.companyId.toUpperCase(), orgId: orgId });
-        if (existValue && existValue.length) {
-          return res.status(400).json({
-            errors: [
-              { code: "VALIDATION_ERROR", message: "Company Id already exist!!" }
-            ]
-          });
-        } */
+        /*      2022/01/06 companyId is now generated in procedure 
+                let existValue = await knex('companies')
+                  .where({ companyId: payload.companyId.toUpperCase(), orgId: orgId });
+                if (existValue && existValue.length) {
+                  return res.status(400).json({
+                    errors: [
+                      { code: "VALIDATION_ERROR", message: "Company Id already exist!!" }
+                    ]
+                  });
+                } */
         /*CHECK DUPLICATE VALUES CLOSE */
 
 
@@ -151,6 +154,25 @@ const companyController = {
 
         }
 
+        //  Log user activity
+        let userActivity = {
+          orgId: company.orgId,
+          companyId: company.id,
+          entityId: company.id,
+          entityTypeId: EntityTypes.Company,
+          entityActionId: EntityActions.Add,
+          description: `${req.me.name} added company '${company.companyName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+          createdBy: userId,
+          createdAt: currentTime,
+          trx: trx
+        }
+        const ret = await addUserActivityHelper.addUserActivity(userActivity);
+        // console.log(`addUserActivity Return: `, ret);
+        if (ret.error) {
+          throw { code: ret.code, message: ret.message };
+        }
+        //  Log user activity
+
         trx.commit;
       });
 
@@ -170,8 +192,10 @@ const companyController = {
   },
   updateCompany: async (req, res) => {
     try {
+      const userId = req.me.id;
       let company = null;
       let companyAdmin = null;
+
       await knex.transaction(async trx => {
 
         const payload = _.omit(req.body, ["logoFile"], ["orgLogoFile"], "companyAdmin");
@@ -374,6 +398,25 @@ const companyController = {
 
         }
 
+        //  Log user activity
+        let userActivity = {
+          orgId: company.orgId,
+          companyId: company.id,
+          entityId: company.id,
+          entityTypeId: EntityTypes.Company,
+          entityActionId: EntityActions.Edit,
+          description: `${req.me.name} changed company '${company.companyName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+          createdBy: userId,
+          createdAt: currentTime,
+          trx: trx
+        }
+        const ret = await addUserActivityHelper.addUserActivity(userActivity);
+        // console.log(`addUserActivity Return: `, ret);
+        if (ret.error) {
+          throw { code: ret.code, message: ret.message };
+        }
+        //  Log user activity
+
         trx.commit;
 
       });
@@ -451,10 +494,10 @@ const companyController = {
             "users.name"
           ]).first();
 
-          console.log("companyAdmin",  companyAdminView);
-          if(companyAdminView){
-            company = {...company, companyAdminView}
-          }
+        console.log("companyAdmin", companyAdminView);
+        if (companyAdminView) {
+          company = { ...company, companyAdminView }
+        }
 
         trx.commit;
       });
@@ -474,8 +517,10 @@ const companyController = {
   },
   deleteCompany: async (req, res) => {
     try {
+      const userId = req.me.id;
       let company = null;
       let message;
+
       await knex.transaction(async trx => {
         let payload = req.body;
         const schema = Joi.object().keys({
@@ -489,6 +534,8 @@ const companyController = {
             ]
           });
         }
+
+        let currentTime = new Date().getTime();
         let companyResult;
         let checkStatus = await knex.from('companies').where({ id: payload.id }).returning(['*']);
 
@@ -514,6 +561,26 @@ const companyController = {
             company = companyResult[0];
             message = "Company Active Successfully!"
           }
+
+          //  Log user activity
+          const action = checkStatus[0].isActive ? 'de-activated' : 'activated';
+          let userActivity = {
+            orgId: company.orgId,
+            companyId: company.id,
+            entityId: company.id,
+            entityTypeId: EntityTypes.Company,
+            entityActionId: EntityActions.ToggleStatus,
+            description: `${req.me.name} ${action} company '${company.companyName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+            createdBy: userId,
+            createdAt: currentTime,
+            trx: trx
+          }
+          const ret = await addUserActivityHelper.addUserActivity(userActivity);
+          // console.log(`addUserActivity Return: `, ret);
+          if (ret.error) {
+            throw { code: ret.code, message: ret.message };
+          }
+          //  Log user activity
         }
         trx.commit;
       });
@@ -1112,7 +1179,7 @@ const companyController = {
       let companyHavingPU1
       let companyArr1 = []
 
-      console.log("[area name]",req.query)
+      console.log("[area name]", req.query)
 
       if (req.query.areaName === 'common') {
         companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true, type: 2 })
@@ -1133,7 +1200,7 @@ const companyController = {
           .orderBy('companies.companyId', 'asc')
 
       } else if (req.query.areaName === 'all' || req.query.areaName == '') {
-        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true})
+        companyHavingPU1 = await knex('property_units').select(['companyId']).where({ orgId: req.orgId, isActive: true })
         companyArr1 = companyHavingPU1.map(v => v.companyId)
         companyArr1 = _.uniq(companyArr1);
 
@@ -1303,22 +1370,22 @@ const companyController = {
     }
   },
 
-  getCompanyForService : async(req,res) =>{
+  getCompanyForService: async (req, res) => {
     try {
 
       let result;
       let companyHavingPU1
       let companyArr1 = []
-      
+
 
       let projectIds = req.accessibleProjects;
-            console.log('ProjectIds:', projectIds);
+      console.log('ProjectIds:', projectIds);
 
-            let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
-                .whereIn('projects.id', projectIds)
-                .where({ orgId: req.orgId });
+      let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
+        .whereIn('projects.id', projectIds)
+        .where({ orgId: req.orgId });
 
-            let companyIds = companyResult.map(v => v.companyId);
+      let companyIds = companyResult.map(v => v.companyId);
 
 
       if (req.query.areaName === 'common') {
@@ -1387,9 +1454,9 @@ const companyController = {
           companies: result
         },
         message: "Companies List!"
-      }); 
+      });
     } catch (err) {
-      
+
       console.log(
         "[controllers][companies][userResult] :  Error",
         err
@@ -1399,7 +1466,7 @@ const companyController = {
       });
     }
   },
-  getCompanyListForPm : async(req,res) =>{
+  getCompanyListForPm: async (req, res) => {
     try {
       let pagination = {};
       let role = req.me.roles[0];
@@ -1411,8 +1478,8 @@ const companyController = {
       console.log('ProjectIds:', projectIds);
 
       let companyResult = await knex.from('projects').select(['companyId', 'projectName', 'project as projectCode'])
-          .whereIn('projects.id', projectIds)
-          .where({ orgId: req.orgId });
+        .whereIn('projects.id', projectIds)
+        .where({ orgId: req.orgId });
 
       let companyIds = companyResult.map(v => v.companyId);
 
@@ -1424,7 +1491,7 @@ const companyController = {
             knex("companies")
               .select("id", "companyId", "companyName as CompanyName")
               .where({ isActive: true, orgId: orgId })
-              .whereIn("companies.id",companyIds)
+              .whereIn("companies.id", companyIds)
               .orderBy('companies.companyId', 'asc')
           ]);
 
@@ -1433,7 +1500,7 @@ const companyController = {
             knex("companies")
               .select("id", "companyId", "companyName as CompanyName")
               .where({ isActive: true })
-              .whereIn("companies.id",companyIds)
+              .whereIn("companies.id", companyIds)
               .orderBy('companies.companyId', 'asc')
           ]);
         }
@@ -1443,7 +1510,7 @@ const companyController = {
           knex("companies")
             .select("id", "companyId", "companyName as CompanyName")
             .where({ isActive: true, orgId: req.orgId })
-            .whereIn("companies.id",companyIds)
+            .whereIn("companies.id", companyIds)
             .orderBy('companies.companyId', 'asc')
         ]);
       }

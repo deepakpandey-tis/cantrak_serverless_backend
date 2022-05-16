@@ -2,6 +2,9 @@ const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
 // const knexReader = require("../../../db/knex-reader");
 const _ = require("lodash");
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const updateLicense = async (req, res) => {
     try {
@@ -92,8 +95,10 @@ const updateLicense = async (req, res) => {
             let insertItem;
             let item;
             let itemRecNo;
+            let itemRecNew, itemRecOld;
 
             itemRecNo = 0;
+            itemRecNew = itemRecOld = 0;
             let licanceId = insertedRecord.id;
 
             for (let rec of payload.items) {
@@ -117,6 +122,8 @@ const updateLicense = async (req, res) => {
                     .returning(["*"])
                     .transacting(trx)
                     .into('license_items');
+
+                    itemRecOld += 1;
                 }
                 else {
                     item = {
@@ -139,6 +146,8 @@ const updateLicense = async (req, res) => {
                     .returning(["*"])
                     .transacting(trx)
                     .into("license_items");
+
+                    itemRecNew += 1;
                 }
 
                 itemRecNo += 1;
@@ -172,6 +181,25 @@ const updateLicense = async (req, res) => {
                 });
             }
     
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.License,
+                entityActionId: EntityActions.Edit,
+                description: `${req.me.name} changed license '${insertedRecord.number}' with ${itemRecOld} existing and  ${itemRecNew} new license items on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
+
             trx.commit;
         });
 

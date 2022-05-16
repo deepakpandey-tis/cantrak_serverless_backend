@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const changeGrowthStage = async (req, res) => {
     let orgId = req.me.orgId;
@@ -24,6 +27,7 @@ const changeGrowthStage = async (req, res) => {
         totalPlants: Joi.number().integer().required(),
         selectedPlantIds: Joi.array().required(),
         remark: Joi.string().allow(null).allow('').required(),
+        plantLotNo: Joi.string().required(),
     });
 
     const result = Joi.validate(payload, schema);
@@ -101,7 +105,7 @@ const changeGrowthStage = async (req, res) => {
  */
             console.log('Change Growth Stage Detail insert sql: ', sqlStr);
 
-            await knex.raw(sqlStr);
+            await knex.raw(sqlStr).transacting(trx);
 
             //  Optional Remark
             if(payload.remark && payload.remark.trim() != ''){
@@ -122,6 +126,25 @@ const changeGrowthStage = async (req, res) => {
                     .transacting(trx)
                     .into("remarks_master");
             }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.PlantChangeGrowthStage,
+                entityActionId: EntityActions.Edit,
+                description: `${req.me.name} changed growth stage of ${insertedRecord.totalPlants} plant(s) of plant lot '${payload.plantLotNo}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

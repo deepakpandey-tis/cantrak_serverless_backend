@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const ItemCategory = {
     RawMaterial: 1,
@@ -217,7 +220,6 @@ const addProduction = async (req, res) => {
                     };
                     console.log('item: ', item);
 
-                    itemRecNo += 1;
                     const insertResult = await knex
                         .insert(item)
                         .returning(["*"])
@@ -225,15 +227,16 @@ const addProduction = async (req, res) => {
                         .into("item_txns");
     
                     insertedIssueRecords[itemRecNo] = insertResult[0];
+                    itemRecNo += 1;
     
                 }
             }
 
             // Receive Items
             // let item;
-            // let itemRecNo;
+            let itemReceiveNo;
 
-            itemRecNo = 0;
+            itemReceiveNo = 0;
             for (let rec of payload.outputItems) {
                 item = {
                     orgId: orgId,
@@ -258,15 +261,34 @@ const addProduction = async (req, res) => {
                 };
                 console.log('item: ', item);
 
-                itemRecNo += 1;
                 const insertResult = await knex
                     .insert(item)
                     .returning(["*"])
                     .transacting(trx)
                     .into("item_txns");
 
-                insertedReceiveRecords[itemRecNo] = insertResult[0];
+                insertedReceiveRecords[itemReceiveNo] = insertResult[0];
+                itemReceiveNo += 1;
             }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.Production,
+                entityActionId: EntityActions.Add,
+                description: `${req.me.name} produced lot '${insertedRecord.lotNo}' containing ${itemReceiveNo} item(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

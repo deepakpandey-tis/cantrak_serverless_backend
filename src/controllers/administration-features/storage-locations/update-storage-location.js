@@ -1,6 +1,9 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../../db/knex');
 const knexReader = require("../../../db/knex-reader");
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../../helpers/user-activity-constants');
 
 const updateStorageLocation = async (req, res) => {
     try {
@@ -51,23 +54,48 @@ const updateStorageLocation = async (req, res) => {
             });
         }
 
-        let currentTime = new Date().getTime();
-        let insertData = {
-            orgId: orgId,
-            ...payload,
-            name: payload.name.trim(),
-            updatedBy: userId,
-            updatedAt: currentTime,
-        };
-        console.log('Storage Location update record: ', insertData);
+        await knex.transaction(async (trx) => {
 
-        const insertResult = await knex
-            .update(insertData)
-            .where({ id: payload.id, orgId: req.orgId })
-            .returning(["*"])
-            .into("storage_locations");
+            let currentTime = new Date().getTime();
+            let insertData = {
+                orgId: orgId,
+                ...payload,
+                name: payload.name.trim(),
+                updatedBy: userId,
+                updatedAt: currentTime,
+            };
+            console.log('Storage Location update record: ', insertData);
 
-        insertedRecord = insertResult[0];
+            const insertResult = await knex
+                .update(insertData)
+                .where({ id: payload.id, orgId: req.orgId })
+                .returning(["*"])
+                .transacting(trx)
+                .into("storage_locations");
+
+            insertedRecord = insertResult[0];
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: insertedRecord.companyId,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.Store,
+                entityActionId: EntityActions.Edit,
+                description: `${req.me.name} changed store '${insertedRecord.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
+
+            trx.commit;
+        });
 
         return res.status(200).json({
             data: {

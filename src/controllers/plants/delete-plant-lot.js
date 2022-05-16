@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const deletePlantLot = async (req, res) => {
     try {
@@ -13,6 +16,9 @@ const deletePlantLot = async (req, res) => {
         const schema = Joi.object().keys({
             id: Joi.string().required(),
             confirm: Joi.string().allow('').allow(null).required(),
+            companyId: Joi.number().required(),
+            plantsCount: Joi.number().integer().required(),
+            plantLotNo: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -35,7 +41,7 @@ const deletePlantLot = async (req, res) => {
 
         childRecords = false;
         wasteCount = locationChangeCount = growthStageChangeCount = harvestCount = 0;
-        if(payload.confirm != "confirm"){
+        if (payload.confirm != "confirm") {
             //  Check whether child records exist
             const wasteSql = `SELECT coalesce(sum(pwt."totalPlants"), 0) "wasteCount" FROM plant_waste_txns pwt WHERE "plantLotId" = ${payload.id} AND "orgId" = ${orgId};`;
             const locationSql = `SELECT coalesce(sum(plt."totalPlants"), 0) "locationChangeCount" FROM plant_location_txns plt WHERE "plantLotId" = ${payload.id} AND "orgId" = ${orgId};`;
@@ -58,18 +64,41 @@ const deletePlantLot = async (req, res) => {
             growthStageChangeCount = parseInt(gStageChangeCount.rows[0].growthStageChangeCount);
             harvestCount = parseInt(hCount.rows[0].harvestCount);
 
-            if(wasteCount || locationChangeCount || growthStageChangeCount || harvestCount){
+            if (wasteCount || locationChangeCount || growthStageChangeCount || harvestCount) {
                 childRecords = true;
                 message = `Plant lot has child records`
             }
         }
 
-        if(!childRecords){
-            //  Delete plant lot record
-            sqlStr = `DELETE FROM plant_lots WHERE id = ${payload.id} AND "orgId" = ${orgId}`;
-            deletedRecord = await knex.raw(sqlStr);
+        if (!childRecords) {
+            await knex.transaction(async (trx) => {
+                //  Delete plant lot record
+                sqlStr = `DELETE FROM plant_lots WHERE id = ${payload.id} AND "orgId" = ${orgId}`;
+                deletedRecord = await knex.raw(sqlStr).transacting(trx);
 
-            message = `Plant lot deleted successfully.`
+                message = `Plant lot deleted successfully.`
+
+                //  Log user activity
+                let userActivity = {
+                    orgId: orgId,
+                    companyId: payload.companyId,
+                    entityId: payload.id,
+                    entityTypeId: EntityTypes.Plant,
+                    entityActionId: EntityActions.Delete,
+                    description: `${req.me.name} deleted plant lot '${payload.plantLotNo}' containing ${payload.plantsCount} plants on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                    createdBy: userId,
+                    createdAt: currentTime,
+                    trx: trx
+                }
+                const ret = await addUserActivityHelper.addUserActivity(userActivity);
+                // console.log(`addUserActivity Return: `, ret);
+                if (ret.error) {
+                    throw { code: ret.code, message: ret.message };
+                }
+                //  Log user activity
+
+                trx.commit;
+            });
         }
 
         return res.status(200).json({
