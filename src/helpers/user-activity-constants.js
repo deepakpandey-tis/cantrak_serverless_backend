@@ -2,6 +2,7 @@
 const EntityTypes = {
     Login: 101,
     Logout: 102,
+    ChangePassword: 103,
     Company: 1,
     GrowingLocation: 2,
     SubGrowingLocation: 3,
@@ -33,6 +34,7 @@ const EntityTypes = {
   const EntityActions = {
     Login: 101,
     Logout: 102,
+    ChangePassword: 103,
     Add: 1,
     View: 2,
     Edit: 3,
