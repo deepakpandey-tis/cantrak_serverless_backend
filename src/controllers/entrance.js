@@ -8,6 +8,8 @@ const uuidv4 = require('uuid/v4');
 var jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const superagent = require('superagent');
+const addUserActivityHelper = require('../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../helpers/user-activity-constants');
 
 
 const entranceController = {
@@ -147,6 +149,25 @@ const entranceController = {
                 }
 
 
+                //  Log user activity
+                let userActivity = {
+                    orgId: orgId,
+                    companyId: null,
+                    entityId: loginResult.id,
+                    entityTypeId: EntityTypes.Login,
+                    entityActionId: EntityActions.Login,
+                    description: `${loginResult.name} logged-in on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                    createdBy: loginResult.id,
+                    createdAt: currentTime,
+                    trx: null
+                }
+                const ret = await addUserActivityHelper.addUserActivity(userActivity);
+                // console.log(`addUserActivity Return: `, ret);
+                if (ret.error) {
+                    throw { code: ret.code, message: ret.message };
+                }
+                //  Log user activity
+
 
                 // An user can have atmost one application role
                 let userApplicationRole = await knexReader('application_user_roles').where({ userId: Number(loginResult.id) }).select('roleId', 'orgId').first();
@@ -239,7 +260,7 @@ const entranceController = {
                     login.user.userLocationsResources = userLocationsResources;
 
                 }
-
+ 
                 console.log("[controllers][entrance][login] : LoginResponse::", login);
                 res.status(200).json(login)
             } else {
