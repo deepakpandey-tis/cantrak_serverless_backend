@@ -118,6 +118,7 @@ const themeRouter = require("./theme");
 const superadminTenantRouter = require('./superadmin/tenant');
 
 const cropCyclePlanRouter = require("./crop-cycle-plan");
+const userActivitiesRouter = require("./user-activities");
 
 
 
@@ -426,5 +427,7 @@ router.use("/db-migration",dbMigrationRouter);
 router.use("/superadmin/tenant", superadminTenantRouter);
 
 router.use("/crop-cycle-plan", cropCyclePlanRouter);
+
+router.use("/user-activities", userActivitiesRouter);
 
 module.exports = router;
