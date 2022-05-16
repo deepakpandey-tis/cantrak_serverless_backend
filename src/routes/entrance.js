@@ -9,6 +9,8 @@ const authMiddleware = require('../middlewares/auth');
 /* GET users listing. */
 router.post('/login', entranceController.login);
 
+router.post('/logout', authMiddleware.isAuthenticated, entranceController.logout);
+
 router.post('/sign-up', entranceController.signUp);
 
 router.post('/forgot-password', entranceController.forgotPassword);
