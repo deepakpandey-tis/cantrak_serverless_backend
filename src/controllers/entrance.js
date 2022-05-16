@@ -281,6 +281,52 @@ const entranceController = {
         }
     },
 
+    logout: async (req, res) => {
+
+        try {
+            let orgId = req.me.orgId;
+            let userId = req.me.id;
+            let userName = req.me.name;
+
+            let payload = req.body;
+
+            let currentTime = new Date().getTime();
+
+            //  Log user activity
+            let userActivity = {
+                orgId: orgId,
+                companyId: null,
+                entityId: userId,
+                entityTypeId: EntityTypes.Logout,
+                entityActionId: EntityActions.Logout,
+                description: `${userName} logged-out on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: null
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
+
+            res.status(200).json({
+                message: "logout successfully!"
+            });
+
+        } catch (err) {
+
+            res.status(500).json({
+                errors: [
+                    { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+                ],
+            });
+
+        }
+
+    },
+
     signUp: async (req, res) => {
 
         try {
