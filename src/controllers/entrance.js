@@ -487,6 +487,9 @@ const entranceController = {
     changePassword: async (req, res) => {
 
         try {
+            let orgId = req.me.orgId;
+            let userId = req.me.id;
+            let userName = req.me.name;
 
             let payload = req.body;
 
@@ -521,12 +524,32 @@ const entranceController = {
             if(match){
             if (payload.newPassword == payload.confirmPassword) {
 
+                let currentTime = new Date().getTime();
                 let userResult = await knex.from('users').where({ id: payload.id }).first();
                 if (userResult) {
 
                     let pass = await bcrypt.hash(payload.newPassword, saltRounds);
 
                     let updateResult = await knex('users').update({ "password": pass }).where({ id: payload.id });
+
+                    //  Log user activity
+                    let userActivity = {
+                        orgId: orgId,
+                        companyId: null,
+                        entityId: payload.id,
+                        entityTypeId: EntityTypes.ChangePassword,
+                        entityActionId: EntityActions.ChangePassword,
+                        description: `${userName} changed password on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                        createdBy: userId,
+                        createdAt: currentTime,
+                        trx: null
+                    }
+                    const ret = await addUserActivityHelper.addUserActivity(userActivity);
+                    // console.log(`addUserActivity Return: `, ret);
+                    if (ret.error) {
+                        throw { code: ret.code, message: ret.message };
+                    }
+                    //  Log user activity
 
                     res.status(200).json({
                         data: {
