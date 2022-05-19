@@ -13,26 +13,28 @@ const getUserActivities = async (req, res) => {
         sqlFrom = ` FROM user_activities ua`;
         sqlFrom += ` LEFT OUTER JOIN companies c ON c.id = ua."companyId"`
         sqlWhere = ` WHERE ua."orgId" = ${orgId}`;
-        if(!userId){
+        if(userId){
+            sqlWhere += ` AND ua."createdBy" = ${userId}`
+        }
+/*         else {
             // userId not specifed, get logged-in user activities
             sqlWhere += ` AND ua."createdBy" = ${loggedInUserId}`
         }
-        else {
-            sqlWhere += ` AND ua."createdBy" = ${userId}`
-        }
+ */
         if(companyId){
-            sqlWhere += ` AND ua."companyId" = ${companyId}`;
+            sqlWhere += ` AND (ua."companyId" is null OR ua."companyId" = ${companyId})`;
         }
         if(fromDate){
-            sqlWhere += ` AND ua."createdAt" >= ${new Date(fromDate).getTime()}`;
+            sqlWhere += ` AND to_timestamp(ua."createdAt"/1000)::date >= to_timestamp(${new Date(fromDate).getTime()}/1000)::date`;
         }
         if(toDate){
-            sqlWhere += ` AND ua."createdAt" <= ${new Date(toDate).getTime()}`;
+            sqlWhere += ` AND to_timestamp(ua."createdAt"/1000)::date <= to_timestamp(${new Date(toDate).getTime()}/1000)::date`;
         }
 
         sqlOrderBy = ` ORDER BY ua."createdAt" DESC`
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
+        console.log('getUserActivities sql: ', sqlStr);
 
         var selectedRecs = await knexReader.raw(sqlStr);
 
