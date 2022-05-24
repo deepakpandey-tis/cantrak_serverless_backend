@@ -14,4 +14,26 @@ router.post('/get-user-activities',
   userActivitiesController.getUserActivities
 );
 
+router.post('/get-user-activity-list',
+  authMiddleware.isAuthenticated,
+//   roleMiddleware.parseUserPermission,
+//   resourceAccessMiddleware.isAccessible,
+  userActivitiesController.getUserActivityList
+);
+
+
+router.get('/get-companies',
+  authMiddleware.isAuthenticated,
+  // roleMiddleware.parseUserPermission,
+  // resourceAccessMiddleware.isAccessible,
+  userActivitiesController.getCompanies
+);
+
+router.get('/get-users',
+  authMiddleware.isAuthenticated,
+  // roleMiddleware.parseUserPermission,
+  // resourceAccessMiddleware.isAccessible,
+  userActivitiesController.getUsers
+);
+
 module.exports = router;
