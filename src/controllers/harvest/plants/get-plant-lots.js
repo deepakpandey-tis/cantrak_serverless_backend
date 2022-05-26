@@ -60,7 +60,8 @@ const getPlantLots = async (req, res) => {
         sqlFrom = ` FROM plant_lots pl, plants p, plant_locations ploc`;
         sqlWhere = ` WHERE ploc."orgId" = ${orgId} and ploc."locationId" = ${payload.locationId} and ploc."subLocationId" = ${payload.subLocationId} and ploc."plantId" = p.id`;
         sqlWhere += ` and p."isActive" and not p."isWaste" and p."plantLotId" = pl.id and pl."companyId" = ${payload.companyId}`;
-        // 2022/05/26 not required it is same as in main select clause sqlWhere += ` and ploc.id = (select id from plant_locations ploc2 where ploc2."plantId" = ploc."plantId" ORDER BY id DESC LIMIT 1)`;
+        // to get latest location of the plantId sub query added
+        sqlWhere += ` and ploc.id = (select id from plant_locations ploc2 where ploc2."orgId" = p."orgId" and ploc2."plantId" = p."id" ORDER BY id DESC LIMIT 1)`;
         sqlGroupBy = ` GROUP BY ploc."locationId", ploc."subLocationId", pl.id, pl."lotNo"`;
 
         sqlStr = `SELECT pl2."orgId", pl2."companyId", pl2."specieId", s."name" "specieName", pl2."strainId", s2."name" "strainName", pl2."licenseId", locationPlants.*`;
