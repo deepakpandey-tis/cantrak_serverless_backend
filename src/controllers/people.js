@@ -239,16 +239,16 @@ const peopleController = {
                     knex
                     .count("* as count")
                     .from("users")
-                    .leftJoin(
-                        "user_house_allocation",
-                        "users.id",
-                        "user_house_allocation.userId"
-                    )
-                    .leftJoin(
-                        "property_units",
-                        "user_house_allocation.houseId",
-                        "property_units.id"
-                    )
+                    // .leftJoin(
+                    //     "user_house_allocation",
+                    //     "users.id",
+                    //     "user_house_allocation.userId"
+                    // )
+                    // .leftJoin(
+                    //     "property_units",
+                    //     "user_house_allocation.houseId",
+                    //     "property_units.id"
+                    // )
                     .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
                     .whereNotIn('application_user_roles.roleId', [2, 4])
                     .where(qb => {
@@ -270,16 +270,16 @@ const peopleController = {
                     .first(),
                     knex
                     .from("users")
-                    .leftJoin(
-                        "user_house_allocation",
-                        "users.id",
-                        "user_house_allocation.userId"
-                    )
-                    .leftJoin(
-                        "property_units",
-                        "user_house_allocation.houseId",
-                        "property_units.id"
-                    )
+                    // .leftJoin(
+                    //     "user_house_allocation",
+                    //     "users.id",
+                    //     "user_house_allocation.userId"
+                    // )
+                    // .leftJoin(
+                    //     "property_units",
+                    //     "user_house_allocation.houseId",
+                    //     "property_units.id"
+                    // )
 
                     .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
                     .whereNotIn('application_user_roles.roleId', [2, 4])
@@ -305,7 +305,7 @@ const peopleController = {
                         "users.email as email",
                         "users.userName",
                         "users.mobileNo",
-                        "property_units.id",
+                        // "property_units.id",
                         "users.lastLogin as lastVisit",
                         "users.isActive"
                         //"companies.id as companyId",
@@ -323,16 +323,16 @@ const peopleController = {
                     knex
                     .count("* as count")
                     .from("users")
-                    .leftJoin(
-                        "user_house_allocation",
-                        "users.id",
-                        "user_house_allocation.userId"
-                    )
-                    .leftJoin(
-                        "property_units",
-                        "user_house_allocation.houseId",
-                        "property_units.id"
-                    )
+                    // .leftJoin(
+                    //     "user_house_allocation",
+                    //     "users.id",
+                    //     "user_house_allocation.userId"
+                    // )
+                    // .leftJoin(
+                    //     "property_units",
+                    //     "user_house_allocation.houseId",
+                    //     "property_units.id"
+                    // )
                     // .leftJoin(
                     //   "companies",
                     //   "property_units.companyId",
@@ -358,21 +358,21 @@ const peopleController = {
                     .first(),
                     knex
                     .from("users")
-                    .leftJoin(
-                        "user_house_allocation",
-                        "users.id",
-                        "user_house_allocation.userId"
-                    )
-                    .leftJoin(
-                        "property_units",
-                        "user_house_allocation.houseId",
-                        "property_units.id"
-                    )
-                    .leftJoin(
-                        "companies",
-                        "property_units.companyId",
-                        "companies.id"
-                    )
+                    // .leftJoin(
+                    //     "user_house_allocation",
+                    //     "users.id",
+                    //     "user_house_allocation.userId"
+                    // )
+                    // .leftJoin(
+                    //     "property_units",
+                    //     "user_house_allocation.houseId",
+                    //     "property_units.id"
+                    // )
+                    // .leftJoin(
+                    //     "companies",
+                    //     "property_units.companyId",
+                    //     "companies.id"
+                    // )
                     // .leftJoin(
                     //   "organisation_user_roles",
                     //   "users.id",
@@ -446,17 +446,17 @@ const peopleController = {
             let userResult;
             let projectResult;
             peopleData = await knex("users")
-                .leftJoin(
-                    "user_house_allocation",
-                    "users.id",
-                    "user_house_allocation.userId"
-                )
-                .leftJoin(
-                    "property_units",
-                    "user_house_allocation.houseId",
-                    "property_units.id"
-                )
-                .leftJoin("companies", "property_units.companyId", "companies.id")
+                // .leftJoin(
+                //     "user_house_allocation",
+                //     "users.id",
+                //     "user_house_allocation.userId"
+                // )
+                // .leftJoin(
+                //     "property_units",
+                //     "user_house_allocation.houseId",
+                //     "property_units.id"
+                // )
+                // .leftJoin("companies", "property_units.companyId", "companies.id")
                 .leftJoin("organisations", "users.orgId", "organisations.id")
                 .leftJoin("team_users", "users.id", "team_users.userId")
                 .leftJoin("teams", "team_users.teamId", "teams.teamId")
@@ -561,21 +561,21 @@ const peopleController = {
 
                 knex
                 .from("users")
-                .leftJoin(
-                    "user_house_allocation",
-                    "users.id",
-                    "user_house_allocation.userId"
-                )
-                .leftJoin(
-                    "property_units",
-                    "user_house_allocation.houseId",
-                    "property_units.id"
-                )
-                .leftJoin(
-                    "companies",
-                    "property_units.companyId",
-                    "companies.id"
-                )
+                // .leftJoin(
+                //     "user_house_allocation",
+                //     "users.id",
+                //     "user_house_allocation.userId"
+                // )
+                // .leftJoin(
+                //     "property_units",
+                //     "user_house_allocation.houseId",
+                //     "property_units.id"
+                // )
+                // .leftJoin(
+                //     "companies",
+                //     "property_units.companyId",
+                //     "companies.id"
+                // )
                 .leftJoin('application_user_roles', 'users.id', 'application_user_roles.userId')
                 .leftJoin('team_users', 'users.id', 'team_users.userId')
                 .leftJoin(
