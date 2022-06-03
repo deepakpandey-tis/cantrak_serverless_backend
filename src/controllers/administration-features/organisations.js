@@ -761,7 +761,9 @@ const organisationsController = {
       let resourcesarr = [];
       let resourceResult = await knex("organisation_resources_master")
         .leftJoin('resources', 'organisation_resources_master.resourceId', 'resources.id')
-        .where({ "organisation_resources_master.orgId": id, "organisation_resources_master.userStatus" : true });
+        .where({ "organisation_resources_master.orgId": id });
+        //  userStatus is not a column of table organisation_resources_master
+        // .where({ "organisation_resources_master.orgId": id, "organisation_resources_master.userStatus" : true });
 
 
       for (resource of resourceResult) {

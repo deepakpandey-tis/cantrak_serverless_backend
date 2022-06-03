@@ -58,6 +58,7 @@ const updateItemFromImportLicense = async (req, res) => {
             refNo: Joi.string().allow([null, '']).required(),
             refDate: Joi.date().allow([null]).optional(),
             additionalAttributes: Joi.array().required(),
+            itemName: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -133,22 +134,22 @@ const updateItemFromImportLicense = async (req, res) => {
             let entity;
             let entityType;
             if(insertedRecord.itemCategoryId == ItemCategory.RawMaterial){
-                entity = 'imported raw material lot number';
+                entity = `imported raw material '${payload.itemName}'`;
                 entityType = EntityTypes.RawMaterial;
             }
             else
             if(insertedRecord.itemCategoryId == ItemCategory.Product){
-                entity = 'imported product lot number';
+                entity = `imported product '${payload.itemName}'`;
                 entityType = EntityTypes.Product;
             }
             else
             if(insertedRecord.itemCategoryId == ItemCategory.FinishedGoods){
-                entity = 'imported finished good lot number';
+                entity = `imported finished good '${payload.itemName}'`;
                 entityType = EntityTypes.FinishedGood;
             }
             else
             if(insertedRecord.itemCategoryId == ItemCategory.WasteMaterial){
-                entity = 'imported waste material lot number';
+                entity = `imported waste material '${payload.itemName}'`;
                 entityType = EntityTypes.WasteMaterial;
             }
 

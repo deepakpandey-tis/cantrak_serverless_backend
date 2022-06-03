@@ -51,6 +51,7 @@ const updateWasteMaterial = async (req, res) => {
             refNo: Joi.string().allow([null, '']).required(),
             refDate: Joi.date().allow([null]).optional(),
             additionalAttributes: Joi.array().required(),
+            itemName: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -102,22 +103,22 @@ const updateWasteMaterial = async (req, res) => {
             let entity;
             let entityType;
             if(insertedRecord.itemCategoryId == ItemCategory.RawMaterial){
-                entity = 'raw material waste lot number';
+                entity = `raw material waste of '${payload.itemName}'`;
                 entityType = EntityTypes.RawMaterial;
             }
             else
             if(insertedRecord.itemCategoryId == ItemCategory.Product){
-                entity = 'product waste lot number';
+                entity = `product waste of '${payload.itemName}'`;
                 entityType = EntityTypes.Product;
             }
             else
             if(insertedRecord.itemCategoryId == ItemCategory.FinishedGoods){
-                entity = 'finished good waste lot number';
+                entity = `finished good waste of '${payload.itemName}'`;
                 entityType = EntityTypes.FinishedGood;
             }
             else
             if(insertedRecord.itemCategoryId == ItemCategory.WasteMaterial){
-                entity = 'waste material lot number';
+                entity = `waste material of '${payload.itemName}'`;
                 entityType = EntityTypes.WasteMaterial;
             }
 
