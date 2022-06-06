@@ -37,7 +37,7 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT wps.*
-        , wpsal."id" "workOrderId", wpsal."displayId", wpsal."name", wpsal."locationId", wpsal."workOrderDate", wpsal."isOverdue", wpsal."status", wpsal."frequencyTag"
+        , wpsal."id" "workOrderId", wpsal."displayId", wpsal."name", wpsal."locationId", wpsal."workOrderDate", wpsal."isOverdue", wpsal."status", wpsal."frequencyTag", wpsal."completedAt"
         , l."name" "locationName", sl."name" "subLocationName"
         `;
 
@@ -46,7 +46,8 @@ const getWorkPlanWorkOrderList = async (req, res) => {
 
         sqlWhere = ` WHERE wps."orgId" = ${orgId} AND wps."workPlanMasterId" = ${id}`;
 
-        sqlWhere += ` AND wpsal."workPlanScheduleId" = wps.id AND wpsal."workOrderDate" <= ${workOrderDate} AND wpsal."locationId" = l.id AND wpsal."subLocationId" = sl.id`;
+        sqlWhere += ` AND wpsal."workPlanScheduleId" = wps.id AND wpsal."locationId" = l.id AND wpsal."subLocationId" = sl.id`;
+        //   condition to show <= today date; now showing for all dates     AND wpsal."workOrderDate" <= ${workOrderDate}
         if(locationId){
             sqlWhere += ` AND wpsal."locationId" = ${locationId}`;
         }

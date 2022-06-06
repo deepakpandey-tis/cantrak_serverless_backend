@@ -16,8 +16,8 @@ module.exports.workOrderOverdueProcessor = async (event, context) => {
   // console.log('[handlers][workOrderOverdueProcessor]: Event:', JSON.stringify(event));
   // console.log('[handlers][workOrderOverdueProcessor]: Context:', JSON.stringify(context));
 
-  const pmHelper = require("../helpers/preventive-maintenance");
-  await pmHelper.markWorkOrdersOverDue();
+  const wpoHelper = require("../helpers/work-plan-overdue");
+  await wpoHelper.markWorkOrdersOverDue();
 
   console.log('[handlers][workOrderOverdueProcessor]: Task Completed Successfully');
 
