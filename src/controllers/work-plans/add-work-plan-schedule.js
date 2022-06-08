@@ -13,7 +13,7 @@ const addWorkPlanSchedule = async (req, res) => {
         );
 
         let insertedRecord = [];
-        let woNo, woTaskNo;
+        let woNo, woTaskNo, woAdditionalUserNo;
         let insertedWorkOrders = [];
         let insertedWorkOrderTasks = [];
 
@@ -68,7 +68,12 @@ const addWorkPlanSchedule = async (req, res) => {
                 workOrderData = {
                     orgId: orgId,
                     workPlanScheduleId: insertedRecord.id,
-                    ...wo,
+                    // ...wo,
+                    companyId: wo.companyId,
+                    name: wo.name,
+                    locationId: wo.locationId,
+                    subLocationId: wo.subLocationId,
+                    frequencyTag: wo.frequencyTag,
                     workOrderDate: new Date(wo.workOrderDate).getTime(),
                     createdBy: userId,
                     createdAt: currentTime,
@@ -85,7 +90,51 @@ const addWorkPlanSchedule = async (req, res) => {
 
                 insertedWorkOrders[woNo] = insertResult[0];
 
-                //  Location Work Ordr Tasks
+                //  Location Work Order Team
+                let insertTeamData = {
+                    orgId: orgId,
+                    entityId: insertedWorkOrders[woNo].id,
+                    entityType: 'work_order',
+                    teamId: wo.teamId,
+                    userId: wo.userId,
+                    createdAt: currentTime,
+                    updatedAt: currentTime,
+                };
+                console.log('work order team insert record: ', insertTeamData);
+
+                const insertTeamResult = await knex
+                    .insert(insertTeamData)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("assigned_service_team");
+
+                insertedWorkOrders[woNo].team = insertTeamResult[0];
+        
+                //  Location Work Order Additional Users
+                woAdditionalUserNo = 0;
+                insertedWorkOrders[woNo].additionalUsers = [];
+                for (let woAUId of wo.additionalUsersId) {
+                    workOrderAdditionalUserData = {
+                        orgId: orgId,
+                        entityId: insertedWorkOrders[woNo].id,
+                        entityType: 'work_order',
+                        userId: woAUId,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                    };
+                    console.log('work order additional user insert record: ', workOrderAdditionalUserData);
+
+                    const insertAdditionaUserResult = await knex
+                        .insert(workOrderAdditionalUserData)
+                        .returning(["*"])
+                        .transacting(trx)
+                        .into("assigned_service_additional_users");
+
+                    insertedWorkOrders[woNo].additionalUsers[woAdditionalUserNo] = insertAdditionaUserResult[0];
+                    woAdditionalUserNo += 1;
+                }
+
+                //  Location Work Order Tasks
                 woTaskNo = 0;
                 for (let woTask of workOrderTasks) {
                     workOrderTaskData = {
