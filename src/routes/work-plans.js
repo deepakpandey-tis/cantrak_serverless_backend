@@ -141,4 +141,11 @@ router.post('/update-work-order-task-remark',
   workPlanController.updateWorkOrderTaskRemark
 );
 
+router.post('/get-teams',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  workPlanController.getTeams
+);
+
 module.exports = router;

@@ -18,6 +18,7 @@ const getLocations = require('./masters/get-locations');
 const getLocationList = require('./masters/get-location-list');
 const getSubLocations = require('./masters/get-sub-locations');
 const getLocationsSubLocations = require('./masters/get-locations-sub-locations');
+const getTeams = require('./masters/get-teams');
 
 module.exports = {
     getWorkPlanList,
@@ -40,4 +41,5 @@ module.exports = {
     getLocationList,
     getSubLocations,
     getLocationsSubLocations,
+    getTeams,
 };

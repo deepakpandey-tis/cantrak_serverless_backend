@@ -8,10 +8,15 @@ const updateWorkOrderDate = async (req, res) => {
     const payload = req.body;
 
     let insertedRecord = [];
+    let woAdditionalUserNo;
 
     const schema = Joi.object().keys({
         id: Joi.string().required(),
         workOrderDate: Joi.date().required(),
+        astId: Joi.string().allow(null).allow('').required(),
+        teamId: Joi.string().required(),
+        userId: Joi.string().allow(null).allow('').required(),
+        additionalUsersId: Joi.array().allow(null).required()
     });
 
     const result = Joi.validate(payload, schema);
@@ -48,6 +53,71 @@ const updateWorkOrderDate = async (req, res) => {
 
             insertedRecord = insertResult[0];
 
+            //  Location Work Order Team
+            if(payload.astId){
+                let teamData = {
+                    teamId: payload.teamId,
+                    userId: payload.userId,
+                    updatedAt: currentTime,
+                };
+                console.log('work order team update record: ', teamData);
+
+                const teamResult = await knex
+                    .update(teamData)
+                    .where({ id: payload.astId, orgId: orgId })
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("assigned_service_team");
+            } else {
+                let teamData = {
+                    orgId: orgId,
+                    entityId: insertedRecord.id,
+                    entityType: 'work_order',
+                    teamId: payload.teamId,
+                    userId: payload.userId,
+                    createdAt: currentTime,
+                    updatedAt: currentTime,
+                };
+                console.log('work order team insert record: ', teamData);
+
+                const teamResult = await knex
+                    .insert(teamData)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("assigned_service_team");
+            }
+        
+            //  Location Work Order Additional Users
+            //  First delete existing records and then insert
+            let result = await knex('assigned_service_additional_users')
+                .delete()
+                .where({ entityId: payload.id, entityType: 'work_order', orgId: orgId })
+                .transacting(trx)
+                .returning(['*']);
+
+            if(payload.additionalUsersId){
+                woAdditionalUserNo = 0;
+                for (let woAUId of payload.additionalUsersId) {
+                    workOrderAdditionalUserData = {
+                        orgId: orgId,
+                        entityId: payload.id,
+                        entityType: 'work_order',
+                        userId: woAUId,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                    };
+                    console.log('work order additional user insert record: ', workOrderAdditionalUserData);
+
+                    const insertAdditionaUserResult = await knex
+                        .insert(workOrderAdditionalUserData)
+                        .returning(["*"])
+                        .transacting(trx)
+                        .into("assigned_service_additional_users");
+
+                    woAdditionalUserNo += 1;
+                }
+            }
+
             trx.commit;
         });
 
@@ -55,7 +125,7 @@ const updateWorkOrderDate = async (req, res) => {
             data: {
                 record: insertedRecord,
             },
-            message: 'Work Order date updated successfully.'
+            message: 'Work Order updated successfully.'
         });
     } catch (err) {
         console.log("[controllers][work-plans][updateWorkOrderDate] :  Error", err);

@@ -35,6 +35,31 @@ const getWorkOrder = async (req, res) => {
 
         var selectedRecs = await knexReader.raw(sqlStr);
 
+        //  Get Work Order Team and Main User
+        sqlSelect = `SELECT ast.*, t."teamName", u."name", u."userName"`;
+
+        sqlFrom = ` FROM assigned_service_team ast`;
+        sqlFrom += ` LEFT JOIN teams t ON ast."teamId" = t."teamId"`;
+        sqlFrom += ` LEFT JOIN users u ON ast."userId" = u.id`;
+
+        sqlWhere = ` WHERE ast."orgId" = ${orgId} and ast."entityId" = ${payload.id} `;
+
+        sqlStr = sqlSelect + sqlFrom + sqlWhere;
+
+        var workOrderTeam = await knexReader.raw(sqlStr);
+
+        //  Get Work Order Additional Users
+        sqlSelect = `SELECT asau.*, u."name", u."userName"`;
+
+        sqlFrom = ` FROM assigned_service_additional_users asau`;
+        sqlFrom += ` LEFT JOIN users u ON asau."userId" = u.id`;
+
+        sqlWhere = ` WHERE asau."orgId" = ${orgId} and asau."entityId" = ${payload.id} `;
+
+        sqlStr = sqlSelect + sqlFrom + sqlWhere;
+
+        var workOrderAdditionalUsers = await knexReader.raw(sqlStr);
+
         //  Get Work Order Tasks
         sqlSelect = `SELECT wpslt.*`;
         sqlSelect += `, rm.id "rmId", rm."entityId" "rmEntityId", rm."description" "rmDescription"`;
@@ -52,6 +77,8 @@ const getWorkOrder = async (req, res) => {
         return res.status(200).json({
             data: {
                 record: selectedRecs.rows[0],
+                workOrderTeam: workOrderTeam.rows[0],
+                workOrderAdditionalUsers: workOrderAdditionalUsers.rows,
                 workOrderTasks: workOrderTasks.rows
             },
             message: "Work Order detail!"
