@@ -22,7 +22,7 @@ const getWorkOrder = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT wpsa.*, c."companyName", l.name "locationName", sl.name "subLocationName"`;
+        sqlSelect = `SELECT wpsa.*, c."companyName", c."logoFile", l.name "locationName", sl.name "subLocationName"`;
 
         sqlFrom = ` FROM work_plan_schedule_assign_locations wpsa, companies c, locations l, sub_locations sl`;
 
