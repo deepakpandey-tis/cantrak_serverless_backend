@@ -12,6 +12,7 @@ const cancelWorkOrder = require('./cancel-work-order');
 const updateWorkOrderTasksStatus = require('./update-work-order-tasks-status');
 const addWorkOrderTaskRemark = require('./add-work-order-task-remark');
 const updateWorkOrderTaskRemark = require('./update-work-order-task-remark');
+const getUserTeamWorkOrderList = require('./get-user-team-work-order-list');
 
 const getCompanies = require('./masters/get-companies');
 const getLocations = require('./masters/get-locations');
@@ -19,6 +20,7 @@ const getLocationList = require('./masters/get-location-list');
 const getSubLocations = require('./masters/get-sub-locations');
 const getLocationsSubLocations = require('./masters/get-locations-sub-locations');
 const getTeams = require('./masters/get-teams');
+const getLocationsSubLocationsPlantLots = require('./masters/get-locations-sub-locations-plant-lots');
 
 module.exports = {
     getWorkPlanList,
@@ -35,6 +37,7 @@ module.exports = {
     updateWorkOrderTasksStatus,
     addWorkOrderTaskRemark,
     updateWorkOrderTaskRemark,
+    getUserTeamWorkOrderList,
 
     getCompanies,
     getLocations,
@@ -42,4 +45,5 @@ module.exports = {
     getSubLocations,
     getLocationsSubLocations,
     getTeams,
+    getLocationsSubLocationsPlantLots,
 };

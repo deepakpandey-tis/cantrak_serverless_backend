@@ -91,6 +91,13 @@ router.post('/update-work-order-tasks-status',
   workPlanController.updateWorkOrderTasksStatus
 );
 
+router.post('/get-user-team-work-order-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  workPlanController.getUserTeamWorkOrderList
+);
+
 
 router.get('/get-companies',
   authMiddleware.isAuthenticated,
@@ -146,6 +153,13 @@ router.post('/get-teams',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   workPlanController.getTeams
+);
+
+router.post('/get-locations-sub-locations-plant-lots',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  workPlanController.getLocationsSubLocationsPlantLots
 );
 
 module.exports = router;
