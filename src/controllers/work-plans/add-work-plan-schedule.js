@@ -113,25 +113,27 @@ const addWorkPlanSchedule = async (req, res) => {
                 //  Location Work Order Additional Users
                 woAdditionalUserNo = 0;
                 insertedWorkOrders[woNo].additionalUsers = [];
-                for (let woAUId of wo.additionalUsersId) {
-                    workOrderAdditionalUserData = {
-                        orgId: orgId,
-                        entityId: insertedWorkOrders[woNo].id,
-                        entityType: 'work_order',
-                        userId: woAUId,
-                        createdAt: currentTime,
-                        updatedAt: currentTime,
-                    };
-                    console.log('work order additional user insert record: ', workOrderAdditionalUserData);
+                if(wo.additionalUsersId != null){
+                    for (let woAUId of wo.additionalUsersId) {
+                        workOrderAdditionalUserData = {
+                            orgId: orgId,
+                            entityId: insertedWorkOrders[woNo].id,
+                            entityType: 'work_order',
+                            userId: woAUId,
+                            createdAt: currentTime,
+                            updatedAt: currentTime,
+                        };
+                        console.log('work order additional user insert record: ', workOrderAdditionalUserData);
 
-                    const insertAdditionaUserResult = await knex
-                        .insert(workOrderAdditionalUserData)
-                        .returning(["*"])
-                        .transacting(trx)
-                        .into("assigned_service_additional_users");
+                        const insertAdditionaUserResult = await knex
+                            .insert(workOrderAdditionalUserData)
+                            .returning(["*"])
+                            .transacting(trx)
+                            .into("assigned_service_additional_users");
 
-                    insertedWorkOrders[woNo].additionalUsers[woAdditionalUserNo] = insertAdditionaUserResult[0];
-                    woAdditionalUserNo += 1;
+                        insertedWorkOrders[woNo].additionalUsers[woAdditionalUserNo] = insertAdditionaUserResult[0];
+                        woAdditionalUserNo += 1;
+                    }
                 }
 
                 //  Location Work Order Tasks
