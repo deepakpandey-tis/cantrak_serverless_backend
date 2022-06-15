@@ -66,6 +66,13 @@ router.post('/get-sub-locations',
   dashboardController.getSubLocations
 );
 
+router.post('/get-user-team-work-orders',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  dashboardController.getUserTeamWorkOrders
+);
+
 
 module.exports = router;
 

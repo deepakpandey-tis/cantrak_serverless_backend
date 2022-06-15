@@ -1,4 +1,5 @@
 const knexReader = require('../../db/knex-reader');
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const getUserActivityList = async (req, res) => {
     try {
@@ -13,7 +14,7 @@ const getUserActivityList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, userId, fromDate, toDate } = req.body;
+        let { companyId, userId, fromDate, toDate, getLoginLogout } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -57,6 +58,9 @@ const getUserActivityList = async (req, res) => {
         }
         if(toDate){
             sqlWhere += ` AND to_timestamp(ua."createdAt"/1000)::date <= to_timestamp(${new Date(toDate).getTime()}/1000)::date`;
+        }
+        if(!getLoginLogout){
+            sqlWhere += ` AND "entityTypeId" != ${EntityTypes.Login} AND "entityTypeId" != ${EntityTypes.Logout}`;
         }
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
