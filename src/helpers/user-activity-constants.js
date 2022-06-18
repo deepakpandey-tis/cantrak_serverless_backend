@@ -29,6 +29,9 @@ const EntityTypes = {
     Harvest: 24,
     Production: 25,
     Invoice: 26,
+    WorkPlanGrowingSubLocation: 27,
+    WorkPlanPlantLot: 28,
+    WorkPlanGrowingLocation: 29,
   };
 
   const EntityActions = {

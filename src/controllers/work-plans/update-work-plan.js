@@ -17,6 +17,7 @@ const updateWorkPlan = async (req, res) => {
             id: Joi.string().required(),
             name: Joi.string().required(),
             companyId: Joi.string().required(),
+            entityTypeId: Joi.number().required(),
             locationIds: Joi.array().required(),
             // plantationId: Joi.string().required(),
             // plantationGroupIds: Joi.array().required(),

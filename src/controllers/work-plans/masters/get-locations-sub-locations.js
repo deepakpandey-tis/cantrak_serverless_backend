@@ -17,7 +17,7 @@ const getLocationsSubLocations = async (req, res) => {
 
         sqlFrom = ` FROM locations l`;
 
-        sqlWhere = ` WHERE l."orgId" = ${orgId} AND l."companyId" = ${payload.companyId} AND l."isActive"`;
+        sqlWhere = ` WHERE l."orgId" = ${orgId} AND l."companyId" = ${payload.companyId} AND l."isActive" AND l."id" IN (${req.GROWINGLOCATION})`;
 
         sqlOrderBy = ` ORDER BY l.name asc`;
 
