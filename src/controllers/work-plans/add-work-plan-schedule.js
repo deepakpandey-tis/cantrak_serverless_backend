@@ -1,6 +1,6 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
-const knexReader = require('../../db/knex-reader');
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const addWorkPlanSchedule = async (req, res) => {
     try {
@@ -71,8 +71,10 @@ const addWorkPlanSchedule = async (req, res) => {
                     // ...wo,
                     companyId: wo.companyId,
                     name: wo.name,
+                    entityTypeId: wo.entityTypeId,
                     locationId: wo.locationId,
-                    subLocationId: wo.subLocationId,
+                    subLocationId: wo.entityTypeId == EntityTypes.WorkPlanGrowingLocation ? null : wo.subLocationId,
+                    plantLotId: wo.entityTypeId == EntityTypes.WorkPlanPlantLot ? wo.plantLotId : null,
                     frequencyTag: wo.frequencyTag,
                     workOrderDate: new Date(wo.workOrderDate).getTime(),
                     createdBy: userId,

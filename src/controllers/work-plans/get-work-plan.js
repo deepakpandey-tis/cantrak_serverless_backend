@@ -1,5 +1,6 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../db/knex-reader");
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const getWorkPlan = async (req, res) => {
     try {
@@ -60,11 +61,28 @@ const getWorkPlan = async (req, res) => {
         }
  */
 
-        sqlSelect = `SELECT l.id, l.name, sl.id "subLocationId", sl.name "subLocationName"`;
-        sqlFrom = ` FROM locations l, sub_locations sl`;
-        sqlWhere = ` WHERE l."orgId" = ${orgId} AND l."companyId" = ${selectedRecs.rows[0].companyId} AND l.id = sl."locationId"`;
-        sqlWhere += ` AND sl.id IN (SELECT UNNEST(string_to_array(regexp_replace(location."subLocationId", '[\\[ \\]]', '', 'g'), ',')::bigint[]) FROM work_plan_master wpm , jsonb_to_recordset(wpm."locationIds") as location(id bigint, "subLocationId" varchar) where wpm.id = ${payload.id})`;
-        sqlOrderBy = ` ORDER BY l.name, sl.name`;
+        if(selectedRecs.rows[0].entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
+            sqlSelect = `SELECT l.id, l.name, sl.id "subLocationId", sl.name "subLocationName"`;
+            sqlFrom = ` FROM locations l, sub_locations sl`;
+            sqlWhere = ` WHERE l."orgId" = ${orgId} AND l."companyId" = ${selectedRecs.rows[0].companyId} AND l.id = sl."locationId"`;
+            sqlWhere += ` AND sl.id IN (SELECT UNNEST(string_to_array(regexp_replace(location."subLocationId", '[\\[ \\]]', '', 'g'), ',')::bigint[]) FROM work_plan_master wpm , jsonb_to_recordset(wpm."locationIds") as location(id bigint, "subLocationId" varchar) WHERE wpm.id = ${payload.id})`;
+            sqlOrderBy = ` ORDER BY l.name, sl.name`;
+        }
+        else if(selectedRecs.rows[0].entityTypeId == EntityTypes.WorkPlanGrowingLocation){
+            sqlSelect = `SELECT l.id, l.name`;
+            sqlFrom = ` FROM locations l, work_plan_master wpm , jsonb_to_recordset(wpm."locationIds") as location(id bigint)`;
+            sqlWhere = ` WHERE l."orgId" = ${orgId} AND l."companyId" = ${selectedRecs.rows[0].companyId}`;
+            sqlWhere += ` AND wpm.id = ${payload.id} AND l.id = location."id"`;
+            sqlOrderBy = ` ORDER BY l.name`;
+        }
+        else if(selectedRecs.rows[0].entityTypeId == EntityTypes.WorkPlanPlantLot){
+            sqlSelect = `SELECT l.id, l.name, sl.id "subLocationId", sl.name "subLocationName", pl.id "plantLotId", pl."lotNo" , pl."plantedOn" , pl."plantsCount", s.name "strainName"`;
+            sqlFrom = ` FROM work_plan_master wpm , jsonb_to_recordset(wpm."locationIds") as location(id bigint, "subLocationId" bigint, "plantLotId" varchar), locations l, sub_locations sl, plant_lots pl, strains s`;
+            sqlWhere = ` WHERE wpm.id = ${payload.id} AND wpm."orgId" = ${orgId} AND wpm."companyId" = ${selectedRecs.rows[0].companyId}`;
+            sqlWhere += ` AND l.id = location."id" AND sl.id = location."subLocationId" AND pl."strainId" = s.id`;
+            sqlWhere += ` AND pl.id in (select unnest(string_to_array(regexp_replace(location."plantLotId", '[\\[ \\]]', '', 'g'), ',')::bigint[]))`;
+            sqlOrderBy = ` ORDER BY l.name, sl.name, pl."lotNo"`;
+        }
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
 

@@ -1,5 +1,6 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../db/knex-reader");
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const getWorkOrder = async (req, res) => {
     try {
@@ -11,7 +12,8 @@ const getWorkOrder = async (req, res) => {
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         const schema = Joi.object().keys({
-            id: Joi.string().required()
+            id: Joi.string().required(),
+            entityTypeId: Joi.number().required()
         });
         const result = Joi.validate(payload, schema);
         if (result && result.hasOwnProperty("error") && result.error) {
@@ -22,14 +24,32 @@ const getWorkOrder = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT wpsa.*, c."companyName", c."logoFile", l.name "locationName", sl.name "subLocationName"`;
+        sqlSelect = `SELECT wpsal.*, c."companyName", c."logoFile", l.name "locationName"`;
+        if(payload.entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
+            sqlSelect += `, sl."name" "subLocationName"`;
+        }
+        else if(payload.entityTypeId == EntityTypes.WorkPlanPlantLot){
+            sqlSelect += `, sl."name" "subLocationName", pl.id "plantLotId", pl."lotNo" , pl."plantedOn" , pl."plantsCount", s.name "strainName"`;
+        }
 
-        sqlFrom = ` FROM work_plan_schedule_assign_locations wpsa, companies c, locations l, sub_locations sl`;
+        sqlFrom = ` FROM work_plan_schedule_assign_locations wpsal`;
+        sqlFrom += `, companies c, locations l`;
+        if(payload.entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
+            sqlFrom += `, sub_locations sl`;
+        }
+        else if(payload.entityTypeId == EntityTypes.WorkPlanPlantLot){
+            sqlFrom += `, sub_locations sl, plant_lots pl, strains s`;
+        }
 
-        sqlWhere = ` WHERE wpsa.id = ${payload.id} AND wpsa."orgId" = ${orgId}`;
-        sqlWhere += ` AND wpsa."companyId" = c.id AND wpsa."orgId" = c."orgId"`;
-        sqlWhere += ` AND wpsa."locationId" = l.id AND wpsa."orgId" = l."orgId"`;
-        sqlWhere += ` AND wpsa."subLocationId" = sl.id AND wpsa."orgId" = sl."orgId"`;
+        sqlWhere = ` WHERE wpsal.id = ${payload.id} AND wpsal."orgId" = ${orgId}`;
+        sqlWhere += ` AND wpsal."companyId" = c.id AND wpsal."orgId" = c."orgId"`;
+        sqlWhere += ` AND wpsal."locationId" = l.id AND wpsal."orgId" = l."orgId"`;
+        if(payload.entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
+            sqlWhere += ` AND wpsal."subLocationId" = sl.id AND wpsal."orgId" = sl."orgId"`;
+        }
+        else if(payload.entityTypeId == EntityTypes.WorkPlanPlantLot){
+            sqlWhere += ` AND wpsal."subLocationId" = sl.id AND wpsal."orgId" = sl."orgId" AND wpsal."plantLotId" = pl.id AND pl."strainId" = s.id`;
+        }
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 

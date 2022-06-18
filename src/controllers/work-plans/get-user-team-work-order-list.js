@@ -40,15 +40,16 @@ const getUserTeamWorkOrderList = async (req, res) => {
         , t."teamName", u."name" "mainUser", l."name" "locationName", sl."name" "subLocationName"
         `;
 
-        sqlFrom = ` FROM work_plan_schedule_assign_locations wpsal, assigned_service_team ast, team_users tu, teams t, users u, locations l, sub_locations sl
-        `;
+        sqlFrom = ` FROM work_plan_schedule_assign_locations wpsal`;
+        sqlFrom += ` LEFT JOIN sub_locations sl ON wpsal."subLocationId" = sl.id`;
+        sqlFrom += `, assigned_service_team ast, team_users tu, teams t, users u, locations l`;
 
         sqlWhere = ` WHERE wpsal."orgId" = ${orgId} AND ast."entityId" = wpsal.id and ast."entityType" = 'work_order'`;
         sqlWhere += ` AND ast."teamId" = t."teamId" AND t."teamId" = tu."teamId"`;
         if ( !(req.me.isSuperAdmin || req.me.isOrgAdmin) ) {
             sqlWhere += ` AND tu."userId" = ${userId}`;
         }
-        sqlWhere += ` AND ast."userId" = u.id  AND wpsal."locationId" = l.id AND wpsal."subLocationId" = sl.id`;
+        sqlWhere += ` AND ast."userId" = u.id  AND wpsal."locationId" = l.id`;
         if(companyId){
             sqlWhere += ` AND wpsal."companyId" = ${companyId}`;
         }

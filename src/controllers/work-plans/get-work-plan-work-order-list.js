@@ -1,5 +1,6 @@
 const knexReader = require('../../db/knex-reader');
 const moment = require("moment");
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const getWorkPlanWorkOrderList = async (req, res) => {
     try {
@@ -10,7 +11,7 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         let sortCol = payload.sortBy;
         let sortOrder = payload.orderBy;
 
-        const { id, workOrderDate, displayId, frequencyTag, status, locationId } = req.body;
+        const { id, entityTypeId, workOrderDate, displayId, frequencyTag, status, locationId } = req.body;
 
         let reqData = req.query;
         let pageSize = reqData.per_page || 10;
@@ -38,15 +39,32 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT wps.*
         , wpsal."id" "workOrderId", wpsal."displayId", wpsal."name", wpsal."locationId", wpsal."workOrderDate", wpsal."isOverdue", wpsal."status", wpsal."frequencyTag", wpsal."completedAt"
-        , l."name" "locationName", sl."name" "subLocationName"
-        `;
+        , l."name" "locationName"`;
+        if(entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
+            sqlSelect += `, sl."name" "subLocationName"`;
+        }
+        else if(entityTypeId == EntityTypes.WorkPlanPlantLot){
+            sqlSelect += `, sl."name" "subLocationName", pl.id "plantLotId", pl."lotNo" , pl."plantedOn" , pl."plantsCount", s.name "strainName"`;
+        }
 
-        sqlFrom = ` FROM work_plan_schedules wps, work_plan_schedule_assign_locations wpsal, locations l, sub_locations sl
-        `;
+        sqlFrom = ` FROM work_plan_schedules wps, work_plan_schedule_assign_locations wpsal`;
+        sqlFrom += `, locations l`;
+        if(entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
+            sqlFrom += `, sub_locations sl`;
+        }
+        else if(entityTypeId == EntityTypes.WorkPlanPlantLot){
+            sqlFrom += `, sub_locations sl, plant_lots pl, strains s`;
+        }
 
         sqlWhere = ` WHERE wps."orgId" = ${orgId} AND wps."workPlanMasterId" = ${id}`;
+        sqlWhere += ` AND wpsal."workPlanScheduleId" = wps.id AND wpsal."locationId" = l.id`;
+        if(entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
+            sqlWhere += ` AND wpsal."subLocationId" = sl.id`;
+        }
+        else if(entityTypeId == EntityTypes.WorkPlanPlantLot){
+            sqlWhere += ` AND wpsal."subLocationId" = sl.id AND wpsal."plantLotId" = pl.id AND pl."strainId" = s.id`;
+        }
 
-        sqlWhere += ` AND wpsal."workPlanScheduleId" = wps.id AND wpsal."locationId" = l.id AND wpsal."subLocationId" = sl.id`;
         //   condition to show <= today date; now showing for all dates     AND wpsal."workOrderDate" <= ${workOrderDate}
         if(locationId){
             sqlWhere += ` AND wpsal."locationId" = ${locationId}`;
@@ -64,7 +82,13 @@ const getWorkPlanWorkOrderList = async (req, res) => {
             sqlWhere += ` AND wpsal."status" in ${str}`;
         }
 
-        sqlOrderBy = ` ORDER BY "workOrderDate" desc, "displayId" desc, "locationName" asc, "subLocationName" asc, name asc`;
+        sqlOrderBy = ` ORDER BY "workOrderDate" desc, "displayId" desc, "locationName" asc`;
+        if(entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
+            sqlOrderBy += `, "subLocationName" asc, name asc`;
+        }
+        else if(entityTypeId == EntityTypes.WorkPlanPlantLot){
+            sqlOrderBy += `, "subLocationName" asc, name asc, "plantedOn"`;
+        }
         //sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
         //console.log('getWorkPlanWorkOrderList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
