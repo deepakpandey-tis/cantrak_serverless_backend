@@ -12,7 +12,7 @@ const getWorkOrder = async (req, res) => {
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         const schema = Joi.object().keys({
-            id: Joi.string().required(),
+            id: Joi.string().required(), 
             entityTypeId: Joi.number().required()
         });
         const result = Joi.validate(payload, schema);
