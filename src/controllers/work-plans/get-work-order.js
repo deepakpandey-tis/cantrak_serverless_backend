@@ -11,7 +11,7 @@ const getWorkOrder = async (req, res) => {
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
-        const schema = Joi.object().keys({
+/*         const schema = Joi.object().keys({
             id: Joi.string().required(), 
             entityTypeId: Joi.number().required()
         });
@@ -23,7 +23,7 @@ const getWorkOrder = async (req, res) => {
                 ]
             });
         }
-
+ */
         sqlSelect = `SELECT wpsal.*, c."companyName", c."logoFile", l.name "locationName"`;
         if(payload.entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
             sqlSelect += `, sl."name" "subLocationName"`;
