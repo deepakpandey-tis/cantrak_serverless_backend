@@ -37,14 +37,14 @@ const deleteWorkPlan = async (req, res) => {
               .where({ id: payload.id, orgId: req.orgId })
               .returning(["*"])
               .into('work_plan_master');
-              message = "Work Plan de-activated successfully!"
+              message = "Template de-activated successfully!"
           } else {
             sqlResult = await knex
               .update({ isActive: true, updatedBy: userId, updatedAt: currentTime })
               .where({ id: payload.id, orgId: req.orgId })
               .returning(["*"])
               .into('work_plan_master');
-              message = "Work Plan activated successfully!"
+              message = "Template activated successfully!"
           }
 
         return res.status(200).json({

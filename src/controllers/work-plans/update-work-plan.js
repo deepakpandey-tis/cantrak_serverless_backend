@@ -122,7 +122,7 @@ const updateWorkPlan = async (req, res) => {
                 record: insertedRecord,
                 workPlanTasks: insertTask,
             },
-            message: 'Work Plan updated successfully.'
+            message: 'Template updated successfully.'
         });
     } catch (err) {
         console.log("[controllers][work-plans][updateWorkPlan] :  Error", err);
