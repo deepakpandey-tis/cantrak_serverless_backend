@@ -7,6 +7,7 @@ service: ${self:custom.serviceName}
   
 plugins:
   - serverless-plugin-lambda-insights
+  - serverless-prune-plugin
 
 
 package:

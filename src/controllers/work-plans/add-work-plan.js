@@ -114,7 +114,7 @@ const addWorkPlan = async (req, res) => {
                 record: insertedRecord,
                 workPlanTasks: insertTask,
             },
-            message: 'Work Plan added successfully.'
+            message: 'Template added successfully.'
         });
     } catch (err) {
         console.log("[controllers][work-plans][addWorkPlan] :  Error", err);
