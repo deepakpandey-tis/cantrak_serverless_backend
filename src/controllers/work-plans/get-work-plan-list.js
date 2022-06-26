@@ -14,19 +14,20 @@ const getWorkPlanList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { name, companyId } = req.body;
+        let { name, companyId, entityTypeIds, fromDate, toDate } = req.body;
         // let { name, companyId, plantationId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'name';
+            sortCol = `"createdAt" desc`;
+            sortOrder = '';
         }
 
-        if(!sortOrder || sortOrder === ''){
-            sortOrder = 'asc';
-        }
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'asc';
+        // }
 
         if(pageNumber < 1){
             pageNumber = 1;
@@ -37,7 +38,7 @@ const getWorkPlanList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT wpm.*
+        sqlSelect = `SELECT wpm.*, CASE WHEN wpm."entityTypeId" = 27 THEN 'For Sub Growing Location' WHEN wpm."entityTypeId" = 28 THEN 'For Plant Lot' ELSE 'For Growing Location' END "templateType"
         , u2."name" "createdByName", c."companyName"
         `;
         // , u2."name" "createdByName", c."companyName", p.name "plantationName"
@@ -59,11 +60,21 @@ const getWorkPlanList = async (req, res) => {
             sqlWhere += ` AND wpm."companyId" = ${companyId}`;
         }
 
+        if(fromDate){
+            sqlWhere += ` AND to_timestamp(wpm."createdAt"/1000)::date >= to_timestamp(${new Date(fromDate).getTime()}/1000)::date`;
+        }
+        if(toDate){
+            sqlWhere += ` AND to_timestamp(wpm."createdAt"/1000)::date <= to_timestamp(${new Date(toDate).getTime()}/1000)::date`;
+        }
+        if(entityTypeIds && entityTypeIds.length && entityTypeIds[0] != 0){
+            sqlWhere += ` AND wpm."entityTypeId" IN (${entityTypeIds})`;
+        }
+
         // if(plantationId && plantationId != ''){
         //     sqlWhere += ` AND wpm."plantationId" = ${plantationId}`;
         // }
 
-        sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getWorkPlanList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
