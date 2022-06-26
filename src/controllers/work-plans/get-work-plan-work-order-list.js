@@ -11,7 +11,7 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         let sortCol = payload.sortBy;
         let sortOrder = payload.orderBy;
 
-        const { id, entityTypeId, workOrderDate, displayId, frequencyTag, status, locationId } = req.body;
+        const { id, entityTypeId, fromDate, toDate, fromCompletedDate, toCompletedDate, displayId, frequencyTag, status, locationId } = req.body;
 
         let reqData = req.query;
         let pageSize = reqData.per_page || 10;
@@ -21,12 +21,20 @@ const getWorkPlanWorkOrderList = async (req, res) => {
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'displayId';
+            sortCol = `"workOrderDate" desc, "displayId" desc, "locationName" asc`;
+            if(entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
+                sortCol += `, "subLocationName" asc`;
+            }
+            else if(entityTypeId == EntityTypes.WorkPlanPlantLot){
+                sortCol += `, "subLocationName" asc, "plantedOn"`;
+            }
+
+            sortOrder = '';
         }
 
-        if(!sortOrder || sortOrder === ''){
-            sortOrder = 'asc';
-        }
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'asc';
+        // }
 
         if(pageNumber < 1){
             pageNumber = 1;
@@ -39,6 +47,7 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT wps.*
         , wpsal."id" "workOrderId", wpsal."displayId", wpsal."name", wpsal."locationId", wpsal."workOrderDate", wpsal."isOverdue", wpsal."status", wpsal."frequencyTag", wpsal."completedAt"
+        , CASE WHEN wpsal."status" = 'O' THEN 'Open' WHEN wpsal."status" = 'COM' THEN 'Completed' ELSE 'Cencelled' END "statusDesc"
         , l."name" "locationName"`;
         if(entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
             sqlSelect += `, sl."name" "subLocationName"`;
@@ -77,20 +86,28 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         }
         if(status){
             var arr = (status + "").split(",");
-            var str = "('" + arr.join("', '") + "')";
-            console.log('status: ', (status + "").split(","));
-            sqlWhere += ` AND wpsal."status" in ${str}`;
+            if(arr[0] != ''){
+                //  Not All
+                var str = "('" + arr.join("', '") + "')";
+                console.log('status: ', (status + "").split(","));
+                sqlWhere += ` AND wpsal."status" in ${str}`;
+            }
+        }
+        if(fromDate){
+            sqlWhere += ` AND to_timestamp(wpsal."workOrderDate"/1000)::date >= to_timestamp(${new Date(fromDate).getTime()}/1000)::date`;
+        }
+        if(toDate){
+            sqlWhere += ` AND to_timestamp(wpsal."workOrderDate"/1000)::date <= to_timestamp(${new Date(toDate).getTime()}/1000)::date`;
+        }
+        if(fromCompletedDate){
+            sqlWhere += ` AND to_timestamp(wpsal."completedAt"/1000)::date >= to_timestamp(${new Date(fromCompletedDate).getTime()}/1000)::date`;
+        }
+        if(toCompletedDate){
+            sqlWhere += ` AND to_timestamp(wpsal."completedAt"/1000)::date <= to_timestamp(${new Date(toCompletedDate).getTime()}/1000)::date`;
         }
 
-        sqlOrderBy = ` ORDER BY "workOrderDate" desc, "displayId" desc, "locationName" asc`;
-        if(entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
-            sqlOrderBy += `, "subLocationName" asc, name asc`;
-        }
-        else if(entityTypeId == EntityTypes.WorkPlanPlantLot){
-            sqlOrderBy += `, "subLocationName" asc, name asc, "plantedOn"`;
-        }
-        //sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
-        //console.log('getWorkPlanWorkOrderList sql: ', sqlSelect + sqlFrom + sqlWhere);
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
+        //console.log('getWorkPlanWorkOrderList sql: ', sqlSelect + sqlFrom + sqlWhere + sqlOrderBy);
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;

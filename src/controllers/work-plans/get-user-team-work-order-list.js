@@ -10,7 +10,7 @@ const getUserTeamWorkOrderList = async (req, res) => {
         let sortCol = payload.sortBy;
         let sortOrder = payload.orderBy;
 
-        const { companyId, fromDate, toDate, displayId, frequencyTag, status, locationId } = req.body;
+        const { companyId, name, fromDate, toDate, fromCompletedDate, toCompletedDate, displayId, overdue, frequencyTag, status, locationId } = req.body;
 
         let reqData = req.query;
         let pageSize = reqData.per_page || 10;
@@ -20,12 +20,13 @@ const getUserTeamWorkOrderList = async (req, res) => {
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'displayId';
+            sortCol = `"workOrderDate" desc, "displayId" desc`;
+            sortOrder = '';
         }
 
-        if(!sortOrder || sortOrder === ''){
-            sortOrder = 'asc';
-        }
+        // if(!sortOrder || sortOrder === ''){
+        //     sortOrder = 'asc';
+        // }
 
         if(pageNumber < 1){
             pageNumber = 1;
@@ -37,6 +38,7 @@ const getUserTeamWorkOrderList = async (req, res) => {
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT DISTINCT wpsal.*
+        , CASE WHEN wpsal."status" = 'O' THEN 'Open' WHEN wpsal."status" = 'COM' THEN 'Completed' ELSE 'Cencelled' END "statusDesc"
         , t."teamName", u."name" "mainUser", l."name" "locationName", sl."name" "subLocationName"
         `;
 
@@ -46,21 +48,30 @@ const getUserTeamWorkOrderList = async (req, res) => {
 
         sqlWhere = ` WHERE wpsal."orgId" = ${orgId} AND ast."entityId" = wpsal.id and ast."entityType" = 'work_order'`;
         sqlWhere += ` AND ast."teamId" = t."teamId" AND t."teamId" = tu."teamId"`;
-        if ( !(req.me.isSuperAdmin || req.me.isOrgAdmin) ) {
+        if ( (!req.me.isSuperAdmin && !req.me.isOrgAdmin) ) {
             sqlWhere += ` AND tu."userId" = ${userId}`;
         }
         sqlWhere += ` AND ast."userId" = u.id  AND wpsal."locationId" = l.id`;
         if(companyId){
             sqlWhere += ` AND wpsal."companyId" = ${companyId}`;
         }
+        if(name && name != ''){
+            sqlWhere += ` AND wpsal."name" iLIKE '%${name}%'`;
+        }
         if(fromDate){
-            sqlWhere += ` AND wpsal."workOrderDate" >= ${new Date(fromDate).getTime()}`;
+            sqlWhere += ` AND to_timestamp(wpsal."workOrderDate"/1000)::date >= to_timestamp(${new Date(fromDate).getTime()}/1000)::date`;
         }
         if(toDate){
-            sqlWhere += ` AND wpsal."workOrderDate" <= ${new Date(toDate).getTime()}`;
+            sqlWhere += ` AND to_timestamp(wpsal."workOrderDate"/1000)::date <= to_timestamp(${new Date(toDate).getTime()}/1000)::date`;
         }
         if(locationId){
             sqlWhere += ` AND wpsal."locationId" = ${locationId}`;
+        }
+        if(fromCompletedDate){
+            sqlWhere += ` AND to_timestamp(wpsal."completedAt"/1000)::date >= to_timestamp(${new Date(fromCompletedDate).getTime()}/1000)::date`;
+        }
+        if(toCompletedDate){
+            sqlWhere += ` AND to_timestamp(wpsal."completedAt"/1000)::date <= to_timestamp(${new Date(toCompletedDate).getTime()}/1000)::date`;
         }
         if(displayId){
             sqlWhere += ` AND wpsal."displayId" = ${displayId}`;
@@ -68,15 +79,20 @@ const getUserTeamWorkOrderList = async (req, res) => {
         if(frequencyTag){
             sqlWhere += ` AND wpsal."frequencyTag" = '${frequencyTag}'`;
         }
+        if(overdue){
+            sqlWhere += overdue == 1 ? ` AND wpsal."isOverdue"` : ` AND NOT wpsal."isOverdue"`;
+        }
         if(status){
             var arr = (status + "").split(",");
-            var str = "('" + arr.join("', '") + "')";
-            console.log('status: ', (status + "").split(","));
-            sqlWhere += ` AND wpsal."status" in ${str}`;
+            if(arr[0] != ''){
+                //  Not All
+                var str = "('" + arr.join("', '") + "')";
+                console.log('arr, str: ', arr, str);
+                sqlWhere += ` AND wpsal."status" in ${str}`;
+            }
         }
 
-        sqlOrderBy = ` ORDER BY "workOrderDate" asc, "displayId" asc, "locationName" asc, "subLocationName" asc, name asc`;
-        //sqlOrderBy = ` ORDER BY "${sortCol}" ${sortOrder}`;
+        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getUserTeamWorkOrderList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
         sqlStr  = `WITH Main_CTE AS (`;
