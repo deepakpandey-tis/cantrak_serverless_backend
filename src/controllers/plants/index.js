@@ -24,6 +24,7 @@ const getWasteTxn = require('./get-waste-txn');
 const generatePdfOfPlants = require('./generate-pdf-of-plants');
 const getWastePlantCount = require('./get-waste-plant-count');
 const getTotalPlants = require('./get-total-plants');
+const getPlantLotUnhealthyPlantsCount = require('./get-plant-lot-unhealthy-plants-count');
 
 const getRawMaterialForPlantList = require('./get-raw-material-for-plant-list');
 const getLocationSubLocationPlantLots = require('./get-location-sublocation-plant-lots');
@@ -71,6 +72,7 @@ module.exports = {
     generatePdfOfPlants,
     getWastePlantCount,
     getTotalPlants,
+    getPlantLotUnhealthyPlantsCount,
 
     getRawMaterialForPlantList,
     getLocationSubLocationPlantLots,

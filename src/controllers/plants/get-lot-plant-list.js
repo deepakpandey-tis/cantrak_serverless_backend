@@ -16,7 +16,7 @@ const getLotPlantList = async (req, res) => {
 
         let { id, locationId, subLocationId, fromPlantSerial, uptoPlantSerial } = req.body;
 
-        let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
+        let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy, sqlObservation;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
@@ -37,14 +37,17 @@ const getLotPlantList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT pl.*, p.id "plantId", p."plantSerial", p."isActive" "plantIsActive", p."isWaste" "plantIsWaste", p."isDestroy" "plantIsDestroy", p."isEndOfLife" "plantIsEndOfLife"
+        sqlSelect = `SELECT DISTINCT ON (p.id) pl.*, p.id "plantId", p."plantSerial", p."isActive" "plantIsActive", p."isWaste" "plantIsWaste", p."isDestroy" "plantIsDestroy", p."isEndOfLife" "plantIsEndOfLife"
         , ploc.id "plantLocationId", l.name "plantLocationName", sl.name "plantSubLocationName", pgs."growthStageId" "plantGrowthStageId", pgs."startDate" "plantGrowthStageDate", gs.name "plantGrowthStageName"
-        , s.name "strainName", s2.name "specieName"
+        , s.name "strainName", s2.name "specieName", observation.*
         `;
 
-        sqlFrom = ` FROM plant_lots pl, plants p, plant_locations ploc, plant_growth_stages pgs, locations l, sub_locations sl, growth_stages gs
-        , strains s, species s2
+        sqlFrom = ` FROM plant_lots pl, plant_locations ploc, plant_growth_stages pgs, locations l, sub_locations sl, growth_stages gs
+        , strains s, species s2, plants p
         `;
+
+        sqlObservation = `(SELECT it."tagData", i."entityId" FROM images i, image_tags it WHERE i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
+        sqlFrom += ` LEFT JOIN ${sqlObservation} ON p.id = observation."entityId"`;
 
         sqlWhere = ` WHERE pl.id = ${id} AND pl."orgId" = ${orgId} AND pl.id = p."plantLotId" AND p."isActive"`;
         sqlWhere += ` AND p.id = ploc."plantId" AND ploc.id = (select id from plant_locations ploc2 where ploc2."plantId" = p.id order by id desc limit 1)`;
