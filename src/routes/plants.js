@@ -196,6 +196,13 @@ router.post('/get-total-plants',
   plantController.getTotalPlants
 );
 
+router.post('/get-plant-lot-unhealthy-plants-count',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotUnhealthyPlantsCount
+);
+
 
 router.post('/get-raw-material-for-plant-list',
   authMiddleware.isAuthenticated,
