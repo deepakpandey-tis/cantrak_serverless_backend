@@ -46,7 +46,7 @@ const getLotPlantList = async (req, res) => {
         , strains s, species s2, plants p
         `;
 
-        sqlObservation = `(SELECT it."tagData", i."entityId" FROM images i, image_tags it WHERE i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
+        sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
         sqlFrom += ` LEFT JOIN ${sqlObservation} ON p.id = observation."entityId"`;
 
         sqlWhere = ` WHERE pl.id = ${id} AND pl."orgId" = ${orgId} AND pl.id = p."plantLotId" AND p."isActive"`;
