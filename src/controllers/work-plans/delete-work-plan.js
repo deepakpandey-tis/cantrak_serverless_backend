@@ -37,7 +37,8 @@ const deleteWorkPlan = async (req, res) => {
               .where({ id: payload.id, orgId: req.orgId })
               .returning(["*"])
               .into('work_plan_master');
-              message = "Template de-activated successfully!"
+              message = "Template deleted successfully!"
+            // In-active template is treated as deleted template  message = "Template de-activated successfully!"
           } else {
             sqlResult = await knex
               .update({ isActive: true, updatedBy: userId, updatedAt: currentTime })

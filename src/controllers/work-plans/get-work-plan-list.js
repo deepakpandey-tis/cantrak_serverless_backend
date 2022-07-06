@@ -37,6 +37,8 @@ const getWorkPlanList = async (req, res) => {
             pageSize = 10;
         }
         
+        // Show only active Work Plan Templates
+
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT wpm.*, CASE WHEN wpm."entityTypeId" = 27 THEN 'For Sub Growing Location' WHEN wpm."entityTypeId" = 28 THEN 'For Plant Lot' ELSE 'For Growing Location' END "templateType"
         , u2."name" "createdByName", c."companyName"
@@ -49,7 +51,7 @@ const getWorkPlanList = async (req, res) => {
         // LEFT JOIN plantations p ON wpm."plantationId" = p.id
 
         sqlWhere = ` WHERE wpm."orgId" = ${orgId}`;
-        sqlWhere += ` AND wpm."createdBy" = u2.id AND wpm."companyId" = c.id
+        sqlWhere += ` AND wpm."createdBy" = u2.id AND wpm."companyId" = c.id AND wpm."isActive"
         `;
 
         if(name && name != ''){

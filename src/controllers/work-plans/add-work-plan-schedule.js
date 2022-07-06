@@ -175,7 +175,7 @@ const addWorkPlanSchedule = async (req, res) => {
                 workOrders: insertedWorkOrders,
                 workOrderTasks: insertedWorkOrderTasks,
             },
-            message: 'Work Plan Schedule added successfully.'
+            message: 'Work Plan Schedule / Work Order added successfully.'
         });
     } catch (err) {
         console.log("[controllers][work-plans][addWorkPlanSchedule] :  Error", err);

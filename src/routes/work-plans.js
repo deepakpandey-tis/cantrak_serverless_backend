@@ -162,4 +162,25 @@ router.post('/get-locations-sub-locations-plant-lots',
   workPlanController.getLocationsSubLocationsPlantLots
 );
 
+router.post('/get-lot-plant-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  workPlanController.getLotPlantList
+);
+
+router.post('/get-plant',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  workPlanController.getPlant
+);
+
+router.post('/get-observations-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  workPlanController.getObservationsList
+);
+
 module.exports = router;
