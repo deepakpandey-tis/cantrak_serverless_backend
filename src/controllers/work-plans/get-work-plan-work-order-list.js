@@ -21,7 +21,7 @@ const getWorkPlanWorkOrderList = async (req, res) => {
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `"workOrderDate" desc, "displayId" desc, "locationName" asc`;
+            sortCol = `"workOrderDate" asc, "displayId" asc, "locationName" asc`;
             if(entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
                 sortCol += `, "subLocationName" asc`;
             }
