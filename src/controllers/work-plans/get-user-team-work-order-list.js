@@ -20,7 +20,7 @@ const getUserTeamWorkOrderList = async (req, res) => {
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = `"workOrderDate" desc, "displayId" desc`;
+            sortCol = `"workOrderDate" asc, "displayId" asc`;
             sortOrder = '';
         }
 
@@ -48,9 +48,9 @@ const getUserTeamWorkOrderList = async (req, res) => {
 
         sqlWhere = ` WHERE wpsal."orgId" = ${orgId} AND ast."entityId" = wpsal.id and ast."entityType" = 'work_order'`;
         sqlWhere += ` AND ast."teamId" = t."teamId" AND t."teamId" = tu."teamId"`;
-        if ( (!req.me.isSuperAdmin && !req.me.isOrgAdmin) ) {
+/*         if ( (!req.me.isSuperAdmin && !req.me.isOrgAdmin) ) {
             sqlWhere += ` AND tu."userId" = ${userId}`;
-        }
+        } */
         sqlWhere += ` AND ast."userId" = u.id  AND wpsal."locationId" = l.id`;
         if(companyId){
             sqlWhere += ` AND wpsal."companyId" = ${companyId}`;
