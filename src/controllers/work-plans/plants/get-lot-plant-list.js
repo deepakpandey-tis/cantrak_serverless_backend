@@ -60,7 +60,7 @@ const getLotPlantList = async (req, res) => {
         }
 
         if(plantId && plantId != ''){
-            sqlWhere += ` AND p."id" iLIKE '%${plantId}%'`;
+            sqlWhere += ` AND p."id" = ${plantId}`;
         }
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
