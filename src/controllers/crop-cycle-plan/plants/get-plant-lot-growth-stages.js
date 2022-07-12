@@ -27,7 +27,8 @@ const getPlantLotGrowthStages = async (req, res) => {
         sqlFrom = ` FROM plant_lots pl , plants p , plant_growth_stages pgs , growth_stages gs`;
         sqlWhere = ` WHERE pl."id" = ${payload.id}`;
         sqlWhere += ` AND pl.id = p."plantLotId" and pgs."plantId" = p.id and pgs."growthStageId" = gs.id`;
-        sqlWhere += ` AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id ORDER BY id DESC limit 1)`;
+        sqlWhere += ` AND pgs.id IN (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id)`;
+        // sqlWhere += ` AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id ORDER BY id DESC limit 1)`;
         sqlOrderBy = ` ORDER BY pl."lotNo" , gs."listOrder"`;
 
         //  Get growth stage end date (start date of next growth stage is end date of the current growth stage) using lead() function
