@@ -27,11 +27,12 @@ const getPlantLotGrowthStages = async (req, res) => {
         sqlFrom = ` FROM plant_lots pl , plants p , plant_growth_stages pgs , growth_stages gs`;
         sqlWhere = ` WHERE pl."id" = ${payload.id}`;
         sqlWhere += ` AND pl.id = p."plantLotId" and pgs."plantId" = p.id and pgs."growthStageId" = gs.id`;
-        sqlWhere += ` AND pgs.id IN (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id)`;
+        sqlWhere += ` AND pgs.id IN (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id AND pgs2."growthStageId" = pgs."growthStageId" ORDER BY id DESC limit 1)`;
         // sqlWhere += ` AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id ORDER BY id DESC limit 1)`;
         sqlOrderBy = ` ORDER BY pl."lotNo" , gs."listOrder"`;
 
         //  Get growth stage end date (start date of next growth stage is end date of the current growth stage) using lead() function
+        // sqlStr = ` SELECT pgs3.* , case when lead(pgs3."startDate") over (partition by pgs3."lotNo" order by pgs3."startDate") is null then (extract(epoch from now()) * 1000)::bigint else lead(pgs3."startDate") over (partition by pgs3."lotNo" order by pgs3."startDate") end "endDate"
         sqlStr = ` SELECT pgs3.* , lead(pgs3."startDate") over (partition by pgs3."lotNo" order by pgs3."startDate") "endDate"
         FROM (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;

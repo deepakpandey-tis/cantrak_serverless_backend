@@ -83,6 +83,7 @@ const updateCropCyclePlan = async (req, res) => {
             for (let rec of payload.inputItems) {
                 if(rec.id){
                     record = {
+                        strainId: rec.strainId,
                         specieId: rec.specieId,
                         locationId: rec.locationId,
                         subLocationId: rec.subLocationId,

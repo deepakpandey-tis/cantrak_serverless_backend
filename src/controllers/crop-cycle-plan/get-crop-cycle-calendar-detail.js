@@ -66,7 +66,8 @@ const getCropCycleCalendarDetail = async (req, res) => {
                 SELECT distinct pl.id "plantLotId", pl."lotNo" "plantLotNo", gs."listOrder" , gs."name" , pgs."startDate" "startDate"
                 FROM plant_lots pl , plants p , plant_growth_stages pgs , growth_stages gs , cropCyclePlans ccps
                 WHERE pl.id  = ccps."cropCyclePlanDetailPlantLotId" AND pl.id = p."plantLotId" AND pgs."plantId" = p.id AND pgs."growthStageId" = gs.id
-                AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id ORDER BY id desc limit 1)
+                AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id AND pgs2."growthStageId" = pgs."growthStageId" ORDER BY id desc limit 1)
+                -- AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id ORDER BY id desc limit 1)
                 ORDER BY pl."lotNo" , gs."listOrder"
             ) pgs3
         )
