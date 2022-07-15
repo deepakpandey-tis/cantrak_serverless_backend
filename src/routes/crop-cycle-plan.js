@@ -85,6 +85,13 @@ router.post('/get-species-having-growth-stages',
   cropCyclePlanController.getSpeciesHavingGrowthStages
 );
 
+router.post('/get-strains-having-growth-stages',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  cropCyclePlanController.getStrainsHavingGrowthStages
+);
+
 router.post('/get-species',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

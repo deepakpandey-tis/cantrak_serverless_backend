@@ -69,6 +69,7 @@ const addCropCyclePlan = async (req, res) => {
                 record = {
                     orgId: orgId,
                     cropCyclePlanId: insertedRecord.id,
+                    strainId: rec.strainId,
                     specieId: rec.specieId,
                     locationId: rec.locationId,
                     subLocationId: rec.subLocationId,
