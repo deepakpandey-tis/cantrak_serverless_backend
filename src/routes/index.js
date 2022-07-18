@@ -74,6 +74,7 @@ const invoiceRouter = require("./invoice");
 const reportsRouter = require("./reports");
 const misRouter = require("./mis");
 const userCustomisationRouter = require("./user-customisation");
+const diseaseRouter = require("./administration-features/diseases");
 // const reportRouter = require("./administration-features/reports");
 
 
@@ -346,6 +347,10 @@ router.use(
 router.use(
   "/user-customisation", 
   userCustomisationRouter
+);
+router.use(
+  "/administration-features/diseases",
+  diseaseRouter
 );
 
 // router.use(
