@@ -7,12 +7,12 @@ const getStrainsHavingGrowthStages = async (req, res) => {
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
  
-        sqlSelect = `SELECT DISTINCT s."id", s."name", s."specieId"
+        sqlSelect = `SELECT DISTINCT s."id", s."name", s."specieId", s2."name" "specieName"
         `;
 
-        sqlFrom = ` FROM strains s, growth_stages gs`;
+        sqlFrom = ` FROM strains s, species s2, growth_stages gs`;
 
-        sqlWhere = ` WHERE s."orgId" = ${orgId} AND s."isActive" AND s."specieId" = gs."specieId"`;
+        sqlWhere = ` WHERE s."orgId" = ${orgId} AND s."isActive" AND s."specieId" = gs."specieId" AND s."specieId" = s2."id"`;
 
         sqlOrderBy = ` ORDER BY s.name asc`;
 

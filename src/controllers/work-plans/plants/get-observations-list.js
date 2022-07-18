@@ -31,6 +31,21 @@ const getObservationsList = async (req, res) => {
 
         var selectedRecs = await knexReader.raw(sqlStr);
 
+        //  get diseases from diseases table
+        for(rec of selectedRecs.rows){
+            const ids = [...rec.tagData.plantCondition.diseases];
+            sqlStr = `SELECT d.name FROM diseases d, UNNEST(string_to_array(regexp_replace('[ ${ids} ]', '[\\[ \\]]', '', 'g'), ',')::bigint[]) did WHERE d.id = did`;
+
+            // console.log('sql: ', sqlStr);
+
+            var selectedDiseases = await knexReader.raw(sqlStr);
+
+            // console.log('Diseases: ', selectedDiseases.rows.map(r => r.name));
+
+            rec.tagData.plantCondition.diseases = selectedDiseases.rows.map(r => r.name);
+            // console.log('record: ', selectedRecs.rows);
+        }
+
         return res.status(200).json({
             data: {
                 record: selectedRecs.rows,
