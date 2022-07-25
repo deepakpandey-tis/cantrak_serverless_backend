@@ -78,4 +78,11 @@ router.get('/get-processes',
   productionController.getProcesses
 );
 
+router.post('/get-reports-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  productionController.getReportsList
+);
+
 module.exports = router;
