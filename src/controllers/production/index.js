@@ -2,6 +2,7 @@ const addProduction = require('./add-production');
 const getProductionList = require('./get-production-list');
 const getProductionLotList = require('./get-production-lot-list');
 const getProductionLot = require('./get-production-lot');
+const getReportsList = require('./get-reports-list');
 
 const getItemAvailableLotNos = require('./inventories/get-item-available-lotnos');
 
@@ -16,6 +17,7 @@ module.exports = {
     getProductionList,
     getProductionLotList,
     getProductionLot,
+    getReportsList,
 
     getItemAvailableLotNos,
 
