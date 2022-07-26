@@ -25,8 +25,9 @@ const getProductionLot = async (req, res) => {
         sqlSelect = `SELECT pl.id, pl."orgId", pl."companyId", pl."processId", pl."productionOn", pl."lotNo" "productionLotNo"
         , pl."isActive", pl."createdBy", pl."createdAt", pl."updatedBy", pl."updatedAt"
         , p."name" "processName", ic."name" "itemCategoryName", i."name" "itemName", i."gtin" "itemGtin", u."name" "itemUM", sl."name" "storageLocation"
-        , it."itemCategoryId", it."itemId", it."txnType", it.quantity, it.quality, it."expiryDate", it."lotNo", it."umId", it."specieId", it."strainId", it."storageLocationId"
+        , it."id" "itemTxnId", it."itemCategoryId", it."itemId", it."txnType", it.quantity, it.quality, it."expiryDate", it."lotNo", it."umId", it."specieId", it."strainId", it."storageLocationId"
         , c."companyName"
+        , (SELECT jsonb_agg(i.*) FROM images i WHERE i."entityId" = pl.id AND i.record_id = it.id) files
         `;
         sqlFrom = ` FROM production_lots pl, item_txns it, processes p, item_categories ic, items i, ums u
         , storage_locations sl , companies c
