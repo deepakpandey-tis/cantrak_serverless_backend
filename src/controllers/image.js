@@ -65,6 +65,56 @@ const imageController = {
     }
   },
 
+  uploadFiles:async (req,res) => {
+    try {
+      const payload = req.body;
+
+      let insertedRecord = [];
+      const currentTime = new Date().getTime();
+
+      await knex.transaction(async (trx) => {
+        let item;
+        let itemRecNo;
+
+        itemRecNo = 0;
+        for (let rec of payload.files) {
+            item = {
+                orgId: req?.me?.orgId,
+                ...rec,
+                createdAt: currentTime,
+            };
+            console.log('item: ', item);
+
+            const insertResult = await knex
+                .insert(item)
+                .returning(["*"])
+                .transacting(trx)
+                .into("images");
+
+            insertedRecord[itemRecNo] = insertResult[0];
+            itemRecNo += 1;
+        }
+
+        trx.commit;
+      });
+
+      return res.status(200).json({
+          data: {
+              records: insertedRecord,
+          },
+          message: 'Files(s) uploaded!'
+      });
+
+    } catch(err) {
+      console.log('[controllers][image][uploadFiles] :  Error', err);
+      res.status(500).json({
+        errors: [
+          { code: 'UNKNOWN_SERVER_ERROR', message: err.message }
+        ],
+      });
+    }
+  },
+
   uploadImageTagsByEntity:async (req,res) => {
     try {
       const payload = req.body;
