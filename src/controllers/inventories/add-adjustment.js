@@ -46,7 +46,7 @@ const addAdjustment = async (req, res) => {
         const schema = Joi.object().keys({
             companyId: Joi.number().required(),
             subId: Joi.number().required(),
-            licenseId: Joi.number().required(),
+            licenseId: Joi.number().allow(null).allow('').required(),
             date: Joi.date().required(),
             itemCategoryId: Joi.number().required(),
             itemId: Joi.number().required(),

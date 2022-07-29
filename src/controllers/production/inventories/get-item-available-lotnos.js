@@ -13,7 +13,8 @@ const getItemAvailableLotNos = async (req, res) => {
         const schema = Joi.object().keys({
             companyId: Joi.string().required(),
             itemCategoryId: Joi.string().required(),
-            itemId: Joi.string().required()
+            itemId: Joi.string().required(),
+            includeZeroBalance: Joi.bool().required()
         });
         const result = Joi.validate(payload, schema);
         if (result && result.hasOwnProperty("error") && result.error) {
@@ -60,7 +61,13 @@ const getItemAvailableLotNos = async (req, res) => {
 
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlGroupBy + `)`;
-        sqlStr += ` SELECT *, ("lotQuantity" - "alreadyIssued") quantity FROM Main_CTE WHERE ("lotQuantity" - "alreadyIssued") > 0`;
+        if(payload.includeZeroBalance){
+            sqlStr += ` SELECT *, ("lotQuantity" - "alreadyIssued") quantity FROM Main_CTE WHERE ("lotQuantity" - "alreadyIssued") >= 0`;
+        }
+        else {
+            sqlStr += ` SELECT *, ("lotQuantity" - "alreadyIssued") quantity FROM Main_CTE WHERE ("lotQuantity" - "alreadyIssued") > 0`;
+        }
+        // sqlStr += ` SELECT *, ("lotQuantity" - "alreadyIssued") quantity FROM Main_CTE WHERE ("lotQuantity" - "alreadyIssued") >= 0`;
         sqlStr += sqlOrderBy;
 
         var selectedRecs = await knexReader.raw(sqlStr);
