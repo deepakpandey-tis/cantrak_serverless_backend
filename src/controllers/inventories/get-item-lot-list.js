@@ -28,7 +28,8 @@ const getItemLotList = async (req, res) => {
         const schema = Joi.object().keys({
             companyId: Joi.string().required(),
             itemCategoryId: Joi.string().required(),
-            itemId: Joi.string().required()
+            itemId: Joi.string().required(),
+            lotNo: Joi.string().allow(null).allow('').required()
         });
         let result = Joi.validate(payload, schema);
         if (result && result.hasOwnProperty("error") && result.error) {
@@ -64,6 +65,9 @@ const getItemLotList = async (req, res) => {
         sqlFrom = ` FROM item_txns it`;
 
         sqlWhere = ` WHERE it."companyId" = ${payload.companyId} AND it."itemCategoryId" = ${payload.itemCategoryId} AND it."itemId" = ${payload.itemId}`;
+        if(payload.lotNo && payload.lotNo != ''){
+            sqlWhere += ` AND it."lotNo" LIKE '%${payload.lotNo}%'`
+        }
 
         sqlGroupBy = ` GROUP BY it."itemCategoryId", it."itemId", it."lotNo", it."storageLocationId", it."specieId" , it."strainId", it."expiryDate"`;
         sqlOrderBy  = ` ORDER BY ${sortCol} ${sortOrder}`;
