@@ -77,7 +77,7 @@ const addDisease = async (req, res) => {
                 orgId: insertedRecord.orgId,
                 companyId: null,
                 entityId: insertedRecord.id,
-                entityTypeId: EntityTypes.UoM,
+                entityTypeId: EntityTypes.Disease,
                 entityActionId: EntityActions.Add,
                 description: `${req.me.name} added disease '${insertedRecord.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
                 createdBy: userId,

@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const updateCropCyclePlan = async (req, res) => {
     try {
@@ -179,6 +182,25 @@ const updateCropCyclePlan = async (req, res) => {
 
                 recNo += 1;
             }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: insertedRecord.orgId,
+                companyId: null,
+                entityId: insertedRecord.id,
+                entityTypeId: EntityTypes.CropCyclePlan,
+                entityActionId: EntityActions.Edit,
+                description: `${req.me.name} changed crop cycle plan '${insertedRecord.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

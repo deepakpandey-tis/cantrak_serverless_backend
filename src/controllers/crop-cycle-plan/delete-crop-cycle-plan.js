@@ -1,10 +1,10 @@
 const Joi = require("@hapi/joi");
-const knex = require('../../../db/knex');
+const knex = require('../../db/knex');
 const moment = require("moment-timezone");
-const addUserActivityHelper = require('../../../helpers/add-user-activity')
-const { EntityTypes, EntityActions } = require('../../../helpers/user-activity-constants');
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
-const deleteDisease = async (req, res) => {
+const deleteCropCyclePlan = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -21,7 +21,7 @@ const deleteDisease = async (req, res) => {
 
         const result = Joi.validate(payload, schema);
         console.log(
-            "[controllers][administration-features][diseases][deleteDisease]: JOi Result",
+            "[controllers][crop-cycle-plan][deleteCropCyclePlan]: JOi Result",
             result
         );
 
@@ -38,13 +38,13 @@ const deleteDisease = async (req, res) => {
             let currentTime = new Date().getTime();
 
             //  Delete record
-            sqlStr = `DELETE FROM diseases WHERE "id" = ${payload.id} AND "orgId" = ${orgId}`;
+            sqlStr = `DELETE FROM crop_cycle_plans WHERE "id" = ${payload.id} AND "orgId" = ${orgId}`;
 
             deletedRecs = await knex.raw(sqlStr).transacting(trx);
             // console.log('deleted recs: ', deletedRecs);
 
             if (deletedRecs && deletedRecs.rowCount < 1) {
-                throw { code: "DELETE_ERROR", message: "Error in deleting disease record!" };
+                throw { code: "DELETE_ERROR", message: "Error in deleting crop cycle plan record!" };
             }
 
             //  Log user activity
@@ -52,9 +52,9 @@ const deleteDisease = async (req, res) => {
                 orgId: orgId,
                 companyId: null,
                 entityId: payload.id,
-                entityTypeId: EntityTypes.Disease,
+                entityTypeId: EntityTypes.CropCyclePlan,
                 entityActionId: EntityActions.Delete,
-                description: `${req.me.name} deleted disease '${payload.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} deleted crop cycle plan '${payload.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx
@@ -73,13 +73,13 @@ const deleteDisease = async (req, res) => {
             data: {
                 record: deletedRecs
             },
-            message: 'Disease deleted successfully.'
+            message: 'Crop cycle plan deleted successfully.'
         });
     } catch (err) {
-        console.log("[controllers][administration-features][diseases][deleteDisease] :  Error", err);
+        console.log("[controllers][crop-cycle-plan][deleteCropCyclePlan] :  Error", err);
         if (err.code == 23503) {            // foreign key violation
             res.status(500).json({
-                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: 'Disease record cannot be deleted because it is already in use.' }]
+                errors: [{ code: "UNKNOWN_SERVER_ERROR", message: 'Crop cycle plan record cannot be deleted because it is already in use.' }]
             });
         }
         else {
@@ -91,7 +91,7 @@ const deleteDisease = async (req, res) => {
     }
 }
 
-module.exports = deleteDisease;
+module.exports = deleteCropCyclePlan;
 
 /**
  */

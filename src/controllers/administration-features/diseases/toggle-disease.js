@@ -63,7 +63,7 @@ const toggleDisease = async (req, res) => {
                 orgId: orgId,
                 companyId: null,
                 entityId: payload.id,
-                entityTypeId: EntityTypes.UoM,
+                entityTypeId: EntityTypes.Disease,
                 entityActionId: EntityActions.ToggleStatus,
                 description: `${req.me.name} ${action} disease '${payload.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
                 createdBy: userId,

@@ -42,6 +42,13 @@ router.post('/update-crop-cycle-plan',
   cropCyclePlanController.updateCropCyclePlan
 );
 
+router.post('/delete-crop-cycle-plan',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  cropCyclePlanController.deleteCropCyclePlan
+);
+
 router.post('/update-crop-cycle-plan-plant-detail',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

@@ -32,6 +32,9 @@ const EntityTypes = {
     WorkPlanGrowingSubLocation: 27,
     WorkPlanPlantLot: 28,
     WorkPlanGrowingLocation: 29,
+    Disease: 30,
+    CropCyclePlan: 31,
+    CropCyclePlanDetail: 32,
   };
 
   const EntityActions = {
