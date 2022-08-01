@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const moment = require("moment-timezone");
+const addUserActivityHelper = require('../../helpers/add-user-activity')
+const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 
 const updateCropCyclePlanPlantDetail = async (req, res) => {
     try {
@@ -12,6 +15,7 @@ const updateCropCyclePlanPlantDetail = async (req, res) => {
         let insertedDetail = [];
 
         const schema = Joi.object().keys({
+            cropCyclePlanName: Joi.string().required(),
             inputItems: Joi.array().required(),
         });
 
@@ -59,6 +63,25 @@ const updateCropCyclePlanPlantDetail = async (req, res) => {
 
                 recNo += 1;
             }
+
+            //  Log user activity
+            let userActivity = {
+                orgId: orgId,
+                companyId: null,
+                entityId: insertedDetail[0].id,
+                entityTypeId: EntityTypes.CropCyclePlanDetail,
+                entityActionId: EntityActions.Edit,
+                description: `${req.me.name} updated plant lot in crop cycle plan '${payload.cropCyclePlanName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                createdBy: userId,
+                createdAt: currentTime,
+                trx: trx
+            }
+            const ret = await addUserActivityHelper.addUserActivity(userActivity);
+            // console.log(`addUserActivity Return: `, ret);
+            if (ret.error) {
+                throw { code: ret.code, message: ret.message };
+            }
+            //  Log user activity
 
             trx.commit;
         });

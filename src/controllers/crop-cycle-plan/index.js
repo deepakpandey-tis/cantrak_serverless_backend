@@ -3,6 +3,7 @@ const getCropCyclePlans = require('./get-crop-cycle-plans');
 const getCropCyclePlan = require('./get-crop-cycle-plan');
 const addCropCyclePlan = require('./add-crop-cycle-plan');
 const updateCropCyclePlan = require('./update-crop-cycle-plan');
+const deleteCropCyclePlan = require('./delete-crop-cycle-plan');
 const updateCropCyclePlanPlantDetail = require('./update-crop-cycle-plan-plant-detail');
 const getCropCycleCalendarDetail = require('./get-crop-cycle-calendar-detail');
 
@@ -24,6 +25,7 @@ module.exports = {
     getCropCyclePlan,
     addCropCyclePlan,
     updateCropCyclePlan,
+    deleteCropCyclePlan,
     updateCropCyclePlanPlantDetail,
     getCropCycleCalendarDetail,
 
