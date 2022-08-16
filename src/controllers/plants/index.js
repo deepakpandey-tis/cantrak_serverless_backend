@@ -40,6 +40,7 @@ const getSubLocations = require('./masters/get-sub-locations');
 const getGrowthStages = require('./masters/get-growth-stages');
 const getStorageLocations = require('./masters/get-storage-locations');
 
+const getObservationList = require('./get-observation-list');
 const getObservationsList = require('./get-observations-list');
 const getImages = require('./get-images');
 
@@ -88,6 +89,7 @@ module.exports = {
     getGrowthStages,
     getStorageLocations,
 
+    getObservationList,
     getObservationsList,
     getImages,
 
