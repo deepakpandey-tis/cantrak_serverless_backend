@@ -117,6 +117,8 @@ const imageController = {
 
   uploadImageTagsByEntity:async (req,res) => {
     try {
+      let userId = req.me.id;
+
       const payload = req.body;
 
       // validate keys
@@ -137,7 +139,8 @@ const imageController = {
         });
       }
 
-      const uploadedImageTags = await knex('image_tags').insert({ ...payload, orgId: req?.me?.orgId }).returning(['*']);
+      let currentTime = new Date().getTime();
+      const uploadedImageTags = await knex('image_tags').insert({ ...payload, orgId: req?.me?.orgId, createdBy: userId, createdAt: currentTime}).returning(['*']);
       return res.status(200).json({
         data: uploadedImageTags,
         message: 'Image Tags uploaded!'

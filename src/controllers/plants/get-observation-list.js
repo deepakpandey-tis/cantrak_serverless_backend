@@ -42,9 +42,10 @@ const getObservationList = async (req, res) => {
             pageSize = 10;
         }
 
-        sqlSelect = `SELECT i.*, it."tagData"`;
-        sqlFrom = ` FROM images i, image_tags it`;
+        sqlSelect = `SELECT i.*, it."tagData", u2."name" "tagCreatedByName", it."createdAt" "tagCreatedAt"`;
+        sqlFrom = ` FROM images i, image_tags it, users u2`;
         sqlWhere = ` WHERE i."entityId" = ${payload.id} AND i."entityType" = 'plant' AND i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i.id = it."entityId"`;
+        sqlWhere += ` AND it."createdBy" = u2.id`;
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
 
