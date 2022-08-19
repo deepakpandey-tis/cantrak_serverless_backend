@@ -14,7 +14,7 @@ const getUserActivityList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, userId, fromDate, toDate, getLoginLogout } = req.body;
+        let { companyId, userId, fromDate, toDate, getLoginLogout, entityActionId, entityTypeId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -61,6 +61,12 @@ const getUserActivityList = async (req, res) => {
         }
         if(!getLoginLogout){
             sqlWhere += ` AND "entityTypeId" != ${EntityTypes.Login} AND "entityTypeId" != ${EntityTypes.Logout}`;
+        }
+        if(entityActionId){
+            sqlWhere += ` AND ua."entityActionId" = ${entityActionId}`;
+        }
+        if(entityTypeId){
+            sqlWhere += ` AND ua."entityTypeId" = ${entityTypeId}`;
         }
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;

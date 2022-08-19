@@ -35,6 +35,7 @@ const EntityTypes = {
     Disease: 30,
     CropCyclePlan: 31,
     CropCyclePlanDetail: 32,
+    PlantObservation: 33,
   };
 
   const EntityActions = {

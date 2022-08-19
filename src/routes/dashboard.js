@@ -44,6 +44,13 @@ router.post('/get-total-plants',
   dashboardController.getTotalPlants
 );
 
+router.post('/get-total-ill-plants',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  dashboardController.getTotalIllPlants
+);
+
 
 router.get('/get-companies',
   authMiddleware.isAuthenticated,

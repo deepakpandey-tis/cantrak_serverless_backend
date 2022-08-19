@@ -4,6 +4,7 @@ const getActiveResourceWithSubResource = require('./get-active-resource-with-sub
 
 const getWastePlantCount = require('./plants/get-waste-plant-count');
 const getTotalPlants = require('./plants/get-total-plants');
+const getTotalIllPlants = require('./plants/get-total-ill-plants');
 
 const getUserTeamWorkOrders = require('./work-orders/get-user-team-work-orders');
 
@@ -18,6 +19,7 @@ module.exports = {
     getActiveResourceWithSubResource,
     getWastePlantCount,
     getTotalPlants,
+    getTotalIllPlants,
 
     getUserTeamWorkOrders,
 
