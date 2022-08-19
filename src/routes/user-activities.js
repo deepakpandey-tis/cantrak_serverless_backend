@@ -36,4 +36,18 @@ router.get('/get-users',
   userActivitiesController.getUsers
 );
 
+router.get('/get-entity-types',
+  authMiddleware.isAuthenticated,
+  // roleMiddleware.parseUserPermission,
+  // resourceAccessMiddleware.isAccessible,
+  userActivitiesController.getEntityTypes
+);
+
+router.get('/get-entity-actions',
+  authMiddleware.isAuthenticated,
+  // roleMiddleware.parseUserPermission,
+  // resourceAccessMiddleware.isAccessible,
+  userActivitiesController.getEntityActions
+);
+
 module.exports = router;
