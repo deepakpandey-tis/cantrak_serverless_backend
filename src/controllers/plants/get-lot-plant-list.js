@@ -42,7 +42,7 @@ const getLotPlantList = async (req, res) => {
         , s.name "strainName", s2.name "specieName"
         `;
 
-        if(plantTypeId != null && (plantTypeId == 1 || plantTypeId == 3)){
+        if(plantTypeId == undefined || plantTypeId != null && (plantTypeId == 1 || plantTypeId == 3)){
             //  1: Healthy Plants || 3: Waste Plants
             sqlSelect += `, null observation`
         }
