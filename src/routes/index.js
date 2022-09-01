@@ -71,6 +71,7 @@ const superadminTenantRouter = require('./superadmin/tenant');
 const cropCyclePlanRouter = require("./crop-cycle-plan");
 const userActivitiesRouter = require("./user-activities");
 
+const packingRouter = require("./packing");
 
 
 /* GET home page. */
@@ -256,5 +257,7 @@ router.use("/superadmin/tenant", superadminTenantRouter);
 router.use("/crop-cycle-plan", cropCyclePlanRouter);
 
 router.use("/user-activities", userActivitiesRouter);
+
+router.use("/packing", packingRouter);
 
 module.exports = router;

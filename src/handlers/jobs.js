@@ -185,6 +185,24 @@ module.exports.longJobsProcessor = async (event, context) => {
     console.log('[handlers][longJobsProcessor]: Task Completed.....');
 
   }
+  else if (messageType == 'PACKING_TO_SCAN') {
+
+    console.log('[handlers][longJobsProcessor]: Data For Packing Doc Prepare:', recordData);
+
+    const packingHelper = require('../helpers/packing-qrcode');
+
+    const { packingLotId, pdfType, data, orgId, requestedBy } = recordData;
+
+    if (packingLotId) {
+      await packingHelper.generatePackingQRCodeDocumentOnEFSv2({ plantId, pdfType, data, orgId, requestedBy });
+    } else {
+      console.log('[handlers][longJobsProcessor]', 'Packing Lot Id not found. Packing Lot PDF document can not be generated.');
+      throw Error('Packing Lot Id not found. Packing Lot PDF document can not be generated.');
+    }
+
+    console.log('[handlers][longJobsProcessor]: Task Completed.....');
+
+  }
 
   if (messageType == 'PARCEL_PREPARE_PENDING_LIST_DOCUMENT') {
 
