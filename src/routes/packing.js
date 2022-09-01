@@ -28,6 +28,13 @@ router.post('/get-packing-lot',
   packingController.getPackingLot
 );
 
+router.post('/generate-pdf-of-packing',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  packingController.generatePdfOfPacking
+);
+
 router.post('/get-item-available-lotnos',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

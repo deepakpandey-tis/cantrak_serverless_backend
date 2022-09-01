@@ -3,7 +3,7 @@
       <table style="width: 100%;">
         <tr>
           <td style="padding: 0px 10px;" align="center">
-              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+              <% for (var i = 0; i < packingLotItems.length;  i++ ) { %>
                 
                 <% if(i == 0 || i % 4 == 0){ var j = 1; %>
                 <table style="width: 100%; page-break-before: always; page-break-after: always;">
@@ -17,20 +17,22 @@
                     <table style="width: 100%; margin-top: 70px; margin-bottom: 70px;">
                       <tr>
                         <td align="center">
-                          <h4 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %> (<%= plantsLot.specieName %>)</h4>
+                        <!-- (<%= packingLotItems[i].specieName %>) -->
+                        <h4 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].strainName %></h4>
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].itemName %></h5>
                         </td>
                       </tr>
                       <tr>
                         <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
                           <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
-                          <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="190px">
+                          <img src="<%= packingLotItems[i].qrCode %>" alt="qr-code" width="190px">
                         </td>
                       </tr>
                       <tr>
                         <td style="text-align: center; padding-bottom: 20px; padding-top: 0px;">
-                          <small style="font-weight: bold;">S No.: <%= plantsLot.plants[i].plantSerial %></small>
+                          <small style="font-weight: bold;"><%= packingLotItems[i].bagSerial %></small>
                           <br>
-                          <small style="font-weight: bold;">Planted On: <%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                          <small style="font-weight: bold;"><%= moment(Number(packingLotItems[i].packingOn)).format('DD/MM/YYYY') %></small>
                         </td>
                       </tr>
                     </table>
@@ -52,7 +54,7 @@
       <table style="width: 100%;">
         <tr>
           <td style="padding: 0px 10px;" align="center">
-              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+              <% for (var i = 0; i < packingLotItems.length;  i++ ) { %>
              
               <% if(i == 0 || i % 6 == 0){ var j = 1; %>
                 <table style="width: 100%; page-break-before: always; page-break-after: always;">
@@ -66,20 +68,22 @@
                   <table style="width: 100%; margin-top: 10px; margin-bottom: 10px;">
                     <tr>
                       <td align="center">
-                        <h4 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %> (<%= plantsLot.specieName %>)</h4>
+                        <!-- (<%= packingLotItems[i].specieName %>) -->
+                        <h4 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].strainName %></h4>
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].itemName %></h5>
                       </td>
                     </tr>
                     <tr>
                       <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
                         <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
-                        <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="225px">
+                        <img src="<%= packingLotItems[i].qrCode %>" alt="qr-code" width="225px">
                       </td>
                     </tr>
                     <tr>
                       <td style="text-align: center; padding-bottom: 20px; padding-top: 0px;">
-                        <small style="font-weight: bold;">S No.: <%= plantsLot.plants[i].plantSerial %></small>
+                        <small style="font-weight: bold;"><%= packingLotItems[i].bagSerial %></small>
                         <br>
-                        <small style="font-weight: bold;">Planted On: <%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                        <small style="font-weight: bold;"><%= moment(Number(packingLotItems[i].packingOn)).format('DD/MM/YYYY') %></small>
                       </td>
                     </tr>
                   </table>
@@ -101,7 +105,7 @@
       <table style="width: 100%;">
         <tr>
           <td style="padding: 0px 10px;" align="center">
-              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+              <% for (var i = 0; i < packingLotItems.length;  i++ ) { %>
               
               <% if(i == 0 || i % 8 == 0){ var j = 1; %>
                 <table style="width: 100%; page-break-before: always; page-break-after: always;">
@@ -115,20 +119,22 @@
                   <table style="width: 100%; margin-top: 0px; margin-bottom: 0px;">
                     <tr>
                       <td align="center">
-                        <h5 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %> (<%= plantsLot.specieName %>)</h5>
+                        <!-- (<%= packingLotItems[i].specieName %>) -->
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].strainName %></h5>
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].itemName %></h5>
                       </td>
                     </tr>
                     <tr>
                       <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
                         <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
-                        <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="160px">
+                        <img src="<%= packingLotItems[i].qrCode %>" alt="qr-code" width="160px">
                       </td>
                     </tr>
                     <tr>
                       <td style="text-align: center; padding-bottom: 15px; padding-top: 0px;">
-                        <small style="font-weight: bold;">S No.: <%= plantsLot.plants[i].plantSerial %></small>
+                        <small style="font-weight: bold;"><%= packingLotItems[i].bagSerial %></small>
                         <br>
-                        <small style="font-weight: bold;">Planted On: <%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                        <small style="font-weight: bold;"><%= moment(Number(packingLotItems[i].packingOn)).format('DD/MM/YYYY') %></small>
                       </td>
                     </tr>
                   </table>
@@ -150,7 +156,7 @@
       <table style="width: 100%;">
         <tr>
           <td style="padding: 0px 10px;" align="center">
-              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+              <% for (var i = 0; i < packingLotItems.length;  i++ ) { %>
               
               <% if(i == 0 || i % 9 == 0){ var j = 1; %>
                 <table style="width: 100%; page-break-before: always; page-break-after: always;">
@@ -164,20 +170,22 @@
                   <table style="width: 100%; margin-top: 25px; margin-bottom: 25px;">
                     <tr>
                       <td align="center">
-                        <h5 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %> (<%= plantsLot.specieName %>)</h5>
+                        <!-- (<%= packingLotItems[i].specieName %>) -->
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].strainName %></h5>
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].itemName %></h5>
                       </td>
                     </tr>
                     <tr>
                       <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
                         <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
-                        <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="200px">
+                        <img src="<%= packingLotItems[i].qrCode %>" alt="qr-code" width="200px">
                       </td>
                     </tr>
                     <tr>
                       <td style="text-align: center; padding-bottom: 20px; padding-top: 0px;">
-                        <small style="font-weight: bold;">S No.: <%= plantsLot.plants[i].plantSerial %></small>
+                        <small style="font-weight: bold;"><%= packingLotItems[i].bagSerial %></small>
                         <br>
-                        <small style="font-weight: bold;">Planted On: <%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                        <small style="font-weight: bold;"><%= moment(Number(packingLotItems[i].packingOn)).format('DD/MM/YYYY') %></small>
                       </td>
                     </tr>
                   </table>
@@ -199,7 +207,7 @@
       <table style="width: 100%;">
         <tr>
           <td style="padding: 0px 10px;" align="center">
-              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+              <% for (var i = 0; i < packingLotItems.length;  i++ ) { %>
               
               <% if(i == 0 || i % 12 == 0){ var j = 1; %>
                 <table style="width: 100%; page-break-before: always; page-break-after: always;">
@@ -213,20 +221,22 @@
                   <table style="width: 100%; margin-top: 5px; margin-bottom: 5px;">
                     <tr>
                       <td align="center">
-                        <h5 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %> (<%= plantsLot.specieName %>)</h5>
+                        <!-- (<%= packingLotItems[i].specieName %>) -->
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].strainName %></h5>
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].itemName %></h5>
                       </td>
                     </tr>
                     <tr>
                       <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
                         <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
-                        <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="150px">
+                        <img src="<%= packingLotItems[i].qrCode %>" alt="qr-code" width="150px">
                       </td>
                     </tr>
                     <tr>
                       <td style="text-align: center; padding-bottom: 20px; padding-top: 0px;">
-                        <small style="font-weight: bold;">S No.: <%= plantsLot.plants[i].plantSerial %></small>
+                        <small style="font-weight: bold;"><%= packingLotItems[i].bagSerial %></small>
                         <br>
-                        <small style="font-weight: bold;">Planted On: <%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                        <small style="font-weight: bold;"><%= moment(Number(packingLotItems[i].packingOn)).format('DD/MM/YYYY') %></small>
                       </td>
                     </tr>
                   </table>
@@ -248,7 +258,7 @@
       <table style="width: 100%;">
         <tr>
           <td style="padding: 0px 10px;" align="center">
-              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+              <% for (var i = 0; i < packingLotItems.length;  i++ ) { %>
               
               <% if(i == 0 || i % 25 == 0){ var j = 1; %>
                 <table style="width: 100%; page-break-before: always; page-break-after: always;">
@@ -262,21 +272,22 @@
                   <table style="width: 100%; margin-top: 0px; margin-bottom: 0px;">
                     <tr>
                       <td align="center">
-                        <!-- (<%= plantsLot.specieName %>) -->
-                        <h5 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %></h5>
+                        <!-- (<%= packingLotItems[i].specieName %>) -->
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].strainName %></h5>
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= packingLotItems[i].itemName %></h5>
                       </td>
                     </tr>
                     <tr>
                       <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
                         <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
-                        <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="140px">
+                        <img src="<%= packingLotItems[i].qrCode %>" alt="qr-code" width="140px">
                       </td>
                     </tr>
                     <tr>
                       <td style="text-align: center; padding-bottom: 15px; padding-top: 0px;">
-                        <small style="font-weight: bold;"><%= plantsLot.plants[i].plantSerial %></small>
+                        <small style="font-weight: bold;"><%= packingLotItems[i].bagSerial %></small>
                         <br>
-                        <small style="font-weight: bold;"><%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                        <small style="font-weight: bold;"><%= moment(Number(packingLotItems[i].packingOn)).format('DD/MM/YYYY') %></small>
                       </td>
                     </tr>
                   </table>

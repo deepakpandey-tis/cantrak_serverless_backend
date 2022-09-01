@@ -10,25 +10,25 @@ const generatePdfOfPacking = async (req, res) => {
 
         let { id, pdfType } = req.body;
 
-        let sqlStr, sqlSelect, sqlFrom, sqlWhere;
+        let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         sqlSelect = `SELECT pl.id, pl."orgId", pl."companyId", pl."packingOn", pl."lotNo" "packingLotNo"
         , pl."isActive", pl."createdBy", pl."createdAt", pl."updatedBy", pl."updatedAt"
-        , ic."name" "itemCategoryName", i."name" "itemName", i."gtin" "itemGtin", u."name" "itemUM", sl."name" "storageLocation"
         , it."id" "itemTxnId", it."itemCategoryId", it."itemId", it."txnType", it.quantity, it.quality, it."expiryDate"
         , it."lotNo", it."umId", it."specieId", it."strainId", it."storageLocationId"
-        , it."packingWeight", c."companyName"
+        , it."packingWeight", i."name" "itemName"
+        , s.name "strainName"
         `;
-        sqlFrom = ` FROM packing_lots pl, item_txns it, item_categories ic, items i, ums u
-        , storage_locations sl , companies c
+        sqlFrom = ` FROM packing_lots pl, item_txns it, items i
+        , strains s
         `;
-        sqlWhere = ` WHERE pl.id = ${payload.id} AND pl."orgId" = ${orgId}`;
-        sqlWhere += ` AND pl.id = it."packingLotId" AND it.quantity > 0 AND it."storageLocationId" != ${SystemStores.PackingLoss}
-        AND it."itemCategoryId" = ic.id AND it."itemCategoryId" = i."itemCategoryId" AND it."itemId" = i.id
-        AND it."umId" = u.id AND it."storageLocationId" = sl.id AND pl."companyId" = c.id
+        sqlWhere = ` WHERE pl.id = ${id} AND pl."orgId" = ${orgId}`;
+        sqlWhere += ` AND pl.id = it."packingLotId" AND it."itemCategoryId" = i."itemCategoryId" AND it."itemId" = i.id
+        AND it.quantity > 0 AND it."storageLocationId" != ${SystemStores.PackingLoss} AND it."strainId" = s.id
         `;
+        sqlOrderBy = `ORDER BY pl.id ASC, it.id ASC`;
 
-        sqlStr = sqlSelect + sqlFrom + sqlWhere;
+        sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
 
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);

@@ -1,6 +1,7 @@
 const addPacking = require('./add-packing');
 const getPackingList = require('./get-packing-list');
 const getPackingLot = require('./get-packing-lot');
+const generatePdfOfPacking = require('./generate-pdf-of-packing');
 
 const getItemAvailableLotNos = require('./inventories/get-item-available-lotnos');
 
@@ -13,6 +14,7 @@ module.exports = {
     addPacking,
     getPackingList,
     getPackingLot,
+    generatePdfOfPacking,
 
     getItemAvailableLotNos,
 
