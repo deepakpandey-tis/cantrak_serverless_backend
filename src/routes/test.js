@@ -912,6 +912,135 @@ router.get("/print-registration", async (req, res) => {
 });
 
 
+// Packing QR Code
+router.get("/print-packing-qrcodes", async (req, res) => {
+  console.log(req.query);
+  const path = require("path");
+  // Read HTML Template
+  const templatePath = path.join(global.appRoot,
+    "pdf-templates",
+    "packing-qr-template.ejs"
+  );
+
+  console.log("=== templatePath ===", templatePath);
+  
+  let packingLotItems = [
+    {
+      id: '3',
+      orgId: '89',
+      companyId: '953',
+      packingOn: '1661797800000',
+      packingLotNo: '2565080001',
+      isActive: true,
+      createdBy: '1188',
+      createdAt: '1661863029752',
+      updatedBy: '1188',
+      updatedAt: '1661863029752',
+      itemCategoryName: 'Product',
+      itemName: 'Bag 5 kg',
+      itemGtin: '',
+      itemUM: 'Kilogram',
+      storageLocation: 'Product Store',
+      itemTxnId: '257',
+      itemCategoryId: '2',
+      itemId: '48',
+      txnType: 26,
+      quantity: 2,
+      quality: 'A',
+      expiryDate: '1667154600000',
+      lotNo: '2565080001',
+      umId: '1',
+      specieId: '1',
+      strainId: '2',
+      storageLocationId: '2',
+      packingWeight: 5,
+      companyName: 'Cantrak',
+      files: null,
+      strainName: 'Blue Dream',
+      bagSerial: '2565080001-48-001',
+      qrCodeString: '{"qn":"CT:PACK:ID","oid":"89","cid":"953","id":"3-48-001"}',
+      qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkCAYAAAAZtYVBAAAAAklEQVR4AewaftIAAAYWSURBVO3BQY4Dx7IgQfcE739lHy1jVUCBbL38mjCzf7DWJQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13ksNZFDmtd5LDWRQ5rXeSw1kUOa13kw5dU/k0VT1SeVDxRmSreUPlLFW+o/JsqvnFY6yKHtS5yWOsiH36s4pdUfkllqnii8qRiqnhD5Q2VqeKNil9S+aXDWhc5rHWRw1oX+fDHVN6oeEPlScUTlScVv6TyRsUTlaniDZU3Kv7SYa2LHNa6yGGti3z4/4zKk4pJ5S9VvKHyX3ZY6yKHtS5yWOsiH/5jKt6omFSmikllqphUpopJ5Zcq/ksOa13ksNZFDmtd5MMfq/hfUpkqJpWpYlJ5ojJVTCpTxROVqWKq+KWKmxzWushhrYsc1rrIhx9T+S+rmFS+oTJVTCpTxaQyVTxRudlhrYsc1rrIYa2LfPhSxU1UpopvVEwqU8WTiicVk8pU8Y2K/0sOa13ksNZFDmtd5MOXVKaKSeWXKqaKN1SmikllqnhDZaqYVKaKqeKJylTxROWXKv7SYa2LHNa6yGGti9g/+CGVqWJSeVLxhspU8URlqvhLKv+miknlScUTlaliUpkqvnFY6yKHtS5yWOsiH/5lFZPKpPKkYqr4N6k8qXhS8ZdUpopJZVKZKqaKSWWq+KXDWhc5rHWRw1oX+fDHVJ5UvKEyVXxDZaqYVJ5UvKEyVUwqU8WkMlV8o2JS+V86rHWRw1oXOax1EfsHX1CZKt5Q+UbFTVSeVEwqU8UbKlPFGypPKp6oTBXfOKx1kcNaFzmsdZEPX6p4ojJVPKl4ovINlaliUvlGxROVqWJSeaNiUnmjYlKZVKaKv3RY6yKHtS5yWOsiH35MZaqYVJ6oPKmYVJ5U/FLFNyqeVLyhMlV8o2JSeVLxS4e1LnJY6yKHtS7y4UsqU8Wk8qRiUpkq3qh4Q2WqmFSeqEwVk8pUMan8m1SeVDxReVLxjcNaFzmsdZHDWhf5cDmVqWKqeKLyhso3VN6oeKIyVUwqk8pU8Y2KJyq/dFjrIoe1LnJY6yIfvlTxpGJSeaNiUpkqJpU3KiaVqeJJxROVSWWqeEPllyqeqEwVf+mw1kUOa13ksNZFPvwxlW+ofKPiicoTlScVb1S8UTGpPKl4Q+UNlanilw5rXeSw1kUOa13kw5dUnlRMKpPKVPFEZVKZKiaVqWKqeKLyl1SeVLyh8m9SmSq+cVjrIoe1LnJY6yIffqxiUpkqJpVJ5Zcqnqi8UfFE5YnKk4pvVLyhMlX8Lx3WushhrYsc1rrIhz9WMalMFW+ovKHypGJSmSomlaliqniiMlVMKlPFN1SeVDxReaPiG4e1LnJY6yKHtS7y4Y+pfENlqphUJpUnFZPKVPGGyhsVk8oTlaliUnlSMalMKlPFVDGpTBW/dFjrIoe1LnJY6yIf/ljFE5WpYqqYVN6omFSmil+qmFS+UfGk4onKk4onKk9UpopvHNa6yGGtixzWusiHy6m8UfGGylTxpGJSmVSeqEwVb6j8ksqTikllqvilw1oXOax1kcNaF7F/8H+YylTxDZUnFd9QmSomlaliUnlS8YbKk4onKlPFNw5rXeSw1kUOa13kw5dU/k0VU8WkMlVMKk8qnqhMFU9UpoonFb+kMlU8qXiiMlX80mGtixzWushhrYt8+LGKX1J5ojJVvFHxRGWqeKNiUpkqJpWp4hsV31CZKiaVqeIbh7UucljrIoe1LvLhj6m8UfENlScVT1SeqHyj4knFN1R+qeJJxS8d1rrIYa2LHNa6yIf/uIpJ5UnFGypvqEwVT1TeqHhD5SaHtS5yWOsih7Uu8uE/pmJSeVLxhspUMak8qZhUnlS8ofJGxU0Oa13ksNZFDmtdxP7BF1Smil9SmSqeqDypeENlqnhD5UnFpPKk4hsqTyomlaniLx3WushhrYsc1rrIhx9T+Tep/JLKE5WpYlJ5UvGk4g2VqWJSeVLxpGJSmSp+6bDWRQ5rXeSw1kXsH6x1icNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhc5rHWRw1oXOax1kcNaFzmsdZHDWhf5fwD/8lxpiK3wAAAAAElFTkSuQmCC'
+    },
+    {
+      id: '3',
+      orgId: '89',
+      companyId: '953',
+      packingOn: '1661797800000',
+      packingLotNo: '2565080001',
+      isActive: true,
+      createdBy: '1188',
+      createdAt: '1661863029752',
+      updatedBy: '1188',
+      updatedAt: '1661863029752',
+      itemCategoryName: 'Product',
+      itemName: 'Bag 5 kg',
+      itemGtin: '',
+      itemUM: 'Kilogram',
+      storageLocation: 'Product Store',
+      itemTxnId: '257',
+      itemCategoryId: '2',
+      itemId: '48',
+      txnType: 26,
+      quantity: 2,
+      quality: 'A',
+      expiryDate: '1667154600000',
+      lotNo: '2565080001',
+      umId: '1',
+      specieId: '1',
+      strainId: '2',
+      storageLocationId: '2',
+      packingWeight: 5,
+      companyName: 'Cantrak',
+      files: null,
+      strainName: 'Blue Dream',
+      bagSerial: '2565080001-48-002',
+      qrCodeString: '{"qn":"CT:PACK:ID","oid":"89","cid":"953","id":"3-48-002"}',
+      qrCode: 'data:image/png;base64,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'
+    },
+    {
+      id: '3',
+      orgId: '89',
+      companyId: '953',
+      packingOn: '1661797800000',
+      packingLotNo: '2565080001',
+      isActive: true,
+      createdBy: '1188',
+      createdAt: '1661863029752',
+      updatedBy: '1188',
+      updatedAt: '1661863029752',
+      itemCategoryName: 'Product',
+      itemName: 'Bag 10 Kg',
+      itemGtin: '',
+      itemUM: 'Kilogram',
+      storageLocation: 'Product Store',
+      itemTxnId: '258',
+      itemCategoryId: '2',
+      itemId: '47',
+      txnType: 26,
+      quantity: 1,
+      quality: 'A',
+      expiryDate: '1667154600000',
+      lotNo: '2565080001',
+      umId: '1',
+      specieId: '1',
+      strainId: '2',
+      storageLocationId: '2',
+      packingWeight: 10,
+      companyName: 'Cantrak',
+      files: null,
+      strainName: 'Blue Dream',
+      bagSerial: '2565080001-47-001',
+      qrCodeString: '{"qn":"CT:PACK:ID","oid":"89","cid":"953","id":"3-47-001"}',
+      qrCode: 'data:image/png;base64,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'
+    }
+  ];
+
+  // await plantsHelper.generatePlantsDocumentOnEFSv2({ plantId: 10, data: {plantsLot: plData}, orgId, requestedBy });
+
+  res.render(templatePath, { moment, packingLotItems, pdfType: '5x5' });
+});
+// Packing QR Code
+
 // router.get("/print-registration", (req, res) => {
 //   console.log(req.query);
 //   const path = require("path");

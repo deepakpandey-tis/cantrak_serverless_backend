@@ -328,36 +328,31 @@ const packingQRCodeHelper = {
             try {
     
                 let packedItemsWithQrCode = [];
-                packedItems = await Parallel.map(selectedRecs.rows, async (packedItem) => {
-                    console.log("[helpers][generatePackingQRCodeDocumentOnEFSv2]: Preparing For Packed Items: ", packedItem);
-        
-                    let packItemsWithQrCode = [];
+                let recs = [];
+                selectedRecs.rows.map(packedItem => {
                     for(let ndx = 1; ndx <= packedItem.quantity; ndx++){
                         let qrCodeObj = {
-                            qn: 'CT:PACKINGLOT:ID',
+                            qn: 'CT:PACK:ID',
                             oid: orgId,
                             cid: packedItem.companyId,
-                            id: packedItem.id + "-" + packedItem.itemTxnId + "-" + String(ndx).padStart(3, '0')
+                            id: packedItem.id + "-" + packedItem.itemId + "-" + String(ndx).padStart(3, '0')    //  PackingLotId + ItemId + RunningNumber
                         };
         
-                        let qrString = JSON.stringify(qrCodeObj);
-                        let qrCodeDataURI = await QRCODE.toDataURL(qrString);
-                        let packedItemWithQrCode = {...packedItem, qrCodeString: qrString, qrCode: qrCodeDataURI};
-        
-                        packItemsWithQrCode.push(packedItemWithQrCode);
-                        packedItemsWithQrCode.push(packedItemWithQrCode);
+                        recs.push(Object.assign({}, packedItem, {bagSerial: packedItem.packingLotNo + '-' + packedItem.itemId + '-' + String(ndx).padStart(3, '0'), qrCodeString: JSON.stringify(qrCodeObj)}));
                     }
-        
-                    console.log("[helpers][generatePackingQRCodeDocumentOnEFSv2]: packed item pdf data: ", packItemsWithQrCode);
-        
-                    return packItemsWithQrCode;
-        
                 });
+                console.log("[helpers][generatePackingQRCodeDocumentOnEFSv2]: Packed Items: ", recs);
         
-                // console.log("[helpers][generatePackingQRCodeDocumentOnEFSv2]: packed items pdf data: ", packedItems);
+                packedItemsWithQrCode = await Parallel.map(recs, async (rec) => {
+        
+                    let qrCodeDataURI = await QRCODE.toDataURL(rec.qrCodeString);
+                    let packedItemWithQrCode = {...rec, qrCode: qrCodeDataURI};
+        
+                    return packedItemWithQrCode;
+                });
                 console.log("[helpers][generatePackingQRCodeDocumentOnEFSv2]: packed items pdf data: ", packedItemsWithQrCode);
                             
-                let htmlContents = await ejs.renderFile(templatePath, { moment, packedItems: plantsLots, pdfType });
+                let htmlContents = await ejs.renderFile(templatePath, { moment, packedItems: packedItemsWithQrCode, pdfType });
         
                 let filename = `plant-${packingLotId}-lot-${packedItems.lotNo}.pdf`;
     
@@ -365,7 +360,7 @@ const packingQRCodeHelper = {
                 html: htmlContents,
                 data: {
                     moment, 
-                    plantsLots,
+                    packedItems,
                     pdfType
                 },
                 s3BasePath: basePath,
