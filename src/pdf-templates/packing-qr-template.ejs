@@ -1,0 +1,298 @@
+<div style="width: 100% !important; position: relative;">
+    <% if(pdfType == '2x2'){%>
+      <table style="width: 100%;">
+        <tr>
+          <td style="padding: 0px 10px;" align="center">
+              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+                
+                <% if(i == 0 || i % 4 == 0){ var j = 1; %>
+                <table style="width: 100%; page-break-before: always; page-break-after: always;">
+                <% }%>
+  
+                <% if(i == 0 || i % 2 == 0){ var c = 1; %>
+                <tr style="margin-top: 5px; margin-bottom: 5px;">
+                <% } %>
+  
+                  <td style="margin: 10px 0 !important;">
+                    <table style="width: 100%; margin-top: 70px; margin-bottom: 70px;">
+                      <tr>
+                        <td align="center">
+                          <h4 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %> (<%= plantsLot.specieName %>)</h4>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
+                          <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
+                          <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="190px">
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="text-align: center; padding-bottom: 20px; padding-top: 0px;">
+                          <small style="font-weight: bold;">S No.: <%= plantsLot.plants[i].plantSerial %></small>
+                          <br>
+                          <small style="font-weight: bold;">Planted On: <%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+  
+                <% if(c == 2){ %>
+                </tr>
+                <% }else{ c++;} %>
+  
+                <% if(j == 4){  %>
+                </table>
+                <% } else{ j++;}%>
+  
+              <% } %>
+          </td>
+        </tr>
+      </table>
+    <% } else if(pdfType == '2x3'){%>
+      <table style="width: 100%;">
+        <tr>
+          <td style="padding: 0px 10px;" align="center">
+              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+             
+              <% if(i == 0 || i % 6 == 0){ var j = 1; %>
+                <table style="width: 100%; page-break-before: always; page-break-after: always;">
+              <% }%>
+  
+              <% if(i == 0 || i % 2 == 0){ var c = 1; %>
+              <tr style="margin-top: 0px; margin-bottom: 0px;">
+              <% } %>
+  
+                <td style="margin: 10px 0 !important;">
+                  <table style="width: 100%; margin-top: 10px; margin-bottom: 10px;">
+                    <tr>
+                      <td align="center">
+                        <h4 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %> (<%= plantsLot.specieName %>)</h4>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
+                        <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
+                        <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="225px">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center; padding-bottom: 20px; padding-top: 0px;">
+                        <small style="font-weight: bold;">S No.: <%= plantsLot.plants[i].plantSerial %></small>
+                        <br>
+                        <small style="font-weight: bold;">Planted On: <%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+  
+              <% if(c == 2){ %>
+              </tr>
+              <% }else{ c++;} %>
+  
+              <% if(j == 6){  %>
+              </table>
+              <% } else{ j++;}%>
+  
+              <% } %>
+          </td>
+        </tr>
+      </table>
+    <% } else if(pdfType == '2x4'){%>
+      <table style="width: 100%;">
+        <tr>
+          <td style="padding: 0px 10px;" align="center">
+              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+              
+              <% if(i == 0 || i % 8 == 0){ var j = 1; %>
+                <table style="width: 100%; page-break-before: always; page-break-after: always;">
+              <% }%>
+  
+              <% if(i == 0 || i % 2 == 0){ var c = 1; %>
+              <tr style="margin-top: 0px; margin-bottom: 0px;">
+              <% } %>
+  
+                <td style="margin: 10px 0 !important;">
+                  <table style="width: 100%; margin-top: 0px; margin-bottom: 0px;">
+                    <tr>
+                      <td align="center">
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %> (<%= plantsLot.specieName %>)</h5>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
+                        <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
+                        <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="160px">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center; padding-bottom: 15px; padding-top: 0px;">
+                        <small style="font-weight: bold;">S No.: <%= plantsLot.plants[i].plantSerial %></small>
+                        <br>
+                        <small style="font-weight: bold;">Planted On: <%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+  
+              <% if(c == 2){ %>
+              </tr>
+              <% }else{ c++;} %>
+  
+              <% if(j == 8){  %>
+              </table>
+              <% } else{ j++;}%>
+  
+              <% } %>
+          </td>
+        </tr>
+      </table>
+    <% } else if(pdfType == '3x3'){%>
+      <table style="width: 100%;">
+        <tr>
+          <td style="padding: 0px 10px;" align="center">
+              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+              
+              <% if(i == 0 || i % 9 == 0){ var j = 1; %>
+                <table style="width: 100%; page-break-before: always; page-break-after: always;">
+              <% }%>
+  
+              <% if(i == 0 || i % 3 == 0){ var c = 1; %>
+              <tr style="margin-top: 10px; margin-bottom: 10px;">
+              <% } %>
+  
+                <td style="margin: 10px 0 !important;">
+                  <table style="width: 100%; margin-top: 25px; margin-bottom: 25px;">
+                    <tr>
+                      <td align="center">
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %> (<%= plantsLot.specieName %>)</h5>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
+                        <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
+                        <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="200px">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center; padding-bottom: 20px; padding-top: 0px;">
+                        <small style="font-weight: bold;">S No.: <%= plantsLot.plants[i].plantSerial %></small>
+                        <br>
+                        <small style="font-weight: bold;">Planted On: <%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+  
+              <% if(c == 3){ %>
+              </tr>
+              <% }else{ c++;} %>
+  
+              <% if(j == 9){  %>
+              </table>
+              <% } else{ j++;}%>
+  
+              <% } %>
+          </td>
+        </tr>
+      </table>
+    <% } else if(pdfType == '3x4'){ %>
+      <table style="width: 100%;">
+        <tr>
+          <td style="padding: 0px 10px;" align="center">
+              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+              
+              <% if(i == 0 || i % 12 == 0){ var j = 1; %>
+                <table style="width: 100%; page-break-before: always; page-break-after: always;">
+              <% }%>
+  
+              <% if(i == 0 || i % 3 == 0){ var c = 1; %>
+              <tr style="margin-top: 10px; margin-bottom: 10px;">
+              <% } %>
+  
+                <td style="margin: 10px 0 !important;">
+                  <table style="width: 100%; margin-top: 5px; margin-bottom: 5px;">
+                    <tr>
+                      <td align="center">
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %> (<%= plantsLot.specieName %>)</h5>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
+                        <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
+                        <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="150px">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center; padding-bottom: 20px; padding-top: 0px;">
+                        <small style="font-weight: bold;">S No.: <%= plantsLot.plants[i].plantSerial %></small>
+                        <br>
+                        <small style="font-weight: bold;">Planted On: <%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+  
+              <% if(c == 3){ %>
+              </tr>
+              <% }else{ c++;} %>
+  
+              <% if(j == 12){  %>
+              </table>
+              <% } else{ j++;}%>
+  
+              <% } %>
+          </td>
+        </tr>
+      </table>
+    <% } else{ %>
+      <table style="width: 100%;">
+        <tr>
+          <td style="padding: 0px 10px;" align="center">
+              <% for (var i = 0; i < plantsLot.plants.length;  i++ ) { %>
+              
+              <% if(i == 0 || i % 25 == 0){ var j = 1; %>
+                <table style="width: 100%; page-break-before: always; page-break-after: always;">
+              <% }%>
+  
+              <% if(i == 0 || i % 5 == 0){ var c = 1; %>
+              <tr style="margin-top: 10px; margin-bottom: 10px;">
+              <% } %>
+  
+                <td style="margin: 10px 0 !important; min-width: 25%; width: 25%; max-width: 25%;">
+                  <table style="width: 100%; margin-top: 0px; margin-bottom: 0px;">
+                    <tr>
+                      <td align="center">
+                        <!-- (<%= plantsLot.specieName %>) -->
+                        <h5 style="color: #d53836 !important; margin: 0;"><%= plantsLot.strainName %></h5>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center; padding-top: 0px; display: flex; justify-content: center;">
+                        <!-- <div style="width: 10px; height: 10px; border: 1px solid gray; margin:auto 0; margin-right: 20px;"></div> -->
+                        <img src="<%= plantsLot.plants[i].qrCode %>" alt="qr-code" width="140px">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center; padding-bottom: 15px; padding-top: 0px;">
+                        <small style="font-weight: bold;"><%= plantsLot.plants[i].plantSerial %></small>
+                        <br>
+                        <small style="font-weight: bold;"><%= moment(Number(plantsLot.plants[i].plantedOn)).format('DD/MM/YYYY') %></small>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+  
+              <% if(c == 5){ %>
+              </tr>
+              <% }else{ c++;} %>
+  
+              <% if(j == 25){  %>
+              </table>
+              <% } else{ j++;}%>
+  
+              <% } %>
+          </td>
+        </tr>
+      </table>
+    <% } %>
+  </div>
