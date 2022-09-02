@@ -24,7 +24,7 @@ const getPlantLotUnhealthyPlantsCount = async (req, res) => {
 
         sqlSelect = `SELECT DISTINCT ON (i."entityId") it."tagData"->'plantCondition'->'appearsIll',  it."tagData", i.id, i."entityId", p."plantLotId"`;
         sqlFrom = ` FROM images i, image_tags it, plants p`;
-        sqlWhere = ` WHERE p."plantLotId" = ${payload.id} AND p."orgId" = ${orgId} `;
+        sqlWhere = ` WHERE p."plantLotId" = ${payload.id} AND p."orgId" = ${orgId} AND p."isActive" AND NOT p."isWaste"`;
         sqlWhere += ` AND i.id = it."entityId" and i."entityId" = p.id`;
         sqlOrderBy = ` ORDER BY i."entityId" asc, i."createdAt" desc`;
 
