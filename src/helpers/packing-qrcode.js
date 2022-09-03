@@ -329,7 +329,7 @@ const packingQRCodeHelper = {
     
                 let packedItemsWithQrCode = [];
                 let recs = [];
-                selectedRecs.rows.map(packedItem => {
+                data.packedItems.map(packedItem => {
                     for(let ndx = 1; ndx <= packedItem.quantity; ndx++){
                         let qrCodeObj = {
                             qn: 'CT:PACK:ID',
