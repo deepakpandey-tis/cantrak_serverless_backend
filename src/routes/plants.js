@@ -210,6 +210,13 @@ router.post('/get-plant-lot-unhealthy-plants-count',
   plantController.getPlantLotUnhealthyPlantsCount
 );
 
+router.post('/get-plant-lot-current-growth-stages',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotCurrentGrowthStages
+);
+
 
 router.post('/get-raw-material-for-plant-list',
   authMiddleware.isAuthenticated,

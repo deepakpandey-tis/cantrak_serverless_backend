@@ -14,7 +14,7 @@ const getLotPlantList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { id, locationId, subLocationId, fromPlantSerial, uptoPlantSerial, includeWaste, plantTypeId } = req.body;
+        let { id, locationId, subLocationId, fromPlantSerial, uptoPlantSerial, includeWaste, plantTypeId, currentGrowthStageId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy, sqlObservation;
 
@@ -91,6 +91,10 @@ const getLotPlantList = async (req, res) => {
 
         sqlWhere += ` AND p.id = ploc."plantId" AND ploc.id = (select id from plant_locations ploc2 where ploc2."plantId" = p.id order by id desc limit 1)`;
         sqlWhere += ` AND p.id = pgs."plantId" AND pgs.id = (select id from plant_growth_stages pgs2 where pgs2."plantId" = p.id order by id desc limit 1)`;
+        if(currentGrowthStageId != undefined && currentGrowthStageId){
+            //  to get plants of growth stage
+            sqlWhere += ` AND pgs."growthStageId" = ${currentGrowthStageId}`;
+        }
         sqlWhere += ` AND ploc."locationId" = l.id AND ploc."subLocationId" = sl.id AND pgs."growthStageId" = gs.id`;
         sqlWhere += ` AND pl."strainId" = s.id AND pl."specieId" = s2.id`;
 
