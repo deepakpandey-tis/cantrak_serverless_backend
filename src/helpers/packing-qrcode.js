@@ -354,7 +354,7 @@ const packingQRCodeHelper = {
                             
                 let htmlContents = await ejs.renderFile(templatePath, { moment, packedItems: packedItemsWithQrCode, pdfType });
         
-                let filename = `plant-${packingLotId}-lot-${packedItems.lotNo}.pdf`;
+                let filename = `packing-${packingLotId}-lot-${packedItemsWithQrCode[0].packingLotNo}.pdf`;
     
                 const document = {
                 html: htmlContents,
