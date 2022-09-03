@@ -209,7 +209,7 @@ const addPacking = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.Packing,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} packing lot '${insertedRecord.lotNo}' containing ${itemReceiveNo} item(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} added packing lot '${insertedRecord.lotNo}' containing ${itemReceiveNo} item(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx
