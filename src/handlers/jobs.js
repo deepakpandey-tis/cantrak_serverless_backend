@@ -194,7 +194,7 @@ module.exports.longJobsProcessor = async (event, context) => {
     const { packingLotId, pdfType, data, orgId, requestedBy } = recordData;
 
     if (packingLotId) {
-      await packingHelper.generatePackingQRCodeDocumentOnEFSv2({ plantId, pdfType, data, orgId, requestedBy });
+      await packingHelper.generatePackingQRCodeDocumentOnEFSv2({ packingLotId, pdfType, data, orgId, requestedBy });
     } else {
       console.log('[handlers][longJobsProcessor]', 'Packing Lot Id not found. Packing Lot PDF document can not be generated.');
       throw Error('Packing Lot Id not found. Packing Lot PDF document can not be generated.');
