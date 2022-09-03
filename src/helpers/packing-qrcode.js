@@ -360,7 +360,7 @@ const packingQRCodeHelper = {
                 html: htmlContents,
                 data: {
                     moment, 
-                    packedItems,
+                    packedItemsWithQrCode,
                     pdfType
                 },
                 s3BasePath: basePath,
