@@ -352,7 +352,7 @@ const packingQRCodeHelper = {
                 });
                 console.log("[helpers][generatePackingQRCodeDocumentOnEFSv2]: packed items pdf data: ", packedItemsWithQrCode);
                             
-                let htmlContents = await ejs.renderFile(templatePath, { moment, packedItems: packedItemsWithQrCode, pdfType });
+                let htmlContents = await ejs.renderFile(templatePath, { moment, packingLotItems: packedItemsWithQrCode, pdfType });
         
                 let filename = `packing-${packingLotId}-lot-${packedItemsWithQrCode[0].packingLotNo}.pdf`;
     
