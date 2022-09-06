@@ -3,8 +3,9 @@ const knex = require('../../db/knex');
 const moment = require("moment-timezone");
 const addUserActivityHelper = require('../../helpers/add-user-activity')
 const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
+const { ItemCategory, TxnTypes, SystemStores } = require('../../helpers/txn-types');
 
-const ItemCategory = {
+/* const ItemCategory = {
     RawMaterial: 1,
     Product: 2,
     WasteMaterial: 3,
@@ -27,6 +28,7 @@ const TxnTypes ={
     IssueFromTxnType: 51,
     IssueUptoTxnType: 90,
 };
+ */
 
 const addHarvest = async (req, res) => {
     try {
@@ -115,7 +117,8 @@ const addHarvest = async (req, res) => {
                     txnType: TxnTypes.ReceiveProductFromHarvest,
                     txnId: txnId,
                     date: new Date(payload.harvestedOn).getTime(),
-                    itemCategoryId: ItemCategory.Product,
+                    // itemCategoryId: ItemCategory.Product,    itemCategoryId is now passed from frontend
+                    itemCategoryId: rec.itemCategoryId,
                     itemId: rec.itemId,
                     specieId: payload.specieId,
                     strainId: payload.strainId,
