@@ -72,6 +72,13 @@ router.get('/get-companies',
   harvestController.getCompanies
 );
 
+router.post('/get-item-categories',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.getItemCategories
+);
+
 router.post('/get-items',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

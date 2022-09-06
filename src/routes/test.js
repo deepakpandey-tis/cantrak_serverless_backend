@@ -1037,7 +1037,7 @@ router.get("/print-packing-qrcodes", async (req, res) => {
 
   // await plantsHelper.generatePlantsDocumentOnEFSv2({ plantId: 10, data: {plantsLot: plData}, orgId, requestedBy });
 
-  res.render(templatePath, { moment, packingLotItems, pdfType: '5x5' });
+  res.render(templatePath, { moment, packingLotItems, pdfType: '2x2' });
 });
 // Packing QR Code
 
