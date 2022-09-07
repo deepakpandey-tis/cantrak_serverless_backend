@@ -1,6 +1,7 @@
 const knexReader = require('../../db/knex-reader');
+const { ItemCategory, TxnTypes, SystemStores } = require('../../helpers/txn-types');
 
-const ItemCategory = {
+/* const ItemCategory = {
     AllInventoryItems: 0,
     RawMaterial: 1,
     Product: 2,
@@ -24,6 +25,7 @@ const TxnTypes ={
     IssueFromTxnType: 51,
     IssueUptoTxnType: 90,
 };
+ */
 
 const getRawMaterialForPlantList = async (req, res) => {
     try {
@@ -69,11 +71,18 @@ const getRawMaterialForPlantList = async (req, res) => {
            AND txn."txnType" >= ${TxnTypes.IssueFromTxnType} AND txn."txnType" <= ${TxnTypes.IssueUptoTxnType}) "issuedQuantity"
         `;
 
-        sqlFrom = ` FROM item_txns it, item_txn_suppliers its, companies c, strains s, species s2, items i2, ums, suppliers splr
+        // raw material (seeds) can be from harvest, in this case supplier is not available therefore left join used
+        // , item_txn_suppliers its, suppliers splr
+        sqlFrom = ` FROM item_txns it
+        LEFT JOIN item_txn_suppliers its on it.id = its."itemTxnId"
+        LEFT JOIN suppliers splr on its."supplierId" = splr.id
+        , companies c, strains s, species s2, items i2, ums
         , storage_locations sl, item_categories ic, users u2
         `;
 
-        sqlWhere = ` WHERE it."orgId" = ${orgId} AND it.id = its."itemTxnId"`;
+        // raw material (seeds) can be from harvest, in this case supplier is not available therefore left join used
+        // AND it.id = its."itemTxnId" AND its."supplierId" = splr.id 
+        sqlWhere = ` WHERE it."orgId" = ${orgId}`;
         if(itemCategoryId){
             sqlWhere += ` AND it."itemCategoryId" = ${itemCategoryId}`;
         }
@@ -98,7 +107,7 @@ const getRawMaterialForPlantList = async (req, res) => {
 
         sqlWhere += ` AND it."itemCategoryId" = ${ItemCategory.RawMaterial} AND it."txnType" >= ${TxnTypes.ReceiveFromTxnType} AND it."txnType" <= ${TxnTypes.ReceiveUptoTxnType} 
           AND it."itemId" = i2.id AND it."strainId" = s.id AND it."specieId" = s2.id AND it."companyId" = c.id AND it."umId" = ums.id
-          AND its."supplierId" = splr.id AND it."storageLocationId" = sl.id AND it."itemCategoryId" = ic.id AND it."umId" = ums.id AND it."createdBy" = u2.id
+          AND it."storageLocationId" = sl.id AND it."itemCategoryId" = ic.id AND it."umId" = ums.id AND it."createdBy" = u2.id
         `;
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;

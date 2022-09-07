@@ -49,7 +49,7 @@ const addPlant = async (req, res) => {
             itemLotNo: Joi.number().required(),
             specieId: Joi.number().required(),
             strainId: Joi.number().required(),
-            supplierId: Joi.number().required(),
+            supplierId: Joi.number().allow(null).required(),
             locationId: Joi.number().required(),
             subLocationId: Joi.number().required(),
             licenseId: Joi.number().required(),
