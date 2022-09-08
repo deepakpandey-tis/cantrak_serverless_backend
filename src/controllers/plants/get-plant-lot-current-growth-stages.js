@@ -15,7 +15,7 @@ const getPlantLotCurrentGrowthStages = async (req, res) => {
         where pl.id = ${id} and pl."orgId" = ${orgId} and pl."companyId" = ${companyId}
         and pl2."locationId" = ${locationId} and pl2."subLocationId" = ${subLocationId}
         and pl.id = p."plantLotId" and p."isActive" and not p."isWaste" and p.id = pl2."plantId"
-        and pl2.id in (select id from plant_locations pl3 where pl3."plantId" = p.id order by pl3.id desc limit 1)
+        and pl2.id in (select id from plant_locations pl3 where pl3."orgId" = pl."orgId" AND pl3."plantId" = p.id order by pl3.id desc limit 1)
         order by p."plantSerial"
         )
         `;
