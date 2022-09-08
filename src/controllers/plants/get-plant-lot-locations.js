@@ -16,8 +16,8 @@ const getPlantLotLocations = async (req, res) => {
         `;
 
         sqlWhere = ` WHERE pl.id = ${payload.id} AND pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId}`;
-        sqlWhere += ` AND pl.id = p."plantLotId" AND p.id = ploc."plantId"`;
-        sqlWhere += ` AND ploc.id = (SELECT id FROM plant_locations ploc2 WHERE ploc2."plantId" = p.id ORDER BY id DESC limit 1)`;
+        sqlWhere += ` AND pl.id = p."plantLotId" AND p."orgId" = ploc."orgId" AND p.id = ploc."plantId"`;
+        sqlWhere += ` AND ploc.id = (SELECT id FROM plant_locations ploc2 WHERE ploc2."orgId" = pl."orgId" AND ploc2."plantId" = p.id ORDER BY id DESC limit 1)`;
         sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND ploc."locationId" = l.id`;
 
         sqlOrderBy = ` ORDER BY l.name asc`;
