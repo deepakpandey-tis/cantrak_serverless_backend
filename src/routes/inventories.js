@@ -154,6 +154,13 @@ router.post('/get-item-txn-list',
   inventoriesController.getItemTxnList
 );
 
+router.post('/get-lot-item-summary-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  inventoriesController.getLotItemSummaryList
+);
+
 router.post('/export-item-txn-list-to-excel',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

@@ -19,6 +19,8 @@ const getStorageLocationLedger = require('./get-storage-location-ledger');
 const getStockLedger = require('./get-stock-ledger');
 const getStockSummary = require('./get-stock-summary');
 const getItemTxnList = require('./get-item-txn-list');
+const getLotItemSummaryList = require('./get-lot-item-summary-list');
+
 const exportItemTxnListToExcel = require('./export-item-txn-list-to-excel');
 const getItemTxn = require('./get-item-txn');
 const getReceiveWasteFromAdjMinusTxn = require('./get-receive-waste-from-adj-minus-txn');
@@ -66,6 +68,8 @@ module.exports = {
     getStockLedger,
     getStockSummary,
     getItemTxnList,
+    getLotItemSummaryList,
+
     exportItemTxnListToExcel,
     getItemTxn,
     getReceiveWasteFromAdjMinusTxn,
