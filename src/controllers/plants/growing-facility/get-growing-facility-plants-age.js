@@ -25,7 +25,8 @@ const getGrowingFacilityPlantsAge = async (req, res) => {
         AND pl."companyId" = ${companyId}
         AND current_date - to_timestamp(p."plantedOn"/1000)::date >= ${pref.from} 
         AND current_date - to_timestamp(p."plantedOn"/1000)::date <= ${pref.to}
-        AND ploc.id = (SELECT id FROM plant_locations pl2 WHERE pl2."plantId" = p.id ORDER BY id desc limit 1)  -- current plant location
+        AND ploc.id = (SELECT id FROM plant_locations pl2 WHERE pl2."orgId" = p."orgId" AND pl2."plantId" = p.id ORDER BY id desc limit 1)  -- current plant location
+        AND ploc."locationId" IN (${req.GROWINGLOCATION})
         `;
         if(strainIds[0] != 0){
             sqlPlantsAge += ` AND pl."strainId" IN (${strainIds})`
