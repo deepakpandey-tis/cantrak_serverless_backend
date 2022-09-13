@@ -84,8 +84,8 @@ const changeGrowthStage = async (req, res) => {
                 sqlFrom = ` FROM plants p, plant_lots pl, plant_locations pl2, plant_growth_stages pgs`;
                 sqlWhere = ` WHERE pl.id = ${payload.plantLotId} AND pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId}
                 AND pl.id = p."plantLotId" AND p."isActive" AND NOT p."isWaste" AND p.id = pl2."plantId"
-                AND pl2.id in (SELECT id FROM plant_locations pl3 WHERE pl3."plantId" = p.id ORDER BY pl3.id desc limit 1)
-                AND pgs.id in (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id ORDER BY pgs2.id desc limit 1)
+                AND pl2.id in (SELECT id FROM plant_locations pl3 WHERE pl3."orgId" = ${orgId} and pl3."plantId" = p.id ORDER BY pl3.id desc limit 1)
+                AND pgs.id in (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."orgId" = ${orgId} and pgs2."plantId" = p.id ORDER BY pgs2.id desc limit 1)
                 AND pl2."locationId" = ${payload.locationId} AND pl2."subLocationId" = ${payload.subLocationId}
                 AND pgs."growthStageId" = ${payload.fromGrowthStageId}
                 `;
