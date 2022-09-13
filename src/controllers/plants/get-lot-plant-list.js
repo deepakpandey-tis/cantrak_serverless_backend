@@ -89,8 +89,8 @@ const getLotPlantList = async (req, res) => {
             sqlWhere += ` (SELECT i."entityId" FROM images i, image_tags it WHERE p.id = i."entityId" AND i.id = it."entityId" AND ("tagData"->'plantCondition'->>'appearsIll')::boolean is true ORDER BY i."entityId" asc, i."createdAt" DESC)`;
         }
 
-        sqlWhere += ` AND p.id = ploc."plantId" AND ploc.id = (select id from plant_locations ploc2 where ploc2."plantId" = p.id order by id desc limit 1)`;
-        sqlWhere += ` AND p.id = pgs."plantId" AND pgs.id = (select id from plant_growth_stages pgs2 where pgs2."plantId" = p.id order by id desc limit 1)`;
+        sqlWhere += ` AND p.id = ploc."plantId" AND ploc.id = (select id from plant_locations ploc2 where ploc2."orgId" = ${orgId} and ploc2."plantId" = p.id order by id desc limit 1)`;
+        sqlWhere += ` AND p.id = pgs."plantId" AND pgs.id = (select id from plant_growth_stages pgs2 where pgs2."orgId" = ${orgId} and pgs2."plantId" = p.id order by id desc limit 1)`;
         if(currentGrowthStageId != undefined && currentGrowthStageId){
             //  to get plants of growth stage
             sqlWhere += ` AND pgs."growthStageId" = ${currentGrowthStageId}`;
