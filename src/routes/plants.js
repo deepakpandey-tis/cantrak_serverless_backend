@@ -217,6 +217,13 @@ router.post('/get-plant-lot-current-growth-stages',
   plantController.getPlantLotCurrentGrowthStages
 );
 
+router.post('/get-plant-lot-specific-location-plants-count',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotSpecificLocationPlantsCount
+);
+
 
 router.post('/get-raw-material-for-plant-list',
   authMiddleware.isAuthenticated,
