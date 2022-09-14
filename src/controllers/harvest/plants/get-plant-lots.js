@@ -59,9 +59,9 @@ const getPlantLots = async (req, res) => {
         sqlSelect = `SELECT ploc."locationId", ploc."subLocationId", pl.id, pl."lotNo", count(pl."lotNo") "plantsCount"`;
         sqlFrom = ` FROM plant_lots pl, plants p, plant_locations ploc`;
         sqlWhere = ` WHERE ploc."orgId" = ${orgId} and ploc."locationId" = ${payload.locationId} and ploc."subLocationId" = ${payload.subLocationId} and ploc."plantId" = p.id`;
-        sqlWhere += ` and p."isActive" and not p."isWaste" and p."plantLotId" = pl.id and pl."companyId" = ${payload.companyId}`;
+        sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND NOT pl."isFinalHarvest" AND p."plantLotId" = pl.id AND pl."companyId" = ${payload.companyId}`;
         // to get latest location of the plantId sub query added
-        sqlWhere += ` and ploc.id = (select id from plant_locations ploc2 where ploc2."orgId" = p."orgId" and ploc2."plantId" = p."id" ORDER BY id DESC LIMIT 1)`;
+        sqlWhere += ` AND ploc.id = (select id from plant_locations ploc2 where ploc2."orgId" = p."orgId" AND ploc2."plantId" = p."id" ORDER BY id DESC LIMIT 1)`;
         sqlGroupBy = ` GROUP BY ploc."locationId", ploc."subLocationId", pl.id, pl."lotNo"`;
 
         sqlStr = `SELECT pl2."orgId", pl2."companyId", pl2."specieId", s."name" "specieName", pl2."strainId", s2."name" "strainName", pl2."licenseId", locationPlants.*`;
