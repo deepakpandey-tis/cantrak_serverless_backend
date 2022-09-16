@@ -47,7 +47,7 @@ const getWorkPlanWorkOrderList = async (req, res) => {
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT wps.*
         , wpsal."id" "workOrderId", wpsal."displayId", wpsal."name", wpsal."locationId", wpsal."workOrderDate", wpsal."isOverdue", wpsal."status", wpsal."frequencyTag", wpsal."completedAt"
-        , CASE WHEN wpsal."status" = 'O' THEN 'Open' WHEN wpsal."status" = 'COM' THEN 'Completed' ELSE 'Cencelled' END "statusDesc"
+        , CASE WHEN wpsal."status" = 'O' THEN 'Open' WHEN wpsal."status" = 'COM' THEN 'Completed' ELSE 'Cancelled' END "statusDesc"
         , l."name" "locationName"`;
         if(entityTypeId == EntityTypes.WorkPlanGrowingSubLocation){
             sqlSelect += `, sl."name" "subLocationName"`;

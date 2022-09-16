@@ -84,6 +84,13 @@ router.post('/cancel-work-order',
   workPlanController.cancelWorkOrder
 );
 
+router.post('/uncancel-work-order',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  workPlanController.uncancelWorkOrder
+);
+
 router.post('/update-work-order-tasks-status',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
