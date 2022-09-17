@@ -31,50 +31,23 @@ const cancelWorkOrder = async (req, res) => {
     let currentTime = new Date().getTime();
     try {
 
-        // Check already exists
-        const alreadyExists = await knex("remarks_master")
-            .where({ orgId: orgId })
-            .where({ entityId: payload.id })
-            .where({ entityType: "work-orders" });
-
-        console.log(
-            "[controllers][work-plans][cancelWorkOrder]: ",
-            alreadyExists
-        );
-
         await knex.transaction(async (trx) => {
-            if (alreadyExists && alreadyExists.length) {
-                let insertData = {
-                    description: payload.cancelReason,
-                    updatedAt: currentTime,
-                };
-                console.log('cancel work order reason record: ', insertData);
+            let insertData = {
+                entityId: payload.id,
+                entityType: "work-orders",
+                description: payload.cancelReason,
+                orgId: req.orgId,
+                createdBy: req.me.id,
+                createdAt: currentTime,
+                updatedAt: currentTime,
+            };
+            console.log('cancel work order reason record: ', insertData);
 
-                const insertRemarkResult = await knex
-                    .update(insertData)
-                    .where({ orgId: orgId, entityId: payload.id, entityType: "work-orders"})
-                    .returning(["*"])
-                    .transacting(trx)
-                    .into("remarks_master");
-            }
-            else {
-                let insertData = {
-                    entityId: payload.id,
-                    entityType: "work-orders",
-                    description: payload.cancelReason,
-                    orgId: req.orgId,
-                    createdBy: req.me.id,
-                    createdAt: currentTime,
-                    updatedAt: currentTime,
-                };
-                console.log('cancel work order reason record: ', insertData);
-
-                const insertRemarkResult = await knex
-                    .insert(insertData)
-                    .returning(["*"])
-                    .transacting(trx)
-                    .into("remarks_master");
-            }
+            const insertRemarkResult = await knex
+                .insert(insertData)
+                .returning(["*"])
+                .transacting(trx)
+                .into("remarks_master");
 
             insertData = {
                 status: "C",
