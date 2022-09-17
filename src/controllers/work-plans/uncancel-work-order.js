@@ -33,14 +33,18 @@ const uncancelWorkOrder = async (req, res) => {
 
         await knex.transaction(async (trx) => {
             let insertData = {
+                entityId: payload.id,
+                entityType: "work-orders",
                 description: payload.uncancelReason,
+                orgId: req.orgId,
+                createdBy: req.me.id,
+                createdAt: currentTime,
                 updatedAt: currentTime,
             };
             console.log('uncancel work order reason record: ', insertData);
 
             const insertRemarkResult = await knex
-                .update(insertData)
-                .where({ orgId: orgId, entityId: payload.id, entityType: "work-orders"})
+                .insert(insertData)
                 .returning(["*"])
                 .transacting(trx)
                 .into("remarks_master");
