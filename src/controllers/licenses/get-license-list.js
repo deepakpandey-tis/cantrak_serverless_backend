@@ -17,9 +17,10 @@ const getLicenseList = async (req, res) => {
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
+        // console.log('sort: ', payload);
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
-            sortCol = 'number desc';
+            sortCol = '"createdAt" desc';
             sortOrder = '';
         }
 
