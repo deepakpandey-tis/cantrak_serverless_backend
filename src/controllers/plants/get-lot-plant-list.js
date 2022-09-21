@@ -64,8 +64,8 @@ const getLotPlantList = async (req, res) => {
         else
         if(plantTypeId && plantTypeId == 2){
             //  2: Ill Plants
-            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i.id = it."entityId" AND ("tagData"->'plantCondition'->>'appearsIll')::boolean is true ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
-            sqlFrom += ` JOIN ${sqlObservation} ON p.id = observation."entityId"`;
+            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
+            sqlFrom += ` JOIN ${sqlObservation} ON p.id = observation."entityId" AND (observation."tagData"->'plantCondition'->>'appearsIll')::boolean is true`;
         }
 
         sqlWhere = ` WHERE pl.id = ${id} AND pl."orgId" = ${orgId} AND pl.id = p."plantLotId" AND p."isActive"`;
@@ -86,7 +86,9 @@ const getLotPlantList = async (req, res) => {
             //  1: Healthy Plants - Plants for which no observation entered or observtion entered as appears fine
             //  therefore to get healthy plants: plants which are not ill
             sqlWhere += ` AND p.id NOT IN `;
-            sqlWhere += ` (SELECT i."entityId" FROM images i, image_tags it WHERE p.id = i."entityId" AND i.id = it."entityId" AND ("tagData"->'plantCondition'->>'appearsIll')::boolean is true ORDER BY i."entityId" asc, i."createdAt" DESC)`;
+            sqlWhere += ` (SELECT "entityId" FROM`;
+            sqlWhere += ` (SELECT DISTINCT ON (i."entityId") i."entityId", it."tagData" FROM images i, image_tags it WHERE p.id = i."entityId" AND i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC)`;
+            sqlWhere += ` illPlants WHERE (illPlants."tagData"->'plantCondition'->>'appearsIll')::boolean is true)`;
         }
 
         sqlWhere += ` AND p.id = ploc."plantId" AND ploc.id = (select id from plant_locations ploc2 where ploc2."orgId" = ${orgId} and ploc2."plantId" = p.id order by id desc limit 1)`;
