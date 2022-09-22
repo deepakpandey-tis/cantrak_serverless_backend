@@ -67,7 +67,7 @@ const getRawMaterialForPlantList = async (req, res) => {
         , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
         , (SELECT coalesce(sum(quantity), 0) FROM item_txns txn WHERE txn."orgId" = it."orgId" AND txn."companyId" = it."companyId"
-           AND txn."lotNo" = it."lotNo"
+           AND txn."lotNo" = it."lotNo" AND txn."itemCategoryId" = it."itemCategoryId" AND txn."itemId" = it."itemId" 
            AND txn."txnType" >= ${TxnTypes.IssueFromTxnType} AND txn."txnType" <= ${TxnTypes.IssueUptoTxnType}) "issuedQuantity"
         `;
 
