@@ -74,9 +74,9 @@ const changeLocation = async (req, res) => {
 
             //  Change Location Records
             if(allPlants){
-                sqlInsert = `INSERT INTO plant_locations ("orgId", "plantId", "plantLocationTxnId", "locationId", "subLocationId"
+                sqlInsert = `INSERT INTO plant_locations ("orgId", "companyId", "plantLotId" "plantId", "plantLocationTxnId", "locationId", "subLocationId"
                 , "startDate")`;
-                sqlSelect = ` SELECT ${orgId}, p.id, ${insertedRecord.id}, ${txnHeader.toLocationId}, ${txnHeader.toSubLocationId}
+                sqlSelect = ` SELECT ${orgId}, ${payload.companyId}, ${payload.plantLotId}, p.id, ${insertedRecord.id}, ${txnHeader.toLocationId}, ${txnHeader.toSubLocationId}
                 , ${new Date(txnHeader.date).getTime()}`;
                 sqlFrom = ` FROM plants p, plant_lots pl, plant_locations ploc`;
                 sqlWhere = ` WHERE pl.id = ${txnHeader.plantLotId} AND p."plantLotId" = pl.id and p.id = ploc."plantId"`;
@@ -84,9 +84,9 @@ const changeLocation = async (req, res) => {
 
                 sqlStr = sqlInsert + sqlSelect + sqlFrom + sqlWhere;
             } else {
-                sqlInsert = `INSERT INTO plant_locations ("orgId", "plantId", "plantLocationTxnId", "locationId", "subLocationId"
+                sqlInsert = `INSERT INTO plant_locations ("orgId", "companyId", "plantLotId", "plantId", "plantLocationTxnId", "locationId", "subLocationId"
                 , "startDate")`;
-                sqlSelect = ` SELECT ${orgId}, p.id, ${insertedRecord.id}, ${txnHeader.toLocationId}, ${txnHeader.toSubLocationId}
+                sqlSelect = ` SELECT ${orgId}, ${payload.companyId}, ${payload.plantLotId}, p.id, ${insertedRecord.id}, ${txnHeader.toLocationId}, ${txnHeader.toSubLocationId}
                 , ${new Date(txnHeader.date).getTime()}`;
                 sqlFrom = ` FROM jsonb_to_recordset('${selectedPlantIds}') as p(id bigint)`;
 
