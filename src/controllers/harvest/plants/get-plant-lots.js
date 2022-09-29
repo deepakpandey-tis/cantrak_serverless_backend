@@ -24,42 +24,42 @@ const getPlantLots = async (req, res) => {
             });
         }
 
-/* Growing Location and Sub Growing Location are now shown alown with the Plant Lot Number.
-    Therefore plantsCount is shown for PlantLotNo-GrowingLoation-SubGrowingLocation
 
-        sqlSelect = `SELECT pl.*, c."companyName", s.name "strainName", s2.name "specieName", lic.number "licenseNo", l.name "locationName"`;
+        sqlStr = `WITH plant_lot_current_locations AS (
+        SELECT pl.id, pl."lotNo", pl2."locationId", pl2."subLocationId"
+        , coalesce(hpl."isFinalHarvest", false) "isFinalHarvest", coalesce(hpl."plantsCount", 0) "harvestedPlantsCount"
+        , count(p."isActive") "plantsCount", sum(p."isWaste"::int) "wastePlants"
+        FROM plant_lots pl, plants p, plant_locations pl2
+        LEFT JOIN harvest_plant_lots hpl ON hpl."orgId" = pl2."orgId" AND hpl."companyId" = pl2."companyId" AND hpl."plantLotId" = pl2."plantLotId" AND hpl."locationId" = pl2."locationId" AND hpl."subLocationId" = pl2."subLocationId" AND hpl."isFinalHarvest"
+        WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND pl2."locationId" = ${payload.locationId} AND pl2."subLocationId" = ${payload.subLocationId}
+        AND pl.id = p."plantLotId" AND p."orgId" = pl2."orgId" AND p.id = pl2."plantId"
+        AND pl2.id IN (SELECT id FROM plant_locations pl3 WHERE pl3."orgId" = pl."orgId" AND pl3."plantId" = p.id order by pl3.id desc limit 1)
+        AND (NOT coalesce(hpl."isFinalHarvest", false) OR (coalesce(hpl."isFinalHarvest", false)))
+        AND pl2."locationId" IN (${req.GROWINGLOCATION})
+        GROUP BY pl.id, pl."lotNo", pl2."locationId", pl2."subLocationId" , coalesce(hpl."isFinalHarvest", false),  coalesce(hpl."isEntireLot" , false), coalesce(hpl."plantsCount", 0)
+        )
+        , plant_lot_current_locations_sum AS
+        (select id, "lotNo", "locationId", "subLocationId", "plantsCount", "wastePlants", "isFinalHarvest", sum("harvestedPlantsCount") "harvestedPlantsCount"
+        from plant_lot_current_locations plcl
+        group by id, "lotNo", "locationId", "subLocationId", "plantsCount", "wastePlants", "isFinalHarvest"
+        )
+        select plcls.*, pl4."orgId", pl4."companyId", pl4."specieId", s."name" "specieName", pl4."strainId", s2."name" "strainName", pl4."licenseId"
+        from plant_lot_current_locations_sum plcls, plant_lots pl4, species s, strains s2
+        WHERE plcls.id = pl4.id AND pl4."specieId" = s.id AND pl4."strainId" = s2.id
+        AND plcls."plantsCount" - plcls."harvestedPlantsCount" > 0
+        ORDER BY plcls."lotNo"
+        `;
 
-        sqlFrom = ` FROM plant_lots pl, companies c, strains s, species s2, locations l, licenses lic`;
 
-        // Allowed more than one harvest of a plant lot pl."harvestPlantLotId" is therefore no longer needed and "isFinalHarvest" added and checked when final / last  harvest is done
-        // sqlWhere = ` WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND pl."harvestPlantLotId" is null`;
-        sqlWhere = ` WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND NOT pl."isFinalHarvest"`;
-        sqlWhere += ` AND pl."locationId" = l.id AND pl."companyId" = c.id AND pl."strainId" = s.id and pl."specieId" = s2.id AND pl."licenseId" = lic.id`;
-
-        sqlOrderBy  = ` ORDER BY pl."lotNo" desc`;
-
-        sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
- */
-
-/* Now, Growing Location and Growing Sub Location selected before selecting the Plant Lot Number
-        Therefore plantsCount is shown for GrowingLocation-GrowingSubLocation-PlantLotNo
-
-        sqlSelect = `SELECT pl.id, pl."lotNo", pl2."locationId", l."name" "locationName", sl."name" "subLocationName", pl2."subLocationId", count(pl2."subLocationId") "plantsCount"`;
-        sqlFrom = ` FROM plant_lots pl, plants p, plant_locations pl2, locations l, sub_locations sl`;
-        sqlWhere = ` WHERE pl2."plantId" = p.id AND pl2."orgId" = ${orgId} AND p."plantLotId" = pl.id AND p."isActive" AND pl."companyId" = ${payload.companyId} AND NOT pl."isFinalHarvest"`;
-        sqlWhere += ` AND pl2.id = (SELECT id FROM plant_locations ploc WHERE ploc."plantId" = p.id ORDER BY id DESC LIMIT 1)`;  // to get current plant location
-        sqlWhere += ` AND pl2."locationId" = l.id AND pl2."subLocationId" = sl.id`;
-        sqlGroupBy = ` GROUP BY pl.id, pl."lotNo", pl2."locationId", l."name", pl2."subLocationId", sl."name"`;
-
-        sqlStr = `SELECT pl3."licenseId" , pl3."specieId" , pl3."strainId", plantLotPlants.* FROM plant_lots pl3 , (`;
-        sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlGroupBy;
-        sqlStr += `) plantLotPlants WHERE pl3.id = plantLotPlants.id`;
- */
-
+/* 
         sqlSelect = `SELECT ploc."locationId", ploc."subLocationId", pl.id, pl."lotNo", count(pl."lotNo") "plantsCount"`;
         sqlFrom = ` FROM plant_lots pl, plants p, plant_locations ploc`;
+        sqlFrom += ` LEFT JOIN harvest_plant_lots hpl ON hpl."orgId" = ploc."orgId" AND hpl."companyId" = ploc."companyId" AND hpl."plantLotId" = ploc."plantLotId" AND hpl."locationId" = ploc."locationId" AND hpl."subLocationId" = ploc."subLocationId" AND hpl."isFinalHarvest"`;
         sqlWhere = ` WHERE ploc."orgId" = ${orgId} and ploc."locationId" = ${payload.locationId} and ploc."subLocationId" = ${payload.subLocationId} and ploc."plantId" = p.id`;
-        sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND NOT pl."isFinalHarvest" AND p."plantLotId" = pl.id AND pl."companyId" = ${payload.companyId}`;
+        sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND p."plantLotId" = pl.id AND pl."companyId" = ${payload.companyId}`;
+        sqlWhere += ` AND (NOT coalesce(hpl."isFinalHarvest", false) OR (coalesce(hpl."isFinalHarvest", false) AND NOT coalesce(hpl."isEntireLot" , false)))`;
+        // sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND NOT pl."isFinalHarvest" AND p."plantLotId" = pl.id AND pl."companyId" = ${payload.companyId}`;
+
         // to get latest location of the plantId sub query added
         sqlWhere += ` AND ploc.id = (select id from plant_locations ploc2 where ploc2."orgId" = p."orgId" AND ploc2."plantId" = p."id" ORDER BY id DESC LIMIT 1)`;
         sqlGroupBy = ` GROUP BY ploc."locationId", ploc."subLocationId", pl.id, pl."lotNo"`;
@@ -68,7 +68,7 @@ const getPlantLots = async (req, res) => {
         sqlStr += ` FROM plant_lots pl2, species s, strains s2, (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlGroupBy;
         sqlStr += `) locationPlants WHERE pl2.id = locationPlants.id and pl2."specieId" = s.id and pl2."strainId" = s2.id`;
-
+ */
         var selectedRecs = await knexReader.raw(sqlStr);
 
         return res.status(200).json({

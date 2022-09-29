@@ -45,6 +45,8 @@ const addHarvest = async (req, res) => {
         const schema = Joi.object().keys({
             companyId: Joi.string().required(),
             plantLotId: Joi.string().required(),
+            locationId: Joi.string().required(),
+            subLocationId: Joi.string().required(),
             licenseId: Joi.string().required(),
             harvestedOn: Joi.date().required(),
             plantsCount: Joi.number().integer().required(),
@@ -80,6 +82,8 @@ const addHarvest = async (req, res) => {
                 orgId: orgId,
                 companyId: payload.companyId,
                 plantLotId: payload.plantLotId,
+                locationId: payload.locationId,
+                subLocationId: payload.subLocationId,
                 licenseId: payload.licenseId,
                 plantsCount: payload.plantsCount,
                 isFinalHarvest: payload.isFinalHarvest,
@@ -209,16 +213,7 @@ const addHarvest = async (req, res) => {
                 }
             }
 
-/*          plant lot can be harvested more than once. isFinalHarvest column added to mark final / last harvest   
-            // Update Plant Lot with harvestPlantLotId
-            plantLotResult = await knex
-              .update({ harvestPlantLotId: insertedRecord.id })
-              .where("id", payload.plantLotId)
-              .returning(["*"])
-              .transacting(trx)
-              .into("plant_lots");
- */
-            // Update Plant Lot with isFinalHarvest
+/*             // Update Plant Lot with isFinalHarvest
             if(payload.isEntireLot){
                 plantLotResult = await knex
                 .update({ isFinalHarvest: payload.isFinalHarvest })
@@ -227,8 +222,7 @@ const addHarvest = async (req, res) => {
                 .transacting(trx)
                 .into("plant_lots");
             }
-
-            // ownerList = plantLotResult[0];
+ */
 
             let entity;
             if(insertedRecord.isFinalHarvest){

@@ -9,16 +9,20 @@ const getPlantLotLocations = async (req, res) => {
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
         
-        sqlSelect = `SELECT DISTINCT pl."lotNo", ploc."locationId" "locationId", l.name "locationName"
+        sqlSelect = `SELECT DISTINCT pl.id, pl."lotNo", pl2."locationId", l."name" "locationName"
         `;
 
-        sqlFrom = ` FROM plant_lots pl, plants p, plant_locations ploc, locations l
+        sqlFrom = ` FROM plant_lots pl, plants p, locations l, plant_locations pl2
+        LEFT JOIN harvest_plant_lots hpl ON hpl."orgId" = pl2."orgId" AND hpl."companyId" = pl2."companyId" AND hpl."plantLotId" = pl2."plantLotId" AND hpl."locationId" = pl2."locationId" AND hpl."subLocationId" = pl2."subLocationId" AND hpl."isFinalHarvest" AND hpl."isFinalHarvest"
         `;
 
-        sqlWhere = ` WHERE pl.id = ${payload.id} AND pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId}`;
-        sqlWhere += ` AND pl.id = p."plantLotId" AND p.id = ploc."plantId"`;
-        sqlWhere += ` AND ploc.id = (SELECT id FROM plant_locations ploc2 WHERE ploc2."plantId" = p.id ORDER BY id DESC limit 1)`;
-        sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND ploc."locationId" = l.id`;
+        sqlWhere = ` WHERE pl.id = ${payload.id} AND pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId}
+        AND pl.id = p."plantLotId" AND p."orgId" = pl2."orgId" AND p.id = pl2."plantId"
+        AND pl2.id in (SELECT id FROM plant_locations pl3 WHERE pl3."orgId" = pl."orgId" AND pl3."plantId" = p.id order by pl3.id desc limit 1)
+        AND (NOT coalesce(hpl."isFinalHarvest", false) OR (coalesce(hpl."isFinalHarvest", false) AND NOT coalesce(hpl."isEntireLot" , false)))
+        AND p."isActive" AND NOT p."isWaste" AND pl2."locationId" = l.id
+        AND pl2."locationId" IN (${req.GROWINGLOCATION})
+        `;
 
         sqlOrderBy = ` ORDER BY l.name asc`;
         //console.log('getPlantLotLocations sql: ', sqlSelect + sqlFrom + sqlWhere);

@@ -36,6 +36,23 @@ const getLotPlantList = async (req, res) => {
             pageSize = 10;
         }
         
+        //  getting plant ids which are final harvested
+        sqlStr = `SELECT hpl."plantIds" FROM harvest_plant_lots hpl
+        WHERE hpl."plantLotId" = ${id} AND hpl."orgId" = ${orgId} AND hpl."locationId" = ${locationId} AND hpl."subLocationId" = ${subLocationId}
+        AND hpl."isFinalHarvest" AND not hpl."isEntireLot"
+        `;
+        
+        var selectedIds = await knexReader.raw(sqlStr);
+        var finalHarvestedPlantIds = [{id: 0}];
+        selectedIds.rows.forEach(el => {
+            if(el.plantIds){
+                finalHarvestedPlantIds = [...finalHarvestedPlantIds, ...el.plantIds];
+            }
+        });
+        var finalHarvestedPlantIdsString = finalHarvestedPlantIds.map(r => r?.id);
+        console.log('finalHarvestedPlantIdsString: ', finalHarvestedPlantIdsString);
+
+
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT pl.*, p.id "plantId", p."plantSerial", p."isActive" "plantIsActive", p."isWaste" "plantIsWaste", p."isDestroy" "plantIsDestroy", p."isEndOfLife" "plantIsEndOfLife"
         , ploc.id "plantLocationId", l.name "plantLocationName", sl.name "plantSubLocationName", pgs."growthStageId" "plantGrowthStageId", pgs."startDate" "plantGrowthStageDate", gs.name "plantGrowthStageName"
@@ -47,6 +64,7 @@ const getLotPlantList = async (req, res) => {
         `;
 
         sqlWhere = ` WHERE pl.id = ${id} AND pl."orgId" = ${orgId} AND pl.id = p."plantLotId" AND p."isActive" AND NOT p."isWaste"`;
+        sqlWhere += ` AND p.id NOT IN (${finalHarvestedPlantIdsString})`;
         sqlWhere += ` AND p.id = ploc."plantId" AND ploc.id = (select id from plant_locations ploc2 where ploc2."plantId" = p.id order by id desc limit 1)`;
         sqlWhere += ` AND p.id = pgs."plantId" AND pgs.id = (select id from plant_growth_stages pgs2 where pgs2."plantId" = p.id order by id desc limit 1)`;
         sqlWhere += ` AND ploc."locationId" = l.id AND ploc."subLocationId" = sl.id AND pgs."growthStageId" = gs.id`;
