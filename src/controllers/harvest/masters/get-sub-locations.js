@@ -9,24 +9,25 @@ const getSubLocations = async (req, res) => {
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         //  get location's sub growing location having active plants (plantsCount - wastePlants > 0)
-        sqlStr = `WITH plant_current_locations AS
+        sqlStr = `WITH plant_lot_current_locations AS
         (
         SELECT pl2."locationId", pl2."subLocationId", pl.id, pl."lotNo"
-        , CASE WHEN p."isActive" THEN 1 ELSE 0 END "activePlant", CASE WHEN p."isWaste" THEN 1 ELSE 0 END "wastePlant"
+        , count(p."isActive") "plantsCount", sum(p."isWaste"::int) "wastePlants"
         FROM plant_lots pl, plants p, plant_locations pl2
-        WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND NOT pl."isFinalHarvest"
+        LEFT JOIN harvest_plant_lots hpl ON hpl."orgId" = pl2."orgId" AND hpl."companyId" = pl2."companyId" AND hpl."plantLotId" = pl2."plantLotId" AND hpl."locationId" = pl2."locationId" AND hpl."subLocationId" = pl2."subLocationId" AND hpl."isFinalHarvest"
+        WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId}
         AND pl.id = p."plantLotId" AND p."orgId" = pl2."orgId" AND p.id = pl2."plantId"
         AND pl2.id in (SELECT id FROM plant_locations pl3 WHERE pl3."orgId" = pl."orgId" AND pl3."plantId" = p.id order by pl3.id desc limit 1)
+        AND (NOT coalesce(hpl."isFinalHarvest", false) OR (coalesce(hpl."isFinalHarvest", false) AND NOT coalesce(hpl."isEntireLot" , false)))
         AND pl2."locationId" = ${payload.locationId}
         AND pl2."locationId" IN (${req.GROWINGLOCATION})
-        ),
-        plant_location_sum AS (select pcl."locationId" , pcl."subLocationId", pcl.id, pcl."lotNo", sum(pcl."activePlant") "plantsCount", sum(pcl."wastePlant") "wastePlants"
-        FROM plant_current_locations pcl
-        GROUP BY pcl."locationId", pcl."subLocationId", pcl.id , pcl."lotNo")
+        GROUP BY pl2."locationId", pl2."subLocationId", pl.id, pl."lotNo"
+        )
         SELECT DISTINCT sl."locationId", sl.id, sl.name
-        FROM plant_location_sum pls, sub_locations sl
-        WHERE pls."plantsCount" - pls."wastePlants" > 0 AND pls."locationId" = sl."locationId" AND pls."subLocationId" = sl.id
+        FROM plant_lot_current_locations plcl, sub_locations sl
+        WHERE plcl."plantsCount" - plcl."wastePlants" > 0 AND plcl."locationId" = sl."locationId" AND plcl."subLocationId" = sl.id
         `;
+        // WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND NOT pl."isFinalHarvest"
         
         var selectedRecs = await knexReader.raw(sqlStr);
 

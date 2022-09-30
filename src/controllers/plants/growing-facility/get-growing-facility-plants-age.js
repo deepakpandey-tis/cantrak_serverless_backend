@@ -21,13 +21,16 @@ const getGrowingFacilityPlantsAge = async (req, res) => {
         , current_date - to_timestamp(p."plantedOn"/1000)::date "ageInDays"
         , ploc."locationId" , ploc."subLocationId"
         FROM plant_lots pl ,plants p, plant_locations ploc 
-        WHERE pl.id = p."plantLotId" AND pl."isActive" AND not pl."isFinalHarvest" AND not p."isWaste"
+        LEFT JOIN harvest_plant_lots hpl ON hpl."orgId" = ploc."orgId" AND hpl."companyId" = ploc."companyId" AND hpl."plantLotId" = ploc."plantLotId" AND hpl."locationId" = ploc."locationId" AND hpl."subLocationId" = ploc."subLocationId"
+        WHERE pl.id = p."plantLotId" AND pl."isActive" AND not p."isWaste"
         AND pl."companyId" = ${companyId}
         AND current_date - to_timestamp(p."plantedOn"/1000)::date >= ${pref.from} 
         AND current_date - to_timestamp(p."plantedOn"/1000)::date <= ${pref.to}
         AND ploc.id = (SELECT id FROM plant_locations pl2 WHERE pl2."orgId" = p."orgId" AND pl2."plantId" = p.id ORDER BY id desc limit 1)  -- current plant location
+        AND (NOT coalesce(hpl."isFinalHarvest", false) OR (coalesce(hpl."isFinalHarvest", false) AND NOT coalesce(hpl."isEntireLot" , false)))
         AND ploc."locationId" IN (${req.GROWINGLOCATION})
         `;
+        // WHERE pl.id = p."plantLotId" AND pl."isActive" AND not pl."isFinalHarvest" AND not p."isWaste"
         if(strainIds[0] != 0){
             sqlPlantsAge += ` AND pl."strainId" IN (${strainIds})`
         }
