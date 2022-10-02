@@ -8,7 +8,7 @@ const getPlant = async (req, res) => {
 
         let payload = req.body;
 
-        let sqlStr, sqlSelect, sqlFrom, sqlWhere;
+        let sqlStr;
 
         const schema = Joi.object().keys({
             id: Joi.string().required()
@@ -22,16 +22,22 @@ const getPlant = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT p.*, pl."lotNo", pl."plantedOn", pl."plantsCount", pl."companyId", pl."specieId", pl."strainId", pl."supplierId"
+        sqlStr = `SELECT p.* "plantLotId", pl."lotNo", pl."plantedOn", pl."companyId", pl."specieId", pl."strainId", pl."supplierId"
+        , case when pl2."plantLocationTxnId" is null then pl."plantsCount" else plt."totalPlants" end "plantsCount"
         , pl."licenseId", pl."locationId", pl."subLocationId", c."companyName", s.name "strainName", s2.name "specieName", lic.number "licenseNo"
-        , l.name "locationName", sl.name "subLocationName"
+        , pl2."locationId" , pl2."subLocationId", l.name "locationName" , sl."name" "subLocationName"
+        , gs.id "growthStageId", gs."name"
+        FROM plant_lots pl , plants p , plant_growth_stages pgs, growth_stages gs, locations l, sub_locations sl
+        , companies c, strains s, species s2, licenses lic, plant_locations pl2
+        LEFT JOIN plant_location_txns plt on plt.id = pl2."plantLocationTxnId"
+        WHERE p.id = ${payload.id} AND p."orgId" = ${orgId} AND pl.id = p."plantLotId" and pgs."plantId" = p.id and pgs."growthStageId" = gs.id
+        AND pl2.id in (SELECT id FROM plant_locations pl3 WHERE pl3."orgId" = pl."orgId" AND pl3."plantId" = p.id order by pl3.id desc limit 1)
+        AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id and pgs2."growthStageId" = pgs."growthStageId" order by id desc limit 1)
+        and pl2."locationId" = l.id
+        and pl2."subLocationId" = sl.id and pl2."locationId" = sl."locationId"
+        AND pl."companyId" = c.id AND pl."strainId" = s.id and pl."specieId" = s2.id AND pl."licenseId" = lic.id
+        ORDER BY pl."lotNo" , gs."listOrder"
         `;
-        sqlFrom = ` FROM plants p, plant_lots pl, companies c, strains s, species s2, licenses lic, locations l, sub_locations sl `;
-        sqlWhere = ` WHERE p.id = ${payload.id} AND p."orgId" = ${orgId} AND p."plantLotId" = pl.id AND pl."companyId" = c.id
-        AND pl."strainId" = s.id and pl."specieId" = s2.id AND pl."licenseId" = lic.id AND pl."locationId" = l.id AND pl."subLocationId" = sl.id
-        `;
-
-        sqlStr = sqlSelect + sqlFrom + sqlWhere;
 
         var selectedRecs = await knexReader.raw(sqlStr);
 
