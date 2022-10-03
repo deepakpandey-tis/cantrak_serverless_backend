@@ -37,7 +37,8 @@ const getLotPlantList = async (req, res) => {
         }
         
         //  getting selected plant ids which are final harvested
-        if(notIncludeSelectedFinalHarvestedPlants){
+        if(notIncludeSelectedFinalHarvestedPlants || (plantTypeId != null && (plantTypeId == 1 || plantTypeId == 4))){
+            // do not include harvested plants in list || get only (healthy || harvested plants)
             sqlStr = `SELECT hpl."plantIds" FROM harvest_plant_lots hpl
             WHERE hpl."plantLotId" = ${id} AND hpl."orgId" = ${orgId} AND hpl."locationId" = ${locationId} AND hpl."subLocationId" = ${subLocationId}
             AND hpl."isFinalHarvest" AND not hpl."isEntireLot"
@@ -45,13 +46,21 @@ const getLotPlantList = async (req, res) => {
             
             var selectedIds = await knexReader.raw(sqlStr);
             var finalHarvestedPlantIds = [{id: 0}];
-            selectedIds.rows.forEach(el => {
+            selectedIds.rows.forEach((el, ndx) => {
                 if(el.plantIds){
-                    finalHarvestedPlantIds = [...finalHarvestedPlantIds, ...el.plantIds];
+                    finalHarvestedPlantIds = (ndx == 0) ? [...el.plantIds] : [...finalHarvestedPlantIds, ...el.plantIds];
                 }
             });
+
             var finalHarvestedPlantIdsString = finalHarvestedPlantIds.map(r => r?.id);
-            console.log('finalHarvestedPlantIdsString: ', finalHarvestedPlantIdsString);
+            // console.log('finalHarvestedPlantIds: ', finalHarvestedPlantIds);
+            // console.log('finalHarvestedPlantIdsString: ', finalHarvestedPlantIdsString);
+
+            var entireLot = false;
+            if(finalHarvestedPlantIdsString.length == 1 && finalHarvestedPlantIdsString == 0)
+            {
+                entireLot = true;
+            }
         }
 
 
@@ -63,8 +72,8 @@ const getLotPlantList = async (req, res) => {
         , s.name "strainName", s2.name "specieName"
         `;
 
-        if(plantTypeId == undefined || plantTypeId != null && (plantTypeId == 1 || plantTypeId == 3)){
-            //  1: Healthy Plants || 3: Waste Plants
+        if(plantTypeId == undefined || plantTypeId != null && (plantTypeId == 1 || plantTypeId == 3 || plantTypeId == 4)){
+            //  1: Healthy Plants || 3: Waste Plants || 4: Harvested Plants
             sqlSelect += `, null observation`
         }
         else {
@@ -104,7 +113,29 @@ const getLotPlantList = async (req, res) => {
         }
 
         if(notIncludeSelectedFinalHarvestedPlants){
-            sqlWhere += ` AND p.id NOT IN (${finalHarvestedPlantIdsString})`;
+            // do not include harvested plants
+            sqlWhere += ` AND p.id NOT IN (${finalHarvestedPlantIdsString}`;
+        }
+        else if(plantTypeId != null && plantTypeId == 1){
+            // only healthy plants
+            if(entireLot){
+            // entire lot harvested; show no plant
+            sqlWhere +=  ` AND p.id <= 0`;
+            }
+            else {
+            // selected plants harvested, plants not part of selected harvested plants
+            sqlWhere +=  ` AND p.id NOT IN (${finalHarvestedPlantIdsString})`;
+            }
+        }
+        else if(!entireLot && plantTypeId != null && plantTypeId == 4){
+            if(entireLot){
+                // All plants
+                sqlWhere +=  ` AND p.id > 0`;
+            }
+            else {
+                // harvested: selected plants (in case of entire lot get all plants)
+            sqlWhere += ` AND p.id IN (${finalHarvestedPlantIdsString})`;
+            }
         }
 
         if(plantTypeId && plantTypeId == 1){
