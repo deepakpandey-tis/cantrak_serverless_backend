@@ -231,6 +231,20 @@ router.post('/get-plant-lot-specific-location-plants-count',
   plantController.getPlantLotSpecificLocationPlantsCount
 );
 
+router.post('/get-plant-growth-stage-history',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantGrowthStageHistory
+);
+
+router.post('/get-plant-location-history',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLocationHistory
+);
+
 
 router.post('/get-raw-material-for-plant-list',
   authMiddleware.isAuthenticated,

@@ -28,6 +28,8 @@ const getPlantLotUnhealthyPlantsCount = require('./get-plant-lot-unhealthy-plant
 const getPlantLotsUnhealthyPlantsCount = require('./get-plant-lots-unhealthy-plants-count');
 const getPlantLotCurrentGrowthStages = require('./get-plant-lot-current-growth-stages');
 const getPlantLotSpecificLocationPlantsCount = require('./get-plant-lot-specific-location-plants-count');
+const getPlantGrowthStageHistory = require('./get-plant-growth-stage-history');
+const getPlantLocationHistory = require('./get-plant-location-history');
 
 const getRawMaterialForPlantList = require('./get-raw-material-for-plant-list');
 const getLocationSubLocationPlantLots = require('./get-location-sublocation-plant-lots');
@@ -80,6 +82,8 @@ module.exports = {
     getPlantLotsUnhealthyPlantsCount,
     getPlantLotCurrentGrowthStages,
     getPlantLotSpecificLocationPlantsCount,
+    getPlantGrowthStageHistory,
+    getPlantLocationHistory,
 
     getRawMaterialForPlantList,
     getLocationSubLocationPlantLots,
