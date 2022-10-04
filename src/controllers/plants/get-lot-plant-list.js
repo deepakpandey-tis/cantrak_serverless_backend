@@ -114,7 +114,7 @@ const getLotPlantList = async (req, res) => {
 
         if(notIncludeSelectedFinalHarvestedPlants){
             // do not include harvested plants
-            sqlWhere += ` AND p.id NOT IN (${finalHarvestedPlantIdsString}`;
+            sqlWhere += ` AND p.id NOT IN (${finalHarvestedPlantIdsString})`;
         }
         else if(plantTypeId != null && plantTypeId == 1){
             // only healthy plants
