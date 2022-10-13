@@ -72,6 +72,7 @@ const cropCyclePlanRouter = require("./crop-cycle-plan");
 const userActivitiesRouter = require("./user-activities");
 
 const packingRouter = require("./packing");
+const traceLotsRouter = require("./trace-lots");
 
 
 /* GET home page. */
@@ -259,5 +260,7 @@ router.use("/crop-cycle-plan", cropCyclePlanRouter);
 router.use("/user-activities", userActivitiesRouter);
 
 router.use("/packing", packingRouter);
+
+router.use("/trace-qr", traceLotsRouter);
 
 module.exports = router;
