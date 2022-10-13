@@ -37,6 +37,7 @@ const EntityTypes = {
     CropCyclePlanDetail: 32,
     PlantObservation: 33,
     Packing: 34,
+    TraceLot: 35,
   };
 
   const EntityActions = {
