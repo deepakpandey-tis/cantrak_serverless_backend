@@ -31,7 +31,7 @@ const getPublicTraceQrDetail = async (req, res) => {
         FROM trace_lots tl
         LEFT JOIN companies c ON c."orgId" = ${orgId} AND c.id = tl."companyId"
         , species s, strains s2, users u, ums
-        WHERE tl.id = ${payload.id} AND tl."orgId" = ${orgId}
+        WHERE tl.id = ${payload.id}
         AND tl."createdBy" = u.id AND tl."umId" = ums.id
         AND tl."orgId" = s."orgId" AND tl."specieId" = s.id AND tl."orgId" = s2."orgId" AND tl."specieId" = s2."specieId" AND tl."strainId" = s2.id
         `;
