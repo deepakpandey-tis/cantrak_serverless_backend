@@ -22,6 +22,9 @@ const getTraceQrDetail = async (req, res) => {
             });
         }
 
+        if(orgId == undefined){
+            orgId = null;
+        }
         sqlStr = `SELECT tl.*, case when c."companyName" is null then tl."cultivatedBy" else c."companyName" end "cultivatedBy"
         , s.name "specieName", s2.name "strainName"
         , u."name" "createdByName", ums.name "umName", ums.abbreviation "umAbbreviation"
