@@ -3,6 +3,7 @@ const updateTraceLot = require('./update-trace-lot');
 const deleteTraceLot = require('./delete-trace-lot');
 const gettraceLotList = require('./get-trace-lot-list');
 const getTraceQrDetail = require('./get-trace-qr-detail');
+const getPublicTraceQrDetail = require('./get-public-trace-qr-detail');
 const getProductionLots = require('./get-production-lots');
 const getLotOutputItems = require('./get-lot-output-items');
 
@@ -17,6 +18,7 @@ module.exports = {
     deleteTraceLot,
     gettraceLotList,
     getTraceQrDetail,
+    getPublicTraceQrDetail,
     getProductionLots,
     getLotOutputItems,
 
