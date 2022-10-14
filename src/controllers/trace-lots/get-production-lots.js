@@ -24,7 +24,7 @@ const getProductionLots = async (req, res) => {
 
         sqlStr = `SELECT pl.id, pl."lotNo", pl."productionOn"
         FROM production_lots pl
-        WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND pl."isActive"
+        WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND pl."isActive" AND pl."fromHarvestLot"
         ORDER BY pl."lotNo" DESC
         `;
 
