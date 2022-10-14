@@ -3,7 +3,7 @@ const knexReader = require("../../db/knex-reader");
 
 const getTraceQrDetail = async (req, res) => {
     try {
-        let orgId = req.me.orgId;
+        let orgId = req.me?.orgId;
         let userId = req.me.id;
 
         let payload = req.body;
