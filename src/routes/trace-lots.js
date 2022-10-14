@@ -50,10 +50,17 @@ router.post('/get-lot-output-items',
 );
 
 router.post('/get-trace-qr-detail',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  // resourceAccessMiddleware.isAccessible,
+  traceLotController.getTraceQrDetail
+);
+
+router.post('/get-public-trace-qr-detail',
   // authMiddleware.isAuthenticated,
   // roleMiddleware.parseUserPermission,
   // resourceAccessMiddleware.isAccessible,
-  traceLotController.getTraceQrDetail
+  traceLotController.getPublicTraceQrDetail
 );
 
 
