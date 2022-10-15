@@ -28,7 +28,7 @@
     "cors": "^2.8.5",
     "ejs": "^3.1.6",
     "exceljs": "^4.3.0",
-    "express": "^4.17.1",
+    "express": "^4.18.1",
     "fs-extra": "^9.1.0",
     "http-errors": "^1.8.0",
     "joi-password-complexity": "^3.0.0",
@@ -56,10 +56,10 @@
     "xlsx": "^0.15.6"
   },
   "devDependencies": {
-    "serverless": "^2.28.7",
-    "serverless-offline": "^7.0.0",
-    "serverless-plugin-lambda-insights": "^1.0.10",
+    "serverless": "^3.21.0",
+    "serverless-offline": "^8.8.1",
+    "serverless-plugin-lambda-insights": "^1.5.0",
     "serverless-prune-plugin": "^2.0.1",
-    "serverless-s3-local": "^0.6.7"
+    "serverless-s3-local": "^0.6.22"
   }
 }
