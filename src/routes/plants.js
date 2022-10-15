@@ -245,6 +245,20 @@ router.post('/get-plant-location-history',
   plantController.getPlantLocationHistory
 );
 
+router.post('/get-plant-lot-unhealthy-plants',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotUnhealthyPlants
+);
+
+router.post('/get-plant-lots-having-unhealthy-plants',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotsHavingUnhealthyPlants
+);
+
 
 router.post('/get-raw-material-for-plant-list',
   authMiddleware.isAuthenticated,
