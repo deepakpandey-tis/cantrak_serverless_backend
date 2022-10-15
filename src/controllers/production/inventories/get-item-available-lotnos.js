@@ -62,13 +62,14 @@ const getItemAvailableLotNos = async (req, res) => {
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlGroupBy + `)`;
         if(payload.includeZeroBalance){
-            sqlStr += ` SELECT *, ("lotQuantity" - "alreadyIssued") quantity FROM Main_CTE WHERE ("lotQuantity" - "alreadyIssued") >= 0`;
+            sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId" FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."lotNo" = Main_CTE."lotNo" WHERE ("lotQuantity" - "alreadyIssued") >= 0`;
         }
         else {
-            sqlStr += ` SELECT *, ("lotQuantity" - "alreadyIssued") quantity FROM Main_CTE WHERE ("lotQuantity" - "alreadyIssued") > 0`;
+            sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId" FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."lotNo" = Main_CTE."lotNo" WHERE ("lotQuantity" - "alreadyIssued") > 0`;
         }
         // sqlStr += ` SELECT *, ("lotQuantity" - "alreadyIssued") quantity FROM Main_CTE WHERE ("lotQuantity" - "alreadyIssued") >= 0`;
         sqlStr += sqlOrderBy;
+        console.log('getItemAvailableLotNos: ', sqlStr);
 
         var selectedRecs = await knexReader.raw(sqlStr);
 
