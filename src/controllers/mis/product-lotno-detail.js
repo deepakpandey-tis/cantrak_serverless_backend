@@ -188,6 +188,7 @@ const getProductLotNoDetail = async (req, res) => {
         sqlStr = `SELECT json_agg(row_to_json(fnl.*)) "data" FROM (`;
         sqlStr += `SELECT json_agg(row_to_json(d.*)) "data", 'Plants' "treeLabel", d."plantedOn" "date" FROM (`;
 
+/* To get plants serials of the locationId and subLocationId, moved inside if and else blocks
         sqlSelect = `SELECT pl.*, CONCAT('Planted: ', pl."plantsCount", ' Plants') "cardHeading", l."number" "licenseNumber", l2."name" "plantLocation", sl."name" "plantSubLocation"
         , (SELECT json_agg(row_to_json(p.*)) "plants" 
         FROM (
@@ -206,6 +207,7 @@ const getProductLotNoDetail = async (req, res) => {
         ) p
         )
         `;
+ */
 
         sqlFrom = ` FROM plant_lots pl, licenses l, locations l2, sub_locations sl
         `;
@@ -228,8 +230,43 @@ const getProductLotNoDetail = async (req, res) => {
                 console.log('inputItem: ', inputItem);
                 for (const chld of inputItem.child) { 
                     for (const rec of chld.data) {                                //  harvested item plant loop
+                        console.log('inputItem child: ', rec);
+        
+/* */                
+                        //  get harvested plant ids
+                        var harvestedPlantIds = [{id: 0}];
+                        rec.plantIds.forEach(el => {
+                            if(el.plantIds){
+                                harvestedPlantIds = [...harvestedPlantIds, ...el.plantIds];
+                            }
+                        });
+                        var harvestedPlantIdsString = harvestedPlantIds.map(r => r?.id);
+                        console.log('harvestedPlantIdsString: ', harvestedPlantIdsString);
+
+                        sqlSelect = `SELECT pl.*, CONCAT('Planted: ', pl."plantsCount", ' Plants') "cardHeading", l."number" "licenseNumber", l2."name" "plantLocation", sl."name" "plantSubLocation"
+                        , (SELECT json_agg(row_to_json(p.*)) "plants" 
+                        FROM (
+                        SELECT p.*
+                        FROM plants p, plant_locations pl2
+                        WHERE p."plantLotId" = pl.id AND p."isActive" AND NOT p."isWaste" AND NOT p."isDestroy"
+                        AND p.id NOT IN (${harvestedPlantIdsString}) AND p.id = pl2."plantId"  AND pl2."locationId" = ${rec.locationId} AND pl2."subLocationId" = ${rec.subLocationId}
+                        AND pl2.id = (select id from plant_locations ploc2 where ploc2."orgId" = ${orgId} and ploc2."plantId" = p.id order by id desc limit 1)
+                        ORDER BY p."plantSerial"
+                        ) p
+                        )
+                        , (SELECT json_agg(row_to_json(p.*)) "wastePlants" 
+                        FROM (
+                        SELECT p.*
+                        FROM plants p 
+                        WHERE p."plantLotId" = pl.id AND p."isActive" AND p."isWaste"
+                        ORDER BY p."plantSerial"
+                        ) p
+                        )
+                        `;
+/* */                
+                
                         sqlWhereAddon = ` AND pl.id = '${rec.plantLotId}'`;
-                        sqlWhereAddon += ` AND  pl."licenseId" = l.id and l2.id ='${rec.locationId}' and sl.id ='${rec.subLocationId}' and sl."locationId" ='${rec.locationId}'
+                        sqlWhereAddon += ` AND  pl."licenseId" = l.id AND l2.id ='${rec.locationId}' AND sl.id ='${rec.subLocationId}' AND sl."locationId" ='${rec.locationId}'
                         `;
             
                         sqlFinal = sqlStr + sqlSelect + sqlFrom + sqlWhere + sqlWhereAddon;
@@ -299,8 +336,41 @@ const getProductLotNoDetail = async (req, res) => {
 
             //  Since all harvested items has same plantLotId, getting plant details using Ist harvested item
             // sqlWhereAddon = ` AND pl."id" = '${selectedHarvestRecs.rows[0].plantLotId}'`;
+            let rec = productionInputDetail.rows[0].data[0].data[0];
             sqlWhereAddon = ` AND pl."id" = '${productionInputDetail.rows[0].data[0].data[0].plantLotId}'`;
-            sqlWhereAddon += ` AND  pl."licenseId" = l.id and pl."locationId" = l2.id`;
+            sqlWhereAddon += ` AND  pl."licenseId" = l.id AND l2.id ='${rec.locationId}' AND sl.id ='${rec.subLocationId}' AND sl."locationId" ='${rec.locationId}'`;
+/* */                
+            //  get harvested plant ids
+            var harvestedPlantIds = [{id: 0}];
+            rec.plantIds.forEach(el => {
+                if(el.plantIds){
+                    harvestedPlantIds = [...harvestedPlantIds, ...el.plantIds];
+                }
+            });
+            var harvestedPlantIdsString = harvestedPlantIds.map(r => r?.id);
+            console.log('harvestedPlantIdsString: ', harvestedPlantIdsString);
+
+            sqlSelect = `SELECT pl.*, CONCAT('Planted: ', pl."plantsCount", ' Plants') "cardHeading", l."number" "licenseNumber", l2."name" "plantLocation", sl."name" "plantSubLocation"
+            , (SELECT json_agg(row_to_json(p.*)) "plants" 
+            FROM (
+            SELECT p.*
+            FROM plants p, plant_locations pl2
+            WHERE p."plantLotId" = pl.id AND p."isActive" AND NOT p."isWaste" AND NOT p."isDestroy"
+            AND p.id NOT IN (${harvestedPlantIdsString}) AND p.id = pl2."plantId"  AND pl2."locationId" = ${rec.locationId} AND pl2."subLocationId" = ${rec.subLocationId}
+            AND pl2.id = (select id from plant_locations ploc2 where ploc2."orgId" = ${orgId} and ploc2."plantId" = p.id order by id desc limit 1)
+            ORDER BY p."plantSerial"
+            ) p
+            )
+            , (SELECT json_agg(row_to_json(p.*)) "wastePlants" 
+            FROM (
+            SELECT p.*
+            FROM plants p 
+            WHERE p."plantLotId" = pl.id AND p."isActive" AND p."isWaste"
+            ORDER BY p."plantSerial"
+            ) p
+            )
+            `;
+/* */                
 
             sqlFinal = sqlStr + sqlSelect + sqlFrom + sqlWhere + sqlWhereAddon;
 
