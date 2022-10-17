@@ -7,6 +7,13 @@ const ItemCategory = {
     PackingLoss: 5
 };
 
+const BatchTypes ={
+    Production: 1,
+    Harvest: 2,
+    Plants: 3,
+    RawMaterial: 4,
+};
+
 const TxnTypes = {
     ReceiveFromSupplier: 11,
     ReceiveProductFromHarvest: 21,
@@ -31,4 +38,4 @@ const SystemStores = {
     PackingLoss: 99991001
 };
 
-module.exports = { ItemCategory, TxnTypes, SystemStores };
+module.exports = { ItemCategory, BatchTypes, TxnTypes, SystemStores };
