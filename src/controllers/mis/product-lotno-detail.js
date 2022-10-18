@@ -185,6 +185,7 @@ const getProductLotNoDetail = async (req, res) => {
     if(validProductionLotNo || validProductionHarvestLotNo || validHarvestLotNo || batchTypeId == BatchTypes.Plants){
 
         //  3. Plant detail of harvested item used in production
+        //      sql to get Harvested Item's Plants Detail
         sqlStr = `SELECT json_agg(row_to_json(fnl.*)) "data" FROM (`;
         sqlStr += `SELECT json_agg(row_to_json(d.*)) "data", 'Plants' "treeLabel", d."plantedOn" "date" FROM (`;
 

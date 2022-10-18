@@ -30,7 +30,7 @@ const getBatchLotNos = async (req, res) => {
         sqlWhere = ` WHERE "orgId" = ${orgId} AND "companyId" = ${companyId}`;
         if(batchTypeId == BatchTypes.Production){
             sqlFrom = ` FROM production_lots pl`;
-            sqlWhere += ` AND "isActive" AND pl."fromHarvestLot"`;
+            sqlWhere += ` AND "isActive"`;
         } else if(batchTypeId == BatchTypes.Harvest){
             sqlFrom = ` FROM harvest_plant_lots hpl`;
             sqlWhere += ` AND "isActive"`;
