@@ -250,7 +250,7 @@ const getProductLotNoDetail = async (req, res) => {
                         SELECT p.*
                         FROM plants p, plant_locations pl2
                         WHERE p."plantLotId" = pl.id AND p."isActive" AND NOT p."isWaste" AND NOT p."isDestroy"
-                        AND p.id NOT IN (${harvestedPlantIdsString}) AND p.id = pl2."plantId"  AND pl2."locationId" = ${rec.locationId} AND pl2."subLocationId" = ${rec.subLocationId}
+                        AND p.id NOT IN (${harvestedPlantIdsString}) AND p.id = pl2."plantId"  AND pl2."locationId" = coalesce(${rec.locationId}, 0) AND pl2."subLocationId" = coalesce(${rec.subLocationId}, 0)
                         AND pl2.id = (select id from plant_locations ploc2 where ploc2."orgId" = ${orgId} and ploc2."plantId" = p.id order by id desc limit 1)
                         ORDER BY p."plantSerial"
                         ) p
@@ -267,7 +267,7 @@ const getProductLotNoDetail = async (req, res) => {
 /* */                
                 
                         sqlWhereAddon = ` AND pl.id = '${rec.plantLotId}'`;
-                        sqlWhereAddon += ` AND  pl."licenseId" = l.id AND l2.id ='${rec.locationId}' AND sl.id ='${rec.subLocationId}' AND sl."locationId" ='${rec.locationId}'
+                        sqlWhereAddon += ` AND  pl."licenseId" = l.id AND l2.id = coalesce(${rec.locationId}, 0) AND sl.id = coalesce(${rec.subLocationId}, 0) AND sl."locationId" = coalesce(${rec.locationId}, 0)
                         `;
             
                         sqlFinal = sqlStr + sqlSelect + sqlFrom + sqlWhere + sqlWhereAddon;
@@ -283,7 +283,7 @@ const getProductLotNoDetail = async (req, res) => {
                         //  harvest has plant detail?
                         validHarvestPlantLotNo = plantLotRecs.rows.length > 0;
 
-                        if(validHarvestPlantLotNo){
+                        if(validHarvestPlantLotNo && plantLotRecs.rows[0].data){
                             //  harvest has plant detail
                             rec.child = plantLotRecs.rows[0].data;
                             // rec.treeLabel = 'Plants';
@@ -339,7 +339,7 @@ const getProductLotNoDetail = async (req, res) => {
             // sqlWhereAddon = ` AND pl."id" = '${selectedHarvestRecs.rows[0].plantLotId}'`;
             let rec = productionInputDetail.rows[0].data[0].data[0];
             sqlWhereAddon = ` AND pl."id" = '${productionInputDetail.rows[0].data[0].data[0].plantLotId}'`;
-            sqlWhereAddon += ` AND  pl."licenseId" = l.id AND l2.id ='${rec.locationId}' AND sl.id ='${rec.subLocationId}' AND sl."locationId" ='${rec.locationId}'`;
+            sqlWhereAddon += ` AND  pl."licenseId" = l.id AND l2.id = coalesce(${rec.locationId}, 0) AND sl.id = coalesce(${rec.subLocationId}, 0) AND sl."locationId" = coalesce(${rec.locationId}, 0)`;
 /* */                
             //  get harvested plant ids
             var harvestedPlantIds = [{id: 0}];
@@ -357,7 +357,7 @@ const getProductLotNoDetail = async (req, res) => {
             SELECT p.*
             FROM plants p, plant_locations pl2
             WHERE p."plantLotId" = pl.id AND p."isActive" AND NOT p."isWaste" AND NOT p."isDestroy"
-            AND p.id NOT IN (${harvestedPlantIdsString}) AND p.id = pl2."plantId"  AND pl2."locationId" = ${rec.locationId} AND pl2."subLocationId" = ${rec.subLocationId}
+            AND p.id NOT IN (${harvestedPlantIdsString}) AND p.id = pl2."plantId"  AND pl2."locationId" = coalesce(${rec.locationId}, 0) AND pl2."subLocationId" = coalesce(${rec.subLocationId}, 0)
             AND pl2.id = (select id from plant_locations ploc2 where ploc2."orgId" = ${orgId} and ploc2."plantId" = p.id order by id desc limit 1)
             ORDER BY p."plantSerial"
             ) p
