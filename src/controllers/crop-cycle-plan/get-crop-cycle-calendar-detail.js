@@ -10,7 +10,8 @@ const getCropCycleCalendarDetail = async (req, res) => {
 
         let sqlStr, sqlSelect;
 
-        sqlSelect = `SELECT l."name" "locationName", sl."name" "subLocationName", ccpd."startDate" "expectedStartDate", ccpd."expectedHarvestDate", ccpd."locationId", ccpd."subLocationId" , pl."lotNo" , pl."plantedOn" "startDate", case when pl."isFinalHarvest" then hpl."harvestedOn" else null end "endDate"
+        //  get location-wise, sub-location-wise, crop cycle plan in the desc order of crop cylce start date
+/*         sqlSelect = `SELECT l."name" "locationName", sl."name" "subLocationName", ccpd."startDate" "expectedStartDate", ccpd."expectedHarvestDate", ccpd."locationId", ccpd."subLocationId" , pl."lotNo" , pl."plantedOn" "startDate", case when pl."isFinalHarvest" then hpl."harvestedOn" else null end "endDate"
         FROM crop_cycle_plans ccp, crop_cycle_plan_detail ccpd, locations l, sub_locations sl, plant_lots pl LEFT JOIN harvest_plant_lots hpl on pl.id = hpl."plantLotId" 
         WHERE ccp."orgId" = ${orgId} AND ccp."companyId" = ${companyId} AND ccp."isActive" AND ccp.id = ccpd."cropCyclePlanId"
         AND ccpd."plantLotId" = pl.id AND ccpd."locationId" = l.id AND ccpd."subLocationId" = sl.id 
@@ -22,8 +23,22 @@ const getCropCycleCalendarDetail = async (req, res) => {
 
         sqlStr = `select json_agg(row_to_json(lslccp.*))
         from (${sqlSelect}) lslccp
-        `;
+        `; */
 
+        //  Plant Lot is final harvested when plantsCount = harvestedPlantsCount
+        sqlStr = `select json_agg(row_to_json(lslccp.*))
+        from (
+            select l."name" "locationName", sl."name" "subLocationName", ccpd."startDate" "expectedStartDate", ccpd."expectedHarvestDate", ccpd."locationId", ccpd."subLocationId"
+            , pl."lotNo" , pl."plantedOn" "startDate", pl."plantsCount"
+            , (select coalesce(sum("plantsCount"), 0) "harvestedPlantsCount" from harvest_plant_lots hpl4 where hpl4."plantLotId" = pl.id and hpl4."isFinalHarvest" )
+            , hpl."harvestedOn"
+            from crop_cycle_plans ccp, crop_cycle_plan_detail ccpd, locations l, sub_locations sl, plant_lots pl, harvest_plant_lots hpl
+            where ccp."orgId" = ${orgId} and ccp."companyId" = ${companyId} and ccp."isActive" and ccp.id = ccpd."cropCyclePlanId"
+            and ccpd."plantLotId" = pl.id and ccpd."locationId" = l.id and ccpd."subLocationId" = sl.id
+            and pl.id = hpl."plantLotId" and hpl.id = (select id from harvest_plant_lots hpl2 where hpl2."orgId" = ccp."orgId" and hpl2."companyId" = ccp."companyId" and hpl2."plantLotId" = pl.id order by hpl2.id desc limit 1)
+            order by l."name" , sl."name" , ccpd."startDate" desc
+        ) lslccp
+        `;
         console.log('getCropCycleCalendarDetail: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);
@@ -34,13 +49,14 @@ const getCropCycleCalendarDetail = async (req, res) => {
         sqlCropCyclePlans = `SELECT l.name "locationName", ccpd."locationId" , sl.name "subLocationName", ccpd."subLocationId", ccp."name" , ccp."date", ccpd.id "cropCyclePlanDetailId", ccpd."plantLotId" "cropCyclePlanDetailPlantLotId", ccpd."startDate" , ccpd."expectedHarvestDate" , ccpd."expectedPlants"
         FROM crop_cycle_plans ccp , crop_cycle_plan_detail ccpd , locations l , sub_locations sl
         WHERE ccp."orgId" = ${orgId} AND ccp."companyId" = ${companyId} AND ccp."isActive" AND ccpd."cropCyclePlanId" = ccp.id AND ccpd."isActive"
-        AND ccpd."locationId" = l.id AND ccpd."subLocationId" = sl.id
+        AND ccpd."locationId" = l.id AND ccpd."locationId" = sl."locationId" AND ccpd."subLocationId" = sl.id
         `;
         if(growingLocationIds?.length && growingLocationIds[0] != 0){
             sqlCropCyclePlans += ` AND ccpd."locationId" IN (${growingLocationIds})`
         }
         sqlCropCyclePlans += ` ORDER BY l."name" , sl."name", ccpd."startDate" DESC`;
 
+        //  get crop cycle plans expected growth stages
         sqlExpectedGrowthStages = `WITH cropCyclePlans
         AS (${sqlCropCyclePlans})
         SELECT json_agg(row_to_json(es.*)) "expectedGrowthStages"

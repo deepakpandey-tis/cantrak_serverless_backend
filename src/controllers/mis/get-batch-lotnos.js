@@ -1,19 +1,6 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../db/knex-reader");
-
-const ItemCategory = {
-    RawMaterial: 1,
-    Product: 2,
-    WasteMaterial: 3,
-    FinishedGoods: 4
-};
-
-const BatchTypes ={
-    Production: 1,
-    Harvest: 2,
-    Plants: 3,
-    RawMaterial: 4,
-};
+const { ItemCategory, BatchTypes, TxnTypes, SystemStores } = require('../../helpers/txn-types');
 
 const getBatchLotNos = async (req, res) => {
     try {
