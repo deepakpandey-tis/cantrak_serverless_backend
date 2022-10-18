@@ -7,6 +7,7 @@ const getBatchLotNos = async (req, res) => {
         let orgId = req.me.orgId;
         let userId = req.me.id;
 
+        const searchStr = req.query?.search;
         let payload = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
@@ -14,6 +15,7 @@ const getBatchLotNos = async (req, res) => {
         const { companyId, batchTypeId } = req.body;
 
         const schema = Joi.object().keys({
+            id: Joi.string().optional().allow(null, ''),
             companyId: Joi.number().required(),
             batchTypeId: Joi.number().required()
         });
@@ -40,6 +42,10 @@ const getBatchLotNos = async (req, res) => {
         } else {    //  Raw Material
             sqlFrom = ` FROM item_txns it`;
             sqlWhere += ` AND "itemCategoryId" = ${ItemCategory.RawMaterial}`;
+        }
+
+        if(searchStr){
+            sqlWhere += ` AND "lotNo" LIKE '%${searchStr}%'`;
         }
 
         sqlOrderBy  = ` ORDER BY "lotNo" desc`;
