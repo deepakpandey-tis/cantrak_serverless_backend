@@ -74,6 +74,8 @@ const userActivitiesRouter = require("./user-activities");
 const packingRouter = require("./packing");
 const traceLotsRouter = require("./trace-lots");
 
+const taxRouter = require("./administration-features/taxes");
+const chargeRouter = require("./administration-features/charges");
 
 /* GET home page. */
 router.get("/", async (req, res, next) => {
@@ -262,5 +264,9 @@ router.use("/user-activities", userActivitiesRouter);
 router.use("/packing", packingRouter);
 
 router.use("/trace-qr", traceLotsRouter);
+
+router.use("/administration-features/taxes", taxRouter);
+
+router.use("/administration-features/charges", chargeRouter);
 
 module.exports = router;

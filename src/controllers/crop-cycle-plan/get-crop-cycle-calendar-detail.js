@@ -29,13 +29,15 @@ const getCropCycleCalendarDetail = async (req, res) => {
         sqlStr = `select json_agg(row_to_json(lslccp.*))
         from (
             select l."name" "locationName", sl."name" "subLocationName", ccpd."startDate" "expectedStartDate", ccpd."expectedHarvestDate", ccpd."locationId", ccpd."subLocationId"
-            , pl."lotNo" , pl."plantedOn" "startDate", pl."plantsCount"
+            , pl.id "plantLotId", pl."lotNo" , pl."plantedOn" "startDate", pl."plantsCount"
+            , (select sum(p."isWaste"::int) "wastePlants" from plants p where p."orgId" = 89 and p."plantLotId" = pl.id)
             , (select coalesce(sum("plantsCount"), 0) "harvestedPlantsCount" from harvest_plant_lots hpl4 where hpl4."plantLotId" = pl.id and hpl4."isFinalHarvest" )
             , hpl."harvestedOn"
-            from crop_cycle_plans ccp, crop_cycle_plan_detail ccpd, locations l, sub_locations sl, plant_lots pl, harvest_plant_lots hpl
+            from crop_cycle_plans ccp, crop_cycle_plan_detail ccpd, locations l, sub_locations sl, plant_lots pl
+            left join harvest_plant_lots hpl on pl.id = hpl."plantLotId"
             where ccp."orgId" = ${orgId} and ccp."companyId" = ${companyId} and ccp."isActive" and ccp.id = ccpd."cropCyclePlanId"
             and ccpd."plantLotId" = pl.id and ccpd."locationId" = l.id and ccpd."subLocationId" = sl.id
-            and pl.id = hpl."plantLotId" and hpl.id = (select id from harvest_plant_lots hpl2 where hpl2."orgId" = ccp."orgId" and hpl2."companyId" = ccp."companyId" and hpl2."plantLotId" = pl.id order by hpl2.id desc limit 1)
+            and (hpl."harvestedOn" is null or hpl.id = (select id from harvest_plant_lots hpl2 where hpl2."orgId" = ccp."orgId" and hpl2."companyId" = ccp."companyId" and hpl2."plantLotId" = pl.id order by hpl2.id desc limit 1))
             order by l."name" , sl."name" , ccpd."startDate" desc
         ) lslccp
         `;

@@ -38,6 +38,8 @@ const EntityTypes = {
     PlantObservation: 33,
     Packing: 34,
     TraceLot: 35,
+    Tax: 36,
+    Charge: 37,
   };
 
   const EntityActions = {
