@@ -8,7 +8,7 @@ const getPlantLots = async (req, res) => {
 
         let payload = req.body;
 
-        let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
+        let sqlStr; //, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         const schema = Joi.object().keys({
             companyId: Joi.string().required()
@@ -22,7 +22,7 @@ const getPlantLots = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT pl.*, c."companyName", s.name "strainName", s2.name "specieName", lic.number "licenseNo", l.name "locationName"`;
+/*         sqlSelect = `SELECT pl.*, c."companyName", s.name "strainName", s2.name "specieName", lic.number "licenseNo", l.name "locationName"`;
 
         sqlFrom = ` FROM plant_lots pl, companies c, strains s, species s2, locations l, licenses lic`;
 
@@ -34,6 +34,23 @@ const getPlantLots = async (req, res) => {
         sqlOrderBy  = ` ORDER BY pl."lotNo" desc`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
+ */
+        //  first get current plants current location plant lot status (plantsCount, wastePlants and harvestedPlantsCount)
+        //  then filtered out final harvested plantLots and select the distinct plantLots
+        sqlStr = `WITH plant_current_locations AS
+        (
+            SELECT pl."lotNo"
+            , coalesce(hpl."isFinalHarvest", false) "isFinalHarvest"
+            FROM plant_lots pl, plants p, plant_locations pl2
+            LEFT JOIN harvest_plant_lots hpl ON hpl."orgId" = pl2."orgId" AND hpl."companyId" = pl2."companyId" AND hpl."plantLotId" = pl2."plantLotId" AND hpl."locationId" = pl2."locationId" AND hpl."subLocationId" = pl2."subLocationId" AND hpl."isFinalHarvest" AND hpl."isFinalHarvest"
+            WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId}
+            AND pl.id = p."plantLotId" AND p."orgId" = pl2."orgId" AND p.id = pl2."plantId"
+            AND pl2.id in (SELECT id FROM plant_locations pl3 WHERE pl3."orgId" = pl."orgId" AND pl3."plantId" = p.id order by pl3.id desc limit 1)
+            AND (NOT coalesce(hpl."isFinalHarvest", false) OR (coalesce(hpl."isFinalHarvest", false) AND NOT coalesce(hpl."isEntireLot" , false)))
+            AND pl2."locationId" IN (${req.GROWINGLOCATION})
+        )
+        SELECT distinct pcl."lotNo" FROM plant_current_locations pcl WHERE NOT "isFinalHarvest" ORDER BY pcl."lotNo" desc
+        `;
 
         var selectedRecs = await knexReader.raw(sqlStr);
 
