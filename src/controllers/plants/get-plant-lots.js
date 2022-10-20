@@ -49,7 +49,7 @@ const getPlantLots = async (req, res) => {
             AND (NOT coalesce(hpl."isFinalHarvest", false) OR (coalesce(hpl."isFinalHarvest", false) AND NOT coalesce(hpl."isEntireLot" , false)))
             AND pl2."locationId" IN (${req.GROWINGLOCATION})
         )
-        SELECT distinct pl.id, pcl."lotNo" FROM plant_current_locations pcl WHERE NOT "isFinalHarvest" ORDER BY pcl."lotNo" desc
+        SELECT distinct pcl.id, pcl."lotNo" FROM plant_current_locations pcl WHERE NOT "isFinalHarvest" ORDER BY pcl."lotNo" desc
         `;
 
         var selectedRecs = await knexReader.raw(sqlStr);
