@@ -39,7 +39,7 @@ const getPlantLots = async (req, res) => {
         //  then filtered out final harvested plantLots and select the distinct plantLots
         sqlStr = `WITH plant_current_locations AS
         (
-            SELECT pl."lotNo"
+            SELECT pl.id, pl."lotNo"
             , coalesce(hpl."isFinalHarvest", false) "isFinalHarvest"
             FROM plant_lots pl, plants p, plant_locations pl2
             LEFT JOIN harvest_plant_lots hpl ON hpl."orgId" = pl2."orgId" AND hpl."companyId" = pl2."companyId" AND hpl."plantLotId" = pl2."plantLotId" AND hpl."locationId" = pl2."locationId" AND hpl."subLocationId" = pl2."subLocationId" AND hpl."isFinalHarvest" AND hpl."isFinalHarvest"
@@ -49,7 +49,7 @@ const getPlantLots = async (req, res) => {
             AND (NOT coalesce(hpl."isFinalHarvest", false) OR (coalesce(hpl."isFinalHarvest", false) AND NOT coalesce(hpl."isEntireLot" , false)))
             AND pl2."locationId" IN (${req.GROWINGLOCATION})
         )
-        SELECT distinct pcl."lotNo" FROM plant_current_locations pcl WHERE NOT "isFinalHarvest" ORDER BY pcl."lotNo" desc
+        SELECT distinct pcl.id, pcl."lotNo" FROM plant_current_locations pcl WHERE NOT "isFinalHarvest" ORDER BY pcl."lotNo" desc
         `;
 
         var selectedRecs = await knexReader.raw(sqlStr);
