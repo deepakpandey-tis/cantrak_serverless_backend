@@ -16,9 +16,10 @@ const addTraceLot = async (req, res) => {
 
         const schema = Joi.object().keys({
             lotOfOption: Joi.number().required(),
+            lotType: Joi.number().required(),
             companyId: Joi.number().allow(null).optional(),
             lotNo: Joi.string().required(),
-            productionLotId: Joi.number().allow(null).optional(),
+            lotId: Joi.number().allow(null).optional(),
             itemTxnId: Joi.number().allow(null).optional(),
             description: Joi.string().required(),
             cultivatedBy: Joi.string().optional(),
@@ -61,9 +62,10 @@ const addTraceLot = async (req, res) => {
 
             let insertData = {
                 orgId: orgId,
+                lotType: payload.lotType,
                 companyId: payload.companyId,
                 lotNo: payload.lotNo,
-                productionLotId: payload.productionLotId,
+                productionLotId: payload.lotId,
                 itemTxnId: payload.itemTxnId,
                 description: payload.description,
                 cultivatedBy: payload.cultivatedBy,

@@ -1,7 +1,7 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../db/knex-reader");
 
-const getProductionLots = async (req, res) => {
+const getHarvestLots = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
@@ -22,10 +22,10 @@ const getProductionLots = async (req, res) => {
             });
         }
 
-        sqlStr = `SELECT pl.id, pl."lotNo", pl."productionOn" "lotDate"
-        FROM production_lots pl
-        WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND pl."isActive" AND pl."fromHarvestLot"
-        ORDER BY pl."lotNo" DESC
+        sqlStr = `SELECT hpl.id, hpl."lotNo", hpl."harvestedOn" "lotDate"
+        FROM harvest_plant_lots hpl
+        WHERE hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."isActive"
+        ORDER BY hpl."lotNo" DESC
         `;
 
         var selectedRecs = await knexReader.raw(sqlStr);
@@ -36,11 +36,11 @@ const getProductionLots = async (req, res) => {
             data: {
                 records: selectedRecs.rows,
             },
-            message: "Production lots!"
+            message: "Harvest lots!"
         });
 
     } catch (err) {
-        console.log("[controllers][trace-lots][getProductionLots] :  Error", err);
+        console.log("[controllers][trace-lots][getHarvestLots] :  Error", err);
         return res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
         });
@@ -49,4 +49,4 @@ const getProductionLots = async (req, res) => {
 
 }
 
-module.exports = getProductionLots;
+module.exports = getHarvestLots;
