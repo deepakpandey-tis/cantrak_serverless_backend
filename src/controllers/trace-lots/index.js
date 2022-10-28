@@ -6,6 +6,8 @@ const getTraceQrDetail = require('./get-trace-qr-detail');
 const getPublicTraceQrDetail = require('./get-public-trace-qr-detail');
 const getProductionLots = require('./get-production-lots');
 const getLotOutputItems = require('./get-lot-output-items');
+const getHarvestLots = require('./get-harvest-lots');
+const getHarvestLotOutputItems = require('./get-harvest-lot-output-items');
 
 const getCompanies = require('./masters/get-companies');
 const getSpecies = require('./masters/get-species');
@@ -21,6 +23,8 @@ module.exports = {
     getPublicTraceQrDetail,
     getProductionLots,
     getLotOutputItems,
+    getHarvestLots,
+    getHarvestLotOutputItems,
 
     getCompanies,
     getSpecies,

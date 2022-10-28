@@ -49,6 +49,20 @@ router.post('/get-lot-output-items',
   traceLotController.getLotOutputItems
 );
 
+router.post('/get-harvest-lots',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  traceLotController.getHarvestLots
+);
+
+router.post('/get-harvest-lot-output-items',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  traceLotController.getHarvestLotOutputItems
+);
+
 router.post('/get-trace-qr-detail',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
