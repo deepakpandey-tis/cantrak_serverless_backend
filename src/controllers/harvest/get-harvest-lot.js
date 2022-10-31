@@ -23,7 +23,7 @@ const getHarvestLot = async (req, res) => {
         }
 
         sqlSelect = `select hpl.*, pl."lotNo" "plantLotNo", l."name" "plantLocation"
-        , it.quantity, it."plantsCount" "itemPlantsCount", it.quality, it."expiryDate", ic."name" "itemCategoryName", i.name "itemName", i.gtin, ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", sl.name "storageLocationName"
+        , it.id "itemTxnId", it.quantity, it."plantsCount" "itemPlantsCount", it.quality, it."expiryDate", ic."name" "itemCategoryName", i.name "itemName", i.gtin, ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", sl.name "storageLocationName"
         , c."companyName", u."name" "createdByName"
         `;
 
