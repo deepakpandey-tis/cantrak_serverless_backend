@@ -57,6 +57,27 @@ router.post('/get-storage-locations',
   invoiceController.getStorageLocations
 );
 
+router.get('/get-charges',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getCharges
+);
+
+router.get('/get-taxes',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getTaxes
+);
+
+router.get('/get-strains',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getStrains
+);
+
 router.get('/get-customers',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

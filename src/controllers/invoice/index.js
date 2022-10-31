@@ -6,6 +6,9 @@ const getCompanies = require('./masters/get-companies');
 const getItemCategories = require('./masters/get-item-categories');
 const getItems = require('./masters/get-items');
 const getStorageLocations = require('./masters/get-storage-locations');
+const getCharges = require('./masters/get-charges');
+const getTaxes = require('./masters/get-taxes');
+const getStrains = require('./masters/get-strains');
 
 const getCustomers = require('./masters/get-customers');
 
@@ -22,6 +25,9 @@ module.exports = {
     getItemCategories,
     getItems,
     getStorageLocations,
+    getCharges,
+    getTaxes,
+    getStrains,
 
     getCustomers,
 
