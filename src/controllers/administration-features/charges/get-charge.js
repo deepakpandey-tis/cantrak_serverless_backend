@@ -7,12 +7,18 @@ const getCharge = async (req, res) => {
         let userId = req.me.id;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere;
-
+/* 
         sqlSelect = `SELECT c.*, t.code "taxCode", t.percentage "taxPercentage"
         , CASE WHEN c."calculationUnit" = 1 THEN 'By Rate' ELSE 'By Hour' END "calculationUnitName"
         `;
         sqlFrom = ` FROM charges c, taxes t `;
         sqlWhere = ` WHERE c."orgId" = ${orgId} AND c.id = ${req.query.id} AND c."orgId" = t."orgId" AND c."taxId" = t.id`;
+ */
+        sqlSelect = `SELECT c.*
+        , CASE WHEN c."calculationUnit" = 1 THEN 'By Rate' ELSE 'By Hour' END "calculationUnitName"
+        `;
+        sqlFrom = ` FROM charges c `;
+        sqlWhere = ` WHERE c."orgId" = ${orgId} AND c.id = ${req.query.id}`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 

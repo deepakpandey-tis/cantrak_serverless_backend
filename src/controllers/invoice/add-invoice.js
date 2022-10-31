@@ -3,8 +3,9 @@ const knex = require('../../db/knex');
 const moment = require("moment-timezone");
 const addUserActivityHelper = require('../../helpers/add-user-activity')
 const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
+const { ItemCategory, TxnTypes, SystemStores } = require('../../helpers/txn-types');
 
-const ItemCategory = {
+/* const ItemCategory = {
     RawMaterial: 1,
     Product: 2,
     WasteMaterial: 3,
@@ -25,6 +26,7 @@ const TxnTypes ={
     IssueFromTxnType: 51,
     IssueUptoTxnType: 90,
 };
+ */
 
 const addInvoice = async (req, res) => {
     try {
@@ -34,6 +36,7 @@ const addInvoice = async (req, res) => {
         const payload = req.body;
 
         let insertedRecord = [];
+        let insertedInvoiceChargeRecords = [];
         let insertedInvoiceItemRecords = [];
         let insertedItemRecords = [];
 
@@ -45,8 +48,13 @@ const addInvoice = async (req, res) => {
             customerLicense: Joi.string().allow('').allow(null).required(),
             customerPo: Joi.string().allow('').allow(null).required(),
             creditDays: Joi.number().allow(0).required(),
+            taxId: Joi.string().required(),
+            subTotal: Joi.number().required(),
+            taxTotal: Joi.number().allow(0).required(),
+            grandTotal: Joi.number().required(),
             dueDate: Joi.date().required(),
             invoiceItems: Joi.array().required(),
+            invoiceCharges: Joi.array().required(),
             customerName: Joi.string().required(),
         });
 
@@ -70,7 +78,7 @@ const addInvoice = async (req, res) => {
 
             let currentTime = new Date().getTime();
 
-            //  Calculate Invoice Amount
+/*             //  Calculate Invoice Amount
             let invoiceCost = 0;
             let invoiceVat = 0;
             let invoiceAmount = 0;
@@ -80,15 +88,16 @@ const addInvoice = async (req, res) => {
                 invoiceAmount += rec.amount;
             }
             console.log('invoice amount: ', invoiceAmount);
-
+ */
             let insertData = {
                 orgId: orgId,
                 companyId: payload.companyId,
+                taxId: payload.taxId,
                 licenseId: payload.licenseId,
                 invoiceOn: new Date(payload.invoiceOn).getTime(),
-                invoiceCost: invoiceCost,
-                invoiceVat: invoiceVat,
-                invoiceAmount: invoiceAmount,
+                invoiceCost: payload.subTotal,
+                invoiceVat: payload.taxTotal,
+                invoiceAmount: payload.grandTotal,
                 creditDays: payload.creditDays,
                 dueDate: new Date(payload.dueDate).getTime(),
                 customerId: payload.customerId,
@@ -109,9 +118,40 @@ const addInvoice = async (req, res) => {
 
             insertedRecord = insertResult[0];
 
+            // Invoice Charges
+            let charge;
+            let recNo;
+
+            recNo = 0;
+            for (let rec of payload.invoiceCharges){
+                charge = {
+                    orgId: orgId,
+                    invoiceId: insertedRecord.id,
+                    chargeId: rec.id,
+                    calculationUnit: rec.calculationUnit,
+                    rate: rec.rate,
+                    totalHours: rec.totalHours,
+                    amount: rec.rate * rec.totalHours,
+
+                    createdBy: userId,
+                    createdAt: currentTime,
+                    updatedBy: userId,
+                    updatedAt: currentTime,
+                };
+                console.log('invoice charge: ', charge);
+
+                const insertResult = await knex
+                    .insert(charge)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("invoice_charges");
+
+                insertedInvoiceChargeRecords[recNo] = insertResult[0];
+                recNo += 1;
+            }
+
             // Invoice Items
             let item;
-            let recNo;
 
             recNo = 0;
             for (let rec of payload.invoiceItems){
@@ -123,10 +163,14 @@ const addInvoice = async (req, res) => {
                     umId: rec.umId,
                     quantity: rec.quantity,
                     unitPrice: rec.unitPrice,
-                    chargeVAT: rec.chargeVAT,
-                    cost: rec.cost,
-                    vat: rec.vat,
-                    amount: rec.amount,
+                    // chargeVAT: rec.chargeVAT,
+                    // cost: rec.cost,
+                    // vat: rec.vat,
+                    // amount: rec.amount,
+                    chargeVAT: false,
+                    cost: rec.quantity * rec.unitPrice,
+                    vat: 0,
+                    amount: rec.quantity * rec.unitPrice,       // cost + vat
                     gtin: rec.gtin,
                     lotNos: JSON.stringify(rec.lotNos),
 
@@ -219,6 +263,7 @@ const addInvoice = async (req, res) => {
             data: {
                 record: insertedRecord,
                 invoiceItems: insertedInvoiceItemRecords,
+                invoiceCharges: insertedInvoiceChargeRecords,
             },
             message: 'Invoice added successfully.'
         });

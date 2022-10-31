@@ -20,7 +20,7 @@ const addCharge = async (req, res) => {
             description: Joi.string().allow(null).required(),
             calculationUnit: Joi.number().required(),                   //  1: By Rate; 2: By Hour
             rate: Joi.number().required(),
-            taxId: Joi.number().required(),
+            // taxId: Joi.number().required(),
         });
 
         const result = Joi.validate(payload, schema);

@@ -35,13 +35,16 @@ const getChargeList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT c.*, t.code "taxCode", t.percentage "taxPercentage", u2."name" "createdByName"
+        // sqlSelect = `SELECT c.*, t.code "taxCode", t.percentage "taxPercentage", u2."name" "createdByName"
+        sqlSelect = `SELECT c.*, u2."name" "createdByName"
         , CASE WHEN c."calculationUnit" = 1 THEN 'By Rate' ELSE 'By Hour' END "calculationUnitName"
         `;
 
-        sqlFrom = ` FROM charges c, taxes t, users u2`;
+        // sqlFrom = ` FROM charges c, taxes t, users u2`;
+        sqlFrom = ` FROM charges c, users u2`;
 
-        sqlWhere = ` WHERE c."orgId" = ${orgId} AND c."orgId" = t."orgId" AND c."taxId" = t.id`;
+        // sqlWhere = ` WHERE c."orgId" = ${orgId} AND c."orgId" = t."orgId" AND c."taxId" = t.id`;
+        sqlWhere = ` WHERE c."orgId" = ${orgId}`;
         sqlWhere += ` AND c."createdBy" = u2.id`;
         if(searchValue){
             sqlWhere += ` AND (c."code" iLIKE '%${searchValue}%' OR c."description" iLIKE '%${searchValue}%')`;

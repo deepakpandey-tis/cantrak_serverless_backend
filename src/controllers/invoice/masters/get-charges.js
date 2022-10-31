@@ -6,8 +6,7 @@ const getCharges = async (req, res) => {
         let orgId = req.me.orgId;
 
         let sqlStr;
-
-/* tax is not part of charges table
+/* 
         sqlStr = `SELECT c.*, t.code "taxCode", t.percentage "taxPercentage"
         , CASE WHEN c."calculationUnit" = 1 THEN 'By Rate' ELSE 'By Hour' END "calculationUnitName"
         FROM charges c, taxes t
@@ -18,7 +17,7 @@ const getCharges = async (req, res) => {
         sqlStr = `SELECT c.*
         , CASE WHEN c."calculationUnit" = 1 THEN 'By Rate' ELSE 'By Hour' END "calculationUnitName"
         FROM charges c
-        WHERE c."orgId" = ${orgId} AND c."isActive" AND c."orgId" = t."orgId"
+        WHERE c."orgId" = ${orgId} AND c."isActive"
         ORDER BY c.code, c.rate
         `;
         
@@ -31,7 +30,7 @@ const getCharges = async (req, res) => {
             message: "Charges!"
         });
     } catch (err) {
-        console.log("[controllers][administrationFeatures][charges][getCharges] :  Error", err);
+        console.log("[controllers][invocie][masters][getCharges] :  Error", err);
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
         });
