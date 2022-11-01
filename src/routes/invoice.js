@@ -14,6 +14,13 @@ router.post('/add-invoice',
   invoiceController.addInvoice
 );
 
+router.post('/cancel-invoice',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.cancelInvoice
+);
+
 router.post('/get-invoice-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -26,6 +33,13 @@ router.post('/get-invoice',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   invoiceController.getInvoice
+);
+
+router.post('/get-cancel-invoice-remark',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getCancelInvoiceRemark
 );
 
 

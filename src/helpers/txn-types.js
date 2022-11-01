@@ -20,6 +20,7 @@ const TxnTypes = {
     ReceiveWasteFromPlantWaste: 22,
     ReceiveWaste: 23,                          // Inventory option
     ReceiveFromProduction: 24,
+    ReceiveFromSaleCancelled: 25,
     ReceiveFromPacking: 26,
     AdjustmentAdd: 41,
     PackingLoss: 42,

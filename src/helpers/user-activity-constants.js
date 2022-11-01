@@ -53,6 +53,7 @@ const EntityTypes = {
     Delete: 5,
     Print: 6,
     Import: 7,
+    Cancel: 8,
   };
 
 module.exports = {EntityTypes, EntityActions};
