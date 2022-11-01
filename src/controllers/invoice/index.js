@@ -1,6 +1,8 @@
 const addInvoice = require('./add-invoice');
 const getInvoiceList = require('./get-invoice-list');
 const getInvoice = require('./get-invoice');
+const cancelInvoice = require('./cancel-invoice');
+const getCancelInvoiceRemark = require('./get-cancel-invoice-remark');
 
 const getCompanies = require('./masters/get-companies');
 const getItemCategories = require('./masters/get-item-categories');
@@ -20,6 +22,8 @@ module.exports = {
     addInvoice,
     getInvoiceList,
     getInvoice,
+    cancelInvoice,
+    getCancelInvoiceRemark,
 
     getCompanies,
     getItemCategories,
