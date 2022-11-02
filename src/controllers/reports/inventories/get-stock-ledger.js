@@ -48,7 +48,7 @@ const getStockLedger = async (req, res) => {
 
         //  Adding outer select to set order by 'Item Category', 'Item Name'
         sqlStr = `SELECT ic.name "itemCategoryName", i.name "itemName", ums.name "UoM", sl.name "storageLocationName", recs.*
-            , it."lotNo", s.name "supplierName", c.name "customerName", tt."name" "txnTypeName"
+            , it."lotNo", s.name "supplierName", c.name "customerName", tt."name" "txnTypeName", rm.description "txnRemark"
             FROM (
             ${sqlSelectWith}  ${sqlSelect}
             ) recs, item_categories ic, items i, ums, storage_locations sl, txn_types tt, item_txns it
@@ -56,6 +56,7 @@ const getStockLedger = async (req, res) => {
             LEFT OUTER JOIN suppliers s ON its."supplierId" = s.id
             LEFT OUTER JOIN invoices inv ON it."orgId" = inv."orgId" AND it."invoiceId" = inv."id"
             LEFT OUTER JOIN customers c ON inv."customerId" = c.id
+            LEFT OUTER JOIN remarks_master rm ON rm."orgId" = it."orgId" AND rm."entityType" = 'invoice_cancelled' AND rm."entityId" = it.id
             WHERE recs."itemCategoryId" = ic.id AND recs."itemId" = i.id AND recs."umId" = ums.id
             AND recs."storageLocationId" = sl.id AND recs.id = it.id AND tt.id = it."txnType" AND tt."subId" = it."subId"
             ORDER BY ic.name, i.name, sl.name, recs.row;
