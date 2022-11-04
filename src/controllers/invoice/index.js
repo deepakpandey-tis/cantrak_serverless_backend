@@ -1,4 +1,5 @@
 const addInvoice = require('./add-invoice');
+const updateInvoice = require('./update-invoice');
 const getInvoiceList = require('./get-invoice-list');
 const getInvoice = require('./get-invoice');
 const cancelInvoice = require('./cancel-invoice');
@@ -20,6 +21,7 @@ const getLicenses = require('./licenses/get-licenses');
 
 module.exports = {
     addInvoice,
+    updateInvoice,
     getInvoiceList,
     getInvoice,
     cancelInvoice,

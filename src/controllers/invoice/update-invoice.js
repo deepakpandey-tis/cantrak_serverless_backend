@@ -5,45 +5,26 @@ const addUserActivityHelper = require('../../helpers/add-user-activity')
 const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
 const { ItemCategory, TxnTypes, SystemStores } = require('../../helpers/txn-types');
 
-/* const ItemCategory = {
-    RawMaterial: 1,
-    Product: 2,
-    WasteMaterial: 3,
-    FinishedGoods: 4
-};
-
-const TxnTypes ={
-    ReceiveFromSupplier: 11,
-    ReceiveProductFromHarvest: 21,
-    ReceiveWasteFromPlantWaste: 22,
-    ReceiveWaste: 23,                          // Inventory option
-    ReceiveFromProduction: 24,
-    ReceiveFromTxnType: 11,
-    ReceiveUptoTxnType: 50,
-    IssueForPlantation: 51,
-    IssueForProduction: 54,
-    IssueForSale: 55,
-    IssueFromTxnType: 51,
-    IssueUptoTxnType: 90,
-};
- */
-
-const addInvoice = async (req, res) => {
+const updateInvoice = async (req, res) => {
     try {
         let orgId = req.me.orgId;
         let userId = req.me.id;
 
         const payload = req.body;
 
+        let sqlStr;
         let insertedRecord = [];
         let insertedInvoiceChargeRecords = [];
         let insertedInvoiceItemRecords = [];
         let insertedItemRecords = [];
+        var deletedRecs;
 
         const schema = Joi.object().keys({
+            id: Joi.string().required(),
             companyId: Joi.string().required(),
             licenseId: Joi.string().required(),
             invoiceOn: Joi.date().required(),
+            invoiceNo: Joi.string().required(),
             customerId: Joi.string().required(),
             customerLicense: Joi.string().allow('').allow(null).required(),
             customerPo: Joi.string().allow('').allow(null).required(),
@@ -54,13 +35,14 @@ const addInvoice = async (req, res) => {
             grandTotal: Joi.number().required(),
             dueDate: Joi.date().required(),
             invoiceItems: Joi.array().required(),
+            invoiceItemsDeleted: Joi.array().required(),
             invoiceCharges: Joi.array().required(),
             customerName: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);
         console.log(
-            "[controllers][invoice][addInvoice]: JOi Result",
+            "[controllers][invoice][updateInvoice]: JOi Result",
             result
         );
 
@@ -78,20 +60,104 @@ const addInvoice = async (req, res) => {
 
             let currentTime = new Date().getTime();
 
-/*             //  Calculate Invoice Amount
-            let invoiceCost = 0;
-            let invoiceVat = 0;
-            let invoiceAmount = 0;
-            for (let rec of payload.invoiceItems){
-                invoiceCost += rec.cost;
-                invoiceVat += rec.vat;
-                invoiceAmount += rec.amount;
+            //  getting existing txnId of issued items from item_txn table
+            sqlStr = `SELECT DISTINCT coalesce("txnId", 0) "txnId" FROM item_txns WHERE "orgId" = ${orgId} AND "companyId" = ${payload.companyId} AND "invoiceId" = ${payload.id}`;
+            var selectedRecs = await knex.raw(sqlStr);
+
+            let existingTxnId;
+            if(selectedRecs.rows.length){
+                existingTxnId = selectedRecs.rows[0].txnId;
             }
-            console.log('invoice amount: ', invoiceAmount);
- */
+            else {
+                existingTxnId = null;
+            }
+            console.log('existingTxnId: ', existingTxnId);
+
+            //  Delete invoice existing charges
+            sqlStr = `DELETE FROM invoice_charges WHERE "orgId" = ${orgId} AND "invoiceId" = ${payload.id}`;
+            deletedRecs = await knex.raw(sqlStr).transacting(trx);
+            // console.log('deleted invoice_charges recs: ', deletedRecs);
+
+            //  Delete invoice existing items
+            sqlStr = `DELETE FROM invoice_items WHERE "orgId" = ${orgId} AND "invoiceId" = ${payload.id}`;
+            deletedRecs = await knex.raw(sqlStr).transacting(trx);
+            // console.log('deleted invoice_items recs: ', deletedRecs);
+
+            //  Reverse deleted Invoiced Items' Txns in item_txns table
+            let recNo;
+            let item;
+            let itemNo;
+            let txnId;
+
+            let dt = new Date(payload.invoiceOn);
+            let invoiceOnStr = dt.getDate() + '/' + (dt.getMonth() + 1) + '/' + dt.getFullYear()
+
+            recNo = 0;
+            txnId = existingTxnId ? existingTxnId : null;
+            itemNo = 0;
+            for (let rec of payload.invoiceItemsDeleted){
+
+                recNo += 1;
+                for (let lotRec of rec.lotNos){
+                    item = {
+                        orgId: orgId,
+                        companyId: payload.companyId,
+                        txnType: TxnTypes.ReceiveFromSaleCancelled,
+                        txnId: txnId,
+                        date: new Date(payload.invoiceOn).getTime(),
+                        itemCategoryId: rec.itemCategoryId,
+                        itemId: rec.itemId,
+                        specieId: lotRec.specieId,
+                        strainId: lotRec.strainId,
+                        quantity: lotRec.quantity,
+                        umId: rec.umId,
+                        expiryDate: lotRec.expiryDate,
+                        // quality: rec.quality,
+                        storageLocationId: lotRec.storageLocationId,
+                        licenseId: payload.licenseId,
+                        invoiceId: payload.id,
+                        lotNo: lotRec.lotNo,
+                        createdBy: userId,
+                        createdAt: currentTime,
+                        updatedBy: userId,
+                        updatedAt: currentTime,
+                    };
+                    console.log('item: ', item);
+
+                    const insertResult = await knex
+                        .insert(item)
+                        .returning(["*"])
+                        .transacting(trx)
+                        .into("item_txns");
+    
+                    insertedItemRecords[itemNo] = insertResult[0];
+                    if(itemNo == 0){
+                        txnId = insertedItemRecords[itemNo].txnId;
+                    }
+                    itemNo += 1;
+
+                    //  Invoice item deleted Remark
+                    let insertData = {
+                        entityId: insertedItemRecords[0].id,
+                        entityType: "invoice_item_cancelled",
+                        description: `${req.me.name} deleted item from invoice '${payload.invoiceNo}' dated ${invoiceOnStr} of '${payload.customerName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                        orgId: orgId,
+                        createdBy: userId,
+                        createdAt: currentTime,
+                        updatedAt: currentTime,
+                    };
+                    console.log('Invoice item deleted reason record: ', insertData);
+
+                    const insertItemTxnRemarkResult = await knex
+                        .insert(insertData)
+                        .returning(["*"])
+                        .transacting(trx)
+                        .into("remarks_master");
+                }
+            }
+
+            //  update invoice
             let insertData = {
-                orgId: orgId,
-                companyId: payload.companyId,
                 taxId: payload.taxId,
                 licenseId: payload.licenseId,
                 invoiceOn: new Date(payload.invoiceOn).getTime(),
@@ -104,14 +170,13 @@ const addInvoice = async (req, res) => {
                 customerLicense: payload.customerLicense,
                 customerPo: payload.customerPo,
 
-                createdBy: userId,
-                createdAt: currentTime,
                 updatedBy: userId,
                 updatedAt: currentTime,
             };
 
             let insertResult = await knex
-                .insert(insertData)
+                .update(insertData)
+                .where({ id: payload.id, orgId: orgId })
                 .returning(["*"])
                 .transacting(trx)
                 .into("invoices");
@@ -120,14 +185,13 @@ const addInvoice = async (req, res) => {
 
             // Invoice Charges
             let charge;
-            let recNo;
 
             recNo = 0;
             for (let rec of payload.invoiceCharges){
                 charge = {
                     orgId: orgId,
                     invoiceId: insertedRecord.id,
-                    chargeId: rec.id,
+                    chargeId: rec.chargeId,
                     calculationUnit: rec.calculationUnit,
                     rate: rec.rate,
                     totalHours: rec.totalHours,
@@ -151,13 +215,9 @@ const addInvoice = async (req, res) => {
             }
 
             // Invoice Items
-            let item;
-            let txnId;
-            let itemNo;
-
-            recNo = 0;
+            txnId = existingTxnId ? existingTxnId : null;
             itemNo = 0;
-            txnId = null;
+            recNo = 0;
             for (let rec of payload.invoiceItems){
                 item = {
                     orgId: orgId,
@@ -194,6 +254,11 @@ const addInvoice = async (req, res) => {
                 insertedInvoiceItemRecords[recNo] = insertResult[0];
                 recNo += 1;
 
+                if(rec.existingItem){
+                    //  an existing item, do not generate issue txn
+                    continue ;
+                }
+                
                 //  Issue Item Txn
                 for (let lotRec of rec.lotNos){
                     item = {
@@ -243,7 +308,7 @@ const addInvoice = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.Invoice,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} issued invoice '${insertedRecord.invoiceNo}' to '${payload.customerName}' containing ${recNo} item(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} changed invoice '${payload.invoiceNo}' of '${payload.customerName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx
@@ -264,10 +329,10 @@ const addInvoice = async (req, res) => {
                 invoiceItems: insertedInvoiceItemRecords,
                 invoiceCharges: insertedInvoiceChargeRecords,
             },
-            message: 'Invoice added successfully.'
+            message: 'Invoice updated successfully.'
         });
     } catch (err) {
-        console.log("[controllers][invoice][addInvoice] :  Error", err);
+        console.log("[controllers][invoice][updateInvoice] :  Error", err);
         //trx.rollback
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
@@ -275,7 +340,7 @@ const addInvoice = async (req, res) => {
     }
 }
 
-module.exports = addInvoice;
+module.exports = updateInvoice;
 
 /**
  */

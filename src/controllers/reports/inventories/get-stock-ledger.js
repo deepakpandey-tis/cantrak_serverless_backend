@@ -56,7 +56,7 @@ const getStockLedger = async (req, res) => {
             LEFT OUTER JOIN suppliers s ON its."supplierId" = s.id
             LEFT OUTER JOIN invoices inv ON it."orgId" = inv."orgId" AND it."invoiceId" = inv."id"
             LEFT OUTER JOIN customers c ON inv."customerId" = c.id
-            LEFT OUTER JOIN remarks_master rm ON rm."orgId" = it."orgId" AND rm."entityType" = 'invoice_cancelled' AND rm."entityId" = it.id
+            LEFT OUTER JOIN remarks_master rm ON rm."orgId" = it."orgId" AND (rm."entityType" = 'invoice_cancelled' OR rm."entityType" = 'invoice_item_cancelled') AND rm."entityId" = it.id
             WHERE recs."itemCategoryId" = ic.id AND recs."itemId" = i.id AND recs."umId" = ums.id
             AND recs."storageLocationId" = sl.id AND recs.id = it.id AND tt.id = it."txnType" AND tt."subId" = it."subId"
             ORDER BY ic.name, i.name, sl.name, recs.row;
