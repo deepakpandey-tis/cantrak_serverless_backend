@@ -14,6 +14,13 @@ router.post('/add-invoice',
   invoiceController.addInvoice
 );
 
+router.post('/update-invoice',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.updateInvoice
+);
+
 router.post('/cancel-invoice',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

@@ -47,13 +47,13 @@ const getInvoice = async (req, res) => {
         , lic.number "licenseNo", u2."name" "createdByName", t.percentage "taxPercentage"
         , c2.name "customerName", c2."contactPerson" "customerContactPerson", c2."address" "customerAddress", c2."taxId" "customerTaxId"
         , (SELECT json_agg(row_to_json(itm.*)) FROM
-        (SELECT ii.*, ic.name "itemCategoryName", i2.name "itemName", i2."description" "itemDescription", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation"
+        (SELECT ii.*, ic.name "itemCategory", i2.name "item", i2."description" "itemDescription", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation"
         FROM invoice_items ii, items i2, item_categories ic, ums
         WHERE i."orgId" = ii."orgId" AND i.id = ii."invoiceId" AND ii."itemCategoryId" = ic.id AND ii."orgId" = i2."orgId" AND ii."itemId" = i2.id
         AND ii."umId" = ums.id) itm
         ) items
         , (SELECT json_agg(row_to_json(chrg.*)) FROM
-        (SELECT ic2.*, case when ic2."calculationUnit" = 1 then 'By Rate' else 'By Hour' end "calculationUnitName", c3.code "chargeCode", c3.description "chargeDescription"
+        (SELECT ic2.*, case when ic2."calculationUnit" = 1 then 'By Rate' else 'By Hour' end "calculationUnitName", c3.code "code", c3.description "description"
         FROM invoice_charges ic2, charges c3
         WHERE i."orgId" = ic2."orgId" AND i.id = ic2."invoiceId" AND i."orgId" = c3."orgId" AND ic2."chargeId" = c3.id) chrg
         ) charges
