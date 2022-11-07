@@ -1,29 +1,31 @@
-const knexReader = require('../../db/knex-reader');
+const Joi = require("@hapi/joi");
+const knexReader = require("../../../db/knex-reader");
 
-const getCropCycleCalendarDetail = async (req, res) => {
+const getPlantLotExpectedActualGrowthStages = async (req, res) => {
     try {
         let orgId = req.me.orgId;
+        let userId = req.me.id;
 
         let payload = req.body;
 
-        let { companyId, growingLocationIds, year } = req.body;
+        let { id, companyId, locationId, subLocationId } = req.body;
 
-        let sqlStr, sqlSelect;
+        let sqlStr;
 
-        //  get location-wise, sub-location-wise, crop cycle plan in the desc order of crop cylce start date
-/*         sqlSelect = `SELECT l."name" "locationName", sl."name" "subLocationName", ccpd."startDate" "expectedStartDate", ccpd."expectedHarvestDate", ccpd."locationId", ccpd."subLocationId" , pl."lotNo" , pl."plantedOn" "startDate", case when pl."isFinalHarvest" then hpl."harvestedOn" else null end "endDate"
-        FROM crop_cycle_plans ccp, crop_cycle_plan_detail ccpd, locations l, sub_locations sl, plant_lots pl LEFT JOIN harvest_plant_lots hpl on pl.id = hpl."plantLotId" 
-        WHERE ccp."orgId" = ${orgId} AND ccp."companyId" = ${companyId} AND ccp."isActive" AND ccp.id = ccpd."cropCyclePlanId"
-        AND ccpd."plantLotId" = pl.id AND ccpd."locationId" = l.id AND ccpd."subLocationId" = sl.id 
-        `;
-        if(growingLocationIds?.length && growingLocationIds[0] != 0){
-            sqlSelect += ` AND ccpd."locationId" IN (${growingLocationIds})`
+        const schema = Joi.object().keys({
+            id: Joi.number().required(),
+            companyId: Joi.number().required(),
+            locationId: Joi.number().required(),
+            subLocationId: Joi.number().required(),
+        });
+        const result1 = Joi.validate(payload, schema);
+        if (result1 && result1.hasOwnProperty("error") && result1.error) {
+            return res.status(400).json({
+                errors: [
+                    { code: "VALIDATION_ERROR", message: result1.error.message }
+                ]
+            });
         }
-        sqlSelect += ` ORDER BY l."name" , sl."name" , ccpd."startDate" DESC`;
-
-        sqlStr = `select json_agg(row_to_json(lslccp.*))
-        from (${sqlSelect}) lslccp
-        `; */
 
         //  Plant Lot is final harvested when plantsCount = harvestedPlantsCount
         sqlStr = `select json_agg(row_to_json(lslccp.*))
@@ -35,11 +37,9 @@ const getCropCycleCalendarDetail = async (req, res) => {
             , hpl."harvestedOn"
             from crop_cycle_plans ccp, crop_cycle_plan_detail ccpd, locations l, sub_locations sl, plant_lots pl
             left join harvest_plant_lots hpl on pl.id = hpl."plantLotId"
-            where ccp."orgId" = ${orgId} and ccp."companyId" = ${companyId} and to_char(to_timestamp("date"/1000 )::date, 'YYYY') = '${year}' and ccp."isActive" and ccp."orgId" = ccpd."orgId" and ccp.id = ccpd."cropCyclePlanId"
+            where ccp."orgId" = ${orgId} and ccp."companyId" = ${companyId} and ccp."isActive"
+            and ccp."orgId" = ccpd."orgId" and ccp.id = ccpd."cropCyclePlanId" and ccpd."plantLotId" = ${id} and ccpd."locationId" = ${locationId} and ccpd."subLocationId" = ${subLocationId}
         `;
-        if(growingLocationIds?.length && growingLocationIds[0] != 0){
-            sqlStr += ` and ccpd."locationId" in (${growingLocationIds})`
-        }
         sqlStr += ` and ccpd."plantLotId" = pl.id and ccpd."locationId" = l.id and ccpd."subLocationId" = sl.id
             and (hpl."harvestedOn" is null or hpl.id = (select id from harvest_plant_lots hpl2 where hpl2."orgId" = ccp."orgId" and hpl2."companyId" = ccp."companyId" and hpl2."plantLotId" = pl.id order by hpl2.id desc limit 1))
             order by l."name" , sl."name" , ccpd."startDate" desc
@@ -54,12 +54,10 @@ const getCropCycleCalendarDetail = async (req, res) => {
 
         sqlCropCyclePlans = `SELECT l.name "locationName", ccpd."locationId" , sl.name "subLocationName", ccpd."subLocationId", ccp."name" , ccp."date", ccpd.id "cropCyclePlanDetailId", ccpd."plantLotId" "cropCyclePlanDetailPlantLotId", ccpd."startDate" , ccpd."expectedHarvestDate" , ccpd."expectedPlants"
         FROM crop_cycle_plans ccp , crop_cycle_plan_detail ccpd , locations l , sub_locations sl
-        WHERE ccp."orgId" = ${orgId} AND ccp."companyId" = ${companyId} AND ccp."isActive" AND ccp."orgId" = ccpd."orgId" AND ccpd."cropCyclePlanId" = ccp.id AND ccpd."isActive"
+        WHERE ccp."orgId" = ${orgId} AND ccp."companyId" = ${companyId} AND ccp."isActive"
+        AND ccp."orgId" = ccpd."orgId" AND ccpd."cropCyclePlanId" = ccp.id AND ccpd."isActive" AND ccpd."plantLotId" = ${id} AND ccpd."locationId" = ${locationId} AND ccpd."subLocationId" = ${subLocationId}
         AND ccpd."locationId" = l.id AND ccpd."locationId" = sl."locationId" AND ccpd."subLocationId" = sl.id
         `;
-        if(growingLocationIds?.length && growingLocationIds[0] != 0){
-            sqlCropCyclePlans += ` AND ccpd."locationId" IN (${growingLocationIds})`
-        }
         sqlCropCyclePlans += ` ORDER BY l."name" , sl."name", ccpd."startDate" DESC`;
 
         //  get crop cycle plans expected growth stages
@@ -87,12 +85,9 @@ const getCropCycleCalendarDetail = async (req, res) => {
         (
             SELECT DISTINCT ON (pl."lotNo", gs."listOrder") pl.id "plantLotId", pl."lotNo" "plantLotNo", gs."listOrder" , gs."name" , pgs."startDate" "startDate"
             FROM plant_lots pl , plants p , plant_growth_stages pgs , growth_stages gs , cropCyclePlans ccps, plant_locations pl2
-            WHERE pl.id  = ccps."cropCyclePlanDetailPlantLotId" and pl."orgId" = p."orgId" AND pl.id = p."plantLotId" AND pl."orgId" = pgs."orgId" and pgs."plantId" = p.id AND pgs."growthStageId" = gs.id
-            AND pl."orgId" = pl2."orgId" AND p.id = pl2."plantId"
+            WHERE pl.id = ${id} AND pl.id  = ccps."cropCyclePlanDetailPlantLotId" and pl."orgId" = p."orgId" AND pl.id = p."plantLotId" AND pl."orgId" = pgs."orgId" and pgs."plantId" = p.id AND pgs."growthStageId" = gs.id
+            AND pl."orgId" = pl2."orgId" AND p.id = pl2."plantId" AND pl2."locationId" = ${locationId} AND pl2."subLocationId" = ${subLocationId}
         `;
-        if(growingLocationIds?.length && growingLocationIds[0] != 0){
-            sqlCropCyclePlanPlantGrowthStages += ` AND pl2."locationId" IN (${growingLocationIds})`
-        }
         sqlCropCyclePlanPlantGrowthStages += ` AND pl2.id in (SELECT id FROM plant_locations pl3 WHERE pl3."orgId" = pl."orgId" AND pl3."plantId" = p.id ORDER BY pl3.id DESC LIMIT 1)
             AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pl."orgId" = pgs2."orgId" AND pgs2."plantId" = p.id ORDER BY pgs2.id DESC LIMIT 1)
 --          AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id AND pgs2."growthStageId" = pgs."growthStageId" ORDER BY id desc limit 1)
@@ -130,17 +125,15 @@ const getCropCycleCalendarDetail = async (req, res) => {
                 message: "Crop cycle calendar detail!"
             }
         }
-        //console.log(result.data)
 
-        return res.status(200).json({
-            data: result.data
-        });
     } catch (err) {
-        console.log("[controllers][crop-cycle-plan][getCropCycleCalendarDetail] :  Error", err);
-        res.status(500).json({
-            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]
+        console.log("[controllers][crop-cycle-plan][getPlantLotExpectedActualGrowthStages] :  Error", err);
+        return res.status(500).json({
+            errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }],
         });
+
     }
+
 }
 
-module.exports = getCropCycleCalendarDetail;
+module.exports = getPlantLotExpectedActualGrowthStages;

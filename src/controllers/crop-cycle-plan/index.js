@@ -18,6 +18,7 @@ const getGrowthStages = require('./masters/get-growth-stages');
 
 const getPlantLots = require('./plants/get-plant-lots');
 const getPlantLotGrowthStages = require('./plants/get-plant-lot-growth-stages');
+const getPlantLotExpectedActualGrowthStages = require('./plants/get-plant-lot-expected-actual-growth-stages');
 
 module.exports = {
     getCropCyclePlanList,
@@ -40,4 +41,5 @@ module.exports = {
 
     getPlantLots,
     getPlantLotGrowthStages,
+    getPlantLotExpectedActualGrowthStages,
 };

@@ -135,4 +135,11 @@ router.post('/get-plant-lot-growth-stages',
   cropCyclePlanController.getPlantLotGrowthStages
 );
 
+router.post('/get-plant-lot-expected-actual-growth-stages',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  cropCyclePlanController.getPlantLotExpectedActualGrowthStages
+);
+
 module.exports = router;
