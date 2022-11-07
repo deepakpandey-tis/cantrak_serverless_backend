@@ -1,6 +1,7 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../db/knex-reader");
-
+const { ItemCategory, BatchTypes, TxnTypes, SystemStores } = require('../../helpers/txn-types');
+/* 
 const TxnTypes ={
     ReceiveFromSupplier: 11,
     ReceiveProductFromHarvest: 21,
@@ -17,7 +18,7 @@ const TxnTypes ={
     IssueFromTxnType: 51,
     IssueUptoTxnType: 90,
 };
-
+ */
 const getItemTxn = async (req, res) => {
     try {
         let orgId = req.me.orgId;
@@ -44,7 +45,7 @@ const getItemTxn = async (req, res) => {
         , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
         , l.number "licenseNumber", ln."permitNumber" "narPermitNumber", ln."issuedOn", ln."expiredOn"
-        , inv."invoiceNo", inv."customerId", cust.name "customerName", tt."name" "txnTypeName"
+        , inv."invoiceNo", inv."customerId", cust.name "customerName", tt."name" "txnTypeName", rm.description "txnRemark"
         , (SELECT coalesce(sum(quantity), 0) FROM item_txns txn WHERE txn."orgId" = it."orgId" AND txn."companyId" = it."companyId"
            AND txn."lotNo" = it."lotNo"
            AND txn."txnType" >= ${TxnTypes.IssueFromTxnType} AND txn."txnType" <= ${TxnTypes.IssueUptoTxnType}) "issuedQuantity"
@@ -55,6 +56,7 @@ const getItemTxn = async (req, res) => {
         LEFT OUTER JOIN suppliers splr on splr.id = its."supplierId"
         LEFT OUTER JOIN invoices inv on inv.id = it."invoiceId"
         LEFT OUTER JOIN customers cust on cust.id = inv."customerId"
+        LEFT OUTER JOIN remarks_master rm ON rm."orgId" = it."orgId" AND (rm."entityType" = 'invoice_cancelled' OR rm."entityType" = 'invoice_item_cancelled' OR rm."entityType" = 'adjustment_txn_entry') AND rm."entityId" = it.id
         , companies c, strains s, species s2, items i2, ums, txn_types tt
         , storage_locations sl, item_categories ic, users u2
         `;
