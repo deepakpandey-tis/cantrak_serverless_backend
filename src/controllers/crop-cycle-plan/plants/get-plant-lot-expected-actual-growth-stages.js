@@ -117,14 +117,21 @@ const getPlantLotExpectedActualGrowthStages = async (req, res) => {
             knexReader.raw(sqlActualGrowthStages)
         ]);
 
+        console.log('actualGrowthStages: ', actualGrowthStages);
+                
+
         const result = {
             data: {
                 list: selectedRecs.rows[0],
-                expectedGrowthStages: expectedGrowthStages.rows[0].expectedGrowthStages,
-                actualGrowthStages: actualGrowthStages.rows[0].actualGrowthStages,
+                expectedGrowthStages: expectedGrowthStages?.rows[0].expectedGrowthStages,
+                actualGrowthStages: actualGrowthStages?.rows[0].actualGrowthStages,
                 message: "Crop cycle calendar detail!"
             }
         }
+
+        return res.status(200).json({
+            data: result.data
+        });
 
     } catch (err) {
         console.log("[controllers][crop-cycle-plan][getPlantLotExpectedActualGrowthStages] :  Error", err);
