@@ -40,9 +40,9 @@ const getRawMaterialForPlantList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { itemCategoryId, lotNo, companyId, itemId, strainId, storageLocationId, supplierId } = req.body;
+        let { itemCategoryId, lotNo, companyId, itemId, strainId, storageLocationId, supplierId, includeZeroBalance } = req.body;
 
-        let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
+        let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy, balanceCondition;
 
         // Setting default values, if not passed
         if(!sortCol || sortCol === ''){
@@ -113,10 +113,18 @@ const getRawMaterialForPlantList = async (req, res) => {
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
         //console.log('getRawMaterialForPlantList sql: ', sqlSelect + sqlFrom + sqlWhere);
 
+        if(includeZeroBalance){
+            balanceCondition = ``;
+        }
+        else
+        {
+            balanceCondition = ` WHERE (Main_CTE."quantity" + Main_CTE."issuedQuantity") > 0`;
+        }
+
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
-        sqlStr += `, Count_CTE AS (SELECT COUNT(*) AS "total" FROM Main_CTE)`;     // To get the total number of records
-        sqlStr += ` SELECT * FROM Main_CTE, Count_CTE`;
+        sqlStr += `, Count_CTE AS (SELECT COUNT(*) AS "total" FROM Main_CTE ${balanceCondition})`;     // To get the total number of records
+        sqlStr += ` SELECT * FROM Main_CTE, Count_CTE ${balanceCondition}`;
         sqlStr += sqlOrderBy;
         sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
         sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
