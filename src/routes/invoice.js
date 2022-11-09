@@ -49,6 +49,27 @@ router.post('/get-cancel-invoice-remark',
   invoiceController.getCancelInvoiceRemark
 );
 
+router.post('/get-invoices',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getInvoices
+);
+
+router.post('/get-invoices-detail',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getInvoicesDetail
+);
+
+router.post('/get-invoiced-items',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.getInvoicedItems
+);
+
 
 router.get('/get-companies',
   authMiddleware.isAuthenticated,

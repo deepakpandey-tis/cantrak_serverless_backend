@@ -14,7 +14,7 @@ const getItems = async (req, res) => {
 
         sqlWhere = ` WHERE i2."orgId" = ${orgId} AND i2."isActive"`;
         if(payload.itemCategoryId){
-            sqlWhere += ` AND i2."itemCategoryId" = ${payload.itemCategoryId}`;
+            sqlWhere += ` AND i2."itemCategoryId" in (${payload.itemCategoryId})`;
         }
         sqlWhere += ` AND i2."itemCategoryId" = ic.id AND i2."umId" = ums.id`;
 

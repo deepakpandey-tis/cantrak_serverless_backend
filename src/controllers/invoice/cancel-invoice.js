@@ -19,6 +19,7 @@ const cancelInvoice = async (req, res) => {
             id: Joi.string().required(),
             companyId: Joi.string().required(),
             customerName: Joi.string().required(),
+            cancelReason: Joi.string().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -54,7 +55,7 @@ const cancelInvoice = async (req, res) => {
                 let insertData;
 
                 let insertResult = await knex
-                    .update({ isCancelled: true, updatedBy: userId, updatedAt: currentTime })
+                    .update({ isCancelled: true, cancelReason: payload.cancelReason, updatedBy: userId, updatedAt: currentTime })
                     .where({ id: payload.id, orgId: req.orgId })
                     .returning(["*"])
                     .transacting(trx)
