@@ -1,11 +1,12 @@
 const knexReader = require('../../db/knex-reader');
-
+const { ItemCategory, BatchTypes, TxnTypes, SystemStores } = require('../../helpers/txn-types');
+/* 
 const TxnTypes ={
     ReceiveFromSupplier: 11,
     ReceiveFromTxnType: 11,
     ReceiveUptoTxnType: 50
 };
-
+ */
 const getItemTxnList = async (req, res) => {
     try {
         let orgId = req.me.orgId;
@@ -49,6 +50,9 @@ const getItemTxnList = async (req, res) => {
         , s.name "strainName", s2.name "specieName", CONCAT(s.name, ' (', s2.name, ')') "strainSpecieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
         , sl.name "storageLocation", ic.name "itemCategory", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", u2."name" "createdByName"
         , l.number "licenseNumber", ln."permitNumber" "narPermitNumber", tt."name" "txnTypeName"
+        , (SELECT coalesce(sum(quantity), 0) FROM item_txns txn WHERE txn."orgId" = it."orgId" AND txn."companyId" = it."companyId"
+           AND txn."lotNo" = it."lotNo"
+           AND txn."txnType" >= ${TxnTypes.IssueFromTxnType} AND txn."txnType" <= ${TxnTypes.IssueUptoTxnType}) "issuedQuantity"
         `;
 
         sqlFrom = ` FROM item_txns it LEFT OUTER JOIN licenses l on l.id = it."licenseId"
