@@ -22,6 +22,7 @@ const updateItem = async (req, res) => {
             description: Joi.string().allow("").required(),
             refCode: Joi.string().allow(null).allow("").required(),
             gtin: Joi.string().allow(null).allow("").required(),
+            unitPrice: Joi.number().required(),
         });
 
         const result = Joi.validate(payload, schema);
