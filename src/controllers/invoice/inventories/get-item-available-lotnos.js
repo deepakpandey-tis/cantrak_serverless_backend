@@ -33,7 +33,8 @@ const getItemAvailableLotNos = async (req, res) => {
         sqlWhere = ` WHERE it."companyId" = ${payload.companyId} AND it."itemCategoryId" = ${payload.itemCategoryId} AND it."itemId" = ${payload.itemId}`;
 
         sqlGroupBy = ` GROUP BY it."itemCategoryId", it."itemId", it."lotNo", it."storageLocationId", it."specieId" , it."strainId", it."expiryDate"`;
-        sqlOrderBy  = ` ORDER BY "lotNo" ASC`;      //  ASC to show older lots first
+        sqlOrderBy  = ` ORDER BY "expiryDate" ASC`;      //  ASC to show expiry first
+        // sqlOrderBy  = ` ORDER BY "lotNo" ASC`;      //  ASC to show older lots first
 
         // sqlStr  = sqlSelect + sqlFrom + sqlWhere + sqlGroupBy + sqlOrderBy;
 
