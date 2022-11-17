@@ -3,6 +3,7 @@ const getPlantLot = require('./get-plant-lot');
 const getPlantLots = require('./get-plant-lots');
 const getPlants = require('./get-plants');
 const getPlant = require('./get-plant');
+const getPlantHistory = require('./get-plant-history');
 const addPlant = require('./add-plant');
 const deletePlantLot = require('./delete-plant-lot');
 const deletePlant = require('./delete-plant');
@@ -53,6 +54,8 @@ const getImages = require('./get-images');
 
 const getGrowingFacilityPlantsAge = require('./growing-facility/get-growing-facility-plants-age');
 
+const getHarvestLot = require('./harvest/get-harvest-lot');
+
 module.exports = {
     getLotPlantList,
     getPlantLot,
@@ -60,6 +63,7 @@ module.exports = {
     getPlants,
     addPlant,
     getPlant,
+    getPlantHistory,
     deletePlantLot,
     deletePlant,
     updatePlantedDate,
@@ -108,4 +112,6 @@ module.exports = {
     getImages,
 
     getGrowingFacilityPlantsAge,
+
+    getHarvestLot,
 };

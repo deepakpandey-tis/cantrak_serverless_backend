@@ -40,7 +40,7 @@ const getLotPlantList = async (req, res) => {
         if(notIncludeSelectedFinalHarvestedPlants || (plantTypeId != null && (plantTypeId == 1 || plantTypeId == 4))){
             // do not include harvested plants in list || get only (healthy || harvested plants)
             sqlStr = `SELECT hpl."plantIds" FROM harvest_plant_lots hpl
-            WHERE hpl."plantLotId" = ${id} AND hpl."orgId" = ${orgId} AND hpl."locationId" = ${locationId} AND hpl."subLocationId" = ${subLocationId}
+            WHERE hpl."orgId" = ${orgId} AND hpl."plantLotId" = ${id} AND hpl."locationId" = ${locationId} AND hpl."subLocationId" = ${subLocationId}
             AND hpl."isFinalHarvest" AND not hpl."isEntireLot"
             `;
             

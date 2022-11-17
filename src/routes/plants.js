@@ -42,6 +42,13 @@ router.post('/get-plant',
   plantController.getPlant
 );
 
+router.post('/get-plant-history',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantHistory
+);
+
 router.post('/add-plant',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -357,6 +364,13 @@ router.post('/get-growing-facility-plants-age',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   plantController.getGrowingFacilityPlantsAge
+);
+
+router.post('/get-harvest-lot',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getHarvestLot
 );
 
 module.exports = router;
