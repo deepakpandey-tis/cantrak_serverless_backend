@@ -49,10 +49,42 @@ const imageController = {
   },
 
   uploadImageByEntity:async (req,res) => {
+    let uploadedImage;
+
     try {
       const currentTime = new Date().getTime();
-      const payload = req.body;
+/*       const payload = req.body;
       const uploadedImage = await knex('images').insert({ ...payload, orgId: req?.me?.orgId, createdAt: currentTime }).returning(['*']);
+ */
+
+      const {remark, ...payload} = req.body;
+
+      await knex.transaction(async (trx) => {
+        uploadedImage = await knex('images').insert({ ...payload, orgId: req?.me?.orgId, createdAt: currentTime }).returning(['*']);
+
+        //  Optional Remark
+        if(remark && remark.trim() != ''){
+          insertData = {
+              entityId: uploadedImage[0].id,
+              entityType: "plant_observation",
+              description: remark.trim(),
+              orgId: req?.me?.orgId,
+              createdBy: req.me.id,
+              createdAt: currentTime,
+              updatedAt: currentTime,
+          };
+          console.log('Plant observation remark: ', insertData);
+
+          const insertRemarkResult = await knex
+              .insert(insertData)
+              .returning(["*"])
+              .transacting(trx)
+              .into("remarks_master");
+        }
+
+        trx.commit;
+      });
+
       return res.status(200).json({
         data: uploadedImage,
         message: 'Image uploaded!'
