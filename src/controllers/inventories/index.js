@@ -20,6 +20,7 @@ const getStockLedger = require('./get-stock-ledger');
 const getStockSummary = require('./get-stock-summary');
 const getItemTxnList = require('./get-item-txn-list');
 const getLotItemSummaryList = require('./get-lot-item-summary-list');
+const getLotItemTxns = require('./get-lot-item-txns');
 
 const exportItemTxnListToExcel = require('./export-item-txn-list-to-excel');
 const getItemTxn = require('./get-item-txn');
@@ -69,6 +70,7 @@ module.exports = {
     getStockSummary,
     getItemTxnList,
     getLotItemSummaryList,
+    getLotItemTxns,
 
     exportItemTxnListToExcel,
     getItemTxn,
