@@ -3,7 +3,9 @@ const knex = require('../../db/knex');
 const moment = require("moment-timezone");
 const addUserActivityHelper = require('../../helpers/add-user-activity')
 const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
+const { ItemCategory, TxnTypes, SystemStores } = require('../../helpers/txn-types');
 
+/* 
 const ItemCategory = {
     RawMaterial: 1,
     Product: 2,
@@ -27,7 +29,7 @@ const TxnTypes ={
     IssueFromTxnType: 51,
     IssueUptoTxnType: 90,
 };
-
+ */
 const addPlant = async (req, res) => {
     try {
         let orgId = req.me.orgId;
@@ -58,6 +60,7 @@ const addPlant = async (req, res) => {
             plantedOn: Joi.date().required(),
             plantsCount: Joi.number().integer().required(),
             refCode: Joi.string().allow('').allow(null).required(),
+            name: Joi.string().allow('').allow(null).required(),
             additionalAttributes: Joi.array().required(),
         });
 
@@ -96,6 +99,7 @@ const addPlant = async (req, res) => {
                 plantedOn: new Date(payload.plantedOn).getTime(),
                 plantsCount: payload.plantsCount,
                 refCode: payload.refCode,
+                name: payload.name,
                 additionalAttributes: payload.additionalAttributes,
                 createdBy: userId,
                 createdAt: currentTime,
@@ -111,35 +115,6 @@ const addPlant = async (req, res) => {
 
             insertedRecord = insertResult[0];
 
-/*             // Additional Attributes
-            let additionalAttribute;
-            let insertedAdditionalRecords = [];
-            let additionalRecNo;
-
-            additionalRecNo = 0;
-            for (let rec of payload.additionalAttributes) {
-                additionalAttribute = {
-                    orgId: orgId,
-                    plantLotId: insertedRecord.id,
-                    attributeName: rec.attributeName,
-                    attributeValue: rec.attributeValue,
-                    createdBy: userId,
-                    createdAt: currentTime,
-                    updatedBy: userId,
-                    updatedAt: currentTime,
-                };
-                console.log('additionalAttribute: ', additionalAttribute);
-
-                additionalRecNo += 1;
-                const insertResult = await knex
-                    .insert(additionalAttribute)
-                    .returning(["*"])
-                    .transacting(trx)
-                    .into("plant_lot_attributes");
-
-                insertedAdditionalRecords[additionalRecNo] = insertResult[0];
-            }
- */
             // Issue Txn
             insertData = {
                 orgId: orgId,

@@ -13,7 +13,7 @@ const getLocationTxnList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, fromLocationId, fromSubLocationId, toLocationId, toSubLocationId, strainId, fromDate, toDate, trackingNumber, growthStageId} = req.body;
+        let { companyId, lotNo, name, fromLocationId, fromSubLocationId, toLocationId, toSubLocationId, strainId, fromDate, toDate, trackingNumber, growthStageId} = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -35,7 +35,7 @@ const getLocationTxnList = async (req, res) => {
             pageSize = 10;
         }
 
-        sqlSelect = `SELECT plt.*, pl."lotNo", l.name "fromLocationName", sl.name "fromSubLocationName", l2.name "toLocationName", sl2.name "toSubLocationName"
+        sqlSelect = `SELECT plt.*, pl."lotNo", pl.name "plantLotName", l.name "fromLocationName", sl.name "fromSubLocationName", l2.name "toLocationName", sl2.name "toSubLocationName"
         , gs.name "growthStageName", s."name" "strainName", s2."name" "specieName", c."companyName"
         `;
 
@@ -69,6 +69,9 @@ const getLocationTxnList = async (req, res) => {
         }
         if(lotNo){
             sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
+        }
+        if(name){
+            sqlWhere += ` AND pl."name" iLIKE '%${name}%'`;
         }
         if(fromDate){
             sqlWhere += ` AND plt."date" >= ${new Date(fromDate).getTime()}`;
