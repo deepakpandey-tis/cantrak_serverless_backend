@@ -22,7 +22,7 @@ const getWasteTxn = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT pwt.*, pl."lotNo" "plantLotNo", i.name "itemName", it.quantity, it."umId" "itemUMId", um.name "itemUM", um."abbreviation" "itemUMAbbreviation"
+        sqlSelect = `SELECT pwt.*, pl."lotNo" "plantLotNo", pl.name "plantLotName", i.name "itemName", it.quantity, it."umId" "itemUMId", um.name "itemUM", um."abbreviation" "itemUMAbbreviation"
         , s."name" "strainName", s2."name" "specieName", sl.name "storageLocation", c."companyName", l.name "locationName", sl2.name "subLocationName", gs."name" "growthStageName"
         , rm.description "reason"
         `;

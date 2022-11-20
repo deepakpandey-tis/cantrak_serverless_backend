@@ -26,7 +26,7 @@ const getPlantLotsHavingUnhealthyPlants = async (req, res) => {
 
         sqlStr = `WITH plant_current_locations AS
         (
-        SELECT pl2."locationId", pl2."subLocationId", pl."id" "plantLotId", pl."lotNo", p.id "plantId"
+        SELECT pl2."locationId", pl2."subLocationId", pl."id" "plantLotId", pl."lotNo", pl.name, p.id "plantId"
         FROM plant_lots pl, plants p, plant_locations pl2
         LEFT JOIN harvest_plant_lots hpl ON hpl."orgId" = ${orgId} AND hpl."orgId" = pl2."orgId" AND hpl."companyId" = pl2."companyId" AND hpl."plantLotId" = pl2."plantLotId" AND hpl."locationId" = pl2."locationId" AND hpl."subLocationId" = pl2."subLocationId"
         WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId}
@@ -50,10 +50,10 @@ const getPlantLotsHavingUnhealthyPlants = async (req, res) => {
         WHERE i.id = it."entityId" and i."entityId" = pcl."plantId"
         ORDER BY i."entityId" ASC, i."createdAt" DESC
         )
-        SELECT up."plantLotId" "id", up."lotNo", count(*)
+        SELECT up."plantLotId" "id", up."lotNo", up."name", count(*)
         FROM unhealthy_plants up
         WHERE (up."tagData"->'plantCondition'->>'appearsIll')::boolean is true
-        GROUP BY up."plantLotId", up."lotNo"
+        GROUP BY up."plantLotId", up."lotNo", up."name"
         ORDER BY up."lotNo"
         `;
 

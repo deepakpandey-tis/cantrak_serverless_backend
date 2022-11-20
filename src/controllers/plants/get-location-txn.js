@@ -22,7 +22,7 @@ const getLocationTxn = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT plt.*, pl."lotNo", l.name "fromLocationName", sl.name "fromSubLocationName", l2.name "toLocationName", sl2.name "toSubLocationName"
+        sqlSelect = `SELECT plt.*, pl."lotNo", pl.name "plantLotName", l.name "fromLocationName", sl.name "fromSubLocationName", l2.name "toLocationName", sl2.name "toSubLocationName"
         , gs.name "growthStageName", s."name" "strainName", s2."name" "specieName", c."companyName"
         , rm.description "remark"
         `;

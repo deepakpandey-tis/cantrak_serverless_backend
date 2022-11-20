@@ -13,7 +13,7 @@ const getWasteTxnList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, locationId, subLocationId, strainId, fromDate, toDate, trackingNumber, growthStageId} = req.body;
+        let { companyId, lotNo, name, locationId, subLocationId, strainId, fromDate, toDate, trackingNumber, growthStageId} = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -35,7 +35,7 @@ const getWasteTxnList = async (req, res) => {
             pageSize = 10;
         }
 
-        sqlSelect = `SELECT pwt.*, pl."lotNo" "plantLotNo"
+        sqlSelect = `SELECT pwt.*, pl."lotNo" "plantLotNo", pl.name "plantLotName"
         , s."name" "strainName", s2."name" "specieName", c."companyName", l.name "locationName", sl.name "subLocationName", gs."name" "growthStageName"
         `;
 
@@ -63,6 +63,9 @@ const getWasteTxnList = async (req, res) => {
         }
         if(lotNo){
             sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
+        }
+        if(name){
+            sqlWhere += ` AND pl."name" iLIKE '%${name}%'`;
         }
         if(fromDate){
             sqlWhere += ` AND pwt."date" >= ${new Date(fromDate).getTime()}`;

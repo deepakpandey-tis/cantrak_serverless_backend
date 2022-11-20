@@ -13,7 +13,7 @@ const getGrowthStageTxnList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, locationId, subLocationId, strainId, fromDate, toDate, trackingNumber, fromGrowthStageId, toGrowthStageId} = req.body;
+        let { companyId, lotNo, name, locationId, subLocationId, strainId, fromDate, toDate, trackingNumber, fromGrowthStageId, toGrowthStageId} = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -35,7 +35,7 @@ const getGrowthStageTxnList = async (req, res) => {
             pageSize = 10;
         }
 
-        sqlSelect = `SELECT pgst.*, pl."lotNo", l.name "locationName", sl.name "subLocationName", gs.name "fromGrowthStageName"
+        sqlSelect = `SELECT pgst.*, pl."lotNo", pl.name "plantLotName", l.name "locationName", sl.name "subLocationName", gs.name "fromGrowthStageName"
         , gs2.name "toGrowthStageName", s."name" "strainName", s2."name" "specieName", c."companyName" 
         `;
 
@@ -62,6 +62,9 @@ const getGrowthStageTxnList = async (req, res) => {
         }
         if(lotNo){
             sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
+        }
+        if(name){
+            sqlWhere += ` AND pl."name" iLIKE '%${name}%'`;
         }
         if(fromDate){
             sqlWhere += ` AND pgst."date" >= ${new Date(fromDate).getTime()}`;

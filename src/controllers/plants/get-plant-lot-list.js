@@ -12,7 +12,7 @@ const getPlantLotList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, lotNo, locationId, subLocationId, strainId, licenseId, fromDate, toDate } = req.body;
+        let { companyId, lotNo, name, locationId, subLocationId, strainId, licenseId, fromDate, toDate } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -36,7 +36,7 @@ const getPlantLotList = async (req, res) => {
 
         let sqlPlantLotCurrentLocations, sqlPlantLotList;
         sqlPlantLotCurrentLocations = `WITH plant_lot_current_locations AS (
-        SELECT pl.id, pl."lotNo", pl2."locationId", pl2."subLocationId"
+        SELECT pl.id, pl."lotNo", pl."name", pl2."locationId", pl2."subLocationId"
         , coalesce(hpl."isFinalHarvest", false) "isFinalHarvest",  coalesce(hpl."isEntireLot" , false) "isEntireLot", coalesce(hpl."plantsCount", 0) "harvestedPlantsCount"
         , count(p."isActive") "plantsCount", sum(p."isWaste"::int) "wastePlants"
         FROM plant_lots pl, plants p, plant_locations pl2
@@ -53,6 +53,9 @@ const getPlantLotList = async (req, res) => {
         }
         if(lotNo){
             sqlPlantLotCurrentLocations += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
+        }
+        if(name){
+            sqlPlantLotCurrentLocations += ` AND pl."name" iLIKE '%${name}%'`;
         }
         if(fromDate){
             sqlPlantLotCurrentLocations += ` AND pl."plantedOn" >= ${new Date(fromDate).getTime()}`;
@@ -77,9 +80,9 @@ const getPlantLotList = async (req, res) => {
         sqlPlantLotCurrentLocations += ` GROUP BY pl.id, pl."lotNo", pl2."locationId", pl2."subLocationId" , coalesce(hpl."isFinalHarvest", false),  coalesce(hpl."isEntireLot" , false), coalesce(hpl."plantsCount", 0)
         )
         , plant_lot_current_locations_sum AS
-        (select id, "lotNo", "locationId", "subLocationId", "plantsCount", "wastePlants", "isFinalHarvest", "isEntireLot", sum("harvestedPlantsCount") "harvestedPlantsCount"
+        (select id, "lotNo", name, "locationId", "subLocationId", "plantsCount", "wastePlants", "isFinalHarvest", "isEntireLot", sum("harvestedPlantsCount") "harvestedPlantsCount"
         from plant_lot_current_locations plcl
-        group by id, "lotNo", "locationId", "subLocationId", "plantsCount", "wastePlants", "isFinalHarvest", "isEntireLot"
+        group by id, "lotNo", name, "locationId", "subLocationId", "plantsCount", "wastePlants", "isFinalHarvest", "isEntireLot"
         )
         `;
 

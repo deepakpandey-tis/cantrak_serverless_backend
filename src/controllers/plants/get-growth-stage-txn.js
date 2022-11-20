@@ -22,7 +22,7 @@ const getGrowthStageTxn = async (req, res) => {
             });
         }
 
-        sqlSelect = `SELECT pgst.*, pl."lotNo", l.name "locationName", sl.name "subLocationName", gs.name "fromGrowthStageName"
+        sqlSelect = `SELECT pgst.*, pl."lotNo", pl."name" "plantName", l.name "locationName", sl.name "subLocationName", gs.name "fromGrowthStageName"
         , gs2.name "toGrowthStageName", s."name" "strainName", s2."name" "specieName", c."companyName"
         , rm.description "remark"
         `;

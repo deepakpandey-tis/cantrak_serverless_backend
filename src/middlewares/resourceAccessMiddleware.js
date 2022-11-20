@@ -40,6 +40,13 @@ const resourceAccessMiddleware = {
         let GROWINGLOCATION = req.userGrowingLocationsResources.filter(v => v.code == code)[0]?.locations;
         console.log('[middleware][resourceAccessMiddleware]: isAccessible: ', true);
         setAccessibleProjects(req, 1);
+
+        if(GROWINGLOCATION.length <= 0){
+          //  growinglocations not entered?: since id cannot be 0;
+          //  setting one entry as '0' to avoid syntax error in subsequent sql calls 'id in ()' instead of 'id in (0)'
+          GROWINGLOCATION = ['0'];
+        }
+
         console.log("==== GROWINGLOCATION ====", GROWINGLOCATION);
         req.GROWINGLOCATION = GROWINGLOCATION;
         return next();

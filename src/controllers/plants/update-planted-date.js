@@ -14,6 +14,7 @@ const updatePlantedDate = async (req, res) => {
         let insertedRecord = [];
 
         const schema = Joi.object().keys({
+            name: Joi.string().allow('').allow(null).required(),
             id: Joi.number().required(),
             plantedOn: Joi.date().required(),
         });
@@ -36,6 +37,7 @@ const updatePlantedDate = async (req, res) => {
 
             let currentTime = new Date().getTime();
             let insertData = {
+                name: payload.name,
                 plantedOn: new Date(payload.plantedOn).getTime(),
                 updatedBy: userId,
                 updatedAt: currentTime,
