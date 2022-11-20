@@ -22,7 +22,7 @@ const getPlant = async (req, res) => {
             });
         }
 
-        sqlStr = `SELECT p.*, pl."lotNo", pl."plantedOn", pl."companyId", pl."specieId", pl."strainId", pl."supplierId"
+        sqlStr = `SELECT p.*, pl."lotNo", pl.name "plantLotName", pl."plantedOn", pl."companyId", pl."specieId", pl."strainId", pl."supplierId"
         , case when pl2."plantLocationTxnId" is null then pl."plantsCount" else plt."totalPlants" end "plantsCount"
         , pl."licenseId", pl."locationId", pl."subLocationId", c."companyName", s.name "strainName", s2.name "specieName", lic.number "licenseNo"
         , pl2."locationId" , pl2."subLocationId", l.name "locationName" , sl."name" "subLocationName"
