@@ -47,7 +47,7 @@ const addHarvest = async (req, res) => {
             plantLotId: Joi.string().required(),
             locationId: Joi.string().required(),
             subLocationId: Joi.string().required(),
-            licenseId: Joi.string().required(),
+            licenseId: Joi.number().allow(null).optional(),
             harvestedOn: Joi.date().required(),
             plantsCount: Joi.number().integer().required(),
             specieId: Joi.string().required(),
