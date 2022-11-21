@@ -16,7 +16,8 @@ const getInvoices = async (req, res) => {
         
         sqlStr = `SELECT inv.*
         , c."companyName", lic.number "licenseNo", c2.name "customerName", u2."name" "createdByName"
-        FROM invoices inv, companies c, licenses lic, customers c2, users u2
+        FROM invoices inv LEFT JOIN licenses lic ON inv."licenseId" = lic.id
+        , companies c, customers c2, users u2
         WHERE inv."orgId" = ${orgId}
         `;
 
@@ -41,8 +42,7 @@ const getInvoices = async (req, res) => {
             sqlStr += ` AND inv."invoiceOn" <= ${new Date(toDate).getTime()}`;
         }
 
-        sqlStr += ` AND inv."companyId" = c.id AND inv."licenseId" = lic.id
-          AND inv."customerId" = c2.id AND inv."createdBy" = u2.id
+        sqlStr += ` AND inv."companyId" = c.id AND inv."customerId" = c2.id AND inv."createdBy" = u2.id
         `;
 
         sqlStr += ` ORDER BY inv."invoiceOn", inv."invoiceNo"`;

@@ -22,7 +22,7 @@ const updateInvoice = async (req, res) => {
         const schema = Joi.object().keys({
             id: Joi.string().required(),
             companyId: Joi.string().required(),
-            licenseId: Joi.string().required(),
+            licenseId: Joi.number().allow(null).optional(),
             invoiceOn: Joi.date().required(),
             invoiceNo: Joi.string().required(),
             customerId: Joi.string().required(),

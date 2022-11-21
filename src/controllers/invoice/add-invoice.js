@@ -42,7 +42,7 @@ const addInvoice = async (req, res) => {
 
         const schema = Joi.object().keys({
             companyId: Joi.string().required(),
-            licenseId: Joi.string().required(),
+            licenseId: Joi.number().allow(null).optional(),
             invoiceOn: Joi.date().required(),
             customerId: Joi.string().required(),
             customerLicense: Joi.string().allow('').allow(null).required(),

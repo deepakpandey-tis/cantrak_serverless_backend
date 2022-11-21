@@ -40,7 +40,8 @@ const getInvoiceList = async (req, res) => {
         , u2."name" "createdByName"
         `;
 
-        sqlFrom = ` FROM invoices inv, companies c, licenses lic, customers c2
+        sqlFrom = ` FROM invoices inv LEFT JOIN licenses lic ON inv."licenseId" = lic.id
+        , companies c, customers c2
         , users u2
         `;
 
@@ -67,8 +68,7 @@ const getInvoiceList = async (req, res) => {
             sqlWhere += ` AND inv."dueDate" <= ${new Date(dueToDate).getTime()}`;
         }
 
-        sqlWhere += ` AND inv."companyId" = c.id AND inv."licenseId" = lic.id
-          AND inv."customerId" = c2.id AND inv."createdBy" = u2.id
+        sqlWhere += ` AND inv."companyId" = c.id AND inv."customerId" = c2.id AND inv."createdBy" = u2.id
         `;
 
         sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;

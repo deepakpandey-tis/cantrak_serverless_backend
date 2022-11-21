@@ -41,7 +41,8 @@ const getHarvestLotList = async (req, res) => {
         , u2."name" "createdByName"
         `;
 
-        sqlFrom = ` FROM harvest_plant_lots hpl, item_txns it, items itm, ums um, companies c, storage_locations sl, licenses lic
+        sqlFrom = ` FROM harvest_plant_lots hpl LEFT JOIN licenses lic ON hpl."licenseId" = lic.id
+        , item_txns it, items itm, ums um, companies c, storage_locations sl
         , plant_lots pl, locations l, users u2
         `;
 
@@ -74,7 +75,7 @@ const getHarvestLotList = async (req, res) => {
             sqlWhere += ` AND it."expiryDate" <= ${new Date(expiryToDate).getTime()}`;
         }
 
-        sqlWhere += ` AND hpl."companyId" = c.id AND hpl."licenseId" = lic.id AND hpl."plantLotId" = pl.id AND pl."locationId" = l.id
+        sqlWhere += ` AND hpl."companyId" = c.id AND hpl."plantLotId" = pl.id AND pl."locationId" = l.id
           AND it."itemId" = itm.id AND it."storageLocationId" = sl.id AND it."umId" = um.id AND hpl."createdBy" = u2.id
         `;
 

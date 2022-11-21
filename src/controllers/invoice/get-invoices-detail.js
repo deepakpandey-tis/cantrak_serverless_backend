@@ -28,7 +28,8 @@ const getInvoicesDetail = async (req, res) => {
         FROM invoice_charges ic2, charges c3
         WHERE i."orgId" = ic2."orgId" AND i.id = ic2."invoiceId" AND i."orgId" = c3."orgId" AND ic2."chargeId" = c3.id) chrg
         ) charges
-        FROM invoices i, companies c, licenses lic, customers c2, users u2, taxes t
+        FROM invoices i LEFT JOIN licenses lic ON i."licenseId" = lic.id
+        , companies c, customers c2, users u2, taxes t
         WHERE i."orgId" = ${orgId} AND NOT i."isCancelled" AND i."taxId" = t.id
         `;
 
@@ -42,8 +43,7 @@ const getInvoicesDetail = async (req, res) => {
             sqlStr += ` AND i."invoiceOn" <= ${new Date(toDate).getTime()}`;
         }
 
-        sqlStr += ` AND i."companyId" = c.id AND i."licenseId" = lic.id
-          AND i."customerId" = c2.id AND i."createdBy" = u2.id
+        sqlStr += ` AND i."companyId" = c.id AND i."customerId" = c2.id AND i."createdBy" = u2.id
         `;
 
         sqlStr += ` ORDER BY i."invoiceOn", i."invoiceNo"`;

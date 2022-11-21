@@ -3,7 +3,9 @@ const knex = require('../../db/knex');
 const moment = require("moment-timezone");
 const addUserActivityHelper = require('../../helpers/add-user-activity')
 const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
+const { ItemCategory, BatchTypes, TxnTypes, SystemStores } = require('../../helpers/txn-types');
 
+/* 
 const ItemCategory = {
     RawMaterial: 1,
     Product: 2,
@@ -21,6 +23,7 @@ const TxnTypes ={
     IssueFromTxnType: 51,
     IssueUptoTxnType: 90,
 };
+ */
 
 const wasteEntry = async (req, res) => {
     let orgId = req.me.orgId;
