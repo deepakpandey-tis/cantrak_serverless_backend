@@ -26,7 +26,7 @@ const getPlantLots = async (req, res) => {
 
 
         sqlStr = `WITH plant_lot_current_locations AS (
-        SELECT pl.id, pl."lotNo", pl2."locationId", pl2."subLocationId"
+        SELECT pl.id, pl."lotNo", pl.name "lotName", pl2."locationId", pl2."subLocationId"
         , coalesce(hpl."isFinalHarvest", false) "isFinalHarvest", coalesce(hpl."plantsCount", 0) "harvestedPlantsCount"
         , count(p."isActive") "plantsCount", sum(p."isWaste"::int) "wastePlants"
         FROM plant_lots pl, plants p, plant_locations pl2
@@ -39,9 +39,9 @@ const getPlantLots = async (req, res) => {
         GROUP BY pl.id, pl."lotNo", pl2."locationId", pl2."subLocationId" , coalesce(hpl."isFinalHarvest", false),  coalesce(hpl."isEntireLot" , false), coalesce(hpl."plantsCount", 0)
         )
         , plant_lot_current_locations_sum AS
-        (select id, "lotNo", "locationId", "subLocationId", "plantsCount", "wastePlants", "isFinalHarvest", sum("harvestedPlantsCount") "harvestedPlantsCount"
+        (select id, "lotNo", "lotName", "locationId", "subLocationId", "plantsCount", "wastePlants", "isFinalHarvest", sum("harvestedPlantsCount") "harvestedPlantsCount"
         from plant_lot_current_locations plcl
-        group by id, "lotNo", "locationId", "subLocationId", "plantsCount", "wastePlants", "isFinalHarvest"
+        group by id, "lotNo", "lotName", "locationId", "subLocationId", "plantsCount", "wastePlants", "isFinalHarvest"
         )
         select plcls.*, pl4."orgId", pl4."companyId", pl4."specieId", s."name" "specieName", pl4."strainId", s2."name" "strainName", pl4."licenseId"
         from plant_lot_current_locations_sum plcls, plant_lots pl4, species s, strains s2
@@ -50,25 +50,6 @@ const getPlantLots = async (req, res) => {
         ORDER BY plcls."lotNo"
         `;
 
-
-/* 
-        sqlSelect = `SELECT ploc."locationId", ploc."subLocationId", pl.id, pl."lotNo", count(pl."lotNo") "plantsCount"`;
-        sqlFrom = ` FROM plant_lots pl, plants p, plant_locations ploc`;
-        sqlFrom += ` LEFT JOIN harvest_plant_lots hpl ON hpl."orgId" = ploc."orgId" AND hpl."companyId" = ploc."companyId" AND hpl."plantLotId" = ploc."plantLotId" AND hpl."locationId" = ploc."locationId" AND hpl."subLocationId" = ploc."subLocationId" AND hpl."isFinalHarvest"`;
-        sqlWhere = ` WHERE ploc."orgId" = ${orgId} and ploc."locationId" = ${payload.locationId} and ploc."subLocationId" = ${payload.subLocationId} and ploc."plantId" = p.id`;
-        sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND p."plantLotId" = pl.id AND pl."companyId" = ${payload.companyId}`;
-        sqlWhere += ` AND (NOT coalesce(hpl."isFinalHarvest", false) OR (coalesce(hpl."isFinalHarvest", false) AND NOT coalesce(hpl."isEntireLot" , false)))`;
-        // sqlWhere += ` AND p."isActive" AND NOT p."isWaste" AND NOT pl."isFinalHarvest" AND p."plantLotId" = pl.id AND pl."companyId" = ${payload.companyId}`;
-
-        // to get latest location of the plantId sub query added
-        sqlWhere += ` AND ploc.id = (select id from plant_locations ploc2 where ploc2."orgId" = p."orgId" AND ploc2."plantId" = p."id" ORDER BY id DESC LIMIT 1)`;
-        sqlGroupBy = ` GROUP BY ploc."locationId", ploc."subLocationId", pl.id, pl."lotNo"`;
-
-        sqlStr = `SELECT pl2."orgId", pl2."companyId", pl2."specieId", s."name" "specieName", pl2."strainId", s2."name" "strainName", pl2."licenseId", locationPlants.*`;
-        sqlStr += ` FROM plant_lots pl2, species s, strains s2, (`;
-        sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlGroupBy;
-        sqlStr += `) locationPlants WHERE pl2.id = locationPlants.id and pl2."specieId" = s.id and pl2."strainId" = s2.id`;
- */
         var selectedRecs = await knexReader.raw(sqlStr);
 
         return res.status(200).json({

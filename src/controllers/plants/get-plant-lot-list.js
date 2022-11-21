@@ -34,6 +34,7 @@ const getPlantLotList = async (req, res) => {
             pageSize = 10;
         }
 
+        //  plant lot list is derived from plant lot's plants' current location
         let sqlPlantLotCurrentLocations, sqlPlantLotList;
         sqlPlantLotCurrentLocations = `WITH plant_lot_current_locations AS (
         SELECT pl.id, pl."lotNo", pl."name", pl2."locationId", pl2."subLocationId"
