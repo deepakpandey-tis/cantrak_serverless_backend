@@ -90,8 +90,10 @@ const getPlantLotList = async (req, res) => {
         (
             SELECT plcls.*, pl4."companyId", pl4."plantedOn", pl4."refCode", s.name "strainName", s2.name "specieName", c."companyName", lic.number "licenseNo"
             , l.name "locationName", sl.name "subLocationName", u2."name" "createdByName"
-            FROM plant_lot_current_locations_sum plcls, plant_lots pl4, companies c, strains s, species s2, licenses lic, locations l, sub_locations sl, users u2
-            WHERE plcls.id = pl4.id AND pl4."strainId" = s.id AND pl4."specieId" = s2.id AND pl4."companyId" = c.id AND pl4."licenseId" = lic.id
+            FROM plant_lot_current_locations_sum plcls, plant_lots pl4
+            LEFT JOIN licenses lic ON pl4."licenseId" = lic.id
+            , companies c, strains s, species s2, locations l, sub_locations sl, users u2
+            WHERE plcls.id = pl4.id AND pl4."strainId" = s.id AND pl4."specieId" = s2.id AND pl4."companyId" = c.id
             AND plcls."locationId" = l.id  AND plcls."subLocationId" = sl.id AND pl4."createdBy" = u2.id
         )
         `;

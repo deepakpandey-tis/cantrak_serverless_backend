@@ -26,9 +26,10 @@ const getPlant = async (req, res) => {
         , pl."licenseId", pl."locationId", pl."subLocationId", c."companyName", s.name "strainName", s2.name "specieName", lic.number "licenseNo"
         , l.name "locationName", sl.name "subLocationName"
         `;
-        sqlFrom = ` FROM plants p, plant_lots pl, companies c, strains s, species s2, licenses lic, locations l, sub_locations sl `;
+        sqlFrom = ` FROM plants p, plant_lots pl LEFT JOIN licenses lic ON pl."licenseId" = lic.id
+        , companies c, strains s, species s2, locations l, sub_locations sl `;
         sqlWhere = ` WHERE p.id = ${payload.id} AND p."orgId" = ${orgId} AND p."plantLotId" = pl.id AND pl."companyId" = c.id
-        AND pl."strainId" = s.id and pl."specieId" = s2.id AND pl."licenseId" = lic.id AND pl."locationId" = l.id AND pl."subLocationId" = sl.id
+        AND pl."strainId" = s.id and pl."specieId" = s2.id AND pl."locationId" = l.id AND pl."subLocationId" = sl.id
         `;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;

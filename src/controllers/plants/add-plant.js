@@ -54,7 +54,7 @@ const addPlant = async (req, res) => {
             supplierId: Joi.number().allow(null).required(),
             locationId: Joi.number().required(),
             subLocationId: Joi.number().required(),
-            licenseId: Joi.number().required(),
+            licenseId: Joi.number().allow(null).optional(),
             containerTypeId: Joi.number().required(),
             growthStageId: Joi.number().integer().required(),
             plantedOn: Joi.date().required(),
