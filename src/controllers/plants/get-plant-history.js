@@ -38,7 +38,8 @@ const getPlantHistory = async (req, res) => {
             LEFT JOIN remarks_master rm ON rm."orgId" = pgst."orgId" AND rm."entityType" = 'plant_change_growth_stage' AND rm."entityId" = pgst.id
             WHERE pgst."orgId" = ${orgId} AND pgst."companyId" = ${payload.companyId} AND pgst."plantLotId" = ${payload.plantLotId} AND pgst."orgId" = pgs."orgId" AND pgst.id = pgs."plantGrowthStageTxnId"  AND pgs."plantId" = ${payload.id}
             UNION
-            SELECT 3 "recType", plt."date" , 0 "fromGrowthStageId" , 0 "toGrowthStageId" , plt."fromLocationId" , plt."fromSubLocationId" , plt."toLocationId" , plt."toSubLocationId", null "s3Url", null "s3Path", null "tagData", plt."createdBy" , plt."createdAt", null "remark", 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot", null "imageData"
+            SELECT 3 "recType", plt."date" , 0 "fromGrowthStageId" , 0 "toGrowthStageId" , plt."fromLocationId" , plt."fromSubLocationId" , plt."toLocationId" , plt."toSubLocationId", null "s3Url", null "s3Path", null "tagData", plt."createdBy" , plt."createdAt", null "remark", 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot"
+            , (SELECT json_agg(json_build_object('img', i."s3Url"))::jsonb FROM images i WHERE i."orgId" = plt."orgId" AND i."entityType" = 'plant_change_location' AND i."entityId" = plt."id") "imageData"
             FROM plant_location_txns plt, plant_locations pl
             WHERE plt."orgId" = ${orgId} AND plt."companyId" = ${payload.companyId} AND plt."plantLotId" = ${payload.plantLotId} AND plt."orgId" = pl."orgId" AND plt.id = pl."plantLocationTxnId" AND pl."plantId" = ${payload.id}
             UNION
@@ -47,9 +48,15 @@ const getPlantHistory = async (req, res) => {
             SELECT 4 "recType", hpl."harvestedOn" date, 0 "fromGrowthStageId", 0 "toGrowthStageId", 0 "fromLocationId", 0 "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", null "s3Url", null "s3Path", null "tagData", hpl."createdBy", hpl."createdAt", null remark, hpl.id "harvestPlantLotId", hpl."isFinalHarvest", hpl."isEntireLot", jsonb_array_elements(hpl."plantIds") "plantId"
             FROM harvest_plant_lots hpl, plant_locations pl
             WHERE hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."plantLotId" = ${payload.plantLotId} AND hpl."orgId" = pl."orgId" AND pl."plantId" = ${payload.id} AND hpl."locationId" = pl."locationId" AND hpl."subLocationId" = pl."subLocationId"
-            AND pl.id = (select id from plant_locations pl3 where pl3."orgId" = hpl."orgId" AND pl3."plantId" = ${payload.id} ORDER BY id desc limit 1)
+            AND pl.id = (SELECT id FROM plant_locations pl3 WHERE pl3."orgId" = hpl."orgId" AND pl3."plantId" = ${payload.id} ORDER BY id desc limit 1)
             ) harvest_plant
             WHERE cast(harvest_plant."plantId"->>'id' as integer) = 0 OR cast(harvest_plant."plantId"->>'id' as integer) = ${payload.id}
+            UNION 
+            SELECT 5 "recType", pwt."date", pwt."growthStageId" "fromGrowthStageId", 0 "toGrowthStageId", pwt."locationId" "fromLocationId", pwt."subLocationId" "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", null "s3Url", null "s3Path", null "tagData", pwt."createdBy", pwt."createdAt", description remark, 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot"
+            , (SELECT json_agg(json_build_object('img', i."s3Url"))::jsonb FROM images i WHERE i."orgId" = pwt."orgId" AND i."entityType" = 'plant_waste' AND i."entityId" = pwt."id") "imageData"
+            FROM plant_waste_txns pwt LEFT JOIN remarks_master rm ON rm."orgId" = pwt."orgId" AND rm."entityType" = 'plant_waste_txn_entry' AND rm."entityId" = pwt.id
+            , jsonb_to_recordset(pwt."plantIds") as plantId(id bigint)
+            WHERE pwt."orgId" = ${orgId} AND pwt."companyId" = ${payload.companyId} AND pwt."plantLotId" = ${payload.plantLotId} AND plantid.id = ${payload.id}
         ) txn
         LEFT JOIN growth_stages gsf ON gsf.id = txn."fromGrowthStageId"
         LEFT JOIN growth_stages gst ON gst.id = txn."toGrowthStageId"
