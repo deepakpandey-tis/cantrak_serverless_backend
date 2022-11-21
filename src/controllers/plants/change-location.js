@@ -74,7 +74,7 @@ const changeLocation = async (req, res) => {
 
             //  Change Location Records
             if(allPlants){
-                sqlInsert = `INSERT INTO plant_locations ("orgId", "companyId", "plantLotId" "plantId", "plantLocationTxnId", "locationId", "subLocationId"
+                sqlInsert = `INSERT INTO plant_locations ("orgId", "companyId", "plantLotId", "plantId", "plantLocationTxnId", "locationId", "subLocationId"
                 , "startDate")`;
                 sqlSelect = ` SELECT ${orgId}, ${payload.companyId}, ${payload.plantLotId}, p.id, ${insertedRecord.id}, ${txnHeader.toLocationId}, ${txnHeader.toSubLocationId}
                 , ${new Date(txnHeader.date).getTime()}`;
