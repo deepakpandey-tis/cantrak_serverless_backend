@@ -84,7 +84,7 @@ const updateGrowthStage = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.GrowthStage,
                 entityActionId: EntityActions.Edit,
-                description: `${req.me.name} changed growth stage '${insertedRecord.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} changed growth stage '${insertedRecord.name}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

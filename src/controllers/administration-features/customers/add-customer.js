@@ -83,7 +83,7 @@ const addCustomer = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.Customer,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} added customer '${insertedRecord.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} added customer '${insertedRecord.name}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

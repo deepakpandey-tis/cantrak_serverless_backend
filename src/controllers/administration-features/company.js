@@ -161,7 +161,7 @@ const companyController = {
           entityId: company.id,
           entityTypeId: EntityTypes.Company,
           entityActionId: EntityActions.Add,
-          description: `${req.me.name} added company '${company.companyName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+          description: `${req.me.name} added company '${company.companyName}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
           createdBy: userId,
           createdAt: currentTime,
           trx: trx
@@ -405,7 +405,7 @@ const companyController = {
           entityId: company.id,
           entityTypeId: EntityTypes.Company,
           entityActionId: EntityActions.Edit,
-          description: `${req.me.name} changed company '${company.companyName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+          description: `${req.me.name} changed company '${company.companyName}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
           createdBy: userId,
           createdAt: currentTime,
           trx: trx
@@ -570,7 +570,7 @@ const companyController = {
             entityId: company.id,
             entityTypeId: EntityTypes.Company,
             entityActionId: EntityActions.ToggleStatus,
-            description: `${req.me.name} ${action} company '${company.companyName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+            description: `${req.me.name} ${action} company '${company.companyName}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
             createdBy: userId,
             createdAt: currentTime,
             trx: trx

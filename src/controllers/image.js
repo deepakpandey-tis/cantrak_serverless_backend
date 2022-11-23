@@ -203,7 +203,7 @@ const imageController = {
             entityId: uploadedImageTags[0].id,
             entityTypeId: EntityTypes.PlantObservation,
             entityActionId: EntityActions.Add,
-            description: payload.diseases != '' ? `${req.me.name} added diseases ${payload.diseases} for plant serial ${payload.plantSerial} of plant lot ${payload.lotNo} on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} ` : `${req.me.name} added plant serial ${payload.plantSerial} of plant lot ${payload.lotNo} seems normal on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+            description: payload.diseases != '' ? `${req.me.name} added diseases ${payload.diseases} for plant serial ${payload.plantSerial} of plant lot ${payload.lotNo} on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} ` : `${req.me.name} added plant serial ${payload.plantSerial} of plant lot ${payload.lotNo} seems normal on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
             createdBy: userId,
             createdAt: currentTime,
             trx: trx

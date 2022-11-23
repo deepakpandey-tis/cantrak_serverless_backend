@@ -65,7 +65,7 @@ const toggleSupplier = async (req, res) => {
                 entityId: payload.id,
                 entityTypeId: EntityTypes.Supplier,
                 entityActionId: EntityActions.ToggleStatus,
-                description: `${req.me.name} ${action} supplier '${payload.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} ${action} supplier '${payload.name}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

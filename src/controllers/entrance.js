@@ -156,7 +156,7 @@ const entranceController = {
                     entityId: loginResult.id,
                     entityTypeId: EntityTypes.Login,
                     entityActionId: EntityActions.Login,
-                    description: `${loginResult.name} logged-in on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                    description: `${loginResult.name} logged-in on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                     createdBy: loginResult.id,
                     createdAt: currentTime,
                     trx: null
@@ -299,7 +299,7 @@ const entranceController = {
                 entityId: userId,
                 entityTypeId: EntityTypes.Logout,
                 entityActionId: EntityActions.Logout,
-                description: `${userName} logged-out on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${userName} logged-out on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: null
@@ -585,7 +585,7 @@ const entranceController = {
                         entityId: payload.id,
                         entityTypeId: EntityTypes.ChangePassword,
                         entityActionId: EntityActions.ChangePassword,
-                        description: `${userName} changed password on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                        description: `${userName} changed password on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                         createdBy: userId,
                         createdAt: currentTime,
                         trx: null

@@ -54,7 +54,7 @@ const deleteCropCyclePlan = async (req, res) => {
                 entityId: payload.id,
                 entityTypeId: EntityTypes.CropCyclePlan,
                 entityActionId: EntityActions.Delete,
-                description: `${req.me.name} deleted crop cycle plan '${payload.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} deleted crop cycle plan '${payload.name}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

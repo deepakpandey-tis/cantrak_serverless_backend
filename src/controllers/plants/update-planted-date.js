@@ -60,7 +60,7 @@ const updatePlantedDate = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.Plant,
                 entityActionId: EntityActions.Edit,
-                description: `${req.me.name} changed plant lot '${insertedRecord.lotNo}' date on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} changed plant lot '${insertedRecord.lotNo}' date on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

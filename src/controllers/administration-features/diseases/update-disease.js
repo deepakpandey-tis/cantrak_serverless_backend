@@ -80,7 +80,7 @@ const updateDisease = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.Disease,
                 entityActionId: EntityActions.Edit,
-                description: `${req.me.name} changed disease '${insertedRecord.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} changed disease '${insertedRecord.name}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

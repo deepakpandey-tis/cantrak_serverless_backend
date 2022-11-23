@@ -239,7 +239,7 @@ const addHarvest = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.Harvest,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} ${entity} ${insertedRecord.plantsCount} plant(s) of plant lot '${payload.plantLotNo}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} ${entity} ${insertedRecord.plantsCount} plant(s) of plant lot '${payload.plantLotNo}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

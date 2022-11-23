@@ -148,7 +148,7 @@ const updateLicenseNar = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.LicenseNar,
                 entityActionId: EntityActions.Edit,
-                description: `${req.me.name} changed license nar '${insertedRecord.permitNumber}' with ${itemRecOld} existing and ${itemRecNew} new items on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} changed license nar '${insertedRecord.permitNumber}' with ${itemRecOld} existing and ${itemRecNew} new items on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx
