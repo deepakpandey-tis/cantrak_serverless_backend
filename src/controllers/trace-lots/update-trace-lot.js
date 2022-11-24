@@ -13,6 +13,7 @@ const updateTraceLot = async (req, res) => {
         const payload = req.body;
 
         let insertedRecord = [];
+        let insertedFile = [];
 
         const schema = Joi.object().keys({
             lotOfOption: Joi.number().required(),
@@ -41,6 +42,15 @@ const updateTraceLot = async (req, res) => {
             cbd: Joi.number().optional(),
             thc: Joi.number().optional(),
             cbg: Joi.number().optional(),
+            vmId: Joi.number().optional(),
+            url: Joi.string().allow('').optional(),
+            imgUrl: Joi.string().allow('').optional(),
+            title: Joi.string().allow('').optional(),
+            name: Joi.string().allow('').optional(),
+            s3Url: Joi.string().allow('').optional(),
+            entityType: Joi.string().optional(),
+            ovmId: Joi.number().optional(),
+            oimgUrl: Joi.string().allow('').optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -60,6 +70,20 @@ const updateTraceLot = async (req, res) => {
         await knex.transaction(async (trx) => {
 
             let currentTime = new Date().getTime();
+
+            if(payload.ovmId == 1 && payload.oimgUrl != ''){
+                if(payload.vmId == 0 || payload.imgUrl != payload.oimgUrl){
+                    // delete old record
+                    // new is url || file url is changed
+
+                    let sqlStr = `DELETE FROM images WHERE "orgId" = ${orgId} AND "entityType" = '${payload.entityType}' AND "entityId" = ${payload.id}`;
+
+                    deletedRecs = await knex.raw(sqlStr).transacting(trx);
+                    if(deletedRecs && deletedRecs.rowCount < 1) {
+                        throw { code: "DELETE_ERROR", message: "Error in deleting uploaded file record!" };
+                    }
+                }
+            }
 
             let insertData = {
                 lotType: payload.lotType,
@@ -86,6 +110,9 @@ const updateTraceLot = async (req, res) => {
                 cbd: payload.cbd,
                 thc: payload.thc,
                 cbg: payload.cbg,
+                vmId: payload.vmId,
+                url: payload.url,
+                imgUrl: payload.imgUrl,
 
                 updatedBy: userId,
                 updatedAt: currentTime,
@@ -100,6 +127,29 @@ const updateTraceLot = async (req, res) => {
                 .into("trace_lots");
 
             insertedRecord = insertResult[0];
+
+            //  file uploaded
+            if(payload.vmId == 1 && payload.imgUrl != payload.oimgUrl && payload.imgUrl != ''){
+                insertData = {
+                    orgId: orgId,
+                    entityId: insertedRecord.id,
+                    entityType: payload.entityType,
+                    s3Url: payload.s3Url,
+                    title: payload.title,
+                    name: payload.name,
+    
+                    createdAt: currentTime,
+                };
+                console.log('trace_lot upload file rec: ', insertData);
+    
+                insertResult = await knex
+                    .insert(insertData)
+                    .returning(["*"])
+                    .transacting(trx)
+                    .into("images");
+    
+                insertedFile = insertResult[0];
+            }
 
             //  Log user activity
             let userActivity = {
