@@ -119,7 +119,7 @@ const cancelInvoice = async (req, res) => {
                 insertData = {
                     entityId: insertedItemRecords[0].id,
                     entityType: "invoice_cancelled",
-                    description: `${req.me.name} cancelled invoice '${selectedRecs.rows[0].invoiceNo}' dated ${selectedRecs.rows[0].invoiceOnStr} of '${payload.customerName}' containing ${recNo} item(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                    description: `${req.me.name} cancelled invoice '${selectedRecs.rows[0].invoiceNo}' dated ${selectedRecs.rows[0].invoiceOnStr} of '${payload.customerName}' containing ${recNo} item(s) on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                     orgId: orgId,
                     createdBy: userId,
                     createdAt: currentTime,
@@ -137,7 +137,7 @@ const cancelInvoice = async (req, res) => {
                 insertData = {
                     entityId: payload.id,
                     entityType: "invoice_cancelled",
-                    description: `${req.me.name} cancelled invoice '${selectedRecs.rows[0].invoiceNo}' dated ${selectedRecs.rows[0].invoiceOnStr} of '${payload.customerName}' containing ${recNo} item(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                    description: `${req.me.name} cancelled invoice '${selectedRecs.rows[0].invoiceNo}' dated ${selectedRecs.rows[0].invoiceOnStr} of '${payload.customerName}' containing ${recNo} item(s) on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                     orgId: orgId,
                     createdBy: userId,
                     createdAt: currentTime,
@@ -159,7 +159,7 @@ const cancelInvoice = async (req, res) => {
                     entityId: payload.id,
                     entityTypeId: EntityTypes.Invoice,
                     entityActionId: EntityActions.Cancel,
-                    description: `${req.me.name} cancelled invoice '${selectedRecs.rows[0].invoiceNo}' dated ${selectedRecs.rows[0].invoiceOnStr} of '${payload.customerName}' containing ${recNo} item(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                    description: `${req.me.name} cancelled invoice '${selectedRecs.rows[0].invoiceNo}' dated ${selectedRecs.rows[0].invoiceOnStr} of '${payload.customerName}' containing ${recNo} item(s) on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                     createdBy: userId,
                     createdAt: currentTime,
                     trx: trx

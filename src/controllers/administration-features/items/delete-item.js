@@ -54,7 +54,7 @@ const deleteItem = async (req, res) => {
                 entityId: payload.id,
                 entityTypeId: EntityTypes.Item,
                 entityActionId: EntityActions.Delete,
-                description: `${req.me.name} deleted item '${payload.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} deleted item '${payload.name}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

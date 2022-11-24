@@ -160,7 +160,7 @@ const addLicense = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.License,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} added license '${insertedRecord.number}' and ${itemRecNo} license item(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} added license '${insertedRecord.number}' and ${itemRecNo} license item(s) on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

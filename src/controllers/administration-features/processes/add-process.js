@@ -80,7 +80,7 @@ const addProcess = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.Process,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} added process '${insertedRecord.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} added process '${insertedRecord.name}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

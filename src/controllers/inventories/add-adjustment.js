@@ -281,7 +281,7 @@ const addAdjustment = async (req, res) => {
                 entityId: insertedRecords[0].id,
                 entityTypeId: entityType,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} added ${entity} lot number '${insertedRecords[0].lotNo}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} added ${entity} lot number '${insertedRecords[0].lotNo}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

@@ -54,7 +54,7 @@ const deleteCharge = async (req, res) => {
                 entityId: payload.id,
                 entityTypeId: EntityTypes.Charge,
                 entityActionId: EntityActions.Delete,
-                description: `${req.me.name} deleted charge '${payload.code}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} deleted charge '${payload.code}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

@@ -71,7 +71,7 @@ const updateCropCyclePlanPlantDetail = async (req, res) => {
                 entityId: insertedDetail[0].id,
                 entityTypeId: EntityTypes.CropCyclePlanDetail,
                 entityActionId: EntityActions.Edit,
-                description: `${req.me.name} updated plant lot in crop cycle plan '${payload.cropCyclePlanName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} updated plant lot in crop cycle plan '${payload.cropCyclePlanName}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

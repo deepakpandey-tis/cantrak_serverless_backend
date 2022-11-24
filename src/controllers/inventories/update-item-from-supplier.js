@@ -157,7 +157,7 @@ const updateItemFromSupplier = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: entityType,
                 entityActionId: EntityActions.Edit,
-                description: `${req.me.name} changed ${entity} '${insertedRecord.lotNo}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} changed ${entity} '${insertedRecord.lotNo}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

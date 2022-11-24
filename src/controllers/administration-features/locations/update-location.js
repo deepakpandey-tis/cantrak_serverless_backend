@@ -171,7 +171,7 @@ const updateLocation = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.GrowingLocation,
                 entityActionId: EntityActions.Edit,
-                description: `${req.me.name} changed growing location '${insertedRecord.name}' with ${subLocationsOld} existing and  ${subLocationsNew} new sub growing locations on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} changed growing location '${insertedRecord.name}' with ${subLocationsOld} existing and  ${subLocationsNew} new sub growing locations on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

@@ -140,7 +140,7 @@ const updateInvoice = async (req, res) => {
                     let insertData = {
                         entityId: insertedItemRecords[0].id,
                         entityType: "invoice_item_cancelled",
-                        description: `${req.me.name} deleted item from invoice '${payload.invoiceNo}' dated ${invoiceOnStr} of '${payload.customerName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                        description: `${req.me.name} deleted item from invoice '${payload.invoiceNo}' dated ${invoiceOnStr} of '${payload.customerName}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                         orgId: orgId,
                         createdBy: userId,
                         createdAt: currentTime,
@@ -308,7 +308,7 @@ const updateInvoice = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.Invoice,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} changed invoice '${payload.invoiceNo}' of '${payload.customerName}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} changed invoice '${payload.invoiceNo}' of '${payload.customerName}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

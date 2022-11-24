@@ -243,7 +243,7 @@ const addInvoice = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.Invoice,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} issued invoice '${insertedRecord.invoiceNo}' to '${payload.customerName}' containing ${recNo} item(s) on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} issued invoice '${insertedRecord.invoiceNo}' to '${payload.customerName}' containing ${recNo} item(s) on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

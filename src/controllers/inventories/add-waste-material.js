@@ -130,7 +130,7 @@ const addWasteMaterial = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: entityType,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} added ${entity} lot number '${insertedRecord.lotNo}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} added ${entity} lot number '${insertedRecord.lotNo}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

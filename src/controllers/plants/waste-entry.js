@@ -199,7 +199,7 @@ const wasteEntry = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.PlantWaste,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} marked ${insertedRecord.totalPlants} plant(s) waste of plant lot '${payload.plantLotNo}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} marked ${insertedRecord.totalPlants} plant(s) waste of plant lot '${payload.plantLotNo}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

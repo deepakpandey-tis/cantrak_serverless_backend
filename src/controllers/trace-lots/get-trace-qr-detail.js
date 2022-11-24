@@ -27,9 +27,10 @@ const getTraceQrDetail = async (req, res) => {
         }
         sqlStr = `SELECT tl.*, case when c."companyName" is null then tl."cultivatedBy" else c."companyName" end "cultivatedBy"
         , s.name "specieName", s2.name "strainName"
-        , u."name" "createdByName", ums.name "umName", ums.abbreviation "umAbbreviation"
+        , u."name" "createdByName", ums.name "umName", ums.abbreviation "umAbbreviation", i.name "filename"
         FROM trace_lots tl
         LEFT JOIN companies c ON c."orgId" = ${orgId} AND c.id = tl."companyId"
+        LEFT JOIN images i ON i."orgId" = ${orgId} AND i."entityType" = 'public_trace_lot' AND i."entityId" = ${payload.id}
         , species s, strains s2, users u, ums
         WHERE tl.id = ${payload.id} AND tl."orgId" = ${orgId}
         AND tl."createdBy" = u.id AND tl."umId" = ums.id

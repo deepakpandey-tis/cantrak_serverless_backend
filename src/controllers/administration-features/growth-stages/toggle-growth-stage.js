@@ -65,7 +65,7 @@ const toggleGrowthStage = async (req, res) => {
                 entityId: payload.id,
                 entityTypeId: EntityTypes.GrowthStage,
                 entityActionId: EntityActions.ToggleStatus,
-                description: `${req.me.name} ${action} growth stage '${payload.name}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} ${action} growth stage '${payload.name}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

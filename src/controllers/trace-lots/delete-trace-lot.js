@@ -36,9 +36,17 @@ const deleteTraceLot = async (req, res) => {
         let currentTime = new Date().getTime();
 
         await knex.transaction(async (trx) => {
+
+            //  Delete uploaded file record, if any
+            sqlStr = `DELETE FROM images WHERE "orgId" = ${orgId} AND "entityType" = 'public_trace_lot' AND "entityId" = ${payload.id}`;
+            deletedRecs = await knex.raw(sqlStr).transacting(trx);
+
             //  Delete record
             sqlStr = `DELETE FROM trace_lots WHERE id = ${payload.id} AND "orgId" = ${orgId}`;
             deletedRecord = await knex.raw(sqlStr).transacting(trx);
+            if(deletedRecs && deletedRecs.rowCount < 1) {
+                throw { code: "DELETE_ERROR", message: "Error in deleting trace QR record!" };
+            }
 
             message = `Trace QR detail deleted successfully.`
 
@@ -49,7 +57,7 @@ const deleteTraceLot = async (req, res) => {
                 entityId: payload.id,
                 entityTypeId: EntityTypes.TraceLot,
                 entityActionId: EntityActions.Delete,
-                description: `${req.me.name} deleted trace QR detail '${payload.lotNo}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} deleted trace QR detail '${payload.lotNo}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

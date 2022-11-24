@@ -95,7 +95,7 @@ const addTax = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.Tax,
                 entityActionId: EntityActions.Add,
-                description: `${req.me.name} added tax '${insertedRecord.code}' on ${moment(currentTime).format("DD/MM/YYYY HH:mm:ss")} `,
+                description: `${req.me.name} added tax '${insertedRecord.code}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx
