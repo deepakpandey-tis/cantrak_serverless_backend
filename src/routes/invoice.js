@@ -70,6 +70,13 @@ router.post('/get-invoiced-items',
   invoiceController.getInvoicedItems
 );
 
+router.post('/export-invoices-to-excel',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  invoiceController.exportInvoicesToExcel
+);
+
 
 router.get('/get-companies',
   authMiddleware.isAuthenticated,
