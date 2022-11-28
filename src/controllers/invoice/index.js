@@ -7,6 +7,7 @@ const getCancelInvoiceRemark = require('./get-cancel-invoice-remark');
 const getInvoices = require('./get-invoices');
 const getInvoicesDetail = require('./get-invoices-detail');
 const getInvoicedItems = require('./get-invoiced-items');
+const exportInvoicesToExcel = require('./export-invoices-to-excel');
 
 const getCompanies = require('./masters/get-companies');
 const getItemCategories = require('./masters/get-item-categories');
@@ -32,6 +33,7 @@ module.exports = {
     getInvoices,
     getInvoicesDetail,
     getInvoicedItems,
+    exportInvoicesToExcel,
 
     getCompanies,
     getItemCategories,

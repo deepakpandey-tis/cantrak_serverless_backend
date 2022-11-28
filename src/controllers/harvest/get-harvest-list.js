@@ -12,7 +12,7 @@ const getHarvestList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { companyId, itemId, storageLocationId, lotNo, plantLotNo, locationId, fromDate, toDate, expiryFromDate, expiryToDate } = req.body;
+        let { companyId, itemId, storageLocationId, lotNo, plantLotNo, locationId, fromDate, toDate, expiryFromDate, expiryToDate, harvestTypeId } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
@@ -76,6 +76,14 @@ const getHarvestList = async (req, res) => {
         }
         if(toDate){
             sqlWhere += ` AND hpl."harvestedOn" <= ${new Date(toDate).getTime()}`;
+        }
+        if(harvestTypeId){
+            if(harvestTypeId == 1){
+                sqlWhere += ` AND hpl."isFinalHarvest"`;
+            }
+            else if(harvestTypeId == 2){
+                sqlWhere += ` AND NOT hpl."isFinalHarvest"`;
+            }
         }
         if(plantLotNo){
             sqlWhere += ` AND pl."lotNo" iLIKE '%${plantLotNo}%'`;
