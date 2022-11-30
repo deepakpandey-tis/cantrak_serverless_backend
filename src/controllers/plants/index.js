@@ -1,6 +1,7 @@
 const getLotPlantList = require('./get-lot-plant-list');
 const getPlantLot = require('./get-plant-lot');
 const getPlantLots = require('./get-plant-lots');
+const getPlantLotsOfLocationSubLocation = require('./get-plant-lots-of-location-sublocation');
 const getPlants = require('./get-plants');
 const getPlant = require('./get-plant');
 const getPlantHistory = require('./get-plant-history');
@@ -47,6 +48,8 @@ const getStrains = require('./masters/get-strains');
 const getSubLocations = require('./masters/get-sub-locations');
 const getGrowthStages = require('./masters/get-growth-stages');
 const getStorageLocations = require('./masters/get-storage-locations');
+const getLocationsOfActivePlantLots = require('./masters/get-locations-of-active-plant-lots');
+const getSubLocationsOfActivePlantLots = require('./masters/get-sub-locations-of-active-plant-lots');
 
 const getObservationList = require('./get-observation-list');
 const getObservationsList = require('./get-observations-list');
@@ -60,6 +63,7 @@ module.exports = {
     getLotPlantList,
     getPlantLot,
     getPlantLots,
+    getPlantLotsOfLocationSubLocation,
     getPlants,
     addPlant,
     getPlant,
@@ -106,6 +110,8 @@ module.exports = {
     getSubLocations,
     getGrowthStages,
     getStorageLocations,
+    getLocationsOfActivePlantLots,
+    getSubLocationsOfActivePlantLots,
 
     getObservationList,
     getObservationsList,
