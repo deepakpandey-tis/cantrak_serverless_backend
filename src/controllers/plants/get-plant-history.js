@@ -38,9 +38,10 @@ const getPlantHistory = async (req, res) => {
             LEFT JOIN remarks_master rm ON rm."orgId" = pgst."orgId" AND rm."entityType" = 'plant_change_growth_stage' AND rm."entityId" = pgst.id
             WHERE pgst."orgId" = ${orgId} AND pgst."companyId" = ${payload.companyId} AND pgst."plantLotId" = ${payload.plantLotId} AND pgst."orgId" = pgs."orgId" AND pgst.id = pgs."plantGrowthStageTxnId"  AND pgs."plantId" = ${payload.id}
             UNION
-            SELECT 3 "recType", plt."date" , 0 "fromGrowthStageId" , 0 "toGrowthStageId" , plt."fromLocationId" , plt."fromSubLocationId" , plt."toLocationId" , plt."toSubLocationId", null "s3Url", null "s3Path", null "tagData", plt."createdBy" , plt."createdAt", null "remark", 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot"
+            SELECT 3 "recType", plt."date" , 0 "fromGrowthStageId" , 0 "toGrowthStageId" , plt."fromLocationId" , plt."fromSubLocationId" , plt."toLocationId" , plt."toSubLocationId", null "s3Url", null "s3Path", null "tagData", plt."createdBy" , plt."createdAt", rm.description "remark", 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot"
             , (SELECT json_agg(json_build_object('img', i."s3Url"))::jsonb FROM images i WHERE i."orgId" = plt."orgId" AND i."entityType" = 'plant_change_location' AND i."entityId" = plt."id") "imageData"
-            FROM plant_location_txns plt, plant_locations pl
+            FROM plant_locations pl, plant_location_txns plt
+            LEFT JOIN remarks_master rm ON rm."orgId" = plt."orgId" AND rm."entityType" = 'plant_change_location' AND rm."entityId" = plt.id
             WHERE plt."orgId" = ${orgId} AND plt."companyId" = ${payload.companyId} AND plt."plantLotId" = ${payload.plantLotId} AND plt."orgId" = pl."orgId" AND plt.id = pl."plantLocationTxnId" AND pl."plantId" = ${payload.id}
             UNION
             SELECT "recType", date, 0 "fromGrowthStageId", 0 "toGrowthStageId", 0 "fromLocationId", 0 "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", null "s3Url", null "s3Path", null "tagData", "createdBy", "createdAt", null remark, "harvestPlantLotId", "isFinalHarvest", "isEntireLot", null "imageData"

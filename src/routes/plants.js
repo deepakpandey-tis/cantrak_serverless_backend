@@ -98,6 +98,13 @@ router.post('/get-plant-lots',
   plantController.getPlantLots
 );
 
+router.post('/get-plant-lots-of-location-sublocation',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotsOfLocationSubLocation
+);
+
 router.post('/get-plant-existig-growth-stages',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -343,6 +350,20 @@ router.post('/get-sub-locations',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   plantController.getSubLocations
+);
+
+router.post('/get-locations-of-active-plant-lots',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getLocationsOfActivePlantLots
+);
+
+router.post('/get-sub-locations-of-active-plant-lots',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getSubLocationsOfActivePlantLots
 );
 
 router.post('/get-storage-locations',
