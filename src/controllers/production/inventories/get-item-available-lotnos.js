@@ -52,7 +52,7 @@ const getItemAvailableLotNos = async (req, res) => {
 
         sqlFrom = ` FROM item_txns it`;
 
-        sqlWhere = ` WHERE it."companyId" = ${payload.companyId} AND it."itemCategoryId" = ${payload.itemCategoryId} AND it."itemId" = ${payload.itemId}`;
+        sqlWhere = ` WHERE it."orgId" = ${orgId} AND it."companyId" = ${payload.companyId} AND it."itemCategoryId" = ${payload.itemCategoryId} AND it."itemId" = ${payload.itemId}`;
 
         sqlGroupBy = ` GROUP BY it."itemCategoryId", it."itemId", it."lotNo", it."storageLocationId", it."specieId" , it."strainId", it."expiryDate"`;
         sqlOrderBy  = ` ORDER BY "lotNo" ASC`;      //  ASC to show older lots first
@@ -62,10 +62,10 @@ const getItemAvailableLotNos = async (req, res) => {
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlGroupBy + `)`;
         if(payload.includeZeroBalance){
-            sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId" FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."lotNo" = Main_CTE."lotNo" WHERE ("lotQuantity" - "alreadyIssued") >= 0`;
+            sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId" FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."lotNo" = Main_CTE."lotNo" WHERE ("lotQuantity" - "alreadyIssued") >= 0`;
         }
         else {
-            sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId" FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."lotNo" = Main_CTE."lotNo" WHERE ("lotQuantity" - "alreadyIssued") > 0`;
+            sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId" FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."lotNo" = Main_CTE."lotNo" WHERE ("lotQuantity" - "alreadyIssued") > 0`;
         }
         // sqlStr += ` SELECT *, ("lotQuantity" - "alreadyIssued") quantity FROM Main_CTE WHERE ("lotQuantity" - "alreadyIssued") >= 0`;
         sqlStr += sqlOrderBy;
