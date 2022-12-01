@@ -38,9 +38,9 @@ const getCustomerList = async (req, res) => {
         sqlSelect = `SELECT c2.*, ct.name "customerType", u2."name" "createdByName"
         `;
 
-        sqlFrom = ` FROM customers c2, customer_types ct, users u2`;
+        sqlFrom = ` FROM customers c2 LEFT JOIN customer_types ct ON c2."customerTypeId" = ct.id, users u2`;
 
-        sqlWhere = ` WHERE c2."orgId" = ${orgId} AND c2."customerTypeId" = ct.id`;
+        sqlWhere = ` WHERE c2."orgId" = ${orgId}`;
         sqlWhere += ` AND c2."createdBy" = u2.id`;
         if(keyword){
             sqlWhere += ` AND c2."name" iLIKE '%${keyword}%'`;
