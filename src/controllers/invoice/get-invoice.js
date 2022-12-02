@@ -25,7 +25,7 @@ const getInvoice = async (req, res) => {
 
         sqlStr = `SELECT i.*, c."companyName", c."companyAddressEng", c."companyAddressThai", c."taxId" "companyTaxId", c.telephone "companyTelephone", c."logoFile" "companyLogoFile", c."orgLogoFile" "companyOrgLogoFile"
         , lic.number "licenseNo", u2."name" "createdByName", t.percentage "taxPercentage"
-        , c2.name "customerName", c2."contactPerson" "customerContactPerson", c2."address" "customerAddress", c2."taxId" "customerTaxId"
+        , c2.name "customerName", c2.type "customerType", c2."contactPerson" "customerContactPerson", c2."address" "customerAddress", c2."taxId" "customerTaxId", countries.name "customerCountry"
         , (SELECT json_agg(row_to_json(itm.*)) FROM
         (SELECT ii.*, ic.name "itemCategory", i2.name "item", i2."description" "itemDescription", ums.name "itemUM", ums.abbreviation "itemUMAbbreviation"
         FROM invoice_items ii, items i2, item_categories ic, ums
@@ -38,7 +38,7 @@ const getInvoice = async (req, res) => {
         WHERE i."orgId" = ic2."orgId" AND i.id = ic2."invoiceId" AND i."orgId" = c3."orgId" AND ic2."chargeId" = c3.id) chrg
         ) charges
         FROM invoices i LEFT JOIN licenses lic ON i."licenseId" = lic.id
-        , companies c, customers c2, users u2, taxes t
+        , companies c, users u2, taxes t, customers c2 LEFT JOIN countries ON c2."countryId" = countries.id
         WHERE i.id = ${payload.id} AND i."orgId" = ${orgId} AND i."companyId" = c.id AND i."customerId" = c2.id AND i."createdBy" = u2.id AND i."taxId" = t.id
         `;
 

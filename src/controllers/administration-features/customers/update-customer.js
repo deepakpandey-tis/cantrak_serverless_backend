@@ -21,9 +21,10 @@ const updateCustomer = async (req, res) => {
             contactPerson: Joi.string().allow('').allow(null).optional(),
             name: Joi.string().required(),
             customerTypeId: Joi.string().optional(),
-            taxId: Joi.allow('').optional(),
+            taxId: Joi.string().allow('').optional(),
             creditDays: Joi.number().optional(),
             address: Joi.allow('').optional(),
+            countryId: Joi.number().allow(null).default(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);

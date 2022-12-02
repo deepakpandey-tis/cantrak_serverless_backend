@@ -62,10 +62,22 @@ const getItemAvailableLotNos = async (req, res) => {
         sqlStr  = `WITH Main_CTE AS (`;
         sqlStr += sqlSelect + sqlFrom + sqlWhere + sqlGroupBy + `)`;
         if(payload.includeZeroBalance){
-            sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId" FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."lotNo" = Main_CTE."lotNo" WHERE ("lotQuantity" - "alreadyIssued") >= 0`;
+            // sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId" FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."lotNo" = Main_CTE."lotNo" WHERE ("lotQuantity" - "alreadyIssued") >= 0`;
+            // getting plant lot name
+            sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId", pl."lotNo" "plantLotNo", pl."name" "plantLotName", s."name" "strainName"
+            FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."lotNo" = Main_CTE."lotNo"
+            LEFT JOIN plant_lots pl on hpl."plantLotId" = pl.id
+            , strains s
+            WHERE ("lotQuantity" - "alreadyIssued") >= 0 AND Main_CTE."strainId" = s.id `;
         }
         else {
-            sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId" FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."lotNo" = Main_CTE."lotNo" WHERE ("lotQuantity" - "alreadyIssued") > 0`;
+            // sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId" FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."lotNo" = Main_CTE."lotNo" WHERE ("lotQuantity" - "alreadyIssued") > 0`;
+            // getting plant lot name
+            sqlStr += ` SELECT Main_CTE.*, ("lotQuantity" - "alreadyIssued") quantity, hpl.id "harvestPlantLotId", pl."lotNo" "plantLotNo", pl."name" "plantLotName", s."name" "strainName"
+            FROM Main_CTE LEFT JOIN harvest_plant_lots hpl on hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."lotNo" = Main_CTE."lotNo"
+            LEFT JOIN plant_lots pl on hpl."plantLotId" = pl.id
+            , strains s
+            WHERE ("lotQuantity" - "alreadyIssued") > 0 AND Main_CTE."strainId" = s.id `;
         }
         // sqlStr += ` SELECT *, ("lotQuantity" - "alreadyIssued") quantity FROM Main_CTE WHERE ("lotQuantity" - "alreadyIssued") >= 0`;
         sqlStr += sqlOrderBy;

@@ -63,4 +63,11 @@ router.get('/get-customer-types',
   customerController.getCustomerTypes
 );
 
+router.get('/get-countries',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  customerController.getCountries
+);
+
 module.exports = router;
