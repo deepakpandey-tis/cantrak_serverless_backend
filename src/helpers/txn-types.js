@@ -1,4 +1,12 @@
 
+const CustomerTypes = {
+    IndividualLocal: 11,
+    IndividualForeigner: 12,
+    CorporateLocal: 21,
+    CorporateForeigner: 22,
+    Government: 31,
+};
+
 const ItemCategory = {
     RawMaterial: 1,
     Product: 2,
@@ -39,4 +47,4 @@ const SystemStores = {
     PackingLoss: 99991001
 };
 
-module.exports = { ItemCategory, BatchTypes, TxnTypes, SystemStores };
+module.exports = { CustomerTypes, ItemCategory, BatchTypes, TxnTypes, SystemStores };

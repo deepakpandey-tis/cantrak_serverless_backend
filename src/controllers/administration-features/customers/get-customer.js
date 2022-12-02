@@ -23,8 +23,8 @@ const getCustomer = async (req, res) => {
         }
 
         sqlSelect = `SELECT c2.*, ct.name "customerType"`;
-        sqlFrom = ` FROM customers c2, customer_types ct `;
-        sqlWhere = ` WHERE c2."orgId" = ${orgId} AND c2.id = ${payload.id} AND c2."customerTypeId" = ct.id`;
+        sqlFrom = ` FROM customers c2 LEFT JOIN customer_types ct ON c2."customerTypeId" = ct.id`;
+        sqlWhere = ` WHERE c2."orgId" = ${orgId} AND c2.id = ${payload.id}`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere;
 

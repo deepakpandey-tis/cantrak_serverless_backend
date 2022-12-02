@@ -6,6 +6,7 @@ const updateCustomer = require('./update-customer');
 const toggleCustomer = require('./toggle-customer');
 const deleteCustomer = require('./delete-customer');
 const getCustomerTypes = require('./get-customer-types');
+const getCountries = require('./get-countries');
 
 module.exports = {
     getCustomerList,
@@ -16,4 +17,5 @@ module.exports = {
     toggleCustomer,
     deleteCustomer,
     getCustomerTypes,
+    getCountries,
 };

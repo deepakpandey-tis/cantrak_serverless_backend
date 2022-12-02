@@ -4,6 +4,7 @@ const knexReader = require("../../../db/knex-reader");
 const moment = require("moment-timezone");
 const addUserActivityHelper = require('../../../helpers/add-user-activity')
 const { EntityTypes, EntityActions } = require('../../../helpers/user-activity-constants');
+const { CustomerTypes } = require('../../../helpers/txn-types');
 
 const updateCustomer = async (req, res) => {
     try {
@@ -16,12 +17,14 @@ const updateCustomer = async (req, res) => {
 
         const schema = Joi.object().keys({
             id: Joi.string().required(),
-            contactPerson: Joi.string().required(),
+            type: Joi.number().required(),
+            contactPerson: Joi.string().allow('').allow(null).optional(),
             name: Joi.string().required(),
-            customerTypeId: Joi.string().required(),
-            taxId: Joi.allow('').optional(),
-            creditDays: Joi.number().required(),
+            customerTypeId: Joi.string().optional(),
+            taxId: Joi.string().allow('').optional(),
+            creditDays: Joi.number().optional(),
             address: Joi.allow('').optional(),
+            countryId: Joi.number().allow(null).default(null).optional(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -77,6 +80,23 @@ const updateCustomer = async (req, res) => {
 
             insertedRecord = insertResult[0];
 
+            let customerType;
+            if(payload.type == CustomerTypes.IndividualLocal){
+                customerType = 'individual local';
+            }
+            else if(payload.type == CustomerTypes.IndividualForeigner){
+                customerType = 'individual foreigner';
+            }
+            else if(payload.type == CustomerTypes.CorporateLocal){
+                customerType = 'corporate local';
+            }
+            else if(payload.type == CustomerTypes.CorporateForeigner){
+                customerType = 'corporate foreigner';
+            }
+            else if(payload.type == CustomerTypes.Government){
+                customerType = 'government';
+            }
+
             //  Log user activity
             let userActivity = {
                 orgId: insertedRecord.orgId,
@@ -84,7 +104,7 @@ const updateCustomer = async (req, res) => {
                 entityId: insertedRecord.id,
                 entityTypeId: EntityTypes.Customer,
                 entityActionId: EntityActions.Edit,
-                description: `${req.me.name} changed customer '${insertedRecord.name}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
+                description: `${req.me.name} changed ${customerType} '${insertedRecord.name}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx

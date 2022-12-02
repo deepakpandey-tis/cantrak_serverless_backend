@@ -26,15 +26,18 @@ const getProductionLot = async (req, res) => {
         , pl."isActive", pl."createdBy", pl."createdAt", pl."updatedBy", pl."updatedAt"
         , p."name" "processName", ic."name" "itemCategoryName", i."name" "itemName", i."gtin" "itemGtin", u."name" "itemUM", sl."name" "storageLocation"
         , it."id" "itemTxnId", it."itemCategoryId", it."itemId", it."txnType", it.quantity, it.quality, it."expiryDate", it."lotNo", it."umId", it."specieId", it."strainId", it."storageLocationId"
-        , c."companyName"
+        , c."companyName", pl2."name" "plantLotName", s.name "strainName"
         , (SELECT jsonb_agg(i.*) FROM images i WHERE i."entityId" = pl.id AND i.record_id = it.id) files
         `;
-        sqlFrom = ` FROM production_lots pl, item_txns it, processes p, item_categories ic, items i, ums u
-        , storage_locations sl , companies c
+        sqlFrom = ` FROM production_lots pl, processes p, item_categories ic, items i, ums u
+        , storage_locations sl , companies c, item_txns it
+        LEFT JOIN harvest_plant_lots hpl ON hpl."orgId" = it."orgId" AND hpl."companyId" = it."companyId" AND hpl."lotNo" = it."lotNo"
+        LEFT JOIN plant_lots pl2 ON pl2.id = hpl."plantLotId"
+        , strains s
         `;
         sqlWhere = ` WHERE pl.id = ${payload.id} AND pl."orgId" = ${orgId}`;
         sqlWhere += ` AND pl.id = it."productionLotId" AND pl."processId" = p.id AND it."itemCategoryId" = ic.id AND it."itemCategoryId" = i."itemCategoryId" AND it."itemId" = i.id
-        AND it."umId" = u.id AND it."storageLocationId" = sl.id AND pl."companyId" = c.id
+        AND it."umId" = u.id AND it."storageLocationId" = sl.id AND pl."companyId" = c.id AND it."strainId" = s.id
         `;
         sqlOrderBy = `ORDER BY pl.id ASC, it.id ASC`;
 
