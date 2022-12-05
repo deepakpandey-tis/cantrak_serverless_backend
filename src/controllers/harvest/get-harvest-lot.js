@@ -24,18 +24,18 @@ const getHarvestLot = async (req, res) => {
 
         sqlSelect = `select hpl.*, pl."lotNo" "plantLotNo", pl.name "plantLotName", l."name" "plantLocation"
         , it.id "itemTxnId", it.quantity, it."plantsCount" "itemPlantsCount", it.quality, it."expiryDate", ic."name" "itemCategoryName", i.name "itemName", i.gtin, ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", sl.name "storageLocationName"
-        , c."companyName", u."name" "createdByName"
+        , c."companyName", u."name" "createdByName", s.name "strainName"
         `;
 
         sqlFrom = ` FROM harvest_plant_lots hpl, plant_lots pl, locations l
         , item_txns it, items i, ums, storage_locations sl, item_categories ic
-        , companies c, users u
+        , companies c, users u, strains s
         `;
 
         sqlWhere = ` WHERE hpl."id" = ${payload.id} AND hpl."orgId" = ${orgId}`;
         sqlWhere += ` AND hpl."plantLotId" = pl.id and pl."locationId" = l.id AND hpl."companyId" = c.id AND hpl."createdBy" = u.id`;
         sqlWhere += ` AND it."harvestPlantLotId" = hpl.id AND it."itemId" = i.id AND it."umId" = ums.id AND it."itemCategoryId" = ic.id AND it."storageLocationId" = sl.id`;
-        sqlWhere += ` AND hpl."companyId" = c.id AND hpl."createdBy" = u.id`;
+        sqlWhere += ` AND hpl."companyId" = c.id AND hpl."createdBy" = u.id AND hpl."strainId" = s.id`;
 
         sqlOrderBy = ` ORDER BY hpl.id ASC, it.id ASC`;
 
