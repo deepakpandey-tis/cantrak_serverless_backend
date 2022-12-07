@@ -89,7 +89,7 @@ const getPlantLotExpectedActualGrowthStages = async (req, res) => {
             AND pl."orgId" = pl2."orgId" AND p.id = pl2."plantId" AND pl2."locationId" = ${locationId} AND pl2."subLocationId" = ${subLocationId}
         `;
         sqlCropCyclePlanPlantGrowthStages += ` AND pl2.id in (SELECT id FROM plant_locations pl3 WHERE pl3."orgId" = pl."orgId" AND pl3."plantId" = p.id ORDER BY pl3.id DESC LIMIT 1)
-            AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pl."orgId" = pgs2."orgId" AND pgs2."plantId" = p.id ORDER BY pgs2.id DESC LIMIT 1)
+--            AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pl."orgId" = pgs2."orgId" AND pgs2."plantId" = p.id ORDER BY pgs2.id DESC LIMIT 1)
 --          AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id AND pgs2."growthStageId" = pgs."growthStageId" ORDER BY id desc limit 1)
             ORDER BY pl."lotNo" , gs."listOrder", pgs."startDate" desc
         ) pgs3
