@@ -25,6 +25,10 @@ router.post('/authorize-line-account', authMiddleware.isAuthenticated, entranceC
 
 router.get('/remove-line-account', authMiddleware.isAuthenticated, entranceController.removeLineAccount);
 
+router.post('/authorize-google-account', authMiddleware.isAuthenticated, entranceController.authorizeGoogleAccount);
+
+router.delete('/remove-google-account', authMiddleware.isAuthenticated, entranceController.removeGoogleAccount);
+
 router.post('/get-old-password',authMiddleware.isAuthenticated,entranceController.getOldPassword)
 
 

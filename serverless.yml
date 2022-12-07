@@ -69,7 +69,7 @@ provider:
     ENV: ${self:provider.stage}
     REGION: ${self:provider.region}
     DB_USER: pg888
-    DB_PASS: su99yTIS#2021
+    DB_PASS: password
     DB_NAME: pg888
     DB_HOST: 127.0.0.1
     DB_PORT: 5432
@@ -86,13 +86,17 @@ provider:
     SQS_MAIL_QUEUE_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/mail-queue
     SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/long-jobs
     FROM_EMAIL_ADDRESS: no-reply@servicemind.asia
-    APP_ENV: PRODUCTION
+    APP_ENV: DEV
     S3_BUCKET_URL:  https://pg888-resources.s3.ap-southeast-1.amazonaws.com
     SOCKET_ENDPOINT: ws://0.0.0.0:3001
     # CDN_URL: resources.servicemind.asia
     REDIS_HOST: 127.0.0.1
     REDIS_PORT: 6379
     MNT_DIR: ${self:custom.localMountPath}
+    GOOGLE_CLIENT_SECRET: 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
+    GOOGLE_CLIENT_ID: 551396889611-ila27c0q57k5cjv6dgc9l2l31dhr2vr4.apps.googleusercontent.com
+    GOOGLE_REDIRECT_URL: google-auth-callback
+
   vpc:
     securityGroupIds:
       - sg-085a4849cdbd4f122
