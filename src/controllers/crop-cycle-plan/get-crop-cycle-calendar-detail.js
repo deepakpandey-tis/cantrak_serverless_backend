@@ -10,21 +10,6 @@ const getCropCycleCalendarDetail = async (req, res) => {
 
         let sqlStr, sqlSelect;
 
-        //  get location-wise, sub-location-wise, crop cycle plan in the desc order of crop cylce start date
-/*         sqlSelect = `SELECT l."name" "locationName", sl."name" "subLocationName", ccpd."startDate" "expectedStartDate", ccpd."expectedHarvestDate", ccpd."locationId", ccpd."subLocationId" , pl."lotNo" , pl."plantedOn" "startDate", case when pl."isFinalHarvest" then hpl."harvestedOn" else null end "endDate"
-        FROM crop_cycle_plans ccp, crop_cycle_plan_detail ccpd, locations l, sub_locations sl, plant_lots pl LEFT JOIN harvest_plant_lots hpl on pl.id = hpl."plantLotId" 
-        WHERE ccp."orgId" = ${orgId} AND ccp."companyId" = ${companyId} AND ccp."isActive" AND ccp.id = ccpd."cropCyclePlanId"
-        AND ccpd."plantLotId" = pl.id AND ccpd."locationId" = l.id AND ccpd."subLocationId" = sl.id 
-        `;
-        if(growingLocationIds?.length && growingLocationIds[0] != 0){
-            sqlSelect += ` AND ccpd."locationId" IN (${growingLocationIds})`
-        }
-        sqlSelect += ` ORDER BY l."name" , sl."name" , ccpd."startDate" DESC`;
-
-        sqlStr = `select json_agg(row_to_json(lslccp.*))
-        from (${sqlSelect}) lslccp
-        `; */
-
         //  Plant Lot is final harvested when plantsCount = harvestedPlantsCount
         sqlStr = `select json_agg(row_to_json(lslccp.*))
         from (
@@ -94,7 +79,7 @@ const getCropCycleCalendarDetail = async (req, res) => {
             sqlCropCyclePlanPlantGrowthStages += ` AND pl2."locationId" IN (${growingLocationIds})`
         }
         sqlCropCyclePlanPlantGrowthStages += ` AND pl2.id in (SELECT id FROM plant_locations pl3 WHERE pl3."orgId" = pl."orgId" AND pl3."plantId" = p.id ORDER BY pl3.id DESC LIMIT 1)
-            AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pl."orgId" = pgs2."orgId" AND pgs2."plantId" = p.id ORDER BY pgs2.id DESC LIMIT 1)
+--            AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pl."orgId" = pgs2."orgId" AND pgs2."plantId" = p.id ORDER BY pgs2.id DESC LIMIT 1)
 --          AND pgs.id = (SELECT id FROM plant_growth_stages pgs2 WHERE pgs2."plantId" = p.id AND pgs2."growthStageId" = pgs."growthStageId" ORDER BY id desc limit 1)
             ORDER BY pl."lotNo" , gs."listOrder", pgs."startDate" desc
         ) pgs3
