@@ -94,8 +94,8 @@ provider:
     REDIS_HOST: pg888-redis.kdebs8.ng.0001.apse1.cache.amazonaws.com
     REDIS_PORT: 6379,
     MNT_DIR: ${self:custom.localMountPath}
-    GOOGLE_CLIENT_SECRET: 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
-    GOOGLE_CLIENT_ID: 551396889611-nlj7l078vqorrojbo69kat5hmmrljud6.apps.googleusercontent.com
+    GOOGLE_CLIENT_SECRET: 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
+    GOOGLE_CLIENT_ID: 423057939767-4smipfn7q9qfmvn8p9ku121ch4kmmned.apps.googleusercontent.com
     GOOGLE_REDIRECT_URL: google-auth-callback
 
   vpc:
