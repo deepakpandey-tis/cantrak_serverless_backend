@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
+
+const googleCalendarSync = require('../../helpers/google-calendar-sync');
 
 const cancelWorkOrder = async (req, res) => {
     let orgId = req.me.orgId;
@@ -68,6 +71,44 @@ const cancelWorkOrder = async (req, res) => {
             trx.commit;
         });
 
+        const assignedServiceTeam = await knexReader('assigned_service_team')
+            .where({
+                orgId: orgId,
+                entityType: 'work_order',
+                entityId: payload.id
+            }).first();
+
+        const assignedServiceAdditionalUsers = await knexReader('assigned_service_additional_users')
+            .where({
+                orgId: orgId,
+                entityType: 'work_order',
+                entityId: payload.id
+            });
+
+        // Delete event from main user's calendar
+        googleCalendarSync.deleteEventFromCalendar(
+            +assignedServiceTeam.userId,
+            +req.orgId,
+            assignedServiceTeam.entityType,
+            +assignedServiceTeam.entityId,    
+            ).catch((error) => { 
+            console.log(error);
+            });
+      
+        // Delete event from additional users calendar
+        if(assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length > 0) {
+            for(let user of assignedServiceAdditionalUsers) {
+                googleCalendarSync.deleteEventFromCalendar(
+                +user.userId,
+                +req.orgId,
+                user.entityType,
+                +user.entityId
+                ).catch((error) => { 
+                console.log(error);
+                });
+            }
+        }
+      
         return res.status(200).json({
             data: {
                 record: insertedRecord,
