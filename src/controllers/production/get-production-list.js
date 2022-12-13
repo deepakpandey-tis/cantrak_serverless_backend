@@ -53,17 +53,18 @@ const getProductionList = async (req, res) => {
         , pl."isActive", pl."createdBy", pl."createdAt", pl."updatedBy", pl."updatedAt"
         , it."itemCategoryId", it."itemId", it."txnType", it."lotNo" "itemLotNo", it."umId", it."specieId", it."strainId", it."storageLocationId"
         , it.quantity "itemQuantity", i.name "itemName", i.gtin, ums.name "itemUM", ums.abbreviation "itemUMAbbreviation", sl.name "storageLocationName"
-        , c."companyName", u."name" "createdByName"
+        , c."companyName", u."name" "createdByName", s.name "specieName", s2.name "strainName"
         `;
 
         sqlFrom = ` FROM production_lots pl
         , item_txns it, items i, ums, storage_locations sl
-        , companies c, users u
+        , companies c, users u, species s, strains s2
         `;
 
         sqlWhere = ` WHERE pl."orgId" = ${orgId}`;
         sqlWhere += ` AND pl."companyId" = c.id AND pl."createdBy" = u.id`;
-        sqlWhere += ` AND it."productionLotId" = pl.id AND it.quantity > 0 AND it."itemId" = i.id AND it."umId" = ums.id AND it."storageLocationId" = sl.id`;
+        sqlWhere += ` AND it."productionLotId" = pl.id AND it.quantity > 0 AND it."itemId" = i.id AND it."umId" = ums.id AND it."storageLocationId" = sl.id 
+        AND it."specieId" = s.id AND it."strainId" = s2.id`;
         
         if(companyId){
             sqlWhere += ` AND pl."companyId" = ${companyId}`;
