@@ -833,7 +833,8 @@ const entranceController = {
               return res.status(200).json({
                   data: {
                       isAuthorizedSuccessfully: false,
-                      user: user
+                      user: user,
+                      message: 'Could not link GOOGLE account to your Cantrak account :( Please check if you have given sufficient permissions'
                   }
               });
           }
@@ -852,6 +853,24 @@ const entranceController = {
 
           const googleProfile = ticket.getPayload();
           const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+
+          const emailLinkedWithAnotherAccount = await knexReader('social_accounts')
+            .whereRaw("social_accounts.details->>'email' = ?", [googleProfile.email])
+            .andWhere("social_accounts.userId", "!=", req.me.id)
+            .first();
+
+          if(emailLinkedWithAnotherAccount) {
+            let user = await knex('users').where({ id: req.me.id }).first();
+            let socialAccounts = await knex('social_accounts').where({ userId: req.me.id });
+            user.socialAccounts = socialAccounts;
+            return res.status(200).json({
+                data: {
+                    isAuthorizedSuccessfully: false,
+                    user: user,
+                    message: 'This Google account is already linked with another Cantrak account.'
+                }
+            });
+          }
 
           let googleAccount = await knex('social_accounts').where({ userId: req.me.id, accountName: 'GOOGLE' }).first();
 
