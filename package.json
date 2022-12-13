@@ -43,7 +43,6 @@
     "nodemailer": "^6.4.17",
     "pdf-merger-js": "^3.1.0",
     "pg": "^8.7.1",
-    "puppeteer-core": "^8.0.0",
     "qrcode": "^1.4.4",
     "redis": "^3.1.2",
     "rrule": "^2.6.6",
