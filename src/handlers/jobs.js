@@ -245,6 +245,47 @@ module.exports.longJobsProcessor = async (event, context) => {
 
   }
 
+
+  if (messageType == 'ADD_WORK_ORDER_CALENDAR_EVENT') {
+
+    console.log('[handlers][longJobsProcessor]: Data Work Order Add Calendar Event:', recordData);
+
+    const workOrderEventsHelper = require('../helpers/work-order-events');
+
+    const { workOrderId, orgId } = recordData;
+
+    if (workOrderId && orgId) {
+      await workOrderEventsHelper.addWorkOrderEvents(workOrderId, orgId);
+    } else {
+      console.log('[handlers][longJobsProcessor]', 'workOrderId or orgId not found.');
+      throw Error('workOrderId or OrgId not found.');
+    }
+
+    console.log('[handlers][longJobsProcessor]: Task Completed.....');
+
+  }
+
+  if (messageType == 'DELETE_WORK_ORDER_CALENDAR_EVENT') {
+
+    console.log('[handlers][longJobsProcessor]: Data Work Order Add Calendar Event:', recordData);
+
+    const workOrderEventsHelper = require('../helpers/work-order-events');
+
+    const { workOrderId, orgId } = recordData;
+
+    if (workOrderId && orgId) {
+      await workOrderEventsHelper.deleteWorkOrderEvents(workOrderId, orgId);
+    } else {
+      console.log('[handlers][longJobsProcessor]', 'workOrderId or orgId not found.');
+      throw Error('workOrderId or OrgId not found.');
+    }
+
+    console.log('[handlers][longJobsProcessor]: Task Completed.....');
+
+  }
+
+
+
   if (messageType == 'TEST_PROCESSOR') {
 
     console.log('[handlers][longJobsProcessor]: Data For TEST_PROCESSOR:', recordData);

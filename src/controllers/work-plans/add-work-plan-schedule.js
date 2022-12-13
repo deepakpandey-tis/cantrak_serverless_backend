@@ -172,21 +172,30 @@ const addWorkPlanSchedule = async (req, res) => {
             trx.commit;
         });
 
+        // Add 7 days to the current date
+        const nextWeekDate = new Date(currentTime).setHours(0, 0, 0, 0) + 7 * 24 * 60 * 60 * 1000;
+
         const workOrdersNew = await knexReader('work_plan_schedule_assign_locations')
             .select('work_plan_schedule_assign_locations.id')
             .innerJoin('work_plan_schedules', 'work_plan_schedule_assign_locations.workPlanScheduleId', 'work_plan_schedules.id')
             .where('work_plan_schedule_assign_locations.workPlanScheduleId', insertedRecord.id)
-            .andWhere('work_plan_schedule_assign_locations.createdAt', '>=', currentTime );
+            .andWhere('work_plan_schedule_assign_locations.createdAt', '>=', currentTime )
+            .andWhere('work_plan_schedule_assign_locations.workOrderDate', '<=', nextWeekDate);
         
-        for(let i = 0; i < workOrdersNew.length; i++) {
-            setTimeout(() => {
-                const workOrder = workOrdersNew[i];
-                workOrderEventsHelper
-                .addWorkOrderEvents(workOrder.id, orgId)
-                .catch(error => console.log(error));
-            }, 1000 * (i + 1));
-        }        
+        // Import SQS Helper..
+        const queueHelper = require('../../helpers/queue');
 
+        for(const workOrder of workOrdersNew) {
+            // Using SQS helper to avoid getting rate limiting errors from Google calendar API
+            queueHelper.addToQueue({
+                workOrderId: workOrder.id,
+                orgId: orgId
+            },
+            'long-jobs',
+            'ADD_WORK_ORDER_CALENDAR_EVENT'
+            ).catch(error => console.log(error));
+        }
+                        
         return res.status(200).json({
             data: {
                 record: insertedRecord,
