@@ -70,13 +70,13 @@ const getProductionList = async (req, res) => {
             sqlWhere += ` AND pl."companyId" = ${companyId}`;
         }
         if(itemId){
-            sqlWhere += ` AND pl."itemId" = ${itemId}`;
+            sqlWhere += ` AND it."itemId" = ${itemId}`;
         }
         if(processId){
             sqlWhere += ` AND pl."processId" = ${processId}`;
         }
         if(itemLotNo){
-            sqlWhere += ` AND pl."itemLotNo" iLIKE '%${itemLotNo}%'`;
+            sqlWhere += ` AND it."lotNo" iLIKE '%${itemLotNo}%'`;
         }
         if(fromDate){
             sqlWhere += ` AND pl."productionOn" >= ${new Date(fromDate).getTime()}`;
