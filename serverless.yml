@@ -86,7 +86,7 @@ provider:
     SQS_MAIL_QUEUE_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/mail-queue
     SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/long-jobs
     FROM_EMAIL_ADDRESS: no-reply@servicemind.asia
-    APP_ENV: PRODUCTION
+    APP_ENV: DEV
     S3_BUCKET_URL:  https://pg888-resources.s3.ap-southeast-1.amazonaws.com
     SOCKET_ENDPOINT: ws://0.0.0.0:3001
     # CDN_URL: resources.servicemind.asia
