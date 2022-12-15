@@ -7,7 +7,7 @@ var arrayCompare = require("array-compare");
 
 const knex = require('../db/knex');
 const XLSX = require('xlsx');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const saltRounds = 10;
 const fs = require('fs')
 const path = require('path')

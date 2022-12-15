@@ -2,8 +2,7 @@ const Joi = require("@hapi/joi");
 const knexReader = require("../../db/knex-reader");
 const ExcelJS = require('exceljs');
 const path = require('path');
-// const mime = require('mime');
-// const fs = require('fs-extra');
+
 
 const getStorageLocationIssueRegisterExcel = async (req, res) => {
     try {

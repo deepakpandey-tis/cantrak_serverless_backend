@@ -4,7 +4,7 @@ const XLSX = require("xlsx");
 const knex = require("../../db/knex");
 const fs = require("fs");
 const moment = require("moment");
-const bcrypt = require("bcrypt");
+const bcrypt = require('bcryptjs');
 const saltRounds = 10;
 const emailHelper = require('../../helpers/email')
 

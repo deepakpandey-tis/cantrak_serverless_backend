@@ -198,59 +198,7 @@ const createPdfOnEFS = (document, plantId, browser, retries = 1) => {
   
     });
   
-}
-  
-  
-const makeZippedFile = (bucket, folder, zipFileKey) => {
-  
-    console.log('[helpers][agm][makeZippedFile]: bucket: ', bucket);
-    console.log('[helpers][agm][makeZippedFile]: folder: ', folder);
-    console.log('[helpers][agm][makeZippedFile]: zipFileKey: ', zipFileKey);
-  
-    const XmlStream = require('xml-stream');
-    const s3Zip = require('s3-zip');
-    const s3 = new AWS.S3();
-  
-    const params = {
-      Bucket: bucket,
-      Prefix: folder
-    }
-  
-    return new Promise((res, rej) => {
-  
-      const filesArray = [];
-      const files = s3.listObjects(params).createReadStream();
-      const xml = new XmlStream(files);
-      xml.collect('Key');
-      xml.on('endElement: Key', (item) => {
-        filesArray.push(item['$text'].substr(folder.length))
-      });
-  
-      xml.on('end', () => {
-        console.log('[helpers][agm][makeZippedFile]: Files To Be Zipped: ', filesArray);
-        // const output = fs.createWriteStream(join(__dirname, 's3-folder.zip'));
-  
-        const s3Stream = require('s3-upload-stream')(new AWS.S3());
-        const upload = s3Stream.upload({
-          "Bucket": bucket,
-          "Key": zipFileKey
-        });
-  
-        upload.on('error', (error) => {
-          console.log(error);
-          rej(error)
-        });
-  
-        upload.on('uploaded', (details) => {
-          res(details);
-        });
-  
-        s3Zip.archive({ s3: s3, bucket: bucket, debug: true }, folder, filesArray).pipe(upload);
-  
-      });
-  
-    });
-}
+}  
   
 const makeZippedFileOnEFS = (folder, zipFileKey) => {
   
