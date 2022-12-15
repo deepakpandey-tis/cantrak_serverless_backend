@@ -87,3 +87,17 @@ deploy_cantrak_prod:
     - sls config credentials --profile cantrak-production --provider aws --key ${MASTER_AWS_KEY} --secret ${MASTER_AWS_SECRET}
     - NODE_ENV=production sls deploy --stage production --param="digest=$IMAGE_DIGEST" --aws-profile cantrak-production --config serverless.prod.yml
     - echo 'Success'
+
+
+
+migrate_cantrak_prod:
+  image: curlimages/curl:7.77.0
+  stage: migrate
+  dependencies:
+    - deploy_cantrak_prod
+  only:
+    - master
+  script:
+    - curl -V
+    - curl -v https://5dec4xg2n8.execute-api.ap-southeast-1.amazonaws.com/production/db-migration/migrate-latest
+    - echo 'Success'
