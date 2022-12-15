@@ -6,12 +6,6 @@ const _ = require("lodash");
 
 const knex = require("../../db/knex");
 
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
-const uuid = require('uuid/v4')
-const emailHelper = require('../../helpers/email')
-const XLSX = require("xlsx");
-const fs = require('fs');
 
 const SubResourcesController = {
     SubResourcesDetail: async (req, res) => {

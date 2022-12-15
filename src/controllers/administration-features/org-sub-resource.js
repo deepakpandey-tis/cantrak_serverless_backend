@@ -6,7 +6,7 @@ const _ = require("lodash");
 
 const knex = require("../../db/knex");
 
-const bcrypt = require("bcrypt");
+const bcrypt = require('bcryptjs');
 const saltRounds = 10;
 const uuid = require('uuid/v4')
 const emailHelper = require('../../helpers/email')

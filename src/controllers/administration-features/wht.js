@@ -6,12 +6,8 @@ const _ = require("lodash");
 
 const knex = require("../../db/knex");
 
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
-
 const XLSX = require("xlsx");
 const fs = require("fs");
-const path = require("path");
 
 
 const whtController = {
