@@ -123,8 +123,6 @@ custom:
     prod: prod
   efsAccessPoint: fsap-065866bda3f6405f1
   localMountPath: /mnt/efs
-  lambdaInsights:
-    defaultLambdaInsights: true #enables Lambda Insights for all functions
   
   
 functions:

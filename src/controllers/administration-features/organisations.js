@@ -5,7 +5,7 @@ const Joi = require("@hapi/joi");
 const _ = require("lodash");
 // const XLSX = require("xlsx");
 const saltRounds = 10;
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const knex = require("../../db/knex");
 const emailHelper = require('../../helpers/email')
 
