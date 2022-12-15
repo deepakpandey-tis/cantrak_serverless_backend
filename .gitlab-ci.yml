@@ -1,39 +1,89 @@
-image: trion/ng-cli-karma:12.1.1
+image: docker:19.03.10
+
+services:
+  - name: docker:dind
+    alias: thedockerhost
+
+variables:
+  # Tell docker CLI how to talk to Docker daemon; see
+  # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-docker-in-docker-executor
+  DOCKER_HOST: tcp://thedockerhost:2375/
+  # Use the overlayfs driver for improved performance:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+
+
+
+.prod-script-before: &prod-script-before
+  - echo "Running Before Script for Master"    
+  - apk add --no-cache curl jq python py-pip
+  - pip install awscli
+  - aws configure set aws_access_key_id $MASTER_AWS_KEY
+  - aws configure set aws_secret_access_key $MASTER_AWS_SECRET
+  - aws configure set region $AWS_DEFAULT_REGION
+  - $(aws ecr get-login --no-include-email --region "${AWS_DEFAULT_REGION}")
+  # - IMAGE_TAG="$(echo $CI_COMMIT_SHA | head -c 8)"
+  - IMAGE_TAG=$CI_PIPELINE_IID
+  - echo $IMAGE_TAG
+  # - echo "Testing Auth Credentials"
+  # - aws ecr describe-repositories --region "${AWS_DEFAULT_REGION}"
+  # - apk add nodejs-current
+  # - apk add --update nodejs npm
+
+
 
 stages:
+  - build
   - deploy
-  - migrate
 
 cache:
-  key: "11082021"
+  key: "15122022"
   paths:
     - node_modules/
 
 
-deploy_master:
+build_cantrak_prod:
+  stage: build
+  only:
+    - master
+  before_script:
+    - *prod-script-before      
+  script:
+    - echo "Building & Pushing image for production"
+    - docker build -t $AWS_IMG_URL:latest ./
+    - echo "Tagging image..."
+    - docker tag $AWS_IMG_URL:latest $AWS_IMG_URL:$IMAGE_TAG
+    - echo "Pushing image..."
+    - docker push $AWS_IMG_URL:latest
+    - docker push $AWS_IMG_URL:$IMAGE_TAG
+    - echo "Building & Pushing image... done"
+    - aws ecr describe-repositories --region "${AWS_DEFAULT_REGION}"
+    - IMAGE_DIGEST=$(aws ecr describe-images --repository-name ${CUSTOM_LAMBDA_IMG_NAME} --image-ids imageTag=latest --output=json | python2 -c "import sys, json; print(json.load(sys.stdin)['imageDetails'][0]['imageDigest'])")
+    - echo "$IMAGE_DIGEST" >> digest.txt
+  variables:
+    CUSTOM_LAMBDA_IMG_NAME: cantrak-backend
+    AWS_IMG_URL: 720172161892.dkr.ecr.ap-southeast-1.amazonaws.com/cantrak-backend
+  artifacts:
+    paths:
+      - digest.txt
+
+
+deploy_cantrak_prod:
+  image: trion/ng-cli-karma:12.1.1
   stage: deploy
+  dependencies:
+    - build_cantrak_prod
   only:
     - master
   script:
     - node -v
+    - npm -v
     - rm ./package-lock.json
     - npm install -g serverless
-    - npm install
-    - sls config credentials --profile pg888-production --provider aws --key $MASTER_AWS_KEY --secret $MASTER_AWS_SECRET
-    - NODE_ENV=production sls deploy --stage production --aws-profile pg888-production --config serverless.prod.yml
-    - echo 'Success'
-
-
-
-migrate_master:
-  image: curlimages/curl:7.77.0
-  stage: migrate
-  only:
-    - master
-  needs: [
-    deploy_master
-  ]  
-  script:
-    - curl -V
-    - curl -v https://5dec4xg2n8.execute-api.ap-southeast-1.amazonaws.com/production/db-migration/migrate-latest
+    - serverless plugin install -n serverless-plugin-lambda-insights
+    - serverless plugin install -n serverless-prune-plugin
+    - IMAGE_DIGEST=$(cat digest.txt)
+    - echo "$IMAGE_DIGEST"
+    - sls config credentials --profile cantrak-production --provider aws --key ${MASTER_AWS_KEY} --secret ${MASTER_AWS_SECRET}
+    - NODE_ENV=production sls deploy --stage production --param="digest=$IMAGE_DIGEST" --aws-profile cantrak-production --config serverless.prod.yml
     - echo 'Success'
