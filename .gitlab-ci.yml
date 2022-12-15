@@ -100,5 +100,5 @@ migrate_cantrak_prod:
     - master
   script:
     - curl -V
-    - curl -v https://5dec4xg2n8.execute-api.ap-southeast-1.amazonaws.com/production/db-migration/migrate-latest
+    - curl -v https://3ny522i0tg.execute-api.ap-southeast-1.amazonaws.com/production/db-migration/migrate-latest
     - echo 'Success'
