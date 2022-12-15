@@ -55,10 +55,10 @@ const getPackingList = async (req, res) => {
             sqlWhere += ` AND pl."companyId" = ${companyId}`;
         }
         if(itemId){
-            sqlWhere += ` AND pl."itemId" = ${itemId}`;
+            sqlWhere += ` AND it."itemId" = ${itemId}`;
         }
         if(itemLotNo){
-            sqlWhere += ` AND pl."itemLotNo" iLIKE '%${itemLotNo}%'`;
+            sqlWhere += ` AND pl."lotNo" iLIKE '%${itemLotNo}%'`;
         }
         if(fromDate){
             sqlWhere += ` AND pl."packingOn" >= ${new Date(fromDate).getTime()}`;

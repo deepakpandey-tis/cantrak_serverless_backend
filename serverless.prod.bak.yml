@@ -21,7 +21,7 @@ provider:
   runtime: nodejs14.x
   stage: prod
   region: ap-southeast-1
-  memorySize: 3072
+  memorySize: 3000
   timeout: 29
   tracing:
     apiGateway: true
@@ -63,12 +63,7 @@ provider:
           Action:
             - events:*
           Resource: 
-            - arn:aws:events:::*
-        - Effect: Allow
-          Action:
-            - execute-api:*
-          Resource: 
-            - arn:aws:execute-api:::*    
+            - arn:aws:events:::*                    
       managedPolicies:
         - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
   environment:
@@ -108,9 +103,8 @@ provider:
   
 
 custom:
-  serviceName: cantrak
+  serviceName: pg888
   awsAccountId: "720172161892"
-  awsContainerImageId: 720172161892.dkr.ecr.ap-southeast-1.amazonaws.com/cantrak-backend
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
   bucket: pg888-resources-prod
@@ -127,11 +121,7 @@ custom:
   
 functions:
   app:
-    # handler: src/app.server # reference the file and exported method
-    image:
-      uri: ${self:custom.awsContainerImageId}@${param:digest}
-      command: 
-        - src/app.server
+    handler: src/app.server # reference the file and exported method
     events: # events trigger lambda functions
       - http: # this is an API Gateway HTTP event trigger
           path: /
@@ -143,11 +133,7 @@ functions:
           # cors: true
   
   websocket:
-    # handler: src/handlers/socket.handler
-    image:
-      uri: ${self:custom.awsContainerImageId}@${param:digest}
-      command: 
-        - src/handlers/socket.handler
+    handler: src/handlers/socket.handler
     memorySize: 2048
     events:
       - websocket:
@@ -182,20 +168,11 @@ functions:
           route: $disconnect
 
   auth:
-    # handler: src/handlers/socket.auth
-    image:
-      uri: ${self:custom.awsContainerImageId}@${param:digest}
-      command: 
-        - src/handlers/socket.auth
-    
+    handler: src/handlers/socket.auth
 
 
   SQS:
-    # handler: src/handlers/jobs.queueProcessor
-    image:
-      uri: ${self:custom.awsContainerImageId}@${param:digest}
-      command: 
-        - src/handlers/jobs.queueProcessor
+    handler: src/handlers/jobs.queueProcessor
     memorySize: 1024
     timeout: 150
     reservedConcurrency: 10                # <-- Concurrency control
@@ -206,11 +183,7 @@ functions:
 
 
   longJobsProcessor:
-    # handler: src/handlers/jobs.longJobsProcessor
-    image:
-      uri: ${self:custom.awsContainerImageId}@${param:digest}
-      command: 
-        - src/handlers/jobs.longJobsProcessor
+    handler: src/handlers/jobs.longJobsProcessor
     memorySize: 5120
     timeout: 900                           # 15 Mins...
     reservedConcurrency: 10                # <-- Concurrency control
@@ -221,11 +194,7 @@ functions:
 
           
   workOrderOverdueProcessor:
-    # handler: src/handlers/daily-tasks.workOrderOverdueProcessor
-    image:
-      uri: ${self:custom.awsContainerImageId}@${param:digest}
-      command: 
-        - src/handlers/daily-tasks.workOrderOverdueProcessor
+    handler: src/handlers/daily-tasks.workOrderOverdueProcessor
     memorySize: 512
     timeout: 300
     events:
