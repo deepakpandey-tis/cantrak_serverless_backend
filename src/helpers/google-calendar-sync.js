@@ -13,7 +13,7 @@ const googleCalendarSync = {
      * @param {string} startDate - start date in ISO format
      * @param {string} endDate - end date in ISO format
      * @param {string} entityType
-     * @param {number} entityId
+     * @param {number} entityId - null, if entityType is 'custom'
      * @returns {Promise}  Promise object which resolves to either data or error object
      */
     addEventToCalendar: async function (userId, orgId, title, description, startDate, endDate, entityType, entityId) {
@@ -26,7 +26,11 @@ const googleCalendarSync = {
                 startDate: Joi.date().greater(new Date(new Date().setHours(0, 0, 0)).toISOString()).iso().required(),
                 endDate: Joi.date().greater(Joi.ref('startDate')).iso().required(),
                 entityType: Joi.string().required(),
-                entityId: Joi.number().required(),
+                entityId: Joi.number().allow(null).when('entityType', {
+                    is: 'custom',
+                    then: Joi.optional(),
+                    otherwise: Joi.required()
+                }),
                 // eventType: Joi.string().valid('single', 'recurring').required(), - if we want to support recurring events in future
                 // recurrence: Joi.array().items(Joi.string()).when('eventType', {
                 //     is: 'recurring',
@@ -59,17 +63,19 @@ const googleCalendarSync = {
                 }
             }
 
-            const existingEvent = await knexReader('google_calendar_events').where({
-                userId: userId,
-                orgId: orgId,
-                eventEntityId: entityId,
-                eventEntityType: entityType
-            }).first();
-
-            if(existingEvent) {
-                console.log('[helpers][google-calendar-sync][addEventToCalendar]: Event already exists -- updating existing event');
-                const data =  this.updateEventInCalendar(userId, orgId, title, description, startDate, endDate, entityType, entityId);
-                return data;
+            if(entityType !== 'custom') {
+                const existingEvent = await knexReader('google_calendar_events').where({
+                    userId: userId,
+                    orgId: orgId,
+                    eventEntityId: entityId,
+                    eventEntityType: entityType
+                }).first();
+                
+                if(existingEvent) {
+                    console.log('[helpers][google-calendar-sync][addEventToCalendar]: Event already exists -- updating existing event');
+                    const data =  this.updateEventInCalendar(userId, orgId, title, description, startDate, endDate, entityType, entityId);
+                    return data;
+                }
             }
 
             const { refreshToken, calendarId } = googleAccount.details;
@@ -108,6 +114,7 @@ const googleCalendarSync = {
             }
 
             switch(entityType) {
+                case 'custom':
                 case 'work_order': {
                     const event = await calendar.events.insert({
                         calendarId: googleCalendar.data.id,
@@ -131,15 +138,17 @@ const googleCalendarSync = {
                             }
                         }
                     });
-                    await knex.insert({
-                        userId: userId,
-                        orgId: orgId,
-                        eventEntityId: entityId,
-                        eventEntityType: entityType,
-                        googleCalEventId: event.data.id
-                    })
-                    .returning(["*"])
-                    .into("google_calendar_events");
+                    if(entityType !== 'custom') {
+                        await knex.insert({
+                            userId: userId,
+                            orgId: orgId,
+                            eventEntityId: entityId,
+                            eventEntityType: entityType,
+                            googleCalEventId: event.data.id
+                        })
+                        .returning(["*"])
+                        .into("google_calendar_events");
+                    }
                     return {
                         data: {
                             event: event.data
@@ -176,10 +185,11 @@ const googleCalendarSync = {
      * @param {string} startDate - start date in ISO format
      * @param {string} endDate - end date in ISO format
      * @param {string} entityType
-     * @param {number} entityId
+     * @param {number} entityId - null, if entityType is 'custom'
+     * @param {string} eventId
      * @returns {Promise}  Promise object which resolves to either data or error object
      */
-    updateEventInCalendar: async function (userId, orgId, title, description, startDate, endDate, entityType, entityId) {
+    updateEventInCalendar: async function (userId, orgId, title, description, startDate, endDate, entityType, entityId, eventId) {
         try {
             const schema = Joi.object().keys({
                 userId: Joi.number().required(),
@@ -189,7 +199,16 @@ const googleCalendarSync = {
                 startDate: Joi.date().greater(new Date(new Date().setHours(0, 0, 0)).toISOString()).iso().required(),
                 endDate: Joi.date().greater(Joi.ref('startDate')).iso().required(),
                 entityType: Joi.string().required(),
-                entityId: Joi.number().required(),
+                entityId: Joi.number().allow(null).when('entityType', {
+                    is: 'custom',
+                    then: Joi.optional(),
+                    otherwise: Joi.required()
+                }),
+                eventId: Joi.string().when('entityType', {
+                    is: 'custom',
+                    then: Joi.required(),
+                    otherwise: Joi.optional()
+                })
                 // eventType: Joi.string().valid('single', 'recurring').required(),  - if we want to support recurring events in future
                 // recurrence: Joi.array().items(Joi.string()).when('eventType', {
                 //     is: 'recurring',
@@ -197,7 +216,7 @@ const googleCalendarSync = {
                 // })
             });
 
-            const result = Joi.validate({ userId, orgId, title, description, startDate, endDate, entityType, entityId }, schema);
+            const result = Joi.validate({ userId, orgId, title, description, startDate, endDate, entityType, entityId, eventId }, schema);
 
             console.log('[helpers][google-calendar-sync][updateEventInCalendar]: Joi Validate Params:', result);
 
@@ -222,22 +241,26 @@ const googleCalendarSync = {
                 }
             }
 
-            const existingEvent = await knexReader('google_calendar_events').where({
-                userId: userId,
-                orgId: orgId,
-                eventEntityId: entityId,
-                eventEntityType: entityType
-            }).first();
+            let existingEvent;
 
-            if(!existingEvent) {
-                console.log('[helpers][google-calendar-sync][updateEventInCalendar]: Event does not exists');
-                return {
-                   error: {
-                    code: "EVENT_NOT_FOUND",
-                    message: 'Event not found',
-                    error: new Error('Event not found.')
-                   }
-                };
+            if(entityType !== 'custom') {
+                existingEvent = await knexReader('google_calendar_events').where({
+                    userId: userId,
+                    orgId: orgId,
+                    eventEntityId: entityId,
+                    eventEntityType: entityType
+                }).first();
+                
+                if(!existingEvent) {
+                    console.log('[helpers][google-calendar-sync][updateEventInCalendar]: Event does not exists');
+                    return {
+                        error: {
+                            code: "EVENT_NOT_FOUND",
+                            message: 'Event not found',
+                            error: new Error('Event not found.')
+                        }
+                    };
+                }
             }
 
             const { refreshToken, calendarId } = googleAccount.details;
@@ -257,6 +280,7 @@ const googleCalendarSync = {
                 token_type: 'Bearer',
                 scope: oauthScope
             });
+
             const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
             let googleCalendar;
@@ -274,12 +298,14 @@ const googleCalendarSync = {
                     }
                 }
             }
+
             switch(entityType) {
+                case 'custom':
                 case 'work_order': {
                     try {
                         const event = await calendar.events.update({
                             calendarId: googleCalendar.data.id,
-                            eventId: existingEvent.googleCalEventId,
+                            eventId: existingEvent?.googleCalEventId ?? eventId,
                             requestBody: {
                                 summary: title,
                                 description: description,
@@ -341,19 +367,28 @@ const googleCalendarSync = {
      * @param {number} orgId
      * @param {string} entityType
      * @param {number} entityId
+     * @param {string} eventId
      * @returns {Promise}  Promise object which resolves to either data or error object
      */
-    deleteEventFromCalendar: async function (userId, orgId, entityType, entityId) {
-        console.log('Delete Event -----------', userId, orgId, entityType, entityType)
+    deleteEventFromCalendar: async function (userId, orgId, entityType, entityId, eventId) {
         try {
             const schema = Joi.object().keys({
                 userId: Joi.number().required(),
                 orgId: Joi.number().required(),
                 entityType: Joi.string().required(),
-                entityId: Joi.number()
+                entityId: Joi.number().allow(null).when('entityType', {
+                    is: 'custom',
+                    then: Joi.optional(),
+                    otherwise: Joi.required()
+                }),
+                eventId: Joi.string().when('entityType', {
+                    is: 'custom',
+                    then: Joi.required(),
+                    otherwise: Joi.optional()
+                })
             });
 
-            const result = Joi.validate({ userId, orgId, entityType, entityId }, schema);
+            const result = Joi.validate({ userId, orgId, entityType, entityId, eventId }, schema);
 
             console.log('[helpers][google-calendar-sync][deleteEventFromCalendar]: Joi Validate Params:', result);
 
@@ -378,20 +413,24 @@ const googleCalendarSync = {
                 }
             }
 
-            const existingEvent = await knexReader('google_calendar_events').where({
-                userId: userId,
-                orgId: orgId,
-                eventEntityId: entityId,
-                eventEntityType: entityType
-            }).first();
+            let existingEvent;
 
-            if(!existingEvent) {
-                console.log('[helpers][google-calendar-sync][deleteEventFromCalendar]: Event does not exists');
-                return {
-                    error: {
-                        code: "EVENT_NOT_FOUND",
-                        message: 'Event not found',
-                        error: new Error('Event not found.')    
+            if(entityType !== 'custom') {
+                existingEvent = await knexReader('google_calendar_events').where({
+                    userId: userId,
+                    orgId: orgId,
+                    eventEntityId: entityId,
+                    eventEntityType: entityType
+                }).first();
+                
+                if(!existingEvent) {
+                    console.log('[helpers][google-calendar-sync][deleteEventFromCalendar]: Event does not exists');
+                    return {
+                        error: {
+                            code: "EVENT_NOT_FOUND",
+                            message: 'Event not found',
+                            error: new Error('Event not found.')    
+                        }
                     }
                 }
             }
@@ -412,6 +451,7 @@ const googleCalendarSync = {
                 token_type: 'Bearer',
                 scope: oauthScope
             });
+
             const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
             let googleCalendar;
@@ -429,19 +469,23 @@ const googleCalendarSync = {
                     }
                 }
             }
+
             switch(entityType) {
+                case 'custom':
                 case 'work_order': {
                     try {
                         await calendar.events.delete({
                             calendarId: googleCalendar.data.id,
-                            eventId: existingEvent.googleCalEventId,
+                            eventId: existingEvent?.googleCalEventId ?? eventId,
                         });
-                        await knex('google_calendar_events').where({
-                            userId: userId,
-                            orgId: orgId,
-                            eventEntityId: entityId,
-                            eventEntityType: entityType
-                        }).del();
+                        if(entityType !== 'custom') {
+                            await knex('google_calendar_events').where({
+                                userId: userId,
+                                orgId: orgId,
+                                eventEntityId: entityId,
+                                eventEntityType: entityType
+                            }).del();
+                        }
                         return {
                             data: {
                                 message: 'Event deleted successfully.'
@@ -498,7 +542,7 @@ const googleCalendarSync = {
                 return { 
                     error: {
                         code: 'PARAMS_VALIDATION_ERROR', 
-                        message: + result.error.message, 
+                        message: result.error.message, 
                         error: new Error('Could Not get calendar events due to params validations failure.') 
                     }
                 };
@@ -520,6 +564,7 @@ const googleCalendarSync = {
             const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
             const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
             const GOOGLE_REDIRECT_URL = process.env.GOOGLE_REDIRECT_URL;
+
             const oauthScope =
             "openid https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar.app.created";
 
@@ -531,6 +576,7 @@ const googleCalendarSync = {
                 token_type: 'Bearer',
                 scope: oauthScope
             });
+
             const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
             let googleCalendar;
@@ -548,9 +594,11 @@ const googleCalendarSync = {
                     }
                 }
             }
+
             const events = await calendar.events.list({
                 calendarId: googleCalendar.data.id
             });
+
             return {
                 data: {
                     events: events.data.items

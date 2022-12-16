@@ -76,6 +76,7 @@ const traceLotsRouter = require("./trace-lots");
 
 const taxRouter = require("./administration-features/taxes");
 const chargeRouter = require("./administration-features/charges");
+const calendarRouter = require('./administration-features/calendar');
 
 /* GET home page. */
 router.get("/", async (req, res, next) => {
@@ -268,5 +269,7 @@ router.use("/trace-qr", traceLotsRouter);
 router.use("/administration-features/taxes", taxRouter);
 
 router.use("/administration-features/charges", chargeRouter);
+
+router.use("/administration-features/calendar", calendarRouter);
 
 module.exports = router;

@@ -176,20 +176,37 @@ const addWorkPlanSchedule = async (req, res) => {
         const nextWeekDate = new Date(currentTime).setHours(0, 0, 0, 0) + 7 * 24 * 60 * 60 * 1000;
 
         const workOrdersNew = await knexReader('work_plan_schedule_assign_locations')
-            .select('work_plan_schedule_assign_locations.id')
+            .select('work_plan_schedule_assign_locations.id', 'work_plan_schedule_assign_locations.orgId')
             .innerJoin('work_plan_schedules', 'work_plan_schedule_assign_locations.workPlanScheduleId', 'work_plan_schedules.id')
             .where('work_plan_schedule_assign_locations.workPlanScheduleId', insertedRecord.id)
             .andWhere('work_plan_schedule_assign_locations.createdAt', '>=', currentTime )
             .andWhere('work_plan_schedule_assign_locations.workOrderDate', '<=', nextWeekDate);
+
         
+        // Temporary code to test adding multiple work order events without using queueHelper
+        /*
+        for(let i = 0; i < workOrdersNew.length; i++) {
+            const workOrder = workOrdersNew[i];
+            setTimeout(async () => {
+                await workOrderEventsHelper
+                    .addWorkOrderEvents(+workOrder.id, +orgId);
+            }, (i + 1) * 1000)
+        }
+        */
+       const workOrdersChunks = [];
+       const chunkSize = 10;
+
+       for(let i = 0; i < workOrdersNew.length; i += chunkSize) {
+            workOrdersChunks.push(workOrdersNew.slice(i, i + chunkSize));
+       }
+
         // Import SQS Helper..
         const queueHelper = require('../../helpers/queue');
 
-        for(const workOrder of workOrdersNew) {
-            // Using SQS helper to avoid getting rate limiting errors from Google calendar API
+        for(const workOrderChunk of workOrdersChunks) {
+            // Using SQS queueHelper to avoid getting rate limiting errors from Google calendar API
             queueHelper.addToQueue({
-                workOrderId: workOrder.id,
-                orgId: orgId
+                workOrderChunk: workOrderChunk
             },
             'long-jobs',
             'ADD_WORK_ORDER_CALENDAR_EVENT'

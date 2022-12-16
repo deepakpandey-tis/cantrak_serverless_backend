@@ -1,5 +1,6 @@
 const knex = require('../db/knex');
 const AWS = require('aws-sdk');
+const Parallel = require('async-parallel');
 
 const readJsonFile = async (Bucket, Key) => {
 
@@ -252,14 +253,17 @@ module.exports.longJobsProcessor = async (event, context) => {
 
     const workOrderEventsHelper = require('../helpers/work-order-events');
 
-    const { workOrderId, orgId } = recordData;
+    const { workOrderChunk } = recordData;
 
-    if (workOrderId && orgId) {
-      await workOrderEventsHelper.addWorkOrderEvents(workOrderId, orgId);
-    } else {
-      console.log('[handlers][longJobsProcessor]', 'workOrderId or orgId not found.');
-      throw Error('workOrderId or OrgId not found.');
-    }
+    await Parallel.each(workOrderChunk, async (workOrder) => {
+      const { id, orgId } = workOrder;
+      if(id && orgId) {
+        await workOrderEventsHelper.addWorkOrderEvents(id, orgId);
+      } else {
+        console.log('[handlers][longJobsProcessor]', 'workOrderId or orgId not found.');
+        throw Error('workOrderId or OrgId not found.');  
+      }
+    }, 1)
 
     console.log('[handlers][longJobsProcessor]: Task Completed.....');
 
@@ -271,14 +275,17 @@ module.exports.longJobsProcessor = async (event, context) => {
 
     const workOrderEventsHelper = require('../helpers/work-order-events');
 
-    const { workOrderId, orgId } = recordData;
+    const { workOrderChunk } = recordData;
 
-    if (workOrderId && orgId) {
-      await workOrderEventsHelper.deleteWorkOrderEvents(workOrderId, orgId);
-    } else {
-      console.log('[handlers][longJobsProcessor]', 'workOrderId or orgId not found.');
-      throw Error('workOrderId or OrgId not found.');
-    }
+    await Parallel.each(workOrderChunk, async (workOrder) => {
+      const { id, orgId } = workOrder;
+      if(id && orgId) {
+        await workOrderEventsHelper.deleteWorkOrderEvents(id, orgId);
+      } else {
+        console.log('[handlers][longJobsProcessor]', 'workOrderId or orgId not found.');
+        throw Error('workOrderId or OrgId not found.');  
+      }
+    }, 1)
 
     console.log('[handlers][longJobsProcessor]: Task Completed.....');
 
