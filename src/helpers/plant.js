@@ -389,7 +389,7 @@ const plantsHelper = {
                         plant.qrCode = await createQRCodeWithImage(
                           qrString,
                           "",
-                          250,
+                          200,
                           50
                         );
                         console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Qr Generated....");
