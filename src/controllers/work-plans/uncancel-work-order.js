@@ -1,5 +1,9 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
+
+const workOrderEventsHelper = require('../../helpers/work-order-events');
+
 
 const uncancelWorkOrder = async (req, res) => {
     let orgId = req.me.orgId;
@@ -67,6 +71,11 @@ const uncancelWorkOrder = async (req, res) => {
 
             trx.commit;
         });
+
+        // Add work order events when work order is uncancelled.
+        workOrderEventsHelper
+            .addWorkOrderEvents(payload.id, orgId)
+            .catch(error => console.log(error));
 
         return res.status(200).json({
             data: {

@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
+
+const workOrderEventsHelper = require('../../helpers/work-order-events');
 
 const updateWorkOrderTasksStatus = async (req, res) => {
     let orgId = req.me.orgId;
@@ -95,6 +98,13 @@ const updateWorkOrderTasksStatus = async (req, res) => {
 
             trx.commit;
         });
+
+        // Update work order events
+        workOrderEventsHelper
+            .updateWorkOrderEvents(payload.workOrderTasks[0].workPlanScheduleAssignLocationId, orgId)
+            .catch(error => {
+                console.log(error);
+            });
 
         return res.status(200).json({
             data: {

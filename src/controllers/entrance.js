@@ -1,6 +1,7 @@
 const knex = require('../db/knex');
 const knexReader = require('../db/knex-reader');
 const Joi = require('@hapi/joi');
+const { google } = require("googleapis");
 const bcrypt = require('bcryptjs');
 const saltRounds = 10;
 const moment = require('moment');
@@ -10,6 +11,7 @@ const _ = require('lodash');
 const superagent = require('superagent');
 const addUserActivityHelper = require('../helpers/add-user-activity')
 const { EntityTypes, EntityActions } = require('../helpers/user-activity-constants');
+
 
 
 const entranceController = {
@@ -790,6 +792,185 @@ const entranceController = {
 
         }
     },
+
+    authorizeGoogleAccount: async (req, res) => {
+        try {
+          const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+          const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+          const GOOGLE_REDIRECT_URL = process.env.GOOGLE_REDIRECT_URL;
+
+          const oauthScope = "openid https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar.app.created";
+
+          const originUrl = req.get('origin');
+          const REDIRECT_URL = originUrl + '/' + GOOGLE_REDIRECT_URL;
+
+          const APP_ENV = process.env.APP_ENV;
+
+          let payload = req.body;
+
+          const schema = Joi.object().keys({
+            code: Joi.string().required(),
+            state: Joi.string().required(),
+          });
+
+          const result = Joi.validate(payload, schema);
+          if (result && result.hasOwnProperty('error') && result.error) {
+                return res.status(400).json({
+                    errors: [
+                        { code: 'VALIDATION_ERROR', message: result.error.message }
+                    ],
+                });
+          }
+
+          const oauth2Client = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URL);
+          let { tokens } = await oauth2Client.getToken(payload.code);
+
+          // If the user has not given the calendar permission then just return the unmodified user object
+          if(!tokens.scope.includes('https://www.googleapis.com/auth/calendar.app.created')) {
+              let user = await knex('users').where({ id: req.me.id }).first();
+              let socialAccounts = await knex('social_accounts').where({ userId: req.me.id });
+              user.socialAccounts = socialAccounts;
+              return res.status(200).json({
+                  data: {
+                      isAuthorizedSuccessfully: false,
+                      user: user,
+                      message: 'Could not link GOOGLE account to your Cantrak account :( Please check if you have given sufficient permissions'
+                  }
+              });
+          }
+
+          oauth2Client.setCredentials({
+              access_token: tokens.access_token,
+              refresh_token: tokens.refresh_token,
+              token_type: 'Bearer',
+              scope: oauthScope
+          });
+
+          const ticket = await oauth2Client.verifyIdToken({
+              idToken: tokens.id_token,
+              audience: GOOGLE_CLIENT_ID
+          });
+
+          const googleProfile = ticket.getPayload();
+          const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+
+          const emailLinkedWithAnotherAccount = await knexReader('social_accounts')
+            .whereRaw("social_accounts.details->>'email' = ?", [googleProfile.email])
+            .andWhere("social_accounts.userId", "!=", req.me.id)
+            .first();
+
+          if(emailLinkedWithAnotherAccount) {
+            let user = await knex('users').where({ id: req.me.id }).first();
+            let socialAccounts = await knex('social_accounts').where({ userId: req.me.id });
+            user.socialAccounts = socialAccounts;
+            return res.status(200).json({
+                data: {
+                    isAuthorizedSuccessfully: false,
+                    user: user,
+                    message: 'This Google account is already linked with another Cantrak account.'
+                }
+            });
+          }
+
+          let googleAccount = await knex('social_accounts').where({ userId: req.me.id, accountName: 'GOOGLE' }).first();
+
+          if(!googleAccount) {
+              const newCalendar = await calendar.calendars.insert({
+                  requestBody: {
+                      summary: `Cantrak${(APP_ENV === 'STAGE' || APP_ENV === 'DEV') ? `-${APP_ENV}` : ''}`,
+                  },
+                  });
+              let insertData = {
+                  accountName: 'GOOGLE',
+                  userId: req.me.id,
+                  details: JSON.stringify({...googleProfile, refreshToken: tokens.refresh_token, calendarId: newCalendar.data.id}),
+                  createdAt: new Date().getTime(),
+                  updatedAt: new Date().getTime(),
+              }
+              const result = await knex.insert(insertData).returning(['*']).into('social_accounts');
+              googleAccount = result && result[0] ? result[0] : result;
+          } else {
+              const result = await knex('social_accounts').update({
+                  details: JSON.stringify({...googleProfile, refreshToken: tokens.refresh_token}),
+                  updatedAt: new Date().getTime()
+              }).where({ id: googleAccount.id }).returning(['*']);        
+              googleAccount = result && result[0] ? result[0] : result;        
+          }
+
+          let user = await knex('users').where({ id: req.me.id }).first();
+
+          let socialAccounts = await knex('social_accounts').where({ userId: req.me.id });
+          socialAccounts = socialAccounts.map(account => {
+              if(account.accountName === 'GOOGLE') {
+                  return {...account, details: _.omit(account.details, ['refreshToken', 'calendarId'])}
+              }
+              return account;
+          })
+          user.socialAccounts = socialAccounts;
+
+          return res.status(200).json({
+              data: {
+                  isAuthorizedSuccessfully: true,
+                  user: user
+              }
+          });
+          
+      } catch (err) {
+          console.error("[controllers][entrance][authorizeGoogleAccount]: Error", err);
+          return res.status(500).json({
+              errors: [
+                  { code: "UNKNOWN_SERVER_ERROR", message: err.message },
+              ],
+          });
+      }  
+    },
+
+    removeGoogleAccount: async (req, res) => {
+        try {
+            // Code for deleting the Cantrak calendar from user's google calendar
+            // For this code to work, we have to use sensitive scopes for which we will need to submit the
+            // application for verification to Google.
+            /*
+            const googleAccount = await knex('social_accounts').where({accountName: 'GOOGLE', userId: req.me.id}).select(["*"]).first();
+            if(googleAccount){
+                const calendarId = googleAccount.details.calendarId;
+                console.error("[controllers][entrance][removeGoogleAccount]:", googleAccount.details.calendarId, googleAccount.details.refreshToken);
+                oauth2Client.setCredentials({
+                    refresh_token: googleAccount.details.refreshToken,
+                    scope: oauthScope
+                });
+                const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+                try {
+                    await calendar.calendars.delete({
+                        calendarId: calendarId,
+                    })
+                } catch(error) {
+                    console.error("[controllers][entrance][removeGoogleAccount]: Can't delete the calendar as user has already deleted the calendar");
+                    console.error("[controllers][entrance][removeGoogleAccount]: Can't delete the calendar as user has already deleted the calendar", error);
+                }
+            }
+            */
+            await knex('social_accounts')
+                .where({ accountName: 'GOOGLE', userId: req.me.id })
+                .del();
+            let user = await knex('users').where({ id: req.me.id }).first();
+            let socialAccounts = await knex('social_accounts').where({ userId: req.me.id });
+            user.socialAccounts = socialAccounts;
+            res.status(200).json({
+                data: {
+                    user: user
+                }
+            });
+        } catch (err) {
+            console.error("[controllers][entrance][removeGoogleAccount]: Error", err);
+            return res.status(500).json({
+                errors: [
+                    { code: "UNKNOWN_SERVER_ERROR", message: err.message },
+                ],
+            });
+        }
+    },
+    
     getOldPassword : async(req,res) =>{
         try {
             let oldPassword = await knex('users')

@@ -1,5 +1,8 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
+
+const workOrderEventsHelper = require('../../helpers/work-order-events');
 
 const updateWorkOrderDate = async (req, res) => {
     let orgId = req.me.orgId;
@@ -9,6 +12,9 @@ const updateWorkOrderDate = async (req, res) => {
 
     let insertedRecord = [];
     let woAdditionalUserNo;
+
+    let previouslyAssignedServiceTeam;
+    let previouslyAssignedServiceAdditionalUsers;
 
     const schema = Joi.object().keys({
         id: Joi.string().required(),
@@ -53,6 +59,13 @@ const updateWorkOrderDate = async (req, res) => {
 
             insertedRecord = insertResult[0];
 
+            previouslyAssignedServiceTeam = await knexReader('assigned_service_team')
+            .where({
+              orgId: orgId,
+              entityType: 'work_order',
+              entityId: payload.id
+            }).first();
+
             //  Location Work Order Team
             if(payload.astId){
                 let teamData = {
@@ -86,6 +99,13 @@ const updateWorkOrderDate = async (req, res) => {
                     .transacting(trx)
                     .into("assigned_service_team");
             }
+
+            previouslyAssignedServiceAdditionalUsers = await knexReader('assigned_service_additional_users')
+            .where({
+              orgId: orgId,
+              entityType: 'work_order',
+              entityId: payload.id
+            });
         
             //  Location Work Order Additional Users
             //  First delete existing records and then insert
@@ -121,6 +141,15 @@ const updateWorkOrderDate = async (req, res) => {
             trx.commit;
         });
 
+        // Delete previous work order events
+        workOrderEventsHelper
+            .deleteWorkOrderEvents(payload.id, orgId)
+            .then(() => {
+                // Add new work order events
+                return workOrderEventsHelper.addWorkOrderEvents(payload.id, orgId);
+            })
+            .catch(error => console.log(error));
+    
         return res.status(200).json({
             data: {
                 record: insertedRecord,

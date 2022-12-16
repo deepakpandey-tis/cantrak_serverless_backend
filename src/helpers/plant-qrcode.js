@@ -393,7 +393,7 @@ const plantQRCodeHelper = {
                 let qrCodeDataURI = await createQRCodeWithImage(
                   qrString,
                   "",
-                  150,
+                  250,
                   50
                 );
 

@@ -1,6 +1,9 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
+const knexReader = require('../../db/knex-reader');
 const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
+
+const workOrderEventsHelper = require('../../helpers/work-order-events');
 
 const addWorkPlanSchedule = async (req, res) => {
     try {
@@ -169,6 +172,47 @@ const addWorkPlanSchedule = async (req, res) => {
             trx.commit;
         });
 
+        // Add 7 days to the current date
+        const nextWeekDate = new Date(currentTime).setHours(0, 0, 0, 0) + 7 * 24 * 60 * 60 * 1000;
+
+        const workOrdersNew = await knexReader('work_plan_schedule_assign_locations')
+            .select('work_plan_schedule_assign_locations.id', 'work_plan_schedule_assign_locations.orgId')
+            .innerJoin('work_plan_schedules', 'work_plan_schedule_assign_locations.workPlanScheduleId', 'work_plan_schedules.id')
+            .where('work_plan_schedule_assign_locations.workPlanScheduleId', insertedRecord.id)
+            .andWhere('work_plan_schedule_assign_locations.createdAt', '>=', currentTime )
+            .andWhere('work_plan_schedule_assign_locations.workOrderDate', '<=', nextWeekDate);
+
+        
+        // Temporary code to test adding multiple work order events without using queueHelper
+        /*
+        for(let i = 0; i < workOrdersNew.length; i++) {
+            const workOrder = workOrdersNew[i];
+            setTimeout(async () => {
+                await workOrderEventsHelper
+                    .addWorkOrderEvents(+workOrder.id, +orgId);
+            }, (i + 1) * 1000)
+        }
+        */
+       const workOrdersChunks = [];
+       const chunkSize = 10;
+
+       for(let i = 0; i < workOrdersNew.length; i += chunkSize) {
+            workOrdersChunks.push(workOrdersNew.slice(i, i + chunkSize));
+       }
+
+        // Import SQS Helper..
+        const queueHelper = require('../../helpers/queue');
+
+        for(const workOrderChunk of workOrdersChunks) {
+            // Using SQS queueHelper to avoid getting rate limiting errors from Google calendar API
+            queueHelper.addToQueue({
+                workOrderChunk: workOrderChunk
+            },
+            'long-jobs',
+            'ADD_WORK_ORDER_CALENDAR_EVENT'
+            ).catch(error => console.log(error));
+        }
+                        
         return res.status(200).json({
             data: {
                 record: insertedRecord,

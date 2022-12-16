@@ -69,7 +69,7 @@ provider:
     ENV: ${self:provider.stage}
     REGION: ${self:provider.region}
     DB_USER: pg888
-    DB_PASS: su99yTIS#2021
+    DB_PASS: password
     DB_NAME: pg888
     DB_HOST: 127.0.0.1
     DB_PORT: 5432
@@ -93,6 +93,10 @@ provider:
     REDIS_HOST: 127.0.0.1
     REDIS_PORT: 6379
     MNT_DIR: ${self:custom.localMountPath}
+    GOOGLE_CLIENT_SECRET: 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
+    GOOGLE_CLIENT_ID: 551396889611-ila27c0q57k5cjv6dgc9l2l31dhr2vr4.apps.googleusercontent.com
+    GOOGLE_REDIRECT_URL: google-auth-callback
+
   vpc:
     securityGroupIds:
       - sg-085a4849cdbd4f122
@@ -185,4 +189,15 @@ functions:
     events:
       - schedule:
           rate: cron(0 1 * * ? *)    # Utc 1 am every day i.e 8 am Morning Thai Time..
-          enabled: true        
+          enabled: true
+
+
+  syncGoogleCalendarEvents:
+    handler: src/handlers/daily-tasks.syncGoogleCalendarEvents
+    memorySize: 1024
+    timeout:  899                     # Max Time out is 15 mins..
+    events:
+      - schedule:
+          #rate: cron(53 11 * * ? *)    # Utc 9 pm every day i.e 4 am Morning Thai Time..
+          rate: rate(5 minutes)
+          enabled: true
