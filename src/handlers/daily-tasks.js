@@ -80,7 +80,7 @@ module.exports.syncGoogleCalendarEvents = async (event, context) => {
     }
 
     // Import SQS Helper..
-    const queueHelper = require('../../helpers/queue');
+    const queueHelper = require('../helpers/queue');
 
     for(const workOrderChunk of workOrdersChunks) {
         // Using SQS queueHelper to avoid getting rate limiting errors from Google calendar API
