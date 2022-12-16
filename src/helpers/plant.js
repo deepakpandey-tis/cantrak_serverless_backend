@@ -386,21 +386,11 @@ const plantsHelper = {
                         // plant.qrCode = qrCodeDataURI;
 
                         //  image not passed, function will use default image - Cantrak logo
-                        let wdth;
-                        let cwdth;
-                        if(pdfType == '5x5'){
-                          wdth = 150;
-                          cwdth = 50;
-                        }
-                        else {
-                          wdth = 175;
-                          cwdth = 50;
-                        }
                         plant.qrCode = await createQRCodeWithImage(
                           qrString,
                           "",
-                          wdth,
-                          cwdth
+                          175,
+                          50
                         );
                         console.log("[helpers][plants][generatePlantsDocumentOnEFSv2]: Qr Generated....");
                         return plant;

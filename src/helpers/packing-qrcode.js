@@ -332,7 +332,7 @@ const packingQRCodeHelper = {
                     let qrCodeDataURI = await createQRCodeWithImage(
                       rec.qrCodeString,
                       "",
-                      150,
+                      175,
                       50
                     );
                     let packedItemWithQrCode = {...rec, qrCode: qrCodeDataURI};

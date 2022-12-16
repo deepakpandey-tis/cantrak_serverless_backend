@@ -390,21 +390,11 @@ const plantQRCodeHelper = {
                 // );
 
                 //  image not passed, function will use default image - Cantrak logo
-                  let wdth;
-                  let cwdth;
-                  if(pdfType == '5x5'){
-                    wdth = 150;
-                    cwdth = 50;
-                  }
-                  else {
-                    wdth = 175;
-                    cwdth = 50;
-                  }
                 let qrCodeDataURI = await createQRCodeWithImage(
                   qrString,
                   "",
-                  wdth,
-                  cwdth
+                  175,
+                  50
                 );
 
                 data.qrCode = qrCodeDataURI;
@@ -435,7 +425,7 @@ const plantQRCodeHelper = {
                 let qrCodeDataURI = await createQRCodeWithImage(
                   qrString,
                   "",
-                  150,
+                  175,
                   50
                 );
 
