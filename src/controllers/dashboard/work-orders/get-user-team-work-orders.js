@@ -29,10 +29,12 @@ const getUserTeamWorkOrders = async (req, res) => {
             sqlWhere += ` AND wpsal."companyId" = ${companyId}`;
         }
         if(fromDate){
-            sqlWhere += ` AND wpsal."workOrderDate" >= ${new Date(fromDate).getTime()}`;
+            // Ignore time part; compare only dates
+            // sqlWhere += ` AND wpsal."workOrderDate" >= ${new Date(fromDate).getTime()}`;
+            sqlWhere += ` AND to_timestamp(wpsal."workOrderDate"/1000 )::date >= to_timestamp(${new Date(fromDate).getTime()}/1000 )::date`;
         }
         if(toDate){
-            sqlWhere += ` AND wpsal."workOrderDate" <= ${new Date(toDate).getTime()}`;
+            sqlWhere += ` AND to_timestamp(wpsal."workOrderDate"/1000 )::date <= to_timestamp(${new Date(toDate).getTime()}/1000 )::date`;
         }
 
         sqlOrderBy = ` ORDER BY "workOrderDate" asc, "displayId" asc, "locationName" asc, "subLocationName" asc, name asc`;

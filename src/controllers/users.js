@@ -1,9 +1,8 @@
 const knex = require('../db/knex');
 const Joi = require('@hapi/joi');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const saltRounds = 10;
 const moment = require('moment');
-var jwt = require('jsonwebtoken');
 const _ = require('lodash');
 
 const usersController = {

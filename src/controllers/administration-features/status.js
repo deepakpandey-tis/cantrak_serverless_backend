@@ -7,7 +7,7 @@ const XLSX = require("xlsx");
 
 const knex = require("../../db/knex");
 
-const bcrypt = require("bcrypt");
+const bcrypt = require('bcryptjs');
 const saltRounds = 10;
 
 const fs = require("fs");

@@ -1,16 +1,11 @@
 const Joi = require("@hapi/joi");
 const moment = require("moment");
 const uuidv4 = require("uuid/v4");
-var jwt = require("jsonwebtoken");
 const _ = require("lodash");
 const XLSX = require("xlsx");
 
 const knex = require("../../db/knex");
 
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
-const fs = require("fs");
-const path = require("path");
 
 const bannersController = {
 

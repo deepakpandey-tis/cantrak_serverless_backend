@@ -166,7 +166,6 @@ module.exports.longJobsProcessor = async (event, context) => {
 
   }
 
-
   if (messageType == 'PLANT_TO_SCAN') {
 
     console.log('[handlers][longJobsProcessor]: Data For Plants Doc Prepare:', recordData);
@@ -186,6 +185,7 @@ module.exports.longJobsProcessor = async (event, context) => {
     console.log('[handlers][longJobsProcessor]: Task Completed.....');
 
   }
+  
   else if (messageType == 'PACKING_TO_SCAN') {
 
     console.log('[handlers][longJobsProcessor]: Data For Packing Doc Prepare:', recordData);
@@ -205,46 +205,6 @@ module.exports.longJobsProcessor = async (event, context) => {
 
   }
 
-  if (messageType == 'PARCEL_PREPARE_PENDING_LIST_DOCUMENT') {
-
-    console.log('[handlers][longJobsProcessor]: Data For Pending Parcel Doc Prepare:', recordData);
-
-    const parcelHelper = require('../helpers/parcel');
-
-    const { requestId, data, orgId, parcelSlipKey, requestedBy } = recordData;
-
-    if (data.parcelList.length > 0) {
-      // await agmHelper.generateVotingDocument({ agmId, data, orgId, requestedBy });
-      await parcelHelper.generateParcelSlipDocumentOnEFSv2({ requestId, data, orgId, parcelSlipKey, requestedBy });
-    } else {
-      console.log('[handlers][longJobsProcessor]', 'Pending Parcel List not found. Hence Pending Parcel Documents can not be generated.');
-      throw Error('Pending Parcel List not found. Hence Pending Parcel Documents can not be generated.');
-    }
-
-    console.log('[handlers][longJobsProcessor]: Task Completed.....');
-
-  }
-
-
-
-  if (messageType == 'AGM_FINAL_SUBMIT') {
-
-    console.log('[handlers][longJobsProcessor]: Data For AGM_FINAL_SUBMIT:', recordData);
-
-    const agmHelper = require('../helpers/agm');
-
-    const { agmId, data, orgId, requestedBy } = recordData;
-
-    if (agmId) {
-      await agmHelper.finalSubmit({ agmId, data, orgId, requestedBy });
-    } else {
-      console.log('[handlers][longJobsProcessor]', 'AGM Id not found. Hence AGM_FINAL_SUBMIT can not be done.');
-      throw Error('AGM Id not found. AGM Id not found. Hence AGM_FINAL_SUBMIT can not be done.');
-    }
-
-    console.log('[handlers][longJobsProcessor]: Task Completed.....');
-
-  }
 
 
   if (messageType == 'ADD_WORK_ORDER_CALENDAR_EVENT') {

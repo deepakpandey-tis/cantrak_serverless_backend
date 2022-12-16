@@ -6,14 +6,6 @@ const _ = require("lodash");
 const multer = require("multer");
 
 const knex = require("../db/knex");
-
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
-
-const AWS = require("aws-sdk");
-const XLSX = require("xlsx");
-const fs = require("fs");
-const https = require("https");
 const imageHelper = require("../helpers/image");
 
 

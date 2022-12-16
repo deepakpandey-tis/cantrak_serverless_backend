@@ -16,10 +16,20 @@ async function sendMessage(connectionId, body) {
     }
     console.log('[socket][sendMessage]: ENDPOINT After https check:', ENDPOINT);
 
-    const apig = new AWS.ApiGatewayManagementApi({
-      // apiVersion: '2018-11-29',
-      endpoint: `${ENDPOINT}`
-    });
+    let apig;
+
+    if (process.env.APP_ENV == 'DEV') {
+      apig = new AWS.ApiGatewayManagementApi({
+        apiVersion: '2018-11-29',
+        endpoint: `${ENDPOINT}`
+      });
+    } else {
+      apig = new AWS.ApiGatewayManagementApi({
+        // apiVersion: '2018-11-29',
+        endpoint: `${ENDPOINT}`
+      });
+    }
+    
 
     body = JSON.stringify(body);
 
