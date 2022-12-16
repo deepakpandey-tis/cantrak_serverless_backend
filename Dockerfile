@@ -8,6 +8,8 @@ COPY ./package.json ${LAMBDA_TASK_ROOT}/package.json
 RUN cd ${LAMBDA_TASK_ROOT}
 RUN pwd
 
+ENV LD_PRELOAD=/var/task/node_modules/canvas/build/Release/libz.so.1
+
 RUN npm install
 
 RUN ls
