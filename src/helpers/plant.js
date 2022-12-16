@@ -393,7 +393,7 @@ const plantsHelper = {
                           cwdth = 50;
                         }
                         else {
-                          wdth = 180;
+                          wdth = 175;
                           cwdth = 50;
                         }
                         plant.qrCode = await createQRCodeWithImage(

@@ -397,7 +397,7 @@ const plantQRCodeHelper = {
                     cwdth = 50;
                   }
                   else {
-                    wdth = 180;
+                    wdth = 175;
                     cwdth = 50;
                   }
                 let qrCodeDataURI = await createQRCodeWithImage(
