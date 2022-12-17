@@ -953,12 +953,49 @@ const entranceController = {
                 }
             }
             */
+            let googleAccount = await knexReader('social_accounts').where({ userId: req.me.id, accountName: 'GOOGLE' }).first();
+
+            if(!googleAccount) {
+                return res.status(404).json({
+                    error: {
+                        code: "ACCOUNT_NOT_FOUND",
+                        message: 'Please connect your Google account to use this API',
+                        error: new Error('Please connect your Google account to use this API')
+                    }
+
+                });
+            }
+            const { refreshToken } = googleAccount.details;
+
+            const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+            const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+            const GOOGLE_REDIRECT_URL = process.env.GOOGLE_REDIRECT_URL;
+            const oauthScope =
+            "openid https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar.app.created";
+
+            const REDIRECT_URL = 'https://app.cantrak.tech' + '/' + GOOGLE_REDIRECT_URL;
+
+            const oauth2Client = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URL);
+            oauth2Client.setCredentials({
+                refresh_token: refreshToken,
+                token_type: 'Bearer',
+                scope: oauthScope
+            });
+
+            const result = await oauth2Client.getAccessToken()
+
+            await oauth2Client.revokeToken(result.token);
+
             await knex('social_accounts')
                 .where({ accountName: 'GOOGLE', userId: req.me.id })
                 .del();
+
             let user = await knex('users').where({ id: req.me.id }).first();
+
             let socialAccounts = await knex('social_accounts').where({ userId: req.me.id });
+
             user.socialAccounts = socialAccounts;
+            
             res.status(200).json({
                 data: {
                     user: user
