@@ -1,5 +1,6 @@
 const { google } = require('googleapis');
 const Joi = require("@hapi/joi");
+const moment = require("moment-timezone");
 
 const knexReader = require('../../db/knex-reader');
 const googleCalendarSync = require('../../helpers/google-calendar-sync');
@@ -43,10 +44,18 @@ const calendarController = {
             
             let payload = req.body;
 
+            moment.tz.setDefault('Asia/Bangkok');
+
+            const today = moment().set({
+                hour: 0,
+                minute: 0,
+                second: 0
+            }).toISOString();
+
             const schema = Joi.object().keys({
                 title: Joi.string().required(),
                 description: Joi.string().required(),
-                startTime: Joi.date().greater(new Date(new Date().setHours(0, 0, 0)).toISOString()).iso().required(),
+                startTime: Joi.date().greater(today).iso().required(),
                 endTime: Joi.date().greater(Joi.ref('startTime')).iso().required()
             });
 
@@ -103,10 +112,19 @@ const calendarController = {
 
             let payload = req.body;
 
+            moment.tz.setDefault('Asia/Bangkok');
+
+            const today = moment().set({
+                hour: 0,
+                minute: 0,
+                second: 0
+            }).toISOString();
+
+
             const schema = Joi.object().keys({
                 title: Joi.string().required(),
                 description: Joi.string().required(),
-                startTime: Joi.date().greater(new Date(new Date().setHours(0, 0, 0)).toISOString()).iso().required(),
+                startTime: Joi.date().greater(today).iso().required(),
                 endTime: Joi.date().greater(Joi.ref('startTime')).iso().required()
             });
 

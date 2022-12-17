@@ -1,4 +1,5 @@
 const Joi = require("@hapi/joi");
+const moment = require("moment-timezone");
 const knex = require('../../db/knex');
 const knexReader = require('../../db/knex-reader');
 const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
@@ -172,8 +173,16 @@ const addWorkPlanSchedule = async (req, res) => {
             trx.commit;
         });
 
+        moment.tz.setDefault('Asia/Bangkok');
+
+        const today = moment(currentTime).set({
+            hour: 0,
+            minute: 0,
+            second: 0
+        }).valueOf();
+
         // Add 7 days to the current date
-        const nextWeekDate = new Date(currentTime).setHours(0, 0, 0, 0) + 7 * 24 * 60 * 60 * 1000;
+        const nextWeekDate = today + 7 * 24 * 60 * 60 * 1000;
 
         const workOrdersNew = await knexReader('work_plan_schedule_assign_locations')
             .select('work_plan_schedule_assign_locations.id', 'work_plan_schedule_assign_locations.orgId')

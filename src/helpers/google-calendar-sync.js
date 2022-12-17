@@ -1,5 +1,6 @@
 const { google } = require('googleapis');
 const Joi = require("@hapi/joi");
+const moment = require("moment-timezone");
 
 const knex = require('../db/knex');
 const knexReader = require('../db/knex-reader');
@@ -18,12 +19,20 @@ const googleCalendarSync = {
      */
     addEventToCalendar: async function (userId, orgId, title, description, startDate, endDate, entityType, entityId) {
         try {
+            moment.tz.setDefault('Asia/Bangkok');
+
+            const today = moment().set({
+                hour: 0,
+                minute: 0,
+                second: 0
+            }).toISOString();
+
             const schema = Joi.object().keys({
                 userId: Joi.number().required(),
                 orgId: Joi.number(),
                 title: Joi.string().required(),
                 description: Joi.string().required(),
-                startDate: Joi.date().greater(new Date(new Date().setHours(0, 0, 0)).toISOString()).iso().required(),
+                startDate: Joi.date().greater(today).iso().required(),
                 endDate: Joi.date().greater(Joi.ref('startDate')).iso().required(),
                 entityType: Joi.string().required(),
                 entityId: Joi.number().allow(null).when('entityType', {
@@ -191,12 +200,20 @@ const googleCalendarSync = {
      */
     updateEventInCalendar: async function (userId, orgId, title, description, startDate, endDate, entityType, entityId, eventId) {
         try {
+            moment.tz.setDefault('Asia/Bangkok');
+
+            const today = moment().set({
+                hour: 0,
+                minute: 0,
+                second: 0
+            }).toISOString();
+
             const schema = Joi.object().keys({
                 userId: Joi.number().required(),
                 orgId: Joi.number(),
                 title: Joi.string().required(),
                 description: Joi.string().required(),
-                startDate: Joi.date().greater(new Date(new Date().setHours(0, 0, 0)).toISOString()).iso().required(),
+                startDate: Joi.date().greater(today).iso().required(),
                 endDate: Joi.date().greater(Joi.ref('startDate')).iso().required(),
                 entityType: Joi.string().required(),
                 entityId: Joi.number().allow(null).when('entityType', {

@@ -878,6 +878,9 @@ const entranceController = {
               const newCalendar = await calendar.calendars.insert({
                   requestBody: {
                       summary: `Cantrak${(APP_ENV === 'STAGE' || APP_ENV === 'DEV') ? `-${APP_ENV}` : ''}`,
+                      description: 'Cantrak calendar for all your work orders.',
+                      timeZone: 'Asia/Bangkok',
+                      location: 'Thailand'
                   },
                   });
               let insertData = {

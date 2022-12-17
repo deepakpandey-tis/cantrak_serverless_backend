@@ -1,3 +1,4 @@
+const moment = require("moment-timezone");
 const knexReader = require('../db/knex-reader');
 
 const googleCalendarSync = require('./google-calendar-sync');
@@ -82,8 +83,21 @@ const getWorkOrderEventData = (workOrder) => {
         </table>
     `;
 
-    const eventStartDate = new Date(new Date(Number(workOrder.workOrderDate)).setHours(8, 00)).toISOString();
-    const eventEndDate = new Date(new Date(Number(workOrder.workOrderDate)).setHours(23, 59)).toISOString();
+    moment.tz.setDefault('Asia/Bangkok');
+
+    const eventStartDate = moment(Number(workOrder.workOrderDate)).set({
+        hour: 8,
+        minute: 0,
+        second: 0,
+        millisecond: 0
+    }).toISOString();
+
+    const eventEndDate = moment(Number(workOrder.workOrderDate)).set({
+        hour: 23,
+        minute: 59,
+        second: 0,
+        millisecond: 0
+    }).toISOString();
 
     return {
         eventTitle,
