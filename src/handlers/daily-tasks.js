@@ -1,5 +1,6 @@
 const knex = require('../db/knex');
 const AWS = require('aws-sdk');
+const moment = require("moment-timezone");
 const knexReader = require('../db/knex-reader');
 
 const workOrderEventsHelper = require('../helpers/work-order-events');
@@ -42,7 +43,7 @@ module.exports.dailyDigestProcessor = async (event, context) => {
 module.exports.syncGoogleCalendarEvents = async (event, context) => {
   console.log('[handlers][syncGoogleCalendarEvents]: Event:', JSON.stringify(event));
 
-  const currentTime = new Date().setHours(0, 0, 0, 0);
+  const currentTime = Date.now();
 
   // Add 7 days to the current date
   const nextWeekDate = currentTime + 7 * 24 * 60 * 60 * 1000;
@@ -61,16 +62,17 @@ module.exports.syncGoogleCalendarEvents = async (event, context) => {
     .andWhere('work_plan_schedule_assign_locations.workOrderDate', '<=', nextWeekDate)
     .andWhere('google_calendar_events.googleCalEventId', null);
 
-
-  // Temporary code to test the cronjob with using queueHelper
-  // for(let i = 0; i < workOrdersWithNoEvents.length; i++) {
-  //     const workOrder = workOrdersWithNoEvents[i];
-  //     setTimeout(async () => {
-  //         console.log('Adding Event --------------------------------------------------------------')
-  //         await workOrderEventsHelper
-  //             .addWorkOrderEvents(+workOrder.id, +workOrder.orgId);
-  //     }, (i + 1) * 1000)
-  // }
+  /*
+  //Temporary code to test the cronjob with using queueHelper
+  for(let i = 0; i < workOrdersWithNoEvents.length; i++) {
+      const workOrder = workOrdersWithNoEvents[i];
+      setTimeout(async () => {
+          console.log('Adding Event --------------------------------------------------------------')
+          await workOrderEventsHelper
+              .addWorkOrderEvents(+workOrder.id, +workOrder.orgId);
+      }, (i + 1) * 1000)
+  }
+  */
 
     const workOrdersChunks = [];
     const chunkSize = 10;
