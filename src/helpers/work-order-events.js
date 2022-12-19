@@ -1,4 +1,5 @@
 const moment = require("moment-timezone");
+const Joi = require("@hapi/joi");
 const knexReader = require('../db/knex-reader');
 
 const googleCalendarSync = require('./google-calendar-sync');
@@ -108,8 +109,32 @@ const getWorkOrderEventData = (workOrder) => {
 };
 
 const workOrderEventsHelper = {
+    /**
+     * @param {number} workOrderId
+     * @param {number} orgId
+     * @returns {Promise}  Promise object which resolves to either error object or undefined in case of successful event creation
+     */
     addWorkOrderEvents: async (workOrderId, orgId) => {
         try {
+            const schema = Joi.object().keys({
+                workOrderId: Joi.number().required(),
+                orgId: Joi.number().required(),
+            });
+
+            const result = Joi.validate({ workOrderId, orgId }, schema);
+
+            console.log('[helpers][workOrderEventsHelper][addWorkOrderEvents]: Joi Validate Params:', result);
+
+            if (result && result.hasOwnProperty('error') && result.error) {
+                return { 
+                   error: {
+                        code: 'PARAMS_VALIDATION_ERROR', 
+                        message:  result.error.message, 
+                        error: new Error('Could Not add work order event due to params validations failure.') 
+                    }
+                };
+            }
+
             const workOrder = await knexReader
                 .select(
                     'work_plan_schedule_assign_locations.id',
@@ -144,6 +169,10 @@ const workOrderEventsHelper = {
                 .where('work_plan_schedule_location_tasks.workPlanScheduleAssignLocationId', workOrderId)
                 .andWhere('work_plan_schedule_location_tasks.orgId', orgId)
                 .orderBy('serialNumber');
+
+            if(!workOrder) {
+                return;
+            }
 
             workOrder.tasks = tasks;
 
@@ -204,8 +233,32 @@ const workOrderEventsHelper = {
 
     },
 
+    /**
+     * @param {number} workOrderId
+     * @param {number} orgId
+     * @returns {Promise}  Promise object which resolves to either error object or undefined in case of successful event update
+     */
     updateWorkOrderEvents: async (workOrderId, orgId) => {
         try {
+            const schema = Joi.object().keys({
+                workOrderId: Joi.number().required(),
+                orgId: Joi.number().required(),
+            });
+
+            const result = Joi.validate({ workOrderId, orgId }, schema);
+
+            console.log('[helpers][workOrderEventsHelper][addWorkOrderEvents]: Joi Validate Params:', result);
+
+            if (result && result.hasOwnProperty('error') && result.error) {
+                return { 
+                   error: {
+                        code: 'PARAMS_VALIDATION_ERROR', 
+                        message:  result.error.message, 
+                        error: new Error('Could Not update work order event due to params validations failure.') 
+                    }
+                };
+            }
+
             const workOrder = await knexReader
                 .select(
                     'work_plan_schedule_assign_locations.id',
@@ -235,6 +288,10 @@ const workOrderEventsHelper = {
                 .where('work_plan_schedule_assign_locations.id', workOrderId)
                 .andWhere('work_plan_schedule_assign_locations.orgId', orgId)
                 .first();
+
+            if(!workOrder) {
+                return;
+            }
 
             const tasks = await knexReader('work_plan_schedule_location_tasks')
                 .where('work_plan_schedule_location_tasks.workPlanScheduleAssignLocationId', workOrderId)
@@ -298,7 +355,31 @@ const workOrderEventsHelper = {
         }
     },
 
+    /**
+     * @param {number} workOrderId
+     * @param {number} orgId
+     * @returns {Promise}  Promise object which resolves to either error object or undefined in case of successful event update
+     */
     deleteWorkOrderEvents: async (workOrderId, orgId) => {
+        const schema = Joi.object().keys({
+            workOrderId: Joi.number().required(),
+            orgId: Joi.number().required(),
+        });
+
+        const result = Joi.validate({ workOrderId, orgId }, schema);
+
+        console.log('[helpers][workOrderEventsHelper][addWorkOrderEvents]: Joi Validate Params:', result);
+
+        if (result && result.hasOwnProperty('error') && result.error) {
+            return { 
+               error: {
+                    code: 'PARAMS_VALIDATION_ERROR', 
+                    message: result.error.message, 
+                    error: new Error('Could Not add work order event due to params validations failure.') 
+                }
+            };
+        }
+
         const workOrderEventsInDB = await knexReader('google_calendar_events')
             .where({
                 orgId: orgId,

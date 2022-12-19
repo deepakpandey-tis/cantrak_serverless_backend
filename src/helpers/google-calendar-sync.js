@@ -144,6 +144,11 @@ const googleCalendarSync = {
                                     { method: 'email', minutes: 24 * 60 },
                                     { method: 'popup', minutes: 10 }
                                 ]
+                            },
+                            extendedProperties: {
+                                private: {
+                                    entityType: entityType
+                                }
                             }
                         }
                     });
@@ -340,7 +345,12 @@ const googleCalendarSync = {
                                         { method: 'email', minutes: 24 * 60 },
                                         { method: 'popup', minutes: 10 }
                                     ]
-                                }
+                                },
+                                extendedProperties: {
+                                    private: {
+                                        entityType: entityType
+                                    }
+                                }    
                             }
                         });
                         return {

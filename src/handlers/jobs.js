@@ -218,7 +218,7 @@ module.exports.longJobsProcessor = async (event, context) => {
     await Parallel.each(workOrderChunk, async (workOrder) => {
       const { id, orgId } = workOrder;
       if(id && orgId) {
-        await workOrderEventsHelper.addWorkOrderEvents(id, orgId);
+        await workOrderEventsHelper.addWorkOrderEvents(+id, +orgId);
       } else {
         console.log('[handlers][longJobsProcessor]', 'workOrderId or orgId not found.');
         throw Error('workOrderId or OrgId not found.');  
@@ -240,7 +240,7 @@ module.exports.longJobsProcessor = async (event, context) => {
     await Parallel.each(workOrderChunk, async (workOrder) => {
       const { id, orgId } = workOrder;
       if(id && orgId) {
-        await workOrderEventsHelper.deleteWorkOrderEvents(id, orgId);
+        await workOrderEventsHelper.deleteWorkOrderEvents(+id, +orgId);
       } else {
         console.log('[handlers][longJobsProcessor]', 'workOrderId or orgId not found.');
         throw Error('workOrderId or OrgId not found.');  
