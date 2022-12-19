@@ -40,6 +40,7 @@ const deleteWorkPlan = async (req, res) => {
               .returning(["*"])
               .into('work_plan_master');
               message = "Template deleted successfully!"
+            // In-active template is treated as deleted template  message = "Template de-activated successfully!"
 
             const workOrders = await knexReader('work_plan_master')
                 .select('work_plan_schedule_assign_locations.id', 'work_plan_schedule_assign_locations.orgId')
@@ -80,11 +81,10 @@ const deleteWorkPlan = async (req, res) => {
                     workOrderChunk: workOrderChunk
                 },
                 'long-jobs',
-                'ADD_WORK_ORDER_CALENDAR_EVENT'
+                'DELETE_WORK_ORDER_CALENDAR_EVENT'
                 ).catch(error => console.log(error));
             }
                         
-            // In-active template is treated as deleted template  message = "Template de-activated successfully!"
           } else {
             sqlResult = await knex
               .update({ isActive: true, updatedBy: userId, updatedAt: currentTime })
