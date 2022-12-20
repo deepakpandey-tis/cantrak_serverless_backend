@@ -238,12 +238,12 @@ functions:
           enabled: true
 
 
-  syncGoogleCalendarEvents:
+  syncEventsToGoogleCalendar:
     #handler: src/handlers/daily-tasks.syncGoogleCalendarEvents
     image:
       uri: ${self:custom.awsContainerImageId}@${param:digest}
       command: 
-        - src/handlers/daily-tasks.syncGoogleCalendarEvents
+        - src/handlers/daily-tasks.syncEventsToGoogleCalendar 
     memorySize: 1024
     timeout:  899                     # Max Time out is 15 mins..
     events:
