@@ -54,8 +54,8 @@ module.exports.syncGoogleCalendarEvents = async (event, context) => {
       'work_plan_schedule_assign_locations.orgId', 
       'google_calendar_events.googleCalEventId'
     )
-    .leftJoin('google_calendar_events', function() {
-      this.on('work_plan_schedule_assign_locations.id', '=', 'google_calendar_events.eventEntityId')
+    .leftJoin('google_calendar_events', (qb) => {
+      qb.on('work_plan_schedule_assign_locations.id', '=', 'google_calendar_events.eventEntityId')
       .andOn('google_calendar_events.eventEntityType', '=', knexReader.raw('?', ['work_order']));
     })
     .where('work_plan_schedule_assign_locations.workOrderDate', '>=', currentTime)
