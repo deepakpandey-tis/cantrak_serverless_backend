@@ -11,7 +11,7 @@ module.exports.workOrderOverdueProcessor = async (event, context) => {
 };
 
 
-module.exports.syncGoogleCalendarEvents = async (event, context) => {
+module.exports.syncEventsToGoogleCalendar = async (event, context) => {
   console.log('[handlers][syncGoogleCalendarEvents]: Event:', JSON.stringify(event));
 
   const googleCalendarCronHelper = require('../helpers/google-calendar-cron');
