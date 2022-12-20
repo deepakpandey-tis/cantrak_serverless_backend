@@ -193,7 +193,7 @@ const addWorkPlanSchedule = async (req, res) => {
 
         
         // Temporary code to test adding multiple work order events without using queueHelper
-        /*
+        
         for(let i = 0; i < workOrdersNew.length; i++) {
             const workOrder = workOrdersNew[i];
             setTimeout(async () => {
@@ -201,7 +201,8 @@ const addWorkPlanSchedule = async (req, res) => {
                     .addWorkOrderEvents(+workOrder.id, +orgId);
             }, (i + 1) * 1000)
         }
-        */
+        
+       /*
        const workOrdersChunks = [];
        const chunkSize = 10;
 
@@ -221,6 +222,7 @@ const addWorkPlanSchedule = async (req, res) => {
             'ADD_WORK_ORDER_CALENDAR_EVENT'
             ).catch(error => console.log(error));
         }
+        */
                         
         return res.status(200).json({
             data: {
