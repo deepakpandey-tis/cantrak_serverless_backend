@@ -5,7 +5,7 @@ const uuidv4 = require('uuid/v4');
 const knex = require("../db/knex");
 
 
-const sendSQSMessage = async (messageBody, queueName, messageType) => {
+const sendSQSMessage = async (messageBody, queueName, messageType, delay = 0) => {
 
     AWS.config.update({
         accessKeyId: process.env.ACCESS_KEY_ID,
@@ -19,7 +19,7 @@ const sendSQSMessage = async (messageBody, queueName, messageType) => {
 
     if (queueName == 'mail-queue') {
         params = {
-            DelaySeconds: 1,
+            DelaySeconds: delay,
             MessageAttributes: {
                 "title": {
                     DataType: "String",
@@ -43,7 +43,7 @@ const sendSQSMessage = async (messageBody, queueName, messageType) => {
 
     if (queueName == 'long-jobs') {
         params = {
-            DelaySeconds: 1,
+            DelaySeconds: delay,
             MessageAttributes: {
                 "title": {
                     DataType: "String",
@@ -84,7 +84,7 @@ const sendSQSMessage = async (messageBody, queueName, messageType) => {
 
 const queueHelper = {
 
-    addToQueue: async (messageBody, queueName, messageType) => {
+    addToQueue: async (messageBody, queueName, messageType, delay = 0) => {
         try {
 
             console.log('[helpers][queue][addToQueue] : Going to Queue Job', messageBody, queueName);
@@ -129,11 +129,11 @@ const queueHelper = {
                 };
                 newSqsMessage = JSON.stringify(newSqsMessage);
 
-                const messageSendResult = await sendSQSMessage(newSqsMessage, queueName, messageType);
+                const messageSendResult = await sendSQSMessage(newSqsMessage, queueName, messageType, delay);
                 return { success: true, message: 'Job added to Queue with s3 Payload...', data: messageSendResult };
 
             } else {
-                const messageSendResult = await sendSQSMessage(sqsMessageBody, queueName, messageType);
+                const messageSendResult = await sendSQSMessage(sqsMessageBody, queueName, messageType, delay);
                 return { success: true, message: 'Job added to Queue', data: messageSendResult };
             }
 
