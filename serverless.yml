@@ -182,12 +182,12 @@ functions:
           enabled: true
 
 
-  syncGoogleCalendarEvents:
-    handler: src/handlers/daily-tasks.syncGoogleCalendarEvents
+  syncEventsToGoogleCalendar:
+    handler: src/handlers/daily-tasks.syncEventsToGoogleCalendar
     memorySize: 1024
     timeout:  899                     # Max Time out is 15 mins..
     events:
       - schedule:
-          rate: cron(*/2 * * * ? *)    # Utc 9 pm every day i.e 4 am Morning Thai Time..
+          rate: cron(0 21 * * ? *)    # Utc 9 pm every day i.e 4 am Morning Thai Time..
           #rate: rate(5 minutes)
           enabled: true

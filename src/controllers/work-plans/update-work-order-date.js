@@ -142,13 +142,11 @@ const updateWorkOrderDate = async (req, res) => {
         });
 
         // Delete previous work order events
-        workOrderEventsHelper
-            .deleteWorkOrderEvents(payload.id, orgId)
-            .then(() => {
-                // Add new work order events
-                return workOrderEventsHelper.addWorkOrderEvents(payload.id, orgId);
-            })
-            .catch(error => console.log(error));
+        await workOrderEventsHelper
+            .deleteWorkOrderEvents(+payload.id, +orgId);
+
+        // Add new work order events
+        await workOrderEventsHelper.addWorkOrderEvents(+payload.id, +orgId);
     
         return res.status(200).json({
             data: {

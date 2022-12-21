@@ -1,5 +1,6 @@
 const moment = require("moment-timezone");
 const Joi = require("@hapi/joi");
+const Parallel = require('async-parallel');
 const knexReader = require('../db/knex-reader');
 
 const googleCalendarSync = require('./google-calendar-sync');
@@ -203,10 +204,12 @@ const workOrderEventsHelper = {
                     assignedServiceTeam.entityType,
                     +assignedServiceTeam.entityId
                 );
+
+            Parallel.setConcurrency(0);
         
             // Add event to additional users' calendar
             if(assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length > 0) {
-                for(let user of assignedServiceAdditionalUsers) {
+                await Parallel.each(assignedServiceAdditionalUsers, async (user) => {
                     await googleCalendarSync.addEventToCalendar(
                         +user.userId,
                         +orgId,
@@ -217,7 +220,7 @@ const workOrderEventsHelper = {
                         user.entityType,
                         +user.entityId
                     );
-                }
+                });            
             }
 
         } catch(error) {
@@ -247,7 +250,7 @@ const workOrderEventsHelper = {
 
             const result = Joi.validate({ workOrderId, orgId }, schema);
 
-            console.log('[helpers][workOrderEventsHelper][addWorkOrderEvents]: Joi Validate Params:', result);
+            console.log('[helpers][workOrderEventsHelper][updateWorkOrderEvents]: Joi Validate Params:', result);
 
             if (result && result.hasOwnProperty('error') && result.error) {
                 return { 
@@ -328,9 +331,11 @@ const workOrderEventsHelper = {
                     +assignedServiceTeam.entityId
                 );
 
+            Parallel.setConcurrency(0);
+
             // Update event in additional users' calendar
-            if(assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length > 0) {
-                for(let user of assignedServiceAdditionalUsers) {
+            if (assignedServiceAdditionalUsers && assignedServiceAdditionalUsers.length > 0) {
+                await Parallel.each(assignedServiceAdditionalUsers, async (user) => {
                     await googleCalendarSync.updateEventInCalendar(
                         +user.userId,
                         +orgId,
@@ -341,8 +346,9 @@ const workOrderEventsHelper = {
                         user.entityType,
                         +user.entityId
                     );
-                }
+                });
             }
+
         } catch (error) {
             console.error("[helpers][work-order-events][workOrderEventsHelper][updateWorkOrderEvents]: Error", error);
             return {
@@ -388,14 +394,17 @@ const workOrderEventsHelper = {
                     eventEntityType: 'work_order'
                 });
 
-            for (const workOrderEvent of workOrderEventsInDB) {
+            Parallel.setConcurrency(0);
+
+            await Parallel.each(workOrderEventsInDB, async (workOrderEvent) => {
                 await googleCalendarSync.deleteEventFromCalendar(
                     +workOrderEvent.userId,
                     +orgId,
                     'work_order',
                     workOrderEvent.eventEntityId
-                )
-            }
+                );
+            });
+
         } catch(error) {
             console.error("[helpers][work-order-events][workOrderEventsHelper][deleteWorkOrderEvents]: Error", error);
             return {
