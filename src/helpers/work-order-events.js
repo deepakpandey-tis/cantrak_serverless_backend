@@ -221,7 +221,7 @@ const workOrderEventsHelper = {
             }
 
         } catch(error) {
-            console.error("[helpers][work-order-events][workOrderEventsHelper][addWorkOrderEvent]: [Error]", error);
+            console.error("[helpers][work-order-events][workOrderEventsHelper][addWorkOrderEvent]: Error", error);
             return {
                 error: {
                     code: "UNKNOWN_SERVER_ERROR",
@@ -344,7 +344,7 @@ const workOrderEventsHelper = {
                 }
             }
         } catch (error) {
-            console.error("[helpers][work-order-events][workOrderEventsHelper][addWorkOrderEvent]: [Error]", error);
+            console.error("[helpers][work-order-events][workOrderEventsHelper][updateWorkOrderEvents]: Error", error);
             return {
                 error: {
                     code: "UNKNOWN_SERVER_ERROR",
@@ -361,39 +361,50 @@ const workOrderEventsHelper = {
      * @returns {Promise}  Promise object which resolves to either error object or undefined in case of successful event update
      */
     deleteWorkOrderEvents: async (workOrderId, orgId) => {
-        const schema = Joi.object().keys({
-            workOrderId: Joi.number().required(),
-            orgId: Joi.number().required(),
-        });
-
-        const result = Joi.validate({ workOrderId, orgId }, schema);
-
-        console.log('[helpers][workOrderEventsHelper][addWorkOrderEvents]: Joi Validate Params:', result);
-
-        if (result && result.hasOwnProperty('error') && result.error) {
-            return { 
-               error: {
-                    code: 'PARAMS_VALIDATION_ERROR', 
-                    message: result.error.message, 
-                    error: new Error('Could Not add work order event due to params validations failure.') 
-                }
-            };
-        }
-
-        const workOrderEventsInDB = await knexReader('google_calendar_events')
-            .where({
-                orgId: orgId,
-                eventEntityId: workOrderId,
-                eventEntityType: 'work_order'
+        try {
+            const schema = Joi.object().keys({
+                workOrderId: Joi.number().required(),
+                orgId: Joi.number().required(),
             });
-        
-        for(const workOrderEvent of workOrderEventsInDB) {
-            await googleCalendarSync.deleteEventFromCalendar(
-                +workOrderEvent.userId,
-                +orgId,
-                'work_order',
-                workOrderEvent.eventEntityId
-            )
+
+            const result = Joi.validate({ workOrderId, orgId }, schema);
+
+            console.log('[helpers][workOrderEventsHelper][deleteWorkOrderEvents]: Joi Validate Params:', result);
+
+            if (result && result.hasOwnProperty('error') && result.error) {
+                return {
+                    error: {
+                        code: 'PARAMS_VALIDATION_ERROR',
+                        message: result.error.message,
+                        error: new Error('Could Not add work order event due to params validations failure.')
+                    }
+                };
+            }
+
+            const workOrderEventsInDB = await knexReader('google_calendar_events')
+                .where({
+                    orgId: orgId,
+                    eventEntityId: workOrderId,
+                    eventEntityType: 'work_order'
+                });
+
+            for (const workOrderEvent of workOrderEventsInDB) {
+                await googleCalendarSync.deleteEventFromCalendar(
+                    +workOrderEvent.userId,
+                    +orgId,
+                    'work_order',
+                    workOrderEvent.eventEntityId
+                )
+            }
+        } catch(error) {
+            console.error("[helpers][work-order-events][workOrderEventsHelper][deleteWorkOrderEvents]: Error", error);
+            return {
+                error: {
+                    code: "UNKNOWN_SERVER_ERROR",
+                    message: error.message,
+                    error: new Error(error.message)
+                }
+            }
         }
     }
 };

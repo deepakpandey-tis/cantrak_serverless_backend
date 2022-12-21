@@ -230,10 +230,10 @@ const addWorkPlanSchedule = async (req, res) => {
                     delayInSeconds
                     );
                 } else {
-                    console.log("[controllers][work-plans][addWorkPlanSchedule]: Skipping adding work orders events to calendar, delay time exceeded 900 seconds");
+                    console.log("[controllers][work-plans][addWorkPlanSchedule] Error: Skipping adding work orders events to calendar, delay time exceeded 900 seconds");
                 }
             } catch(error) {
-                console.log("[controllers][work-plans][addWorkPlanSchedule]: Some error in processing work orders events chunks", JSON.stringify(workOrderChunk), error);
+                console.log("[controllers][work-plans][addWorkPlanSchedule] Error: Some error in processing work orders events chunks", JSON.stringify(workOrderChunk), error);
             }
         });
         
