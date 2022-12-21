@@ -73,9 +73,8 @@ const uncancelWorkOrder = async (req, res) => {
         });
 
         // Add work order events when work order is uncancelled.
-        workOrderEventsHelper
-            .addWorkOrderEvents(payload.id, orgId)
-            .catch(error => console.log(error));
+        await workOrderEventsHelper
+            .addWorkOrderEvents(+payload.id, +orgId);
 
         return res.status(200).json({
             data: {

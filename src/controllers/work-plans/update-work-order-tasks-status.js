@@ -100,11 +100,7 @@ const updateWorkOrderTasksStatus = async (req, res) => {
         });
 
         // Update work order events
-        workOrderEventsHelper
-            .updateWorkOrderEvents(payload.workOrderTasks[0].workPlanScheduleAssignLocationId, orgId)
-            .catch(error => {
-                console.log(error);
-            });
+        await workOrderEventsHelper.updateWorkOrderEvents(+payload.workOrderTasks[0].workPlanScheduleAssignLocationId, +orgId);
 
         return res.status(200).json({
             data: {

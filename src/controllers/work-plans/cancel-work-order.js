@@ -72,9 +72,7 @@ const cancelWorkOrder = async (req, res) => {
         });
 
         // Delete work order events when work order is cancelled.
-        workOrderEventsHelper
-            .deleteWorkOrderEvents(payload.id, orgId)
-            .catch(error => console.log(error));
+        await workOrderEventsHelper.deleteWorkOrderEvents(+payload.id, +orgId);
 
         return res.status(200).json({
             data: {

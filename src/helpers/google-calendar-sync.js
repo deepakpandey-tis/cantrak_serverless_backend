@@ -369,7 +369,7 @@ const googleCalendarSync = {
                             message: 'Event not found',
                             error: new Error('Event not found.')
                            }
-                        }
+                        };
                     }
                 }
                 default:
