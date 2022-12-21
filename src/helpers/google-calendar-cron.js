@@ -1,6 +1,7 @@
 const knex = require('../db/knex');
 const knexReader = require('../db/knex-reader');
 const moment = require('moment-timezone');
+const Parallel = require('async-parallel');
 
 const googleCalendarCronHelper = async () => {
     const currentTime = moment().valueOf();
@@ -42,25 +43,37 @@ const googleCalendarCronHelper = async () => {
     */
   
       const workOrdersChunks = [];
-      const chunkSize = 10;
+      const chunkSize = 20;
   
       for(let i = 0; i < workOrdersWithNoEvents.length; i += chunkSize) {
           workOrdersChunks.push(workOrdersWithNoEvents.slice(i, i + chunkSize));
       }
+
+      let delayInSeconds = 0;
   
       // Import SQS Helper..
       const queueHelper = require('../helpers/queue');
-  
-      for(const workOrderChunk of workOrdersChunks) {
-          // Using SQS queueHelper to avoid getting rate limiting errors from Google calendar API
-          queueHelper.addToQueue({
-              workOrderChunk: workOrderChunk
-          },
-          'long-jobs',
-          'ADD_WORK_ORDER_CALENDAR_EVENT'
-          ).catch(error => console.log(error));
-      }  
-    
+      
+      Parallel.setConcurrency(0);
+
+      await Parallel.each(workOrdersChunks, async (workOrdersChunk) => {
+          try {
+              if (delayInSeconds < 900) {
+                  delayInSeconds += 30;
+                  await queueHelper.addToQueue({
+                      workOrderChunk: workOrdersChunk
+                  },
+                  'long-jobs',
+                  'ADD_WORK_ORDER_CALENDAR_EVENT',
+                  delayInSeconds
+                  );
+              } else {
+                  console.log("[helpers][google-calendar-cron][googleCalendarCronHelper]: Skipping adding events to calendar, delay time exceeded 900 seconds");
+              }
+          } catch (error) {
+              console.log("[helpers][google-calendar-cron][googleCalendarCronHelper]: Some error in processing work orders events chunks", JSON.stringify(workOrderChunk), error);
+          }
+      });
 };
 
 module.exports = googleCalendarCronHelper;
