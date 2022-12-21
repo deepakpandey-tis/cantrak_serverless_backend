@@ -68,10 +68,10 @@ const googleCalendarCronHelper = async () => {
                   delayInSeconds
                   );
               } else {
-                  console.log("[helpers][google-calendar-cron][googleCalendarCronHelper]: Skipping adding events to calendar, delay time exceeded 900 seconds");
+                  console.log("[helpers][google-calendar-cron][googleCalendarCronHelper] Error: Skipping adding events to calendar, delay time exceeded 900 seconds");
               }
           } catch (error) {
-              console.log("[helpers][google-calendar-cron][googleCalendarCronHelper]: Some error in processing work orders events chunks", JSON.stringify(workOrderChunk), error);
+              console.log("[helpers][google-calendar-cron][googleCalendarCronHelper] Error: Some error in processing work orders events chunks", JSON.stringify(workOrderChunk), error);
           }
       });
 };

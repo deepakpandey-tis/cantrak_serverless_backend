@@ -93,10 +93,10 @@ const deleteWorkPlan = async (req, res) => {
                             delayInSeconds
                         );
                     } else {
-                        console.log("[controllers][work-plans]deleteWorkPlan: Skipping deleting work orders events from calendar, delay time exceeded 900 seconds");
+                        console.log("[controllers][work-plans]deleteWorkPlan Error: Skipping deleting work orders events from calendar, delay time exceeded 900 seconds");
                     }
                 } catch (error) {
-                    console.log("[controllers][work-plans]deleteWorkPlan: Some error in processing work orders events chunks", JSON.stringify(workOrderChunk), error);
+                    console.log("[controllers][work-plans]deleteWorkPlan Error: Some error in processing work orders events chunks", JSON.stringify(workOrderChunk), error);
                 }
             });
                         

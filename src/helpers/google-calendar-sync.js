@@ -63,6 +63,7 @@ const googleCalendarSync = {
 
             let googleAccount = await knexReader('social_accounts').where({ userId: userId, accountName: 'GOOGLE' }).first();
             if(!googleAccount) {
+                console.log('[helpers][google-calendar-sync][addEventToCalendar] Error: User does not have a Google account linked');
                 return {
                     error: {
                         code: "ACCOUNT_NOT_FOUND",
@@ -112,7 +113,7 @@ const googleCalendarSync = {
                     calendarId: calendarId,
                   });
             } catch(error) {
-                console.error("[helpers][google-calendar-sync][addEventToCalendar]: [Error] Calendar Not Found", error);
+                console.error("[helpers][google-calendar-sync][addEventToCalendar]: Error [Error] Calendar Not Found", error);
                 return {
                     error: {
                         code: "CALENDAR_NOT_FOUND",
@@ -170,6 +171,7 @@ const googleCalendarSync = {
                     };
                 }
                 default:
+                    console.error("[helpers][google-calendar-sync][addEventToCalendar]: Error: Invalid entity type provided");
                     return {
                         error: {
                             code: "INVALID_ENTITY_TYPE",
@@ -254,6 +256,7 @@ const googleCalendarSync = {
 
             let googleAccount = await knexReader('social_accounts').where({ userId: userId, accountName: 'GOOGLE' }).first();
             if(!googleAccount) {
+                console.log('[helpers][google-calendar-sync][updateEventToCalendar] Error: User does not have a Google account linked');
                 return {
                     error: {
                         code: "ACCOUNT_NOT_FOUND",
@@ -274,7 +277,7 @@ const googleCalendarSync = {
                 }).first();
                 
                 if(!existingEvent) {
-                    console.log('[helpers][google-calendar-sync][updateEventInCalendar]: Event does not exists');
+                    console.log('[helpers][google-calendar-sync][updateEventInCalendar] Error: Event does not exists');
                     return {
                         error: {
                             code: "EVENT_NOT_FOUND",
@@ -359,6 +362,7 @@ const googleCalendarSync = {
                             }
                         };
                     } catch(error) {
+                        console.log('[helpers][google-calendar-sync][updateEventInCalendar] Error: Error updating event', error);
                         return {
                            error: {
                             code: "EVENT_NOT_FOUND",
@@ -369,6 +373,7 @@ const googleCalendarSync = {
                     }
                 }
                 default:
+                    console.log('[helpers][google-calendar-sync][updateEventToCalendar] Error: Invalid entity type provided');
                     return {
                         error: {
                             code: "INVALID_ENTITY_TYPE",
@@ -431,6 +436,7 @@ const googleCalendarSync = {
 
             let googleAccount = await knexReader('social_accounts').where({ userId: userId, accountName: 'GOOGLE' }).first();
             if(!googleAccount) {
+                console.log('[helpers][google-calendar-sync][deleteEventFromCalendar] Error: User does not have a Google account linked');
                 return {
                     error: {
                         code: "ACCOUNT_NOT_FOUND",
@@ -487,7 +493,7 @@ const googleCalendarSync = {
                     calendarId: calendarId,
                   });
             } catch(error) {
-                console.error("[helpers][google-calendar-sync][updateEventInCalendar]: [Error] Calendar Not Found", error);
+                console.error("[helpers][google-calendar-sync][deleteEventFromCalendar]: [Error] Calendar Not Found", error);
                 return {
                     error: {
                         code: "CALENDAR_NOT_FOUND",
@@ -519,6 +525,7 @@ const googleCalendarSync = {
                             }
                         };
                     } catch(error) {
+                        console.log('[helpers][google-calendar-sync][deleteEventFromCalendar] Error: Error deleting event', error);
                         return {
                             error: {
                                 code: "EVENT_NOT_FOUND",
@@ -529,6 +536,7 @@ const googleCalendarSync = {
                     }
                 }
                 default:
+                    console.log('[helpers][googleCalendarSync][deleteEventFromCalendar]:  Error: Invalid entity type provided');
                     return {
                         error: {
                             code: "INVALID_ENTITY_TYPE",
@@ -577,6 +585,7 @@ const googleCalendarSync = {
 
             let googleAccount = await knexReader('social_accounts').where({ userId: userId, accountName: 'GOOGLE' }).first();
             if(!googleAccount) {
+                console.log('[helpers][google-calendar-sync][deleteEventFromCalendar] Error: User does not have a Google account linked');
                 return {
                     error: {
                         code: "ACCOUNT_NOT_FOUND",
@@ -632,7 +641,7 @@ const googleCalendarSync = {
                 }
             };
         } catch(error) {
-            console.log('[helpers][googleCalendarSync][getAllEventsFromGoogleCalendar]:  Error', err);
+            console.log('[helpers][googleCalendarSync][getAllEventsFromGoogleCalendar]:  Error', error);
             return { 
                 error: {
                     code: 'UNKNOWN_ERROR', 
@@ -673,6 +682,7 @@ const googleCalendarSync = {
 
             let googleAccount = await knexReader('social_accounts').where({ userId: userId, accountName: 'GOOGLE' }).first();
             if(!googleAccount) {
+                console.log('[helpers][google-calendar-sync][deleteEventFromCalendar] Error: User does not have a Google account linked');
                 return {
                     error: {
                         code: "ACCOUNT_NOT_FOUND",
@@ -719,6 +729,7 @@ const googleCalendarSync = {
             const googleCalendarEvents = await this.getAllEventsFromGoogleCalendar(userId, orgId);
 
             if(googleCalendarEvents.error) {
+                console.log('[helpers][googleCalendarSync][getAllEventsFromLocalDB]:  Error', googleCalendarEvents.error);
                 return {
                     error: googleCalendarEvents.error
                 }
