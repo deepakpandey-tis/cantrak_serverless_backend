@@ -185,7 +185,7 @@ module.exports.longJobsProcessor = async (event, context) => {
     console.log('[handlers][longJobsProcessor]: Task Completed.....');
 
   }
-  
+
   else if (messageType == 'PACKING_TO_SCAN') {
 
     console.log('[handlers][longJobsProcessor]: Data For Packing Doc Prepare:', recordData);
@@ -204,61 +204,6 @@ module.exports.longJobsProcessor = async (event, context) => {
     console.log('[handlers][longJobsProcessor]: Task Completed.....');
 
   }
-
-
-
-  if (messageType == 'ADD_WORK_ORDER_CALENDAR_EVENT') {
-
-    console.log('[handlers][longJobsProcessor]: Data Work Order Add Calendar Event:', recordData);
-
-    const workOrderEventsHelper = require('../helpers/work-order-events');
-
-    const { workOrderChunk } = recordData;
-
-    Parallel.setConcurrency(1);
-
-    await Parallel.each(workOrderChunk, async (workOrder) => {
-      const { id, orgId } = workOrder;
-      if(id && orgId) {
-        await workOrderEventsHelper.addWorkOrderEvents(+id, +orgId);
-      } else {
-        console.log('[handlers][longJobsProcessor]', 'workOrderId or orgId not found.');
-        throw Error('workOrderId or OrgId not found.');  
-      }
-    });
-
-    Parallel.setConcurrency(0);
-
-    console.log('[handlers][longJobsProcessor]: Task Completed.....');
-
-  }
-
-  if (messageType == 'DELETE_WORK_ORDER_CALENDAR_EVENT') {
-
-    console.log('[handlers][longJobsProcessor]: Data Work Order Add Calendar Event:', recordData);
-
-    const workOrderEventsHelper = require('../helpers/work-order-events');
-
-    const { workOrderChunk } = recordData;
-
-    Parallel.setConcurrency(1);
-
-    await Parallel.each(workOrderChunk, async (workOrder) => {
-      const { id, orgId } = workOrder;
-      if(id && orgId) {
-        await workOrderEventsHelper.deleteWorkOrderEvents(+id, +orgId);
-      } else {
-        console.log('[handlers][longJobsProcessor]', 'workOrderId or orgId not found.');
-        throw Error('workOrderId or OrgId not found.');  
-      }
-    });
-
-    Parallel.setConcurrency(0);
-
-    console.log('[handlers][longJobsProcessor]: Task Completed.....');
-
-  }
-
 
 
   if (messageType == 'TEST_PROCESSOR') {
@@ -288,3 +233,73 @@ module.exports.longJobsProcessor = async (event, context) => {
   console.log('[handlers][longJobsProcessor]: Finished.....');
   return true;
 };
+
+
+module.exports.calSyncQueueProcessor = async (event, context) => {
+  const recordsFromSQS = event.Records;
+  const currentRecord = recordsFromSQS[0];    // Since we have kept the batchSize to only 1
+
+  console.log('[handlers][calSyncQueueProcessor] Current Record:', currentRecord);
+
+  let recordData = JSON.parse(currentRecord.body);
+  
+  console.log('[handlers][calSyncQueueProcessor] recordData:', recordData);
+
+  if (currentRecord && recordData.payloadType && recordData.payloadType == 's3') {
+    console.log('[handlers][calSyncQueueProcessor] Got S3 Link, Sqs Message (as json file):', recordData.s3FileKey);
+
+    let jsonData = await readJsonFile(process.env.S3_BUCKET_NAME, recordData.s3FileKey);
+
+    console.log('[handlers][calSyncQueueProcessor] Json Data from s3:', jsonData);
+
+    recordData = JSON.parse(jsonData);
+  }
+
+  let messageType = '';
+
+  if (currentRecord.messageAttributes && currentRecord.messageAttributes.messageType) {
+    messageType = currentRecord.messageAttributes.messageType.stringValue;
+  }
+
+  console.log('[handlers][calSyncQueueProcessor]', 'Message Type:', messageType);
+
+  if (messageType == 'ADD_WORK_ORDER_CALENDAR_EVENT') {
+    console.log('[handlers][calSyncQueueProcessor]: Data Work Order Add Calendar Event:', recordData);
+
+    const workOrderEventsHelper = require('../helpers/work-order-events');
+
+    const { workOrder } = recordData;
+    const { id, orgId } = workOrder;
+
+    if (id && orgId) {
+      await workOrderEventsHelper.addWorkOrderEvents(+id, +orgId);
+    } else {
+      console.log('[handlers][calSyncQueueProcessor]', 'workOrderId or orgId not found.');
+      throw Error('workOrderId or OrgId not found.');
+    }
+
+    console.log('[handlers][calSyncQueueProcessor]: Task Completed.....');
+  }
+
+  if (messageType == 'DELETE_WORK_ORDER_CALENDAR_EVENT') {
+    console.log('[handlers][calSyncQueueProcessor]: Data Work Order Add Calendar Event:', recordData);
+
+    const workOrderEventsHelper = require('../helpers/work-order-events');
+
+    const { workOrder } = recordData;
+    const { id, orgId } = workOrder;
+
+    if (id && orgId) {
+      await workOrderEventsHelper.deleteWorkOrderEvents(+id, +orgId);
+    } else {
+      console.log('[handlers][calSyncQueueProcessor]', 'workOrderId or orgId not found.');
+      throw Error('workOrderId or OrgId not found.');
+    }
+
+    console.log('[handlers][calSyncQueueProcessor]: Task Completed.....');
+  }
+
+  console.log('[handlers][calSyncQueueProcessor]: Finished.....');
+  return true;
+};
+

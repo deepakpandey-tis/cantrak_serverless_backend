@@ -1,6 +1,7 @@
 const moment = require("moment-timezone");
 const Joi = require("@hapi/joi");
 const Parallel = require('async-parallel');
+
 const knexReader = require('../db/knex-reader');
 
 const googleCalendarSync = require('./google-calendar-sync');

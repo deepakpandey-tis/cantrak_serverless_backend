@@ -203,39 +203,26 @@ const addWorkPlanSchedule = async (req, res) => {
             }, (i + 1) * 1000)
         }
         */
-       
-        const workOrdersChunks = [];
-        const chunkSize = 20;
-
-        for(let i = 0; i < workOrdersNew.length; i += chunkSize) {
-            workOrdersChunks.push(workOrdersNew.slice(i, i + chunkSize));
-        }
 
         // Import SQS Helper..
         const queueHelper = require('../../helpers/queue');
 
-        let delayInSeconds = 0;
+        Parallel.setConcurrency(5);
 
-        Parallel.setConcurrency(0);
-
-        await Parallel.each(workOrdersChunks, async (workOrderChunk) => {
+        await Parallel.each(workOrdersNew, async (workOrder) => {
             try {
-                if (delayInSeconds < 900) {
-                    delayInSeconds += 30;
-                    await queueHelper.addToQueue({
-                        workOrderChunk: workOrderChunk
-                    },
-                    'long-jobs',
-                    'ADD_WORK_ORDER_CALENDAR_EVENT',
-                    delayInSeconds
-                    );
-                } else {
-                    console.log("[controllers][work-plans][addWorkPlanSchedule] Error: Skipping adding work orders events to calendar, delay time exceeded 900 seconds");
-                }
+                await queueHelper.addToQueue({
+                    workOrder: workOrder
+                },
+                    'sync-calendar',
+                    'ADD_WORK_ORDER_CALENDAR_EVENT'
+                );
             } catch(error) {
-                console.log("[controllers][work-plans][addWorkPlanSchedule] Error: Some error in processing work orders events chunks", JSON.stringify(workOrderChunk), error);
+                console.log("[controllers][work-plans][addWorkPlanSchedule] Error: Some error in processing work order events", JSON.stringify(workOrder), error);
             }
         });
+
+        Parallel.setConcurrency(0);
         
                         
         return res.status(200).json({
