@@ -65,6 +65,31 @@ const sendSQSMessage = async (messageBody, queueName, messageType, delay = 0) =>
         };
     }
 
+
+    if (queueName == 'sync-calendar') {
+        params = {
+            DelaySeconds: delay,
+            MessageAttributes: {
+                "title": {
+                    DataType: "String",
+                    StringValue: "Sync Calendar Message Body"
+                },
+                "createdAt": {
+                    DataType: "String",
+                    StringValue: createdAt
+                },
+                "messageType": {
+                    DataType: "String",
+                    StringValue: messageType
+                }
+            },
+            MessageBody: messageBody,
+            // MessageDeduplicationId: "TheWhistler",  // Required for FIFO queues
+            // MessageId: "Group1",  // Required for FIFO queues
+            QueueUrl: process.env.SQS_SYNC_CAL_URL
+        };
+    }
+
     return new Promise(async (resolve, reject) => {
         const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
         sqs.sendMessage(params, (err, data) => {

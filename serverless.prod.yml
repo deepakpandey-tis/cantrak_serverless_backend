@@ -93,6 +93,7 @@ provider:
     SECRET_ACCESS_KEY: g8KILqxF2rJtdyR7lgaSh01r90+Etg0YGZ+RjBbA
     SQS_MAIL_QUEUE_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/mail-queue
     SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/long-jobs
+    SQS_SYNC_CAL_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/sync-calendar
     FROM_EMAIL_ADDRESS: no-reply@servicemind.asia
     APP_ENV: PRODUCTION
     S3_BUCKET_URL:  https://pg888-resources.s3.ap-southeast-1.amazonaws.com
@@ -251,6 +252,23 @@ functions:
           rate: cron(50 */3 * * ? *)    # Utc 9 pm every day i.e 4 am Morning Thai Time..
           #rate: rate(5 minutes)
           enabled: true
+
+  
+
+  calSyncQueueProcessor:
+    # handler: src/handlers/jobs.longJobsProcessor
+    image:
+      uri: ${self:custom.awsContainerImageId}@${param:digest}
+      command: 
+        - src/handlers/jobs.calSyncQueueProcessor
+    memorySize: 1024
+    timeout: 150                           # 2.5 Mins...
+    reservedConcurrency: 1                # <-- Concurrency control
+    events:
+      - sqs:
+          arn: arn:aws:sqs:${self:provider.region}:${self:custom.awsAccountId}:sync-calendar
+          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
+
 
 
 resources:
