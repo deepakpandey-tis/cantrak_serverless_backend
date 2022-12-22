@@ -282,7 +282,7 @@ module.exports.calSyncQueueProcessor = async (event, context) => {
   }
 
   if (messageType == 'DELETE_WORK_ORDER_CALENDAR_EVENT') {
-    console.log('[handlers][calSyncQueueProcessor]: Data Work Order Add Calendar Event:', recordData);
+    console.log('[handlers][calSyncQueueProcessor]: Data Work Order Delete Calendar Event:', recordData);
 
     const workOrderEventsHelper = require('../helpers/work-order-events');
 
