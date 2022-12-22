@@ -193,7 +193,7 @@ const addWorkPlanSchedule = async (req, res) => {
             .andWhere('work_plan_schedule_assign_locations.workOrderDate', '<=', nextWeekDate);
 
         
-        // Temporary code to test adding multiple work order events without using queueHelper
+        // Temporary code to test adding multiple work order events without using queueHelper on localhost
         /*
         for(let i = 0; i < workOrdersNew.length; i++) {
             const workOrder = workOrdersNew[i];
