@@ -62,6 +62,7 @@ const getRawMaterialForPlantList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
+        // 2022/12/22: issue for plantation is added to get planted quantity
         sqlSelect = `SELECT it.*, its.id "itemTxnSupplierId", its."supplierId", its."lotNo" "supplierLotNo"
         , its."licenseNo" "supplierLicenseNo", its."internalCode" "supplierInternalCode", its."quality" "supplierQuality", splr.name "supplierName"
         , s.name "strainName", s2.name "specieName", i2.name "itemName", i2.description "itemDescription", c."companyName"
@@ -69,6 +70,9 @@ const getRawMaterialForPlantList = async (req, res) => {
         , (SELECT coalesce(sum(quantity), 0) FROM item_txns txn WHERE txn."orgId" = it."orgId" AND txn."companyId" = it."companyId"
            AND txn."lotNo" = it."lotNo" AND txn."itemCategoryId" = it."itemCategoryId" AND txn."itemId" = it."itemId" 
            AND txn."txnType" >= ${TxnTypes.IssueFromTxnType} AND txn."txnType" <= ${TxnTypes.IssueUptoTxnType}) "issuedQuantity"
+        , (SELECT coalesce(sum(quantity), 0) FROM item_txns txn WHERE txn."orgId" = it."orgId" AND txn."companyId" = it."companyId"
+           AND txn."lotNo" = it."lotNo" AND txn."itemCategoryId" = it."itemCategoryId" AND txn."itemId" = it."itemId" 
+           AND txn."txnType" = ${TxnTypes.IssueForPlantation}) "plantedQuantity"
         `;
 
         // raw material (seeds) can be from harvest, in this case supplier is not available therefore left join used
