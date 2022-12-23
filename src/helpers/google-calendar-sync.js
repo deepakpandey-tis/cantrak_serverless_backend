@@ -511,14 +511,6 @@ const googleCalendarSync = {
                             calendarId: googleCalendar.data.id,
                             eventId: existingEvent?.googleCalEventId ?? eventId,
                         });
-                        if(entityType !== 'custom') {
-                            await knex('google_calendar_events').where({
-                                userId: userId,
-                                orgId: orgId,
-                                eventEntityId: entityId,
-                                eventEntityType: entityType
-                            }).del();
-                        }
                         return {
                             data: {
                                 message: 'Event deleted successfully.'
@@ -532,6 +524,15 @@ const googleCalendarSync = {
                                 message: 'Event not found',
                                 error: new Error('Event not found.')    
                             }
+                        }
+                    } finally {
+                        if (entityType !== 'custom') {
+                            await knex('google_calendar_events').where({
+                                userId: userId,
+                                orgId: orgId,
+                                eventEntityId: entityId,
+                                eventEntityType: entityType
+                            }).del();
                         }
                     }
                 }
