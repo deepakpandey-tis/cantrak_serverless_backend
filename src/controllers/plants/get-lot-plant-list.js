@@ -46,8 +46,10 @@ const getLotPlantList = async (req, res) => {
             
             var selectedIds = await knexReader.raw(sqlStr);
             var finalHarvestedPlantIds = [{id: 0}];
+            var plantLotHarvested = false;
             selectedIds.rows.forEach((el, ndx) => {
                 if(el.plantIds){
+                    plantLotHarvested = true;
                     finalHarvestedPlantIds = (ndx == 0) ? [...el.plantIds] : [...finalHarvestedPlantIds, ...el.plantIds];
                 }
             });
@@ -57,7 +59,7 @@ const getLotPlantList = async (req, res) => {
             // console.log('finalHarvestedPlantIdsString: ', finalHarvestedPlantIdsString);
 
             var entireLot = false;
-            if(finalHarvestedPlantIdsString.length == 1 && finalHarvestedPlantIdsString == 0)
+            if(plantLotHarvested && finalHarvestedPlantIdsString.length == 1 && finalHarvestedPlantIdsString == 0)
             {
                 entireLot = true;
             }
@@ -68,7 +70,7 @@ const getLotPlantList = async (req, res) => {
 
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
         sqlSelect = `SELECT DISTINCT ON (p.id) pl.*, p.id "plantId", p."plantSerial", p."isActive" "plantIsActive", p."isWaste" "plantIsWaste", p."isDestroy" "plantIsDestroy", p."isEndOfLife" "plantIsEndOfLife"
-        , ploc.id "plantLocationId", l.name "plantLocationName", sl.name "plantSubLocationName", pgs."growthStageId" "plantGrowthStageId", pgs."startDate" "plantGrowthStageDate", gs.name "plantGrowthStageName"
+        , ploc.id "plantLocationId", ploc."locationId" "plantCurrentLocationId", l.name "plantLocationName", ploc."subLocationId" "plantCurrentSubLocationId", sl.name "plantSubLocationName", pgs."growthStageId" "plantGrowthStageId", pgs."startDate" "plantGrowthStageDate", gs.name "plantGrowthStageName"
         , s.name "strainName", s2.name "specieName"
         `;
 

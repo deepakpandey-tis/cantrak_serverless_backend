@@ -49,6 +49,13 @@ router.post('/get-plant-history',
   plantController.getPlantHistory
 );
 
+router.post('/get-plant-lot-history',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotHistory
+);
+
 router.post('/add-plant',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -82,6 +89,13 @@ router.post('/get-plant-lot-list',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   plantController.getPlantLotList
+);
+
+router.post('/get-plant-lot-list-original-location',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotListOriginalLocation
 );
 
 router.post('/get-plant-lot',
@@ -140,6 +154,13 @@ router.post('/get-plant-lot-sub-locations',
   plantController.getPlantLotSubLocations
 );
 
+router.post('/get-plant-lot-locations-active',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotLocationsActive
+);
+
 router.post('/get-growth-stage-txn-list',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -196,6 +217,48 @@ router.post('/get-waste-txn',
   plantController.getWasteTxn
 );
 
+router.post('/unhealthy-entry',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.unhealthyEntry
+);
+
+router.post('/get-unhealthy-txn-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getUnhealthyTxnList
+);
+
+router.post('/get-unhealthy-txn',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getUnhealthyTxn
+);
+
+router.post('/healthy-entry',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.healthyEntry
+);
+
+router.post('/get-healthy-txn-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getHealthyTxnList
+);
+
+router.post('/get-healthy-txn',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getHealthyTxn
+);
+
 router.post('/generate-pdf-of-plants',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
@@ -243,6 +306,13 @@ router.post('/get-plant-lot-specific-location-plants-count',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   plantController.getPlantLotSpecificLocationPlantsCount
+);
+
+router.post('/get-plant-lot-plants-count',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotPlantsCount
 );
 
 router.post('/get-plant-growth-stage-history',
@@ -350,6 +420,13 @@ router.post('/get-sub-locations',
   roleMiddleware.parseUserPermission,
   resourceAccessMiddleware.isAccessible,
   plantController.getSubLocations
+);
+
+router.get('/get-diseases',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getDiseases
 );
 
 router.post('/get-locations-of-active-plant-lots',

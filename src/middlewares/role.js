@@ -102,9 +102,9 @@ const roleMiddleware = {
           }
 
 
-          console.log('[middleware][role]: parseUserPermission: userCompanyResources (From Redis) :: ', userCompanyResources);
-          console.log('[middleware][role]: parseUserPermission: userPlantationResources (From Redis) :: ', userPlantationResources);
-          console.log('[middleware][role]: parseUserPermission: userGrowingLocationsResources (From Redis) :: ', userGrowingLocationsResources);
+          // console.log('[middleware][role]: parseUserPermission: userCompanyResources (From Redis) :: ', userCompanyResources);
+          // console.log('[middleware][role]: parseUserPermission: userPlantationResources (From Redis) :: ', userPlantationResources);
+          // console.log('[middleware][role]: parseUserPermission: userGrowingLocationsResources (From Redis) :: ', userGrowingLocationsResources);
 
           req.userCompanyResources = userCompanyResources;
           req.userGrowingLocationsResources = userGrowingLocationsResources;
