@@ -19,7 +19,7 @@ const resourceAccessMiddleware = {
       return next();
     }
 
-    console.log("==== userGrowingLocationsResources ===", req.userGrowingLocationsResources);
+    // console.log("==== userGrowingLocationsResources ===", req.userGrowingLocationsResources);
 
     let uriData = req.originalUrl.split('/');
 

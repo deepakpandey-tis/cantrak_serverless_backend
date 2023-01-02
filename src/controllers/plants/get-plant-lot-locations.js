@@ -8,7 +8,8 @@ const getPlantLotLocations = async (req, res) => {
         let payload = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
-        
+
+        // Plant lot locations (harvest is NOT final || few / selected plants are fully / final harvested)
         sqlSelect = `SELECT DISTINCT pl.id, pl."lotNo", pl2."locationId", l."name" "locationName"
         `;
 

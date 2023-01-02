@@ -5,16 +5,19 @@ const getPlantLotsOfLocationSubLocation = require('./get-plant-lots-of-location-
 const getPlants = require('./get-plants');
 const getPlant = require('./get-plant');
 const getPlantHistory = require('./get-plant-history');
+const getPlantLotHistory = require('./get-plant-lot-history');
 const addPlant = require('./add-plant');
 const deletePlantLot = require('./delete-plant-lot');
 const deletePlant = require('./delete-plant');
 const updatePlantedDate = require('./update-planted-date');
 const getPlantLotList = require('./get-plant-lot-list');
+const getPlantLotListOriginalLocation = require('./get-plant-lot-list-original-location');
 const getPlantExistingGrowthStages = require('./get-plant-existing-growth-stages');
 const changeGrowthStage = require('./change-growth-stage');
 const checkLotNameExists = require('./check-lot-name-exists');
 const getPlantLotLocations = require('./get-plant-lot-locations');
 const getPlantLotSubLocations = require('./get-plant-lot-sub-locations');
+const getPlantLotLocationsActive = require('./get-plant-lot-locations-active');
 const getGrowthStageTxnList = require('./get-growth-stage-txn-list');
 const getGrowthStageTxn = require('./get-growth-stage-txn');
 const changeLocation = require('./change-location');
@@ -30,10 +33,17 @@ const getPlantLotUnhealthyPlantsCount = require('./get-plant-lot-unhealthy-plant
 const getPlantLotsUnhealthyPlantsCount = require('./get-plant-lots-unhealthy-plants-count');
 const getPlantLotCurrentGrowthStages = require('./get-plant-lot-current-growth-stages');
 const getPlantLotSpecificLocationPlantsCount = require('./get-plant-lot-specific-location-plants-count');
+const getPlantLotPlantsCount = require('./get-plant-lot-plants-count');
 const getPlantGrowthStageHistory = require('./get-plant-growth-stage-history');
 const getPlantLocationHistory = require('./get-plant-location-history');
 const getPlantLotUnhealthyPlants = require('./get-plant-lot-unhealthy-plants');
 const getPlantLotsHavingUnhealthyPlants = require('./get-plant-lots-having-unhealthy-plants');
+const unhealthyEntry = require('./unhealthy-entry');
+const getUnhealthyTxnList = require('./get-unhealthy-txn-list');
+const getUnhealthyTxn = require('./get-unhealthy-txn');
+const healthyEntry = require('./healthy-entry');
+const getHealthyTxnList = require('./get-healthy-txn-list');
+const getHealthyTxn = require('./get-healthy-txn');
 
 const getRawMaterialForPlantList = require('./get-raw-material-for-plant-list');
 const getLocationSubLocationPlantLots = require('./get-location-sublocation-plant-lots');
@@ -48,6 +58,7 @@ const getStrains = require('./masters/get-strains');
 const getSubLocations = require('./masters/get-sub-locations');
 const getGrowthStages = require('./masters/get-growth-stages');
 const getStorageLocations = require('./masters/get-storage-locations');
+const getDiseases = require('./masters/get-diseases');
 const getLocationsOfActivePlantLots = require('./masters/get-locations-of-active-plant-lots');
 const getSubLocationsOfActivePlantLots = require('./masters/get-sub-locations-of-active-plant-lots');
 
@@ -68,15 +79,18 @@ module.exports = {
     addPlant,
     getPlant,
     getPlantHistory,
+    getPlantLotHistory,
     deletePlantLot,
     deletePlant,
     updatePlantedDate,
     getPlantLotList,
+    getPlantLotListOriginalLocation,
     getPlantExistingGrowthStages,
     changeGrowthStage,
     checkLotNameExists,
     getPlantLotLocations,
     getPlantLotSubLocations,
+    getPlantLotLocationsActive,
     getGrowthStageTxnList,
     getGrowthStageTxn,
     changeLocation,
@@ -92,10 +106,17 @@ module.exports = {
     getPlantLotsUnhealthyPlantsCount,
     getPlantLotCurrentGrowthStages,
     getPlantLotSpecificLocationPlantsCount,
+    getPlantLotPlantsCount,
     getPlantGrowthStageHistory,
     getPlantLocationHistory,
     getPlantLotUnhealthyPlants,
     getPlantLotsHavingUnhealthyPlants,
+    unhealthyEntry,
+    getUnhealthyTxnList,
+    getUnhealthyTxn,
+    healthyEntry,
+    getHealthyTxnList,
+    getHealthyTxn,
 
     getRawMaterialForPlantList,
     getLocationSubLocationPlantLots,
@@ -110,6 +131,7 @@ module.exports = {
     getSubLocations,
     getGrowthStages,
     getStorageLocations,
+    getDiseases,
     getLocationsOfActivePlantLots,
     getSubLocationsOfActivePlantLots,
 

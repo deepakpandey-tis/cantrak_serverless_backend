@@ -108,60 +108,6 @@ const getPlantLotList = async (req, res) => {
         sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
         sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
 
-/* plant lot list is derived from plant lot's plants' current location
-        // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT pl.*
-        , s.name "strainName", s2.name "specieName", c."companyName", lic.number "licenseNo"
-        , l.name "locationName", sl.name "subLocationName", u2."name" "createdByName"
-        , (select count(p.id)::int from plants p where p."plantLotId" = pl.id and p."isWaste") "wastePlants"
-        `;
-
-        sqlFrom = ` FROM plant_lots pl, companies c, strains s, species s2, licenses lic
-        , locations l, sub_locations sl, users u2
-        `;
-
-        sqlWhere = ` WHERE pl."orgId" = ${orgId}`;
-        if(companyId){
-            sqlWhere += ` AND pl."companyId" = ${companyId}`;
-        }
-        if(strainId){
-            sqlWhere += ` AND pl."strainId" = ${strainId}`;
-        }
-        if(locationId){
-            sqlWhere += ` AND pl."locationId" = ${locationId}`;
-        }
-        if(subLocationId){
-            sqlWhere += ` AND pl."subLocationId" = ${subLocationId}`;
-        }
-        if(licenseId){
-            sqlWhere += ` AND pl."licenseId" = ${licenseId}`;
-        }
-        if(lotNo){
-            sqlWhere += ` AND pl."lotNo" iLIKE '%${lotNo}%'`;
-        }
-        if(fromDate){
-            sqlWhere += ` AND pl."plantedOn" >= ${new Date(fromDate).getTime()}`;
-        }
-        if(toDate){
-            sqlWhere += ` AND pl."plantedOn" <= ${new Date(toDate).getTime()}`;
-        }
-
-        sqlWhere += ` AND pl."locationId" IN (${req.GROWINGLOCATION})`;
-        sqlWhere += ` AND pl."strainId" = s.id AND pl."specieId" = s2.id AND pl."companyId" = c.id AND pl."licenseId" = lic.id
-          AND pl."locationId" = l.id  AND pl."subLocationId" = sl.id AND pl."createdBy" = u2.id
-        `;
-
-        sqlOrderBy = ` ORDER BY ${sortCol} ${sortOrder}`;
-        //console.log('getPlantLotList sql: ', sqlSelect + sqlFrom + sqlWhere);
-
-        sqlStr  = `WITH Main_CTE AS (`;
-        sqlStr += sqlSelect + sqlFrom + sqlWhere + `)`;
-        sqlStr += `, Count_CTE AS (SELECT COUNT(*) AS "total" FROM Main_CTE)`;     // To get the total number of records
-        sqlStr += ` SELECT * FROM Main_CTE, Count_CTE`;
-        sqlStr += sqlOrderBy;
-        sqlStr += ` OFFSET ((${pageNumber} - 1) * ${pageSize}) ROWS`
-        sqlStr += ` FETCH NEXT ${pageSize} ROWS ONLY;`;
- */
         console.log('getPlantLotList: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);

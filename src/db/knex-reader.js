@@ -17,7 +17,7 @@
 function getReadOnlyDbHost() {
     let DB_HOST = process.env.DB_HOST_READ_ONLY;
     if (!DB_HOST || DB_HOST === '') {
-        console.log("Read Replica Not Available, Going to use default host.")
+        // console.log("Read Replica Not Available, Going to use default host.")
         DB_HOST = process.env.DB_HOST;
     }
 
@@ -28,7 +28,7 @@ function getReadOnlyDbHost() {
 function getReadOnlyDbPort() {
     let DB_PORT = process.env.DB_PORT_READ_ONLY;
     if (!DB_PORT || DB_PORT === '') {
-        console.log("Read Replica Not Available, Going to use default port.")
+        // console.log("Read Replica Not Available, Going to use default port.")
         DB_PORT = process.env.DB_PORT;
     }
 

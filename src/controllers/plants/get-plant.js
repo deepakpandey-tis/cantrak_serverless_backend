@@ -39,6 +39,7 @@ const getPlant = async (req, res) => {
         AND pl."companyId" = c.id AND pl."strainId" = s.id and pl."specieId" = s2.id
         ORDER BY pl."lotNo" , gs."listOrder"
         `;
+        console.log('getPlant sql: ', sqlStr);
 
         var selectedRecs = await knexReader.raw(sqlStr);
 

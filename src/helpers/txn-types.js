@@ -47,4 +47,9 @@ const SystemStores = {
     PackingLoss: 99991001
 };
 
-module.exports = { CustomerTypes, ItemCategory, BatchTypes, TxnTypes, SystemStores };
+const ObservationTypes ={
+    Unhealthy: 1,
+    Healthy: 2,
+};
+
+module.exports = { CustomerTypes, ItemCategory, BatchTypes, TxnTypes, SystemStores, ObservationTypes };

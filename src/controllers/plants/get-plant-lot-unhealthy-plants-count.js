@@ -12,8 +12,8 @@ const getPlantLotUnhealthyPlantsCount = async (req, res) => {
 
         const schema = Joi.object().keys({
             id: Joi.string().required(),
-            locationId: Joi.string().required(),
-            subLocationId: Joi.string().required()
+            locationId: Joi.number().allow(null).required(),
+            subLocationId: Joi.number().allow(null).required()
         });
         const result = Joi.validate(payload, schema);
         if (result && result.hasOwnProperty("error") && result.error) {
@@ -24,14 +24,6 @@ const getPlantLotUnhealthyPlantsCount = async (req, res) => {
             });
         }
 
-/*         sqlSelect = `SELECT DISTINCT ON (i."entityId") it."tagData"->'plantCondition'->'appearsIll',  it."tagData", i.id, i."entityId", p."plantLotId"`;
-        sqlFrom = ` FROM images i, image_tags it, plants p`;
-        sqlWhere = ` WHERE p."plantLotId" = ${payload.id} AND p."orgId" = ${orgId} AND p."isActive" AND NOT p."isWaste"`;
-        sqlWhere += ` AND i.id = it."entityId" and i."entityId" = p.id`;
-        sqlOrderBy = ` ORDER BY i."entityId" asc, i."createdAt" desc`;
-
-        sqlStr = `SELECT count(*) FROM (` + sqlSelect + sqlFrom + sqlWhere + sqlOrderBy + `) a WHERE (a."tagData"->'plantCondition'->>'appearsIll')::boolean is true`;
- */
         sqlStr = `WITH plant_current_locations AS
         (
         SELECT pl2."locationId", pl2."subLocationId", pl."id" "plantLotId", pl."lotNo", p.id "plantId"
@@ -41,8 +33,14 @@ const getPlantLotUnhealthyPlantsCount = async (req, res) => {
         AND pl.id = p."plantLotId" AND p."orgId" = pl2."orgId" AND p.id = pl2."plantId"  AND p."isActive" AND not p."isWaste"
         AND pl2.id in (SELECT id FROM plant_locations pl3 WHERE pl3."orgId" = pl."orgId" AND pl3."plantId" = p.id order by pl3.id desc limit 1)
         -- AND (NOT coalesce(hpl."isFinalHarvest", false) OR (coalesce(hpl."isFinalHarvest", false) AND NOT coalesce(hpl."isEntireLot" , false)))
-        AND pl2."locationId" = ${payload.locationId} AND pl2."subLocationId" = ${payload.subLocationId}
-        AND pl2."locationId" IN (${req.GROWINGLOCATION})
+        `;
+
+        if(payload.locationId){
+            //  location specified; get unhealthy plants for this location
+            sqlStr += ` AND pl2."locationId" = ${payload.locationId} AND pl2."subLocationId" = ${payload.subLocationId}`;
+        }
+
+        sqlStr += `AND pl2."locationId" IN (${req.GROWINGLOCATION})
         ), unhealthy_plants AS
         (
         SELECT DISTINCT ON (i."entityId") it."tagData"->'plantCondition'->'appearsIll',  it."tagData", pcl.*
