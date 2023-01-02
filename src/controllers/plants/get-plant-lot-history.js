@@ -23,7 +23,7 @@ const getPlantLotHistory = async (req, res) => {
             });
         }
 
-        // recType: 1: Plant Lot, 2: Observation, 3: growth stage changed; 4: location changed; 5: waste txn; 6: harvest txn
+        // recType: 1: Plant Lot, 2: Observation, 3: Individual Plant Observation (plant marked ill or healthy), 4: growth stage changed; 5: location changed; 6: waste txn; 7: harvest txn
         sqlStr = `SELECT txn.*, lf.name "fromLocation", slf."name" "fromSubLocation", lt.name "toLocation", slt."name" "toSubLocation", s."name" "specieName", s2."name" "strainName", gsf."name" "fromGrowthStage", gst."name" "toGrowthStage", u."name" "createdByName"
         FROM (
             SELECT * FROM (
@@ -35,30 +35,36 @@ const getPlantLotHistory = async (req, res) => {
             FROM plant_observation_txns pot, images i, image_tags it, remarks_master rm
             WHERE pot."orgId" = ${orgId} AND pot."plantLotId" = ${payload.id} AND pot."orgId" = i."orgId" AND i."entityType" = 'plant' AND pot.id = i.record_id AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" AND i."id" = it."entityId" AND pot."orgId" = rm."orgId" AND rm."entityType" = 'plant_observation' AND i.id = rm."entityId"
             UNION
-            SELECT 3 "recType", null "lotNo", null "plantLotName", 0 "harvestPlantLotId", 0 "fromLocationId", 0 "fromSubLocationId", pgst."locationId" "toLocationId", pgst."subLocationId" "toSubLocationId", 0 "specieId", 0 "strainId", pgst."fromGrowthStageId", pgst."toGrowthStageId", pgst."date", pgst."totalPlants" "plantsCount", 0 "observationType", null "s3Url", null "tagData", rm.description remark, false "isFinalHarvest", false "isEntireLot", pgst."createdBy" , pgst."createdAt"
-            , (SELECT json_agg(json_build_object('img', i."s3Url"))::jsonb from images i where i."orgId" = pgst."orgId" and i."entityType" = 'plant_change_growth_stage' and i."entityId" = pgst."id") "imageData"
-            FROM plant_growth_stage_txns pgst, remarks_master rm
-            WHERE pgst."orgId" = ${orgId} AND pgst."plantLotId" = ${payload.id} and pgst."orgId" = rm."orgId" and rm."entityType" = 'plant_change_growth_stage' and pgst.id = rm."entityId"
+            SELECT 3 "recType", null "lotNo", null "plantLotName", 0 "harvestPlantLotId", 0 "fromLocationId", 0 "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", 0 "specieId", 0 "strainId", 0 "fromGrowthStageId", 0 "toGrowthStageId", it."createdAt" "date", 1 "plantsCount", 0 "observationType", i."s3Url", it."tagData"::jsonb, rm.description remark, false "isFinalHarvest", false "isEntireLot", it."createdBy", it."createdAt", null::jsonb "imageData"
+            FROM plant_lots pl, plants p, image_tags it, images i
+            LEFT JOIN remarks_master rm ON rm."orgId" = i."orgId" AND rm."entityType" = 'plant_observation' AND rm."entityId" = i.id
+            WHERE i."orgId" = ${orgId} AND i."entityType" = 'plant' AND i.record_id is null AND it."orgId" = i."orgId" AND i.id = it."entityId"
+            AND pl.id = ${payload.id} AND pl.id = p."plantLotId" AND i."entityId" = p.id
             UNION
-            SELECT 4 "recType", null "lotNo", null "plantLotName", 0 "harvestPlantLotId", plt."fromLocationId", plt."fromSubLocationId", plt."toLocationId", plt."toSubLocationId", 0 "specieId", 0 "strainId", 0 "fromGrowthStageId", plt."growthStageId" "toGrowthStageId", plt."date", plt."totalPlants" "plantsCount", 0 "observationType", null "s3Url", null "tagData", rm.description remark, false "isFinalHarvest", false "isEntireLot", plt."createdBy", plt."createdAt"
+            SELECT 4 "recType", null "lotNo", null "plantLotName", 0 "harvestPlantLotId", 0 "fromLocationId", 0 "fromSubLocationId", pgst."locationId" "toLocationId", pgst."subLocationId" "toSubLocationId", 0 "specieId", 0 "strainId", pgst."fromGrowthStageId", pgst."toGrowthStageId", pgst."date", pgst."totalPlants" "plantsCount", 0 "observationType", null "s3Url", null "tagData", rm.description remark, false "isFinalHarvest", false "isEntireLot", pgst."createdBy" , pgst."createdAt"
+            , (SELECT json_agg(json_build_object('img', i."s3Url"))::jsonb from images i where i."orgId" = pgst."orgId" AND i."entityType" = 'plant_change_growth_stage' AND i."entityId" = pgst."id") "imageData"
+            FROM plant_growth_stage_txns pgst, remarks_master rm
+            WHERE pgst."orgId" = ${orgId} AND pgst."plantLotId" = ${payload.id} AND pgst."orgId" = rm."orgId" AND rm."entityType" = 'plant_change_growth_stage' AND pgst.id = rm."entityId"
+            UNION
+            SELECT 5 "recType", null "lotNo", null "plantLotName", 0 "harvestPlantLotId", plt."fromLocationId", plt."fromSubLocationId", plt."toLocationId", plt."toSubLocationId", 0 "specieId", 0 "strainId", 0 "fromGrowthStageId", plt."growthStageId" "toGrowthStageId", plt."date", plt."totalPlants" "plantsCount", 0 "observationType", null "s3Url", null "tagData", rm.description remark, false "isFinalHarvest", false "isEntireLot", plt."createdBy", plt."createdAt"
             , (SELECT json_agg(json_build_object('img', i."s3Url"))::jsonb FROM images i WHERE i."orgId" = plt."orgId" AND i."entityType" = 'plant_change_location' AND i."entityId" = plt."id") "imageData"
             FROM plant_location_txns plt, remarks_master rm
-            WHERE plt."orgId" = ${orgId} AND plt."plantLotId" = ${payload.id} and plt."orgId" = rm."orgId" and rm."entityType" = 'plant_change_location' and plt.id = rm."entityId"
+            WHERE plt."orgId" = ${orgId} AND plt."plantLotId" = ${payload.id} AND plt."orgId" = rm."orgId" AND rm."entityType" = 'plant_change_location' AND plt.id = rm."entityId"
             UNION
-            SELECT 5 "recType", null "lotNo", null "plantLotName", 0 "harvestPlantLotId", 0 "fromLocationId", 0 "fromSubLocationId", pwt."locationId" "toLocationId", pwt."subLocationId" "toSubLocationId", 0 "specieId", 0 "strainId", 0 "fromGrowthStageId", pwt."growthStageId" "toGrowthStageId", pwt."date", pwt."totalPlants" "plantsCount", 0 "observationType", null "s3Url", null "tagData", rm.description remark, false "isFinalHarvest", false "isEntireLot", pwt."createdBy", pwt."createdAt"
+            SELECT 6 "recType", null "lotNo", null "plantLotName", 0 "harvestPlantLotId", 0 "fromLocationId", 0 "fromSubLocationId", pwt."locationId" "toLocationId", pwt."subLocationId" "toSubLocationId", 0 "specieId", 0 "strainId", 0 "fromGrowthStageId", pwt."growthStageId" "toGrowthStageId", pwt."date", pwt."totalPlants" "plantsCount", 0 "observationType", null "s3Url", null "tagData", rm.description remark, false "isFinalHarvest", false "isEntireLot", pwt."createdBy", pwt."createdAt"
             , (SELECT json_agg(json_build_object('img', i."s3Url"))::jsonb FROM images i WHERE i."orgId" = pwt."orgId" AND i."entityType" = 'plant_waste' AND i."entityId" = pwt."id") "imageData"
             FROM plant_waste_txns pwt, remarks_master rm
             WHERE pwt."orgId" = ${orgId} AND pwt."plantLotId" = ${payload.id} AND pwt."orgId" = rm."orgId" AND rm."entityType" = 'plant_waste_txn_entry' AND rm."entityId" = pwt.id
             UNION
-            SELECT 6 "recType", null "lotNo", null "plantLotName", hpl.id "harvestPlantLotId", 0 "fromLocationId", 0 "fromSubLocationId", hpl."locationId" "toLocationId", hpl."subLocationId" "toSubLocationId", hpl."specieId", hpl."strainId", 0 "fromGrowthStageId", 0 "toGrowthStageId", hpl."harvestedOn" date, hpl."plantsCount", 0 "observationType", null "s3Url", null "tagData", null remark, "isFinalHarvest", "isEntireLot", hpl."createdBy", hpl."createdAt", null::jsonb "imageData"
+            SELECT 7 "recType", null "lotNo", null "plantLotName", hpl.id "harvestPlantLotId", 0 "fromLocationId", 0 "fromSubLocationId", hpl."locationId" "toLocationId", hpl."subLocationId" "toSubLocationId", hpl."specieId", hpl."strainId", 0 "fromGrowthStageId", 0 "toGrowthStageId", hpl."harvestedOn" date, hpl."plantsCount", 0 "observationType", null "s3Url", null "tagData", null remark, "isFinalHarvest", "isEntireLot", hpl."createdBy", hpl."createdAt", null::jsonb "imageData"
             FROM harvest_plant_lots hpl WHERE hpl."plantLotId" = ${payload.id} AND hpl."orgId" = ${orgId}
             ) txn
             left join growth_stages gsf on gsf.id = txn."fromGrowthStageId"
             left join growth_stages gst on gst.id = txn."toGrowthStageId"
             left join locations lf on lf.id = txn."fromLocationId"
-            left join sub_locations slf on slf."locationId" = txn."fromLocationId" and slf.id = txn."fromSubLocationId"
+            left join sub_locations slf on slf."locationId" = txn."fromLocationId" AND slf.id = txn."fromSubLocationId"
             left join locations lt on lt.id = txn."toLocationId"
-            left join sub_locations slt on slt."locationId" = txn."toLocationId" and slt.id = txn."toSubLocationId"
+            left join sub_locations slt on slt."locationId" = txn."toLocationId" AND slt.id = txn."toSubLocationId"
             LEFT JOIN species s ON txn."specieId" = s.id
             LEFT JOIN strains s2 ON txn."strainId" = s2.id
             , users u WHERE u.id = txn."createdBy"
