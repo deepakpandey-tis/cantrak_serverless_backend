@@ -214,7 +214,7 @@ const getProductLotNoDetail = async (req, res) => {
         sqlFrom = ` FROM plant_lots pl, licenses l, locations l2, sub_locations sl
         `;
  */
-        sqlFrom = ` FROM plant_lots pl LEFT JOIN licenses l ON pl."licenseId = l.id", locations l2, sub_locations sl
+        sqlFrom = ` FROM plant_lots pl LEFT JOIN licenses l ON pl."licenseId" = l.id, locations l2, sub_locations sl
         `;
 
         /* */
