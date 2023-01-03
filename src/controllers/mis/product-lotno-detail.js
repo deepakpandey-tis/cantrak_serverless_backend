@@ -210,7 +210,11 @@ const getProductLotNoDetail = async (req, res) => {
         `;
  */
 
+/* 2023/01/03   now, license is optional
         sqlFrom = ` FROM plant_lots pl, licenses l, locations l2, sub_locations sl
+        `;
+ */
+        sqlFrom = ` FROM plant_lots pl LEFT JOIN licenses l ON pl."licenseId = l.id", locations l2, sub_locations sl
         `;
 
         /* */
@@ -267,8 +271,10 @@ const getProductLotNoDetail = async (req, res) => {
 /* */                
                 
                         sqlWhereAddon = ` AND pl.id = '${rec.plantLotId}'`;
-                        sqlWhereAddon += ` AND  pl."licenseId" = l.id AND l2.id = coalesce(${rec.locationId}, 0) AND sl.id = coalesce(${rec.subLocationId}, 0) AND sl."locationId" = coalesce(${rec.locationId}, 0)
+                        sqlWhereAddon += ` AND l2.id = coalesce(${rec.locationId}, 0) AND sl.id = coalesce(${rec.subLocationId}, 0) AND sl."locationId" = coalesce(${rec.locationId}, 0)
                         `;
+/* 2023/01/03                        sqlWhereAddon += ` AND  pl."licenseId" = l.id AND l2.id = coalesce(${rec.locationId}, 0) AND sl.id = coalesce(${rec.subLocationId}, 0) AND sl."locationId" = coalesce(${rec.locationId}, 0)
+                        `; */
             
                         sqlFinal = sqlStr + sqlSelect + sqlFrom + sqlWhere + sqlWhereAddon;
 
@@ -339,7 +345,9 @@ const getProductLotNoDetail = async (req, res) => {
             // sqlWhereAddon = ` AND pl."id" = '${selectedHarvestRecs.rows[0].plantLotId}'`;
             let rec = productionInputDetail.rows[0].data[0].data[0];
             sqlWhereAddon = ` AND pl."id" = '${productionInputDetail.rows[0].data[0].data[0].plantLotId}'`;
-            sqlWhereAddon += ` AND  pl."licenseId" = l.id AND l2.id = coalesce(${rec.locationId}, 0) AND sl.id = coalesce(${rec.subLocationId}, 0) AND sl."locationId" = coalesce(${rec.locationId}, 0)`;
+            sqlWhereAddon += ` AND l2.id = coalesce(${rec.locationId}, 0) AND sl.id = coalesce(${rec.subLocationId}, 0) AND sl."locationId" = coalesce(${rec.locationId}, 0)`;
+/* 2023/01/03            sqlWhereAddon += ` AND  pl."licenseId" = l.id AND l2.id = coalesce(${rec.locationId}, 0) AND sl.id = coalesce(${rec.subLocationId}, 0) AND sl."locationId" = coalesce(${rec.locationId}, 0)`;
+ */            
 /* */                
             //  get harvested plant ids
             var harvestedPlantIds = [{id: 0}];
@@ -430,10 +438,30 @@ const getProductLotNoDetail = async (req, res) => {
         else if(!validProductionLotNo && !validHarvestLotNo){
             //  lotNo neither of Production nor of Harvest, is it of Plant Lot?
             var plantLotRecs;
-
+            sqlSelect = `SELECT pl.*, CONCAT('Planted: ', pl."plantsCount", ' Plants') "cardHeading", l."number" "licenseNumber", l2."name" "plantLocation", sl."name" "plantSubLocation"
+            , (SELECT json_agg(row_to_json(p.*)) "plants" 
+            FROM (
+            SELECT p.*
+            FROM plants p 
+            WHERE p."plantLotId" = pl.id AND p."isActive" AND NOT p."isWaste" AND NOT p."isDestroy"
+            ORDER BY p."plantSerial"
+            ) p
+            )
+            , (SELECT json_agg(row_to_json(p.*)) "wastePlants" 
+            FROM (
+            SELECT p.*
+            FROM plants p 
+            WHERE p."plantLotId" = pl.id AND p."isActive" AND p."isWaste"
+            ORDER BY p."plantSerial"
+            ) p
+            )
+            `;
+    
             //  Since all harvested items has same plantLotId, getting plant details using Ist harvested item
             sqlWhereAddon = ` AND pl."lotNo" = '${lotNo}'`;
-            sqlWhereAddon += ` AND  pl."licenseId" = l.id and pl."locationId" = l2.id`;
+            sqlWhereAddon += ` and pl."locationId" = l2.id`;
+/* 2023/01/03            sqlWhereAddon += ` AND  pl."licenseId" = l.id and pl."locationId" = l2.id`;
+ */
 
             sqlFinal = sqlStr + sqlSelect + sqlFrom + sqlWhere + sqlWhereAddon;
 
