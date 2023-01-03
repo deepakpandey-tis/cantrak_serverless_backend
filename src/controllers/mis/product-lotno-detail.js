@@ -442,8 +442,11 @@ const getProductLotNoDetail = async (req, res) => {
             , (SELECT json_agg(row_to_json(p.*)) "plants" 
             FROM (
             SELECT p.*
-            FROM plants p 
+            FROM plants p
+            --, plant_locations pl2
             WHERE p."plantLotId" = pl.id AND p."isActive" AND NOT p."isWaste" AND NOT p."isDestroy"
+            -- AND p.id = pl2."plantId"
+            -- AND pl2.id = (select id from plant_locations ploc2 where ploc2."orgId" = ${orgId} and ploc2."plantId" = p.id order by id desc limit 1)
             ORDER BY p."plantSerial"
             ) p
             )
@@ -459,7 +462,7 @@ const getProductLotNoDetail = async (req, res) => {
     
             //  Since all harvested items has same plantLotId, getting plant details using Ist harvested item
             sqlWhereAddon = ` AND pl."lotNo" = '${lotNo}'`;
-            sqlWhereAddon += ` and pl."locationId" = l2.id`;
+            sqlWhereAddon += ` and pl."locationId" = l2.id and pl."subLocationId" = sl.id`;
 /* 2023/01/03            sqlWhereAddon += ` AND  pl."licenseId" = l.id and pl."locationId" = l2.id`;
  */
 
@@ -471,7 +474,7 @@ const getProductLotNoDetail = async (req, res) => {
             console.log('Plants sql: ', sqlFinal);
             
             plantLotRecs = await knexReader.raw(sqlFinal);
-            console.log('Plant Lot: ', plantLotRecs.rows[0]?.data[0]);
+            // console.log('Plant Lot: ', plantLotRecs.rows[0]?.data[0]);
 
             selectedPlantLotRecs = plantLotRecs;
 
