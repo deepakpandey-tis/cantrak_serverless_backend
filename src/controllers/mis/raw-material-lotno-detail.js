@@ -60,16 +60,22 @@ const getRawMaterialLotNoDetail = async (req, res) => {
         ) p
         )`;
 
-        sqlFrom = ` FROM plant_lots pl, licenses l, locations l2
+        sqlFrom = ` FROM plant_lots pl LEFT JOIN licenses l ON pl."licenseId" = l.id, locations l2
         `;
+/* 2023/01/03        sqlFrom = ` FROM plant_lots pl, licenses l, locations l2
+        `;
+ */
 
         sqlWhere = ` WHERE pl."orgId" = ${orgId}`;
         if(companyId){
             sqlWhere += ` AND pl."companyId" = ${companyId}`;
         }
 
-        sqlWhere += ` AND  pl."licenseId" = l.id AND pl."locationId" = l2.id
+        sqlWhere += ` AND pl."locationId" = l2.id
         `;
+/* 2023/01/03        sqlWhere += ` AND  pl."licenseId" = l.id AND pl."locationId" = l2.id
+        `;
+ */
 
         var selectedPlantLotRecs = { rows: [] };
 
