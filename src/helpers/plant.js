@@ -493,8 +493,8 @@ const plantsHelper = {
             let notificationPayload = {
                 payload: {
                     title: 'Plants Lot - QR Generated',
-                    description: `Plants Lot - QR Generated for Plants: "${data.plantsLot[0].lotNo}"`,
-                    url: `/admin/plants/lot-plant-list/${data.plantsLot[0].id}`,
+                    description: `Plants Lot - QR Generated for Plants: "${data.plantsLot[0].lotNo}" `,
+                    url: `/admin/plants/plants-list/lot-plant-list/${data.plantsLot[0].id}`,
                     orgData: orgData,
                     s3Url: s3FileDownloadUrl,
                     requestedBy,
