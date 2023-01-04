@@ -497,6 +497,7 @@ const plantsHelper = {
                     url: `/admin/plants/plants-list/lot-plant-list/${data.plantsLot[0].id}`,
                     orgData: orgData,
                     s3Url: s3FileDownloadUrl,
+                    id: plantId,
                     requestedBy,
                     requestedAt: new Date().getTime()
                 }

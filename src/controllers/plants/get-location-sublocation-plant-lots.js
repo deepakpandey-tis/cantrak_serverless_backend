@@ -13,7 +13,7 @@ const getLocationSubLocationPlantLots = async (req, res) => {
         //  not final harvest || (final harvest && not entire lot)
         sqlSelectPlantCurrentLocations = `WITH plant_current_locations AS
         (
-        SELECT pl2."locationId", pl2."subLocationId", pl.id, pl."lotNo", pl."plantedOn", pl."specieId", pl."strainId"  
+        SELECT pl2."locationId", pl2."subLocationId", pl.id, pl."lotNo", pl.name "plantLotName", pl."plantedOn", pl."specieId", pl."strainId"  
         , coalesce(hpl."isFinalHarvest", false) "isFinalHarvest", coalesce(hpl."plantsCount", 0) "harvestedPlantsCount"
         , count(p."isActive") "plantsCount", sum(p."isWaste"::int) "wastePlants"
         FROM plant_lots pl, plants p, plant_locations pl2
@@ -32,10 +32,10 @@ const getLocationSubLocationPlantLots = async (req, res) => {
         }
         sqlSelectPlantCurrentLocations += `)`;
         sqlSelectPlantCurrentLocations += `, plant_current_locations_sum AS
-        (SELECT "locationId", "subLocationId", id, "lotNo", "plantedOn", "specieId", "strainId"
+        (SELECT "locationId", "subLocationId", id, "lotNo", "plantLotName", "plantedOn", "specieId", "strainId"
         , "plantsCount", "wastePlants", "isFinalHarvest", sum("harvestedPlantsCount") "harvestedPlantsCount"
         FROM plant_current_locations pcl
-        GROUP BY "locationId", "subLocationId", id, "lotNo", "plantedOn", "specieId", "strainId", "plantsCount", "wastePlants", "isFinalHarvest"
+        GROUP BY "locationId", "subLocationId", id, "lotNo", "plantLotName", "plantedOn", "specieId", "strainId", "plantsCount", "wastePlants", "isFinalHarvest"
         )
         `;
         // AND pl2."locationId" IN (75,12,34,62,22,74,67,26)
