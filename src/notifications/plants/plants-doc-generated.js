@@ -150,7 +150,7 @@ const plantsDocGeneratedNotification = {
             orgId: sender.orgId,
             senderId: sender.id,
             receiverId: receiver.id,
-            channel: 'palnts-qr-code-notification',
+            channel: ['socket-notification',`plants-qr-code-notification-${data.payload.id}`],
             payload: {
                 subject: title,
                 body: description + `from ${sender.name}`,
