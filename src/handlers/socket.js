@@ -216,7 +216,7 @@ module.exports.auth = async (event, context, callback) => {
 
   if (user && orgId) {
     const policy = generatePolicy(user.email, 'Allow', event.methodArn);
-    console.log("[socket][auth]:: Policy Generated::", policy);
+    console.log("[socket][auth]:: Policy Generated::", JSON.stringify(policy));
     callback(null, policy);
   } else {
     callback("Unauthorized");
