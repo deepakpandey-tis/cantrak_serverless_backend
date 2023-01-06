@@ -75,7 +75,7 @@ const getPlantLotHistory = async (req, res) => {
 
         //  get diseases from diseases table
         for(rec of selectedRecs.rows){
-            if(rec.recType == 2){
+            if(rec.recType == 2 || rec.recType == 3){
                 const ids = [...rec.tagData.plantCondition.diseases];
                 sqlStr = `SELECT d.name FROM diseases d, UNNEST(string_to_array(regexp_replace('[ ${ids} ]', '[\\[ \\]]', '', 'g'), ',')::bigint[]) did WHERE d.id = did`;
     
