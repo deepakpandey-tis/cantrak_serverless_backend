@@ -1,5 +1,6 @@
 const Joi = require("@hapi/joi");
 const knexReader = require("../../db/knex-reader");
+const { ItemCategory, BatchTypes, TxnTypes, SystemStores } = require('../../helpers/txn-types');
 
 const getProductionLots = async (req, res) => {
     try {
@@ -22,9 +23,10 @@ const getProductionLots = async (req, res) => {
             });
         }
 
-        sqlStr = `SELECT pl.id, pl."lotNo", pl."productionOn" "lotDate"
-        FROM production_lots pl
+        sqlStr = `SELECT DISTINCT pl.id, pl."lotNo", pl."productionOn" "lotDate", pl2."name" "plantLotName"
+        FROM production_lots pl, item_txns it, harvest_plant_lots hpl, plant_lots pl2
         WHERE pl."orgId" = ${orgId} AND pl."companyId" = ${payload.companyId} AND pl."isActive" AND pl."fromHarvestLot"
+        AND it."orgId" = pl."orgId" AND it."companyId" = pl."companyId" AND it."productionLotId" = pl.id  AND it."txnType" = ${TxnTypes.IssueForProduction} AND it.quantity < 0 and it."lotNo" = hpl."lotNo" and hpl."plantLotId" = pl2.id
         ORDER BY pl."lotNo" DESC
         `;
 

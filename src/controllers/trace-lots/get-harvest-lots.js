@@ -22,9 +22,9 @@ const getHarvestLots = async (req, res) => {
             });
         }
 
-        sqlStr = `SELECT hpl.id, hpl."lotNo", hpl."harvestedOn" "lotDate"
-        FROM harvest_plant_lots hpl
-        WHERE hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."isActive"
+        sqlStr = `SELECT hpl.id, hpl."lotNo", hpl."harvestedOn" "lotDate", pl2."name" "plantLotName"
+        FROM harvest_plant_lots hpl, plant_lots pl2
+        WHERE hpl."orgId" = ${orgId} AND hpl."companyId" = ${payload.companyId} AND hpl."isActive" AND hpl."plantLotId" = pl2.id
         ORDER BY hpl."lotNo" DESC
         `;
 

@@ -18,6 +18,8 @@ const updateStrain = async (req, res) => {
             id: Joi.string().required(),
             name: Joi.string().required(),
             specieId: Joi.string().required(),
+            flavor: Joi.string().allow(null).allow('').required(),
+            topEffect: Joi.string().allow(null).allow('').required(),
         });
 
         const result = Joi.validate(payload, schema);

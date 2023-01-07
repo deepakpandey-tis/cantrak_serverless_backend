@@ -35,15 +35,15 @@ const getTraceLotList = async (req, res) => {
         }
         
         // Using CTE (Common Table Expressions 'SELECT in WITH' for pageSize retrieval)
-        sqlSelect = `SELECT tl.*, s.name "specieName", s2.name "strainName"
+        sqlSelect = `SELECT tl.*, s.name "specieName", s2.name "strainName", s2.flavor, s2."topEffect"
         , u."name" "createdByName", ums.name "umName", ums.abbreviation "umAbbreviation"
         `;
 
-        sqlFrom = ` FROM trace_lots tl, species s, strains s2, users u, ums
+        sqlFrom = ` FROM trace_lots tl LEFT JOIN ums ON tl."orgId" = ums."orgId" AND tl."umId" = ums.id, species s, strains s2, users u
         `;
 
         sqlWhere = ` WHERE tl."orgId" = ${orgId}`;
-        sqlWhere += ` AND tl."createdBy" = u.id AND tl."orgId" = ums."orgId" AND tl."umId" = ums.id
+        sqlWhere += ` AND tl."createdBy" = u.id 
         AND tl."orgId" = s."orgId" AND tl."specieId" = s.id AND tl."orgId" = s2."orgId" AND tl."specieId" = s2."specieId" AND tl."strainId" = s2.id
         `;
         
