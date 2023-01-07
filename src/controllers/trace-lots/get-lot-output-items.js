@@ -38,7 +38,7 @@ const getLotOutputItems = async (req, res) => {
         // console.log("selectedRecs: ", selectedRecs.rows);
 
         // To get production lot input items plant details (comma separated growing locations, planted dates and total harvested plants)
-        sqlStr = `SELECT string_agg(gl."name", ', ') "growingLocation", string_agg(to_char(to_timestamp(gl."plantedOn"/1000 )::date, 'dd/mm/yyyy'), ', ') "plantedDates", sum(gl."plantsCount") "plantsCount"
+        sqlStr = `SELECT string_agg(gl."name", ', ') "growingLocation", string_agg(to_char(to_timestamp(gl."plantedOn"/1000 )::date, 'dd MON yyyy'), ', ') "plantedDates", sum(gl."plantsCount") "plantsCount"
         FROM (
         SELECT l."name", pl."plantedOn" , hpl."plantsCount"
         FROM harvest_plant_lots hpl, plant_lots pl, locations l

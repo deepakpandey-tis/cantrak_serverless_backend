@@ -17,6 +17,8 @@ const addStrain = async (req, res) => {
         const schema = Joi.object().keys({
             name: Joi.string().required(),
             specieId: Joi.string().required(),
+            flavor: Joi.string().allow(null).allow('').required(),
+            topEffect: Joi.string().allow(null).allow('').required(),
         });
 
         const result = Joi.validate(payload, schema);
