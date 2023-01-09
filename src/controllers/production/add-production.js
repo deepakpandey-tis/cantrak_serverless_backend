@@ -3,7 +3,9 @@ const knex = require('../../db/knex');
 const moment = require("moment-timezone");
 const addUserActivityHelper = require('../../helpers/add-user-activity')
 const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
+const { ItemCategory, BatchTypes, TxnTypes, SystemStores } = require('../../helpers/txn-types');
 
+/* 
 const ItemCategory = {
     RawMaterial: 1,
     Product: 2,
@@ -24,6 +26,7 @@ const TxnTypes ={
     IssueFromTxnType: 51,
     IssueUptoTxnType: 90,
 };
+ */
 
 const addProduction = async (req, res) => {
     try {
@@ -52,6 +55,9 @@ const addProduction = async (req, res) => {
             // quantity: Joi.number().required(),
             inputItems: Joi.array().required(),
             outputItems: Joi.array().required(),
+            refNo: Joi.string().allow([null, '']).required(),
+            refDate: Joi.date().allow([null]).optional(),
+            additionalAttributes: Joi.array().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -86,6 +92,9 @@ const addProduction = async (req, res) => {
                 // strainId: payload.strainId,
                 // itemLotNo: payload.itemLotNo,
                 // quantity: payload.quantity,
+                refNo: payload.refNo,
+                refDate: payload.refDate ? new Date(payload.refDate).getTime() : null,
+                additionalAttributes: payload.additionalAttributes,
 
                 createdBy: userId,
                 createdAt: currentTime,
@@ -215,6 +224,7 @@ const addProduction = async (req, res) => {
                         storageLocationId: lot.storageLocationId,
                         productionLotId: insertedRecord.id,
                         lotNo: lot.lotNo,
+
                         createdBy: userId,
                         createdAt: currentTime,
                         updatedBy: userId,

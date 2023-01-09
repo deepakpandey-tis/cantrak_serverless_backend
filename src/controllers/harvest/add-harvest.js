@@ -3,7 +3,7 @@ const knex = require('../../db/knex');
 const moment = require("moment-timezone");
 const addUserActivityHelper = require('../../helpers/add-user-activity')
 const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
-const { ItemCategory, TxnTypes, SystemStores } = require('../../helpers/txn-types');
+const { ItemCategory, BatchTypes, TxnTypes, SystemStores } = require('../../helpers/txn-types');
 
 /* const ItemCategory = {
     RawMaterial: 1,
@@ -58,6 +58,9 @@ const addHarvest = async (req, res) => {
             harvestedProducts: Joi.array().required(),
             harvestedWastes: Joi.array().required(),
             plantLotNo: Joi.string().required(),
+            refNo: Joi.string().allow([null, '']).required(),
+            refDate: Joi.date().allow([null]).optional(),
+            additionalAttributes: Joi.array().required(),
         });
 
         const result = Joi.validate(payload, schema);
@@ -92,6 +95,9 @@ const addHarvest = async (req, res) => {
                 harvestedOn: new Date(payload.harvestedOn).getTime(),
                 specieId: payload.specieId,
                 strainId: payload.strainId,
+                refNo: payload.refNo,
+                refDate: payload.refDate ? new Date(payload.refDate).getTime() : null,
+                additionalAttributes: payload.additionalAttributes,
 
                 createdBy: userId,
                 createdAt: currentTime,
