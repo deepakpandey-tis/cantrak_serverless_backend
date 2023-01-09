@@ -46,7 +46,7 @@ const getPlantLots = async (req, res) => {
         select plcls.*, pl4."orgId", pl4."companyId", pl4."specieId", s."name" "specieName", pl4."strainId", s2."name" "strainName", pl4."licenseId"
         from plant_lot_current_locations_sum plcls, plant_lots pl4, species s, strains s2
         WHERE plcls.id = pl4.id AND pl4."specieId" = s.id AND pl4."strainId" = s2.id
-        AND plcls."plantsCount" - plcls."harvestedPlantsCount" > 0
+        AND (plcls."plantsCount" - plcls."wastePlants" - plcls."harvestedPlantsCount") > 0
         ORDER BY plcls."lotNo"
         `;
 
