@@ -23,7 +23,7 @@ const getProductionLot = async (req, res) => {
         }
 
         sqlSelect = `SELECT pl.id, pl."orgId", pl."companyId", pl."processId", pl."productionOn", pl."lotNo" "productionLotNo"
-        , pl."isActive", pl."createdBy", pl."createdAt", pl."updatedBy", pl."updatedAt"
+        , pl."refNo", pl."refDate", pl."additionalAttributes", pl."isActive", pl."createdBy", pl."createdAt", pl."updatedBy", pl."updatedAt"
         , p."name" "processName", ic."name" "itemCategoryName", i."name" "itemName", i."gtin" "itemGtin", u."name" "itemUM", sl."name" "storageLocation"
         , it."id" "itemTxnId", it."itemCategoryId", it."itemId", it."txnType", it.quantity, it.quality, it."expiryDate", it."lotNo", it."umId", it."specieId", it."strainId", it."storageLocationId"
         , c."companyName", pl2."name" "plantLotName", s.name "strainName"
