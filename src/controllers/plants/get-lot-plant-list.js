@@ -90,13 +90,13 @@ const getLotPlantList = async (req, res) => {
         // sqlFrom += ` LEFT JOIN ${sqlObservation} ON p.id = observation."entityId"`;
         if(plantTypeId != null && plantTypeId == 0){
             //  0: All Plants
-            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
+            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" AND i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
             sqlFrom += ` LEFT JOIN ${sqlObservation} ON p.id = observation."entityId"`;
         }
         else
         if(plantTypeId && plantTypeId == 2){
             //  2: Ill Plants
-            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
+            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" AND i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
             sqlFrom += ` JOIN ${sqlObservation} ON p.id = observation."entityId" AND (observation."tagData"->'plantCondition'->>'appearsIll')::boolean is true`;
         }
 
