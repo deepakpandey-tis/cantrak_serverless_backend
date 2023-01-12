@@ -73,7 +73,7 @@ const getLotPlantList = async (req, res) => {
         , strains s, species s2, plants p
         `;
 
-        sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
+        sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" AND i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
         sqlFrom += ` LEFT JOIN ${sqlObservation} ON p.id = observation."entityId"`;
 
         sqlWhere = ` WHERE pl.id = ${id} AND pl."orgId" = ${orgId} AND pl.id = p."plantLotId" AND p."isActive" AND NOT p."isWaste"`;
@@ -84,8 +84,10 @@ const getLotPlantList = async (req, res) => {
             sqlWhere += ` AND p.id NOT IN (${finalHarvestedPlantIdsString})`;
         }
 
-        sqlWhere += ` AND p.id = ploc."plantId" AND ploc.id = (select id from plant_locations ploc2 where ploc2."orgId" = ${orgId} and ploc2."plantId" = p.id order by id desc limit 1)`;
-        sqlWhere += ` AND p.id = pgs."plantId" AND pgs.id = (select id from plant_growth_stages pgs2 where pgs2."orgId" = ${orgId} and pgs2."plantId" = p.id order by id desc limit 1)`;
+        sqlWhere += ` AND p.id = ploc."plantId" AND ploc.id = (select id from plant_locations ploc2 where ploc2."orgId" = ${orgId} AND ploc2."plantId" = p.id order by id desc limit 1)`;
+        sqlWhere += ` AND p.id = pgs."plantId" AND pgs.id = (select id from plant_growth_stages pgs2 where pgs2."orgId" = ${orgId} AND pgs2."plantId" = p.id order by id desc limit 1)`;
+        sqlWhere += ` AND ploc."locationId" = l.id AND ploc."subLocationId" = sl.id AND pgs."growthStageId" = gs.id`;
+        sqlWhere += ` AND pl."strainId" = s.id AND pl."specieId" = s2.id`;
 
         if(locationId && locationId != ''){
             sqlWhere += ` AND ploc."locationId" = ${locationId}`;
@@ -122,7 +124,7 @@ const getLotPlantList = async (req, res) => {
 
         }
 
-        //console.log('harvest getLotPlantList: ', sqlStr);
+        console.log('harvest getLotPlantList: ', sqlStr);
 
 
 
