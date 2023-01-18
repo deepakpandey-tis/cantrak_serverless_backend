@@ -57,10 +57,62 @@ const imageController = {
       const uploadedImage = await knex('images').insert({ ...payload, orgId: req?.me?.orgId, createdAt: currentTime }).returning(['*']);
  */
 
-      const {remark, ...payload} = req.body;
+      const {remark, companyId, ...payload} = req.body;
 
       await knex.transaction(async (trx) => {
         uploadedImage = await knex('images').insert({ ...payload, orgId: req?.me?.orgId, createdAt: currentTime }).returning(['*']);
+
+        //  Call growdoc api
+        if(payload.s3Url != null && payload.s3Url != ''){
+          //  Image uploaded
+          const axios = require('axios');
+          const FormData = require('form-data');
+          
+          var data = new FormData();
+          // data.append('imageURL', 'https://pg888-resources.s3.ap-southeast-1.amazonaws.com/production/5e44a357-a52b-463d-a5fa-21afea3d226a.jpg');
+          data.append('imageURL', `${payload.s3Url}`);
+          
+          var config = {
+            method: 'post',
+            url: 'https://api.growdocb2b.com/SendImageURL',
+            headers: { 
+              'x-api-key': '6XWNO1FVsA4L5YjOxH85t397U94KEW415fn9SxUN', 
+              ...data.getHeaders()
+            },
+            data : data
+          };
+          
+          let response = await axios(config)
+          // .then(function (response) {
+            console.log('growdoc response: ', JSON.stringify(response.data));
+            const insertGrowdocData = {
+              entityId: uploadedImage[0].id,
+              entityType: payload.entityType,
+              plantLotId: payload.plantLotId,
+              plantId: payload.entityId,
+              apiResponse: JSON.stringify(response.data),
+              orgId: req?.me?.orgId,
+              companyId: companyId,
+              createdBy: req.me.id,
+              createdAt: currentTime,
+              updatedBy: req.me.id,
+              updatedAt: currentTime,
+            };
+            console.log('growdoc data: ', insertGrowdocData);
+
+            const insertGrowdocResult = await knex
+              .insert(insertGrowdocData)
+              .returning(["*"])
+              // .transacting(trx)      NOT part of the transaction; independent insert
+              .into("growdoc_txns");
+
+              console.log('growdoc data insert: ', insertGrowdocResult);
+          // })
+          // .catch(function (error) {
+          //   console.log('growdoc error: ', error);
+          // });
+        }
+        //  Call growdoc api
 
         //  Optional Remark
         if(remark && remark.trim() != ''){

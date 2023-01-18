@@ -35,6 +35,13 @@ router.post('/get-harvest-lot',
   harvestController.getHarvestLot
 );
 
+router.post('/delete-harvest-lot',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  harvestController.deleteHarvestLot
+);
+
 
 router.post('/get-plant-lots',
   authMiddleware.isAuthenticated,

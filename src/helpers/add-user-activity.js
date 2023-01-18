@@ -2,7 +2,7 @@ const knex = require("../db/knex");
 
 const addUserActivityHelper = {
   addUserActivity: async (userActivity) => {
-    console.log("[helpers][addUserActivity][payload] userActivity:", userActivity)
+    // console.log("[helpers][addUserActivity][payload] userActivity:", userActivity)
 
     let insertedRecord = [];
     let insertResult;

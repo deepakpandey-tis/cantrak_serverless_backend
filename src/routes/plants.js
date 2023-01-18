@@ -6,6 +6,14 @@ const roleMiddleware = require('../middlewares/role')
 const resourceAccessMiddleware = require('../middlewares/resourceAccessMiddleware');
 const plantController = require('../controllers/plants');
 
+const plantAiController = require('../controllers/plant-ai');
+
+router.post('/get-plant-ai-list',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantAiController.getPlantAiResult
+);
 
 router.post('/get-lot-plant-list',
   authMiddleware.isAuthenticated,
