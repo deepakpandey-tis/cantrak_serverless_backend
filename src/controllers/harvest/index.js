@@ -2,6 +2,7 @@ const addHarvest = require('./add-harvest');
 const getHarvestLotList = require('./get-harvest-lot-list');
 const getHarvestList = require('./get-harvest-list');
 const getHarvestLot = require('./get-harvest-lot');
+const deleteHarvestLot = require('./delete-harvest-lot');
 
 const getPlantLots = require('./plants/get-plant-lots');
 const getPlantLotLocations = require('./plants/get-plant-lot-locations');
@@ -20,6 +21,7 @@ module.exports = {
     getHarvestLotList,
     getHarvestList,
     getHarvestLot,
+    deleteHarvestLot,
 
     getPlantLots,
     getPlantLotLocations,
