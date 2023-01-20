@@ -27,10 +27,11 @@ const getLotItemTxns = async (req, res) => {
         AND it."strainId" = ${strainId} AND it."storageLocationId" = ${storageLocationId}
         AND it."itemId" = i.id AND it."storageLocationId" = sl.id AND tt.id = it."txnType"
         AND it."strainId" = st.id AND it."specieId" = sp.id AND i."umId" = ums.id AND it."companyId" = co.id AND it."createdBy" = u.id
+        AND it."txnType" = tt.id AND it."subId" = tt."subId"
         ORDER BY it."date", it."createdAt"
         `;
 
-        //console.log('getLotItemTxns: ', sqlStr);
+        // console.log('getLotItemTxns: ', sqlStr);
         
         var selectedRecs = await knexReader.raw(sqlStr);
         //console.log('selectedRecs: ', selectedRecs);
