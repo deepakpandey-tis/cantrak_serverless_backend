@@ -126,7 +126,7 @@ custom:
     dev: dev
     stage: stage
     prod: prod
-  efsAccessPoint: fsap-07f4fe775952aefa5
+  efsAccessPoint: fsap-0016b355fe3eabe3b
   localMountPath: /mnt/efs
 
   
