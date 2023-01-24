@@ -180,8 +180,8 @@ migrate_cantrak_stage:
   dependencies:
     - deploy_cantrak_stage
   only:
-    - master
+    - stage
   script:
     - curl -V
-    # - curl -v https://3ny522i0tg.execute-api.ap-southeast-1.amazonaws.com/production/db-migration/migrate-latest
+    - curl -v https://gbesrx7vbh.execute-api.ap-southeast-1.amazonaws.com/stage/db-migration/migrate-latest
     - echo 'Success'
