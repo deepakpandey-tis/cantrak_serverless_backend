@@ -13,7 +13,9 @@ plugins:
 package:
   patterns:
     - '!.vscode/**'
-    - '!.serverless/**'
+    - '!.git/**'
+    - '!cantrak_docker/**'
+    - '!.gitignore'
 
 
 provider:
@@ -21,7 +23,7 @@ provider:
   runtime: nodejs14.x
   stage: prod
   region: ap-southeast-1
-  memorySize: 3000
+  memorySize: 3072
   timeout: 29
   tracing:
     apiGateway: true
@@ -63,7 +65,12 @@ provider:
           Action:
             - events:*
           Resource: 
-            - arn:aws:events:::*                    
+            - arn:aws:events:::*
+        - Effect: Allow
+          Action:
+            - execute-api:*
+          Resource: 
+            - arn:aws:execute-api:::*    
       managedPolicies:
         - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess              
   environment:
@@ -72,10 +79,10 @@ provider:
     DB_USER: pg888
     DB_PASS: su99yTIS#2021
     DB_NAME: pg888
-    DB_HOST: db-writer.cantrak.tech
+    DB_HOST: db-writer.staging.cantrak.tech
     DB_PORT: 5432
-    SITE_URL: https://d1m3726mxf0335.cloudfront.net
-    ORIGIN_URL: https://5dec4xg2n8.execute-api.ap-southeast-1.amazonaws.com/production
+    SITE_URL: https://app.staging.cantrak.tech
+    ORIGIN_URL: https://3ny522i0tg.execute-api.ap-southeast-1.amazonaws.com/production
     JWT_PRIVATE_KEY: t6sadtrtt54ysfdf5y*hjhfd&56640)hkuksadasdas
     JWT_ACCESS_TOKEN_EXPIRY_TIME: 60m
     JWT_REFRESH_TOKEN_EXPIRY_TIME: 96h
@@ -86,42 +93,50 @@ provider:
     SECRET_ACCESS_KEY: g8KILqxF2rJtdyR7lgaSh01r90+Etg0YGZ+RjBbA
     SQS_MAIL_QUEUE_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/mail-queue
     SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/long-jobs
+    SQS_SYNC_CAL_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/sync-calendar
     FROM_EMAIL_ADDRESS: no-reply@servicemind.asia
     APP_ENV: PRODUCTION
-    S3_BUCKET_URL:  https://pg888-resources.s3.ap-southeast-1.amazonaws.com
-    SOCKET_ENDPOINT: wss://k0l99tstv9.execute-api.ap-southeast-1.amazonaws.com/production
+    S3_BUCKET_URL:  https://cantrak-staging-resources.s3.ap-southeast-1.amazonaws.com
+    SOCKET_ENDPOINT: wss://16z5ox70r8.execute-api.ap-southeast-1.amazonaws.com/production
     # CDN_URL: resources.servicemind.asia
-    REDIS_HOST: pg888-redis.kdebs8.ng.0001.apse1.cache.amazonaws.com
+    REDIS_HOST: redis-cluster.mal7gr.ng.0001.apse1.cache.amazonaws.com
     REDIS_PORT: 6379,
     MNT_DIR: ${self:custom.localMountPath}
+    GOOGLE_CLIENT_SECRET: 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
+    GOOGLE_CLIENT_ID: 423057939767-4smipfn7q9qfmvn8p9ku121ch4kmmned.apps.googleusercontent.com
+    GOOGLE_REDIRECT_URL: google-auth-callback
+
   vpc:
     securityGroupIds:
-      - sg-03ab4859828983c2a
+      - sg-0a55b8537f845dd00
     subnetIds:
-      - subnet-04167c7353716ccb9
-      - subnet-054ddfd13f02560b9
+      - subnet-0e9751e8fe5e4a261
+      - subnet-08b185f7f8c1365d4
   
 
 custom:
-  serviceName: pg888
-  awsAccountId: "720172161892"
+  serviceName: cantrak
+  awsAccountId: "302128947681"
+  awsContainerImageId: 302128947681.dkr.ecr.ap-southeast-1.amazonaws.com/cantrak-backend
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
-  bucket: pg888-resources-prod
-  defaultStage: prod
+  bucket: cantrak-resources-staging
+  defaultStage: stage
   profiles:
     dev: dev
     stage: stage
     prod: prod
-  efsAccessPoint: fsap-065866bda3f6405f1
+  efsAccessPoint: fsap-07f4fe775952aefa5
   localMountPath: /mnt/efs
-  lambdaInsights:
-    defaultLambdaInsights: true #enables Lambda Insights for all functions
-  
+
   
 functions:
   app:
-    handler: src/app.server # reference the file and exported method
+    # handler: src/app.server # reference the file and exported method
+    image:
+      uri: ${self:custom.awsContainerImageId}@${param:digest}
+      command: 
+        - src/app.server
     events: # events trigger lambda functions
       - http: # this is an API Gateway HTTP event trigger
           path: /
@@ -133,7 +148,11 @@ functions:
           # cors: true
   
   websocket:
-    handler: src/handlers/socket.handler
+    # handler: src/handlers/socket.handler
+    image:
+      uri: ${self:custom.awsContainerImageId}@${param:digest}
+      command: 
+        - src/handlers/socket.handler
     memorySize: 2048
     events:
       - websocket:
@@ -168,11 +187,20 @@ functions:
           route: $disconnect
 
   auth:
-    handler: src/handlers/socket.auth
+    # handler: src/handlers/socket.auth
+    image:
+      uri: ${self:custom.awsContainerImageId}@${param:digest}
+      command: 
+        - src/handlers/socket.auth
+    
 
 
   SQS:
-    handler: src/handlers/jobs.queueProcessor
+    # handler: src/handlers/jobs.queueProcessor
+    image:
+      uri: ${self:custom.awsContainerImageId}@${param:digest}
+      command: 
+        - src/handlers/jobs.queueProcessor
     memorySize: 1024
     timeout: 150
     reservedConcurrency: 10                # <-- Concurrency control
@@ -183,7 +211,11 @@ functions:
 
 
   longJobsProcessor:
-    handler: src/handlers/jobs.longJobsProcessor
+    # handler: src/handlers/jobs.longJobsProcessor
+    image:
+      uri: ${self:custom.awsContainerImageId}@${param:digest}
+      command: 
+        - src/handlers/jobs.longJobsProcessor
     memorySize: 5120
     timeout: 900                           # 15 Mins...
     reservedConcurrency: 10                # <-- Concurrency control
@@ -194,13 +226,49 @@ functions:
 
           
   workOrderOverdueProcessor:
-    handler: src/handlers/daily-tasks.workOrderOverdueProcessor
+    # handler: src/handlers/daily-tasks.workOrderOverdueProcessor
+    image:
+      uri: ${self:custom.awsContainerImageId}@${param:digest}
+      command: 
+        - src/handlers/daily-tasks.workOrderOverdueProcessor
     memorySize: 512
     timeout: 300
     events:
       - schedule:
           rate: rate(1 hour)
           enabled: true
+
+
+  syncEventsToGoogleCalendar:
+    #handler: src/handlers/daily-tasks.syncGoogleCalendarEvents
+    image:
+      uri: ${self:custom.awsContainerImageId}@${param:digest}
+      command: 
+        - src/handlers/daily-tasks.syncEventsToGoogleCalendar 
+    memorySize: 1024
+    timeout:  899                     # Max Time out is 15 mins..
+    events:
+      - schedule:
+          rate: cron(50 */3 * * ? *)    # Utc 9 pm every day i.e 4 am Morning Thai Time..
+          #rate: rate(5 minutes)
+          enabled: true
+
+  
+
+  calSyncQueueProcessor:
+    # handler: src/handlers/jobs.longJobsProcessor
+    image:
+      uri: ${self:custom.awsContainerImageId}@${param:digest}
+      command: 
+        - src/handlers/jobs.calSyncQueueProcessor
+    memorySize: 1024
+    timeout: 150                           # 2.5 Mins...
+    reservedConcurrency: 1                # <-- Concurrency control
+    events:
+      - sqs:
+          arn: arn:aws:sqs:${self:provider.region}:${self:custom.awsAccountId}:sync-calendar
+          batchSize: 1                     # Using a batchSize of 1, so that messages succeed or fail on their own.
+
 
 
 resources:
