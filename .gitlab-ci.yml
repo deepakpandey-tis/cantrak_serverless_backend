@@ -36,8 +36,8 @@ variables:
   - echo "Running Before Script for Stage"    
   - apk add --no-cache curl jq python py-pip
   - pip install awscli
-  - aws configure set aws_access_key_id $MASTER_AWS_KEY
-  - aws configure set aws_secret_access_key $MASTER_AWS_SECRET
+  - aws configure set aws_access_key_id $STAGE_AWS_KEY
+  - aws configure set aws_secret_access_key $STAGE_AWS_SECRET
   - aws configure set region $AWS_DEFAULT_REGION
   - $(aws ecr get-login --no-include-email --region "${AWS_DEFAULT_REGION}")
   # - IMAGE_TAG="$(echo $CI_COMMIT_SHA | head -c 8)"
@@ -168,7 +168,7 @@ deploy_cantrak_stage:
     - serverless plugin install -n serverless-prune-plugin
     - IMAGE_DIGEST=$(cat digest.txt)
     - echo "$IMAGE_DIGEST"
-    - sls config credentials --profile cantrak-stage --provider aws --key ${MASTER_AWS_KEY} --secret ${MASTER_AWS_SECRET}
+    - sls config credentials --profile cantrak-stage --provider aws --key ${STAGE_AWS_KEY} --secret ${STAGE_AWS_SECRET}
     - NODE_ENV=production sls deploy --stage stage --param="digest=$IMAGE_DIGEST" --aws-profile cantrak-stage --config serverless.stage.yml
     - echo 'Success'
 

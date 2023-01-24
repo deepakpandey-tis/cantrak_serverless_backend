@@ -89,8 +89,8 @@ provider:
     S3_BUCKET_NAME: pg888-resources
     VAPID_PUBLIC_KEY: BMpCMLxldme4F8BHAKyz41cAEh8FgFvibgwdJrM7LH8Th5t47J84NVGZiPhuTOEKRBOzfsJMAgXQueLjPyoc8z0
     VAPID_PRIVATE_KEY: MwnSWApwHAJZXnhk6K1s9jqS_ndArrcMSGuI60c7gZc
-    ACCESS_KEY_ID: AKIA2PLM3DNSLWMFB57N
-    SECRET_ACCESS_KEY: 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
+    ACCESS_KEY_ID: AKIAUMWCJ4HQQMU2ZXNM
+    SECRET_ACCESS_KEY: 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
     SQS_MAIL_QUEUE_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/mail-queue
     SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/long-jobs
     SQS_SYNC_CAL_URL: https://sqs.ap-southeast-1.amazonaws.com/720172161892/sync-calendar
