@@ -42,13 +42,18 @@ const updateCropCyclePlan = async (req, res) => {
 
             let currentTime = new Date().getTime();
 
+            //  Delete existing growth stages
+            let sqlDel = `DELETE FROM crop_cycle_plan_detail_gs WHERE "cropCyclePlanDetailId" IN (SELECT id FROM crop_cycle_plan_detail WHERE "cropCyclePlanId" = ${payload.id} AND "orgId" = ${orgId})`;
+            await knex.raw(sqlDel).transacting(trx);
+
             let deletedRecords;
             for (const rec of payload.deletedInputItems) {
+/*                 grwoth stages deleted above
                 deletedRecords = await knex('crop_cycle_plan_detail_gs')
                 .delete()
                 .where({ cropCyclePlanDetailId: rec.id, orgId: orgId })
                 .returning(["*"])
-                .transacting(trx)
+                .transacting(trx) */
 
                 deletedRecords = await knex('crop_cycle_plan_detail')
                 .delete()
@@ -134,7 +139,7 @@ const updateCropCyclePlan = async (req, res) => {
                 insertedDetail[recNo] = insertDetail[0];
 
                 for(let rec1 of rec.growthStages){
-                    if(rec1.id){
+/*                     if(rec1.id){
                         record = {
                             cropCyclePlanDetailId: rec.id,
                             growthStageId: rec1.growthStageId,
@@ -155,7 +160,7 @@ const updateCropCyclePlan = async (req, res) => {
                         .transacting(trx)
                         .into("crop_cycle_plan_detail_gs");
                     }
-                    else {
+                    else { */
                         record = {
                             orgId: orgId,
                             cropCyclePlanDetailId: insertedDetail[recNo].id,
@@ -177,7 +182,7 @@ const updateCropCyclePlan = async (req, res) => {
                         .returning(["*"])
                         .transacting(trx)
                         .into("crop_cycle_plan_detail_gs");
-                    }
+/*                     } */
                 }
 
                 recNo += 1;
