@@ -11,7 +11,8 @@ const getImages = async (req, res) => {
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy;
 
         const schema = Joi.object().keys({
-            id: Joi.number().required()
+            id: Joi.number().required(),
+            entityType: Joi.string().required()
         });
         const result = Joi.validate(payload, schema);
         if (result && result.hasOwnProperty("error") && result.error) {
@@ -24,7 +25,7 @@ const getImages = async (req, res) => {
 
         sqlSelect = `SELECT i.*`;
         sqlFrom = ` FROM images i`;
-        sqlWhere = ` WHERE i."entityId" = ${payload.id} AND i."orgId" = ${orgId}`;
+        sqlWhere = ` WHERE i."orgId" = ${orgId} AND i."entityType" = '${payload.entityType}' AND i."entityId" = ${payload.id}`;
         sqlOrderBy = ` ORDER BY i.id desc`;
 
         sqlStr = sqlSelect + sqlFrom + sqlWhere + sqlOrderBy;
