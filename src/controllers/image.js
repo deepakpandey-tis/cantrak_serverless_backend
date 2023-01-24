@@ -63,7 +63,7 @@ const imageController = {
         uploadedImage = await knex('images').insert({ ...payload, orgId: req?.me?.orgId, createdAt: currentTime }).returning(['*']);
 
         //  Call growdoc api
-        if(payload.s3Url != null && payload.s3Url != ''){
+        if(payload.entityType == 'plant' && payload.s3Url != null && payload.s3Url != ''){
           //  Image uploaded
           const axios = require('axios');
           const FormData = require('form-data');
