@@ -39,8 +39,9 @@ const getPublicTraceQrDetail = async (req, res) => {
         `;
 
         var selectedRecs = await knexReader.raw(sqlStr);
+        console.log(`get-public-trace-qr-detail: `, selectedRecs);
 
-        if(selectedRecs.rows[0].lotType == 1){
+        if(selectedRecs.rowCount && selectedRecs.rows[0].lotType == 1){
             //  Production lot
             sqlStr = `SELECT DISTINCT pl2."name" "plantLotName"
             FROM production_lots pl, item_txns it, harvest_plant_lots hpl, plant_lots pl2
@@ -51,7 +52,7 @@ const getPublicTraceQrDetail = async (req, res) => {
             var selectedPlantLotName = await knexReader.raw(sqlStr);
             selectedRecs.rows[0].plantLotName = selectedPlantLotName.rows[0].plantLotName;
         }
-        else if(selectedRecs.rows[0].lotType == 0){
+        else if(selectedRecs.rowCount && selectedRecs.rows[0].lotType == 0){
             //  Harvest lot
             sqlStr = `SELECT pl2.name "plantLotName"
             FROM harvest_plant_lots hpl, plant_lots pl2
@@ -66,7 +67,7 @@ const getPublicTraceQrDetail = async (req, res) => {
 
         return res.status(200).json({
             data: {
-                record: selectedRecs.rows[0],
+                record: selectedRecs.rowCount ? selectedRecs.rows[0] : null,
             },
             message: "Trace QR detail!"
         });

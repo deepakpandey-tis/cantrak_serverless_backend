@@ -44,6 +44,7 @@ const getUnhealthyTxn = require('./get-unhealthy-txn');
 const healthyEntry = require('./healthy-entry');
 const getHealthyTxnList = require('./get-healthy-txn-list');
 const getHealthyTxn = require('./get-healthy-txn');
+const getPlantLotAiResponsePlantsCount = require('./get-plant-lot-ai-response-plants-count');
 
 const getRawMaterialForPlantList = require('./get-raw-material-for-plant-list');
 const getLocationSubLocationPlantLots = require('./get-location-sublocation-plant-lots');
@@ -117,6 +118,7 @@ module.exports = {
     healthyEntry,
     getHealthyTxnList,
     getHealthyTxn,
+    getPlantLotAiResponsePlantsCount,
 
     getRawMaterialForPlantList,
     getLocationSubLocationPlantLots,

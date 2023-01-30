@@ -24,27 +24,28 @@ const getPlantHistory = async (req, res) => {
             });
         }
 
-        // recType: 1: Observation, 2: growth stage changed; 3: location changed
+        // recType: 1: Observation, 2: growth stage changed; 3: location changed; 4: harvested; 5: waste
         sqlStr = `SELECT txn.*, gsf."name" "fromGrowthStage", gst."name" "toGrowthStage", lf.name "fromLocation", slf."name" "fromSubLocation", lt.name "toLocation", slt."name" "toSubLocation", u.name "createdByName"
         FROM (
-            SELECT 1 "recType", it."createdAt" "date", 0 "fromGrowthStageId" , 0 "toGrowthStageId", 0 "fromLocationId", 0 "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", i."s3Url", i."s3Path", it."tagData"::jsonb, it."createdBy", it."createdAt", rm.description "remark", 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot", null "imageData"
+            SELECT 1 "recType", it."createdAt" "date", 0 "fromGrowthStageId" , 0 "toGrowthStageId", 0 "fromLocationId", 0 "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", i."s3Url", i."s3Path", it."tagData"::jsonb, it."createdBy", it."createdAt", rm.description "remark", 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot", null "imageData", gt."apiResponse"
             FROM image_tags it, images i
+            LEFT JOIN growdoc_txns gt ON gt."orgId" = i."orgId" AND gt."entityType" = i."entityType" AND gt."entityId" = i."id" -- AND gt."apiResponse"->>'Result' != 'Not A Plant'
             LEFT JOIN remarks_master rm ON rm."orgId" = i."orgId" AND rm."entityType" = 'plant_observation' AND rm."entityId" = i.id
             WHERE i."orgId" = ${orgId} AND i."entityType" = 'plant' AND i."entityId" = ${payload.id} AND it."orgId" = i."orgId" AND i.id = it."entityId"
             UNION
-            SELECT 2 "recType", pgst."date" , pgst."fromGrowthStageId" , pgst."toGrowthStageId", 0 "fromLocationId", 0 "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", null "s3Url", null "s3Path", null "tagData", pgst."createdBy", pgst."createdAt", rm.description "remark", 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot"
+            SELECT 2 "recType", pgst."date" , pgst."fromGrowthStageId" , pgst."toGrowthStageId", 0 "fromLocationId", 0 "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", null "s3Url", null "s3Path", null "tagData", pgst."createdBy", pgst."createdAt", rm.description "remark", 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot", null "apiResponse"
             , (SELECT json_agg(json_build_object('img', i."s3Url"))::jsonb FROM images i WHERE i."orgId" = pgst."orgId" AND i."entityType" = 'plant_change_growth_stage' AND i."entityId" = pgst."id") "imageData"
             FROM plant_growth_stages pgs, plant_growth_stage_txns pgst
             LEFT JOIN remarks_master rm ON rm."orgId" = pgst."orgId" AND rm."entityType" = 'plant_change_growth_stage' AND rm."entityId" = pgst.id
             WHERE pgst."orgId" = ${orgId} AND pgst."companyId" = ${payload.companyId} AND pgst."plantLotId" = ${payload.plantLotId} AND pgst."orgId" = pgs."orgId" AND pgst.id = pgs."plantGrowthStageTxnId"  AND pgs."plantId" = ${payload.id}
             UNION
-            SELECT 3 "recType", plt."date" , 0 "fromGrowthStageId" , 0 "toGrowthStageId" , plt."fromLocationId" , plt."fromSubLocationId" , plt."toLocationId" , plt."toSubLocationId", null "s3Url", null "s3Path", null "tagData", plt."createdBy" , plt."createdAt", rm.description "remark", 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot"
+            SELECT 3 "recType", plt."date" , 0 "fromGrowthStageId" , 0 "toGrowthStageId" , plt."fromLocationId" , plt."fromSubLocationId" , plt."toLocationId" , plt."toSubLocationId", null "s3Url", null "s3Path", null "tagData", plt."createdBy" , plt."createdAt", rm.description "remark", 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot", null "apiResponse"
             , (SELECT json_agg(json_build_object('img', i."s3Url"))::jsonb FROM images i WHERE i."orgId" = plt."orgId" AND i."entityType" = 'plant_change_location' AND i."entityId" = plt."id") "imageData"
             FROM plant_locations pl, plant_location_txns plt
             LEFT JOIN remarks_master rm ON rm."orgId" = plt."orgId" AND rm."entityType" = 'plant_change_location' AND rm."entityId" = plt.id
             WHERE plt."orgId" = ${orgId} AND plt."companyId" = ${payload.companyId} AND plt."plantLotId" = ${payload.plantLotId} AND plt."orgId" = pl."orgId" AND plt.id = pl."plantLocationTxnId" AND pl."plantId" = ${payload.id}
             UNION
-            SELECT "recType", date, 0 "fromGrowthStageId", 0 "toGrowthStageId", 0 "fromLocationId", 0 "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", null "s3Url", null "s3Path", null "tagData", "createdBy", "createdAt", null remark, "harvestPlantLotId", "isFinalHarvest", "isEntireLot", null "imageData"
+            SELECT "recType", date, 0 "fromGrowthStageId", 0 "toGrowthStageId", 0 "fromLocationId", 0 "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", null "s3Url", null "s3Path", null "tagData", "createdBy", "createdAt", null remark, "harvestPlantLotId", "isFinalHarvest", "isEntireLot", null "imageData", null "apiResponse"
             FROM (
             SELECT 4 "recType", hpl."harvestedOn" date, 0 "fromGrowthStageId", 0 "toGrowthStageId", 0 "fromLocationId", 0 "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", null "s3Url", null "s3Path", null "tagData", hpl."createdBy", hpl."createdAt", null remark, hpl.id "harvestPlantLotId", hpl."isFinalHarvest", hpl."isEntireLot", jsonb_array_elements(hpl."plantIds") "plantId"
             FROM harvest_plant_lots hpl, plant_locations pl
@@ -53,7 +54,7 @@ const getPlantHistory = async (req, res) => {
             ) harvest_plant
             WHERE cast(harvest_plant."plantId"->>'id' as integer) = 0 OR cast(harvest_plant."plantId"->>'id' as integer) = ${payload.id}
             UNION 
-            SELECT 5 "recType", pwt."date", pwt."growthStageId" "fromGrowthStageId", 0 "toGrowthStageId", pwt."locationId" "fromLocationId", pwt."subLocationId" "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", null "s3Url", null "s3Path", null "tagData", pwt."createdBy", pwt."createdAt", description remark, 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot"
+            SELECT 5 "recType", pwt."date", pwt."growthStageId" "fromGrowthStageId", 0 "toGrowthStageId", pwt."locationId" "fromLocationId", pwt."subLocationId" "fromSubLocationId", 0 "toLocationId", 0 "toSubLocationId", null "s3Url", null "s3Path", null "tagData", pwt."createdBy", pwt."createdAt", description remark, 0 "harvestPlantLotId", false "isFinalHarvest", false "isEntireLot", null "apiResponse"
             , (SELECT json_agg(json_build_object('img', i."s3Url"))::jsonb FROM images i WHERE i."orgId" = pwt."orgId" AND i."entityType" = 'plant_waste' AND i."entityId" = pwt."id") "imageData"
             FROM plant_waste_txns pwt LEFT JOIN remarks_master rm ON rm."orgId" = pwt."orgId" AND rm."entityType" = 'plant_waste_txn_entry' AND rm."entityId" = pwt.id
             , jsonb_to_recordset(pwt."plantIds") as plantId(id bigint)
@@ -68,6 +69,8 @@ const getPlantHistory = async (req, res) => {
         , users u WHERE u.id = txn."createdBy"
         order by date, "createdAt"
         `;
+
+        console.log('getPlantHistory: ', sqlStr);
 
         var selectedRecs = await knexReader.raw(sqlStr);
 

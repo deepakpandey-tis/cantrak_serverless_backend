@@ -1,6 +1,5 @@
 const Joi = require("@hapi/joi");
 const knex = require('../../db/knex');
-const knexReader = require("../../db/knex-reader");
 const moment = require("moment-timezone");
 const addUserActivityHelper = require('../../helpers/add-user-activity')
 const { EntityTypes, EntityActions } = require('../../helpers/user-activity-constants');
@@ -10,18 +9,20 @@ const deleteLicense = async (req, res) => {
         let orgId = req.me.orgId;
         let userId = req.me.id;
 
-        let insertedRecord = [];
-        let sqlResult;
-        let message;
+        let sqlStr;
+        let deletedRecord, message;
 
         const payload = req.body;
         const schema = Joi.object().keys({
             id: Joi.string().required(),
+            companyId: Joi.number().required(),
+            number: Joi.string().required(),
+            revisionNumber: Joi.number().required(),
         });
 
         const result = Joi.validate(payload, schema);
         console.log(
-            "[controllers][controllers][licenses]deleteLicense: JOi Result",
+            "[controllers][licenses]deleteLicense: JOi Result",
             result
         );
 
@@ -33,39 +34,39 @@ const deleteLicense = async (req, res) => {
             });
         }
 
+        let currentTime = new Date().getTime();
+
         await knex.transaction(async (trx) => {
 
-            let currentTime = new Date().getTime();
-            let check = await knexReader('licenses').select('isActive').where({ id: payload.id, orgId: orgId }).first();
-            if (check.isActive) {
-                sqlResult = await knex
-                    .update({ isActive: false, updatedBy: userId, updatedAt: currentTime })
-                    .where({ id: payload.id, orgId: req.orgId })
-                    .returning(["*"])
-                    .transacting(trx)
-                    .into('licenses');
-                message = "License de-activated successfully!"
-            } else {
-                sqlResult = await knex
-                    .update({ isActive: true, updatedBy: userId, updatedAt: currentTime })
-                    .where({ id: payload.id, orgId: req.orgId })
-                    .returning(["*"])
-                    .transacting(trx)
-                    .into('licenses');
-                message = "License activated successfully!"
-            }
+            //  Setting licenseId to null
+            sqlStr = `UPDATE invoices SET "licenseId" = null WHERE "orgId" = ${orgId} AND "companyId" = ${payload.companyId} AND "licenseId" = ${payload.id}`;
+            deletedRecord = await knex.raw(sqlStr).transacting(trx);
 
-            insertedRecord = sqlResult[0];
+            sqlStr = `UPDATE harvest_plant_lots SET "licenseId" = null WHERE "orgId" = ${orgId} AND "companyId" = ${payload.companyId} AND "licenseId" = ${payload.id}`;
+            deletedRecord = await knex.raw(sqlStr).transacting(trx);
+
+            sqlStr = `UPDATE plant_lots SET "licenseId" = null WHERE "orgId" = ${orgId} AND "companyId" = ${payload.companyId} AND "licenseId" = ${payload.id}`;
+            deletedRecord = await knex.raw(sqlStr).transacting(trx);
+
+            sqlStr = `UPDATE item_txns SET "licenseId" = null, "licenseNarId" = null, "licenseNarItemId" = null WHERE "orgId" = ${orgId} AND "companyId" = ${payload.companyId} AND "licenseId" = ${payload.id}`;
+            deletedRecord = await knex.raw(sqlStr).transacting(trx);
+
+            //  Delete license record
+            sqlStr = `DELETE FROM licenses WHERE id = ${payload.id} AND "orgId" = ${orgId} AND "companyId" = ${payload.companyId}`;
+            deletedRecord = await knex.raw(sqlStr).transacting(trx);
+
+            message = `License deleted successfully.`
+
+            let sRevisionNo = payload.revisionNumber > 0 ? `revision number ${payload.revisionNumber}` : '';
 
             //  Log user activity
-            const action = check.isActive ? 'de-activated' : 'activated';
             let userActivity = {
-                orgId: insertedRecord.orgId,
-                companyId: insertedRecord.companyId,
-                entityId: insertedRecord.id,
-                entityTypeId: EntityTypes.License,
-                entityActionId: EntityActions.ToggleStatus,
-                description: `${req.me.name} ${action} license '${insertedRecord.number}' on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
+                orgId: orgId,
+                companyId: payload.companyId,
+                entityId: payload.id,
+                entityTypeId: EntityTypes.Plant,
+                entityActionId: EntityActions.Delete,
+                description: `${req.me.name} deleted license '${payload.number}' ${sRevisionNo} on ${moment(currentTime).format('DD MMM YYYY hh:mm:ss a')} `,
                 createdBy: userId,
                 createdAt: currentTime,
                 trx: trx
@@ -81,13 +82,13 @@ const deleteLicense = async (req, res) => {
         });
 
         return res.status(200).json({
-            data: {
-                record: sqlResult[0]
-            },
+/*             data: {
+                childRecords: childRecords,
+            }, */
             message: message
         });
     } catch (err) {
-        console.log("[controllers][controllers][licenses][deleteLicense] :  Error", err);
+        console.log("[controllers][licenses][deleteLicense] :  Error", err);
         //trx.rollback
         res.status(500).json({
             errors: [{ code: "UNKNOWN_SERVER_ERROR", message: err.message }]

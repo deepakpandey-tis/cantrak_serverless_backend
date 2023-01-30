@@ -267,6 +267,13 @@ router.post('/get-healthy-txn',
   plantController.getHealthyTxn
 );
 
+router.post('/get-plant-lot-ai-response-plants-count',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.getPlantLotAiResponsePlantsCount
+);
+
 router.post('/generate-pdf-of-plants',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,
