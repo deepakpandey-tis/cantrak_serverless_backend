@@ -479,4 +479,11 @@ router.post('/get-harvest-lot',
   plantController.getHarvestLot
 );
 
+router.post('/add-bulk-observation',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  plantController.addBulkObservation
+);
+
 module.exports = router;
