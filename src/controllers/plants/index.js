@@ -70,6 +70,8 @@ const getGrowingFacilityPlantsAge = require('./growing-facility/get-growing-faci
 
 const getHarvestLot = require('./harvest/get-harvest-lot');
 
+const addBulkObservation = require('./add-bulk-observation');
+
 module.exports = {
     getLotPlantList,
     getPlantLot,
@@ -142,4 +144,5 @@ module.exports = {
     getGrowingFacilityPlantsAge,
 
     getHarvestLot,
+    addBulkObservation
 };
