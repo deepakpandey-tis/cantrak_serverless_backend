@@ -42,6 +42,13 @@ router.post('/update-license',
   licenseController.updateLicense
 );
 
+router.post('/change-license-status',
+  authMiddleware.isAuthenticated,
+  roleMiddleware.parseUserPermission,
+  resourceAccessMiddleware.isAccessible,
+  licenseController.changeLicenseStatus
+);
+
 router.post('/delete-license',
   authMiddleware.isAuthenticated,
   roleMiddleware.parseUserPermission,

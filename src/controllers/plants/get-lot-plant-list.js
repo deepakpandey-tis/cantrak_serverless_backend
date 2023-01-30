@@ -14,7 +14,7 @@ const getLotPlantList = async (req, res) => {
         let pageSize = reqData.per_page || 10;
         let pageNumber = reqData.current_page || 1;
 
-        let { id, locationId, subLocationId, fromPlantSerial, uptoPlantSerial, includeWaste, plantTypeId, currentGrowthStageId, notIncludeSelectedFinalHarvestedPlants } = req.body;
+        let { id, locationId, subLocationId, fromPlantSerial, uptoPlantSerial, includeWaste, plantTypeId, currentGrowthStageId, notIncludeSelectedFinalHarvestedPlants, plantsWithAiResponse } = req.body;
 
         let sqlStr, sqlSelect, sqlFrom, sqlWhere, sqlOrderBy, sqlObservation;
 
@@ -86,17 +86,63 @@ const getLotPlantList = async (req, res) => {
         , strains s, species s2, plants p
         `;
 
-        // sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
-        // sqlFrom += ` LEFT JOIN ${sqlObservation} ON p.id = observation."entityId"`;
         if(plantTypeId != null && plantTypeId == 0){
             //  0: All Plants
-            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" AND i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
+/*          2023/01/25: implementing plants with ai response code
+            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId", gt."apiResponse" FROM images i LEFT JOIN growdoc_txns gt ON gt."orgId" = i."orgId" AND gt."entityType" = i."entityType" AND gt."entityId" = i."id" ${andAiResponsePlants} -- AND gt."apiResponse"->>'Result' != 'Not A Plant'
+            , image_tags it WHERE i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" AND i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
             sqlFrom += ` LEFT JOIN ${sqlObservation} ON p.id = observation."entityId"`;
+*/
+
+            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId", gt."apiResponse" FROM images i`;
+            if(plantsWithAiResponse != undefined && plantsWithAiResponse){
+                //  plants with ai response
+                sqlObservation += ` JOIN`;
+            } else {
+                //  plants with or without ai response
+                sqlObservation += ` LEFT JOIN`;
+            }
+
+            sqlObservation += ` growdoc_txns gt ON gt."orgId" = i."orgId" AND gt."entityType" = i."entityType" AND gt."entityId" = i."id"`;
+            if(plantsWithAiResponse != undefined && plantsWithAiResponse){
+                //  plants with ai response
+                sqlObservation += ` AND gt."apiResponse" IS NOT NULL`;
+            }
+
+            sqlObservation += `, image_tags it WHERE i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" AND i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
+            if(plantsWithAiResponse != undefined && plantsWithAiResponse){
+                sqlFrom += ` JOIN`;
+            } else {
+                sqlFrom += ` LEFT JOIN`;
+            }
+
+            sqlFrom += ` ${sqlObservation} ON p.id = observation."entityId"`;
         }
         else
         if(plantTypeId && plantTypeId == 2){
             //  2: Ill Plants
-            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId" FROM images i, image_tags it WHERE i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" AND i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
+/*          2023/01/25: implementing plants with ai response code
+            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId", gt."apiResponse" FROM images i LEFT JOIN growdoc_txns gt ON gt."orgId" = i."orgId" AND gt."entityType" = i."entityType" AND gt."entityId" = i."id" ${andAiResponsePlants} -- AND gt."apiResponse"->>'Result' != 'Not A Plant'
+            , image_tags it WHERE i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" AND i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
+            sqlFrom += ` JOIN ${sqlObservation} ON p.id = observation."entityId" AND (observation."tagData"->'plantCondition'->>'appearsIll')::boolean is true`;
+*/
+
+            sqlObservation = `(SELECT DISTINCT ON (i."entityId") it."tagData", i."entityId", gt."apiResponse" FROM images i`;
+            if(plantsWithAiResponse != undefined && plantsWithAiResponse){
+                //  plants with ai response
+                sqlObservation += ` JOIN`;
+            } else {
+                //  plants with or without ai response
+                sqlObservation += ` LEFT JOIN`;
+            }
+
+            sqlObservation += ` growdoc_txns gt ON gt."orgId" = i."orgId" AND gt."entityType" = i."entityType" AND gt."entityId" = i."id"`;
+            if(plantsWithAiResponse != undefined && plantsWithAiResponse){
+                //  plants with ai response
+                sqlObservation += ` AND gt."apiResponse" IS NOT NULL`;
+            }
+
+            sqlObservation += `, image_tags it WHERE i."orgId" = ${orgId} AND i."orgId" = it."orgId" AND i."entityType" = it."entityType" AND i.id = it."entityId" ORDER BY i."entityId" asc, i."createdAt" DESC) observation`;
             sqlFrom += ` JOIN ${sqlObservation} ON p.id = observation."entityId" AND (observation."tagData"->'plantCondition'->>'appearsIll')::boolean is true`;
         }
 
@@ -149,8 +195,8 @@ const getLotPlantList = async (req, res) => {
             sqlWhere += ` illPlants WHERE (illPlants."tagData"->'plantCondition'->>'appearsIll')::boolean is true)`;
         }
 
-        sqlWhere += ` AND p.id = ploc."plantId" AND ploc.id = (select id from plant_locations ploc2 where ploc2."orgId" = ${orgId} and ploc2."plantId" = p.id order by id desc limit 1)`;
-        sqlWhere += ` AND p.id = pgs."plantId" AND pgs.id = (select id from plant_growth_stages pgs2 where pgs2."orgId" = ${orgId} and pgs2."plantId" = p.id order by id desc limit 1)`;
+        sqlWhere += ` AND p.id = ploc."plantId" AND ploc.id = (select id from plant_locations ploc2 where ploc2."orgId" = ${orgId} AND ploc2."plantId" = p.id order by id desc limit 1)`;
+        sqlWhere += ` AND p.id = pgs."plantId" AND pgs.id = (select id from plant_growth_stages pgs2 where pgs2."orgId" = ${orgId} AND pgs2."plantId" = p.id order by id desc limit 1)`;
         if(currentGrowthStageId != undefined && currentGrowthStageId){
             //  to get plants of growth stage
             sqlWhere += ` AND pgs."growthStageId" = ${currentGrowthStageId}`;
