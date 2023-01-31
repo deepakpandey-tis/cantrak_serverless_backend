@@ -95,7 +95,7 @@ provider:
     SQS_LONG_JOBS_URL: https://sqs.ap-southeast-1.amazonaws.com/302128947681/long-jobs
     SQS_SYNC_CAL_URL: https://sqs.ap-southeast-1.amazonaws.com/302128947681/sync-calendar
     FROM_EMAIL_ADDRESS: no-reply@servicemind.asia
-    APP_ENV: PRODUCTION
+    APP_ENV: STAGE
     S3_BUCKET_URL:  https://cantrak-staging-resources.s3.ap-southeast-1.amazonaws.com
     SOCKET_ENDPOINT: wss://1dra6qfzdd.execute-api.ap-southeast-1.amazonaws.com/stage
     # CDN_URL: resources.servicemind.asia
@@ -120,7 +120,7 @@ custom:
   awsContainerImageId: 302128947681.dkr.ecr.ap-southeast-1.amazonaws.com/cantrak-backend
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${self:custom.profiles.${self:provider.stage}}
-  bucket: cantrak-resources-staging
+  bucket: cantrak-staging-resources
   defaultStage: stage
   profiles:
     dev: dev
