@@ -357,7 +357,8 @@ const resourcesController = {
             .select([            
                 "resources.code as resourceCode",
                 "resources.resourceName as resourceName",
-                "resources.id"
+                "resources.id",
+                "resources.isPlantationLocationBasedResource"
             ])
             .where({           
                 "organisation_resources_master.orgId": req.orgId,

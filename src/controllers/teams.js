@@ -81,7 +81,7 @@ const teamsController = {
                     for (let i = 0; i < roleProjectData.length; i++) {
 
 
-                        if (roleProjectData[i].locationId && roleProjectData[i].roleId) {
+                        if (roleProjectData[i].roleId) {
 
                             //for (let role of roleProjectData[i].roleId) {
 

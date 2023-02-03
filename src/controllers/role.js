@@ -73,12 +73,18 @@ const roleController = {
         }
         /*CHECK DUPLICATE VALUES CLOSE */
         let currentTime = new Date().getTime();
+        const resources = await knex("resources")
+          .whereIn("id", resourceIds);
+
+        const isLocationBasedRole = resources?.some(r => r.isPlantationLocationBasedResource);
+
         /*ROLE INSERT OPEN */
         let insertRole = {
           name: roleName,
           orgId: orgId,
           createdAt: currentTime,
-          updatedAt: currentTime
+          updatedAt: currentTime,
+          isLocationBasedRole: isLocationBasedRole
         }
         let roleResult = await knex.insert(insertRole)
           .returning(['*'])
@@ -319,10 +325,17 @@ const roleController = {
           });
         }
         let currentTime = new Date().getTime();
+
+        const resources = await knex("resources")
+          .whereIn("id", resourceIds);
+
+        const isLocationBasedRole = resources?.some(r => r.isPlantationLocationBasedResource);
+
         /*ROLE UPDATE OPEN */
         let insertRole = {
           name: roleName,
-          updatedAt: currentTime
+          updatedAt: currentTime,
+          isLocationBasedRole: isLocationBasedRole
         }
         let roleResult = await knex.update(insertRole)
           .returning(['*'])

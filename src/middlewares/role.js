@@ -139,7 +139,7 @@ const roleMiddleware = {
               ]).where({ 'team_users.userId': userId, 'team_users.orgId': req.orgId })//.whereIn('team_users.teamId',teams);
 
             console.log(
-              "result***********************************************************",
+              "[middlewares][role][parseUserPermission]: Query result::",
               result
             );
 
@@ -149,10 +149,30 @@ const roleMiddleware = {
               ids[e.resourceId] = e.code
             });
             
-            console.log("_.chain(result)", _.chain(result).groupBy("resourceId"));
+            console.log("[middlewares][role][parseUserPermission]: Query result:: Group by resource ID", _.chain(result).groupBy("resourceId").value());
 
-            userPlantationResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, code: ids[key], plantations: value.map(a => a.locationId) })).value();
-            userGrowingLocationsResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, code: ids[key], locations: value.map(a => a.locationId) })).value();
+            let locationIds = await knexReader("team_roles_project_master")
+              .innerJoin(
+                "team_users",
+                "team_roles_project_master.teamId",
+                "team_users.teamId"
+              )
+              .select([
+                "team_roles_project_master.locationId"
+              ])
+              .where({
+                'team_users.userId': userId,
+                'team_users.orgId': req.orgId,
+              })
+              .whereNotNull("team_roles_project_master.locationId");
+
+            locationIds = locationIds?.map(location => location.locationId);
+
+            userPlantationResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, code: ids[key], plantations: locationIds ? locationIds : [] })).value();
+            userGrowingLocationsResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, code: ids[key], locations: locationIds ? locationIds : [] })).value();
+
+            // userPlantationResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, code: ids[key], plantations: value.map(a => a.locationId ? a.locationId : locationIds) })).value();
+            // userGrowingLocationsResources = _.chain(result).groupBy("resourceId").map((value, key) => ({ id: key, code: ids[key], locations: value.map(a => a.locationId ? a.locationId : locationIds) })).value();
 
             console.log('[middleware][role]: parseUserPermission: userPlantationResources (From DB) :: ', userPlantationResources);
             console.log('[middleware][role]: parseUserPermission: userGrowingLocationsResources (From DB) :: ', userGrowingLocationsResources);
