@@ -19,6 +19,7 @@ const getLotPlantListNew = async (req, res) => {
             currentGrowthStageId: Joi.alternatives(Joi.number().allow(null), Joi.string().allow(null, '')).optional(),
             plantsWithAiResponse: Joi.alternatives(Joi.number().allow(null), Joi.string().allow(null, '')).optional(),
             includeWaste: Joi.bool().allow(null).optional(),
+            notIncludeWaste: Joi.bool().allow(null).optional(),
             notIncludeSelectedFinalHarvestedPlants: Joi.bool().allow(null).optional(),
             plantTypeIds: Joi.array().items(Joi.alternatives(Joi.number(), Joi.string())).optional(),
             growthStageIds: Joi.array().items(Joi.alternatives(Joi.number(), Joi.string())).optional(),
@@ -64,7 +65,7 @@ const getLotPlantListNew = async (req, res) => {
             currentGrowthStageId,
             plantTypeIds,
             growthStageIds,
-            includeWaste,
+            notIncludeWaste,
             searchTerm
         } = payload;
 
@@ -302,11 +303,9 @@ const getLotPlantListNew = async (req, res) => {
                 }
             }
 
-            // if (includeWaste) {
-            //     qb.whereRaw(`plants."isWaste"`);
-            // } else {
-            //     qb.whereRaw(`NOT plants."isWaste"`);   
-            // }
+            if (notIncludeWaste) {
+                qb.whereRaw(`NOT plants."isWaste"`);   
+            }
 
 
             if(locationId && `${locationId}`.trim()) {
