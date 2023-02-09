@@ -73,10 +73,10 @@ const getLotPlantListNew = async (req, res) => {
 
         if (notIncludeSelectedFinalHarvestedPlants || plantTypeId == 4 || plantTypeIds?.includes(4) || plantTypeIds?.includes('4')) { // plant type 4 = harvested plants
             const locationQuery = {};
-            if(locationId && locationId.trim()) {
+            if(locationId && locationId.trim() && locationId != 0) {
                 locationQuery.locationId = locationId;
 
-                if(subLocationId && subLocationId.trim()) {
+                if(subLocationId && subLocationId.trim() && subLocationId != 0) {
                     locationQuery.subLocationId = subLocationId;
                 }
             }
