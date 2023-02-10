@@ -93,14 +93,28 @@ const getLotPlantListNew = async (req, res) => {
 
             finalHarvestedPlantIds = await Parallel.map(finalHarvestedPlants, async (plant) => {
                 if(plant.isEntireLot) {
-                    let plantIds = await knexReader("plant_locations")
-                        .pluck('plantId')
-                        .where({
-                            plantLotId: plantLotId,
-                            orgId: orgId,
-                            locationId: plant.locationId,
-                            subLocationId: plant.subLocationId
-                        });
+                    let plantIds = await knexReader.with(
+                        'pl',
+                        knexReader.raw(`
+                            SELECT DISTINCT ON (plant_locations."plantId")
+                                plant_locations.*
+                            FROM 
+                                plant_locations
+                            WHERE 
+                                plant_locations."plantLotId" = ?
+                            AND
+                                plant_locations."orgId" = ?
+                            ORDER BY 
+                                plant_locations."plantId" ASC, plant_locations."startDate" DESC
+                        `, [plantLotId, orgId])
+                    )
+                    .from('pl')
+                    .where({
+                        locationId: plant.locationId,
+                        subLocationId: plant.subLocationId
+                    });
+
+                    plantIds = plantIds.map(pt => pt.plantId);
 
                     if(plantIds.length > 0) {
                         plantIds = await knexReader("plants")
