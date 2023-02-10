@@ -1,4 +1,5 @@
 const Joi = require('@hapi/joi');
+const Parallel = require('async-parallel');
 
 const knexReader = require('../../db/knex-reader');
 
@@ -69,7 +70,6 @@ const getLotPlantListNew = async (req, res) => {
             searchTerm
         } = payload;
 
-        let entireLotHarvested = false;
         let finalHarvestedPlantIds = [];
 
         if (notIncludeSelectedFinalHarvestedPlants || plantTypeId == 4 || plantTypeIds?.includes(4) || plantTypeIds?.includes('4')) { // plant type 4 = harvested plants
@@ -83,35 +83,43 @@ const getLotPlantListNew = async (req, res) => {
             }
 
             let finalHarvestedPlants = await knexReader("harvest_plant_lots")
-                .select("plantIds")
+                .select("*")
                 .where({
                     plantLotId: plantLotId,
                     orgId: orgId,
                     ...locationQuery,
                     isFinalHarvest: true,
-                    isEntireLot: true
-                })
-                .first();
+                });
 
-            if (finalHarvestedPlants) {
-                entireLotHarvested = true;
-            } else {
-                finalHarvestedPlants = await knexReader("harvest_plant_lots")
-                    .select("plantIds")
-                    .where({
-                        plantLotId: plantLotId,
-                        orgId: orgId,
-                        ...locationQuery,
-                        isFinalHarvest: true,
-                        isEntireLot: false
-                    });
-    
-                finalHarvestedPlantIds = finalHarvestedPlants
-                    .map(plant => {
-                        return plant.plantIds.map(pid => pid.id);
-                    })
-                    .flat();
-            }
+            finalHarvestedPlantIds = await Parallel.map(finalHarvestedPlants, async (plant) => {
+                if(plant.isEntireLot) {
+                    let plantIds = await knexReader("plant_locations")
+                        .pluck('plantId')
+                        .where({
+                            plantLotId: plantLotId,
+                            orgId: orgId,
+                            locationId: plant.locationId,
+                            subLocationId: plant.subLocationId
+                        });
+
+                    if(plantIds.length > 0) {
+                        plantIds = await knexReader("plants")
+                            .pluck('id')
+                            .where({
+                                plantLotId: plantLotId,
+                                orgId: orgId,
+                                isWaste: false
+                            })
+                            .whereIn('id', plantIds);
+                    }
+
+                    return plantIds;
+                } else {
+                    return plant.plantIds.map(pid => pid.id);
+                }
+            }, 1);
+
+            finalHarvestedPlantIds = finalHarvestedPlantIds.flat();
         }
 
         let baseQuery = knexReader("plant_lots")
@@ -241,16 +249,11 @@ const getLotPlantListNew = async (req, res) => {
                     plantTypeQueries.push(query);
                 }
                 if (plantTypeIds.includes(4) || plantTypeIds.includes('4')) {
-                    if (!entireLotHarvested) {
-                        if (finalHarvestedPlantIds.length > 0) { 
-                            const query = `plants.id IN (${finalHarvestedPlantIds.join(' , ')})`;
-                            plantTypeQueries.push(query);
-                        } else {
-                            const query = `plants.id < 0`;
-                            plantTypeQueries.push(query);
-                        }
+                    if (finalHarvestedPlantIds.length > 0) {
+                        const query = `plants.id IN (${finalHarvestedPlantIds.join(' , ')})`;
+                        plantTypeQueries.push(query);
                     } else {
-                        const query = `plants.id > 0`;
+                        const query = `plants.id < 0`;
                         plantTypeQueries.push(query);
                     }
                 }
@@ -282,23 +285,16 @@ const getLotPlantListNew = async (req, res) => {
                     qb.whereRaw(`plants."isWaste"`);
                 } else if (plantTypeId == 4) { 
                     // plantTypeId = 4 => Harvested plants
-                    if(!entireLotHarvested) {
-                        if(finalHarvestedPlantIds.length > 0) {
-                            console.log(finalHarvestedPlantIds, 'FINAL HARVESTED PLANTS LIST')
-                            qb.whereIn(`plants.id`, finalHarvestedPlantIds);
-                        } else {
-                            qb.where('plants.id', '<', '0');
-                        }
+                    if (finalHarvestedPlantIds.length > 0) {
+                        qb.whereIn(`plants.id`, finalHarvestedPlantIds);
                     } else {
-                        qb.where('plants.id', '>', '0');
+                        qb.where('plants.id', '<', '0');
                     }
                 }
             }
 
             if (notIncludeSelectedFinalHarvestedPlants) {
-                if(entireLotHarvested) {
-                    qb.where('plants.id', '<', '0');
-                } else {
+                if (finalHarvestedPlantIds.length > 0) {
                     qb.whereNotIn(`plants.id`, finalHarvestedPlantIds);
                 }
             }
